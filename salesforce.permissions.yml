@@ -1,0 +1,4 @@
+administer salesforce:
+  title: 'administer salesforce'
+  description: 'Administer Salesforce integration'
+  restrict access: TRUE
