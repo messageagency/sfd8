@@ -1,4 +1,4 @@
 services:
-  plugin.manager.salesforce.push:
-    class: Drupal\salesforce_push\Plugin\PushPluginManager
+  plugin.manager.salesforce_push:
+    class: Drupal\salesforce_push\Plugin\SalesforcePushPluginManager
     arguments: ['@container.namespaces', '@cache.data', '@language_manager', '@module_handler']

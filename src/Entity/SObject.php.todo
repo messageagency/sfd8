@@ -16,7 +16,7 @@ namespace Drupal\salesforce\Entity;
  * @EntityType(
  *   id = "sobject",
  *   label = @Translation("Salesforce Object"),
- *   controllers = {
+ *   handlers = {
  *     "storage" = "Drupal\file\NullStorage",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder"
  *   },

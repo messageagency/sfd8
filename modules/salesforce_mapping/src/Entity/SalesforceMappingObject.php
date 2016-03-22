@@ -20,8 +20,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingObjectInterface;
  *   id = "salesforce_mapping_object",
  *   label = @Translation("Salesforce Mapping Object"),
  *   module = "salesforce_mapping",
- *   controllers = {
- *     "storage" = "Drupal\Core\Entity\FieldableDatabaseStorageController",
+ *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "access" = "Drupal\Core\Entity\EntityAccessController",
  *   },

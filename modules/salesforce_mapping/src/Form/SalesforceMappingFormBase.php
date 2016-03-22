@@ -12,15 +12,16 @@ namespace Drupal\salesforce_mapping\Form;
 // use Drupal\Core\Ajax\ReplaceCommand;
 // use Drupal\Core\Ajax\InsertCommand;
 use Drupal\Component\Plugin\PluginManagerInterface;
-use Drupal\Core\Entity\EntityFormController;
+use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce_mapping\Plugin\MappingFieldPluginInterface;
+use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginInterface;
 
 /**
  * Salesforce Mapping Form base.
  */
-abstract class SalesforceMappingFormBase extends EntityFormController {
+abstract class SalesforceMappingFormBase extends EntityForm {
 
   /**
    * The storage controller.
@@ -29,7 +30,7 @@ abstract class SalesforceMappingFormBase extends EntityFormController {
    */
   protected $storageController;
 
-  protected $mappingFieldManager;
+  protected $SalesforceMappingFieldManager;
 
   protected $pushPluginManager;
 
@@ -38,14 +39,13 @@ abstract class SalesforceMappingFormBase extends EntityFormController {
    *
    * @param \Drupal\Core\Entity\EntityStorageControllerInterface
    *   Need this to fetch the appropriate field mapping
-   * @param \Drupal\salesforce_mapping\Plugin\MappingFieldPluginInterface
+   * @param \Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginInterface
    *   Need this to fetch the mapping field plugins
    *
    * @throws RuntimeException
    */
-  public function __construct(EntityStorageControllerInterface $storageController, PluginManagerInterface $mappingFieldManager, PluginManagerInterface $pushPluginManager) {
-    $this->mappingFieldManager = $mappingFieldManager;
-    $this->storageController = $storageController;
+  public function __construct(PluginManagerInterface $SalesforceMappingFieldManager, PluginManagerInterface $pushPluginManager) {
+    $this->SalesforceMappingFieldManager = $SalesforceMappingFieldManager;
     $this->pushPluginManager = $pushPluginManager;
   }
 
@@ -54,9 +54,8 @@ abstract class SalesforceMappingFormBase extends EntityFormController {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-$container->get('entity.manager')->getStorageController('salesforce_mapping'),
-      $container->get('plugin.manager.salesforce.mapping_field'),
-      $container->get('plugin.manager.salesforce.push')
+      $container->get('plugin.manager.salesforce_mapping_field'),
+      $container->get('plugin.manager.salesforce_push')
     );
   }
 
@@ -64,7 +63,7 @@ $container->get('entity.manager')->getStorageController('salesforce_mapping'),
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, array &$form_state) {
+  public function save(array $form, FormStateInterface $form_state) {
     $is_new = $this->entity->isNew();
     if (!$this->entity->save()) {
       drupal_set_message($this->t('An error occurred while trying to save the mapping.'));

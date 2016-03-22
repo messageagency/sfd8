@@ -9,7 +9,7 @@ In progress:
   - SalesforceClientInterface
   - SalesforceMappingInterface
   - SalesforceMappingObjectInterface
-  - MappingFieldPluginManagerInterface
+  - SalesforceMappingFieldPluginManagerInterface
 
 - Need to build an entity definition for Salesforce Objects as defined by instance schema
 

@@ -9,17 +9,17 @@ namespace Drupal\salesforce_mapping;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Config\Entity\DraggableListController;
-use Drupal\Core\Entity\EntityControllerInterface;
+use Drupal\Core\Config\Entity\DraggableListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines the filter format list controller.
  */
-class SalesforceMappingList extends DraggableListController implements EntityControllerInterface {
+class SalesforceMappingList extends DraggableListBuilder {
 
   /**
    * {@inheritdoc}
@@ -76,7 +76,7 @@ class SalesforceMappingList extends DraggableListController implements EntityCon
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, array &$form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
     $form['actions']['submit']['#value'] = $this->t('Save changes');
     return $form;

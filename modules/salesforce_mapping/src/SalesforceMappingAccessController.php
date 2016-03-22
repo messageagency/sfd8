@@ -7,7 +7,7 @@
 
 namespace Drupal\salesforce_mapping;
 
-use Drupal\Core\Entity\EntityAccessController;
+use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\salesforce\SalesforceClient;
@@ -17,12 +17,12 @@ use Drupal\salesforce\SalesforceClient;
  *
  * @see \Drupal\salesforce_mapping\Entity\SalesforceMapping.
  */
-class SalesforceMappingAccessController extends EntityAccessController {
+class SalesforceMappingAccessController extends EntityAccessControlHandler {
 
   /**
    * {@inheritdoc}
    */
-  protected function checkAccess(EntityInterface $entity, $operation, $langcode, AccountInterface $account) {
+  protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
     switch ($operation) {
       case 'view':
         return $account->hasPermission('view salesforce mapping');

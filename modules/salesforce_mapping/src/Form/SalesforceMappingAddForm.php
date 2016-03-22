@@ -16,6 +16,6 @@ use Drupal\Core\Ajax\InsertCommand;
 /**
  * Salesforce Mapping Add/Edit Form
  */
-class SalesforceMappingEditForm extends SalesforceMappingFormCrudBase {
+class SalesforceMappingAddForm extends SalesforceMappingFormCrudBase {
 
 }

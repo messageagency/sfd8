@@ -8,7 +8,7 @@
 namespace Drupal\salesforce_mapping\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\salesforce_mapping\Plugin\MappingFieldPluginManager;
+use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginManager;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
@@ -19,14 +19,13 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
  *   id = "salesforce_mapping",
  *   label = @Translation("Salesforce Mapping"),
  *   module = "salesforce_mapping",
- *   controllers = {
- *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
+ *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "access" = "Drupal\salesforce_mapping\SalesforceMappingAccessController",
- *     "list" = "Drupal\salesforce_mapping\SalesforceMappingList",
+ *     "list_builder" = "Drupal\salesforce_mapping\SalesforceMappingList",
  *     "form" = {
  *       "edit" = "Drupal\salesforce_mapping\Form\SalesforceMappingEditForm",
- *       "add" = "Drupal\salesforce_mapping\Form\SalesforceMappingEditForm",
+ *       "add" = "Drupal\salesforce_mapping\Form\SalesforceMappingAddForm",
  *       "disable" = "Drupal\salesforce_mapping\Form\SalesforceMappingDisableForm",
  *       "delete" = "Drupal\salesforce_mapping\Form\SalesforceMappingDeleteForm",
  *       "enable" = "Drupal\salesforce_mapping\Form\SalesforceMappingEnableForm",
@@ -138,7 +137,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   public $sync_triggers = array();
   public $push_plugin;
 
-  protected $mappingFieldManager;
+  protected $SalesforceMappingFieldManager;
 
   /**
    * {@inheritdoc}
@@ -147,8 +146,8 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     parent::__construct($values, $entity_type);
     // entities don't support Dependency Injection, so we have to build a hard
     // dependency on the container here.
-    $this->mappingFieldManager = \Drupal::service('plugin.manager.salesforce.mapping_field');
-    $this->pushManager = \Drupal::service('plugin.manager.salesforce.push');
+    $this->SalesforceMappingFieldManager = \Drupal::service('plugin.manager.salesforce_mapping_field');
+    $this->pushManager = \Drupal::service('plugin.manager.salesforce_push');
     if ($this->get('push_plugin')) {
       $this->pushPlugin = $this->pushManager->createInstance($this->get('push_plugin'));
     }
@@ -164,7 +163,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
       return;
     }
     $fieldmap = $this->field_mappings[$this->key_field_id];
-    $this->key_field_plugin = $this->mappingFieldManager->createInstance($fieldmap['drupal_field_type'], $fieldmap);
+    $this->key_field_plugin = $this->SalesforceMappingFieldManager->createInstance($fieldmap['drupal_field_type'], $fieldmap);
     // Just double-check that we have something there:
     if ($this->key_field_plugin->config('salesforce_field')) {
       $this->has_key = TRUE;
@@ -208,7 +207,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   public function getPushParams(EntityInterface $entity) {
     // @todo This should probably be delegated to a field plugin bag?
     foreach ($this->field_mappings as $fieldmap) {
-      $field_plugin = $this->mappingFieldManager->createInstance($fieldmap['drupal_field_type'], $fieldmap);
+      $field_plugin = $this->SalesforceMappingFieldManager->createInstance($fieldmap['drupal_field_type'], $fieldmap);
       // Skip fields that aren't being pushed to Salesforce.
       if (!$field_plugin->push()) {
         continue;

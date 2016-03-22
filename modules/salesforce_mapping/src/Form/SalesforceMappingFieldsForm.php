@@ -183,7 +183,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       return;
     }
 
-    $field_plugin = $this->mappingFieldManager->createInstance($field_plugin_definition['id'], $field_configuration);
+    $field_plugin = $this->SalesforceMappingFieldManager->createInstance($field_plugin_definition['id'], $field_configuration);
 
     // @todo allow plugins to override forms for all these fields
     $row['drupal_field_type'] = array(
@@ -272,7 +272,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   }
 
   protected function get_drupal_type_options() {
-    $field_plugins = $this->mappingFieldManager->getDefinitions();
+    $field_plugins = $this->SalesforceMappingFieldManager->getDefinitions();
     $field_type_options = array();
     foreach ($field_plugins as $field_plugin) {
       $field_type_options[$field_plugin['id']] = $field_plugin['label'];
@@ -282,8 +282,8 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
 
   protected function get_field_plugin($field_type) {
     // @todo not sure if it's best practice to static cache definitions, or just
-    // get them from mappingFieldManager each time.
-    $field_plugins = $this->mappingFieldManager->getDefinitions();
+    // get them from SalesforceMappingFieldManager each time.
+    $field_plugins = $this->SalesforceMappingFieldManager->getDefinitions();
     return $field_plugins[$field_type];
   }
 

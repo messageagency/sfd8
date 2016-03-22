@@ -1,16 +1,18 @@
 entity.salesforce_mapping.list:
   path: '/admin/structure/salesforce/mappings'
   defaults:
-    _entity_list: 'salesforce_mapping'
+    _entity_list: salesforce_mapping
+    _title: 'Salesforce Mappings'
   requirements:
     _permission: 'administer salesforce mapping'
 
 entity.salesforce_mapping.add:
   path: '/admin/structure/salesforce/mappings/add'
   defaults:
-    _entity_form: 'salesforce_mapping.edit'
+    _entity_form: salesforce_mapping.add
+    _title: 'Add Mapping'
   requirements:
-    _entity_create_access: 'salesforce_mapping'
+    _entity_create_access: salesforce_mapping
 
 entity.salesforce_mapping.edit:
   path: '/admin/structure/salesforce/mappings/manage/{salesforce_mapping}'
