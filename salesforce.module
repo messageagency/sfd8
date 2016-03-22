@@ -82,7 +82,7 @@ function salesforce_help($path, $arg) {
 
 /**
  * Implements hook_menu().
- * @todo hook_menu is going away. this will likely be replaced by something like 
+ * @todo hook_menu is going away. this will likely be replaced by something like
  *   hook_default_menu_links()
  * @see http://drupal.org/node/1800686
  * @see http://drupal.org/node/2047633
@@ -112,19 +112,6 @@ function salesforce_menu() {
   );
 
   return $items;
-}
-
-/**
- * Implements hook_permission().
- */
-function salesforce_permission() {
-  return array(
-    'administer salesforce' => array(
-      'title' => t('administer salesforce'),
-      'description' => t('Administer Salesforce integration.'),
-      'restrict access' => TRUE,
-    ),
-  );
 }
 
 /**
