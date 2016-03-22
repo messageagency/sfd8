@@ -59,10 +59,10 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     $this->assertRaw('<td>user</td>', 'Drupal entity type shows up in the table.');
     $this->assertRaw('<td>Contact</td>', 'Salesforce object type shows up in the table.');
     $this->assertRaw('<span class=\'entity-status-custom\' title=\'A custom configuration by a user.\'>Custom</span>', 'Status declared as custom.');
-    $this->assertRaw('<a href="/admin/structure/salesforce/mappings/manage/foobar">edit</a>', 'Edit link is in table.');
-    $this->assertRaw('<a href="/admin/structure/salesforce/mappings/manage/foobar/clone">clone</a>', 'Clone link is in table.');
-    $this->assertRaw('<a href="/admin/structure/salesforce/mappings/manage/foobar/delete?destination=admin/structure/salesforce/mappings">delete</a>', 'Delete link is in table.');
-    $this->assertRaw('<a href="/admin/structure/salesforce/mappings/manage/foobar/export">export</a>', 'Export link is in table.');
+    $this->assertRaw('<a href="/salesforce_mapping/mappings/manage/foobar">edit</a>', 'Edit link is in table.');
+    $this->assertRaw('<a href="/salesforce_mapping/mappings/manage/foobar/clone">clone</a>', 'Clone link is in table.');
+    $this->assertRaw('<a href="/salesforce_mapping/mappings/manage/foobar/delete?destination=salesforce_mapping/mappings">delete</a>', 'Delete link is in table.');
+    $this->assertRaw('<a href="/salesforce_mapping/mappings/manage/foobar/export">export</a>', 'Export link is in table.');
 
     // Delete map.
     $this->clickLink('delete');

@@ -9,7 +9,7 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\entity\Entity\EntityDisplay;
+use \Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 // Not sure if we'll actually need these, since entity API seems to provide everything:
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingObject;
@@ -49,40 +49,6 @@ define('SALESFORCE_MAPPING_ARRAY_DELIMITER', ';');
 define('SALESFORCE_MAPPING_NAME_LENGTH', 128);
 
 /**
- * @todo hook_menu is going away, and entity framework no longer builds our menu items. Need this here to expose our routing items to as menus.
- */
-function salesforce_mapping_menu() {
-  $items = array();
-
-  $items['admin/structure/salesforce/mappings'] = array(
-    'title' => 'Salesforce Mappings',
-    'description' => 'Manage Salesforce Mappings.',
-    'route_name' => 'salesforce_mapping.list',
-  );
-
-  $items['admin/structure/salesforce/mappings/add'] = array(
-    'title' => 'Add Salesforce Mapping',
-    'description' => 'Add Salesforce Mapping',
-    'route_name' => 'salesforce_mapping.add',
-  );
-
-  $items['admin/structure/salesforce/mappings/%'] = array(
-    'title' => 'Properties',
-    'route_name' => 'salesforce_mapping.edit',
-    // 'type' => MENU_LOCAL_TASK,
-    // 'context' => MENU_CONTEXT_INLINE,
-  );
-
-  $items['admin/structure/salesforce/mappings/%/fields'] = array(
-    'title' => 'Fields',
-    'description' => 'Salesforce Mapping Fields',
-    'route_name' => 'salesforce_mapping.fields',
-  );
-
-  return $items;
-}
-
-/**
  * Loads a single salesforce_mapping or all of them if no name provided.
  *
  * @param string $name (optional)
@@ -96,11 +62,11 @@ function salesforce_mapping_menu() {
  *   The requested mapping or an array of all mappings, indexed by id, if $name
  *   was not specified
  */
-function salesforce_mapping_load($name = NULL, $reset = FALSE) {
+function salesforce_mapping_load($name = NULL) {
   if ($name) {
-    return entity_load('salesforce_mapping', $name, $reset);
+    return SalesforceMappingObject::load($name);
   }
-  return entity_load_multiple('salesforce_mapping');
+  return SalesforceMappingObject::loadMultiple();
 }
 
 /**
@@ -121,9 +87,9 @@ function salesforce_mapping_load($name = NULL, $reset = FALSE) {
  */
 function salesforce_mapping_load_multiple($properties = array()) {
   if (empty($properties)) {
-    return entity_load_multiple('salesforce_mapping');
+    return SalesforceMappingObject::loadMultiple();
   }
-  return entity_load_multiple_by_properties('salesforce_mapping', $properties);
+  return SalesforceMappingObject::loadByProperties($properties);
 }
 
 /**
@@ -301,6 +267,9 @@ function salesforce_mapping_entity_delete(EntityInterface $entity) {
  * Implements hook_entity_load().
  */
 function salesforce_mapping_entity_load($entities, $entity_type) {
+  // just stop doing this for now
+  return;
+  
   if ($entity_type == 'salesforce_mapping') {
     // Best to avoid infinite recursion...
     return;
@@ -349,12 +318,13 @@ function salesforce_mapping_permission() {
 /**
  * Implements hook_entity_view().
  */
-function salesforce_mapping_entity_view(EntityInterface $entity, EntityDisplay $display, $view_mode, $langcode) {
+function salesforce_mapping_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
   // Don't bother with any further processing if there are no map for this
   // entity type.
-  if (!salesforce_mapping_load_by_drupal($entity->entityType())) {
+  if (!salesforce_mapping_load_by_drupal(get_class($entity))) {
     return;
   }
+
   // Render linked Salesforce data when viewing a mapped entity.
   $mapping_object = salesforce_mapping_object_load_by_entity($entity);
 
@@ -363,7 +333,7 @@ function salesforce_mapping_entity_view(EntityInterface $entity, EntityDisplay $
     // #field_type property, or hook_entity_view_alter() to override the theme
     // of this.
     if ($conf = $display->getComponent('salesforce_id')) {
-      $entity->content['salesforce_id'] = array(
+      $build['salesforce_id'] = array(
         '#type' => 'item',
         '#title' => t('Salesforce ID'),
         '#markup' => $mapping_object->getSalesforceLink(),
@@ -372,7 +342,7 @@ function salesforce_mapping_entity_view(EntityInterface $entity, EntityDisplay $
       );
     }
     if ($conf = $display->getComponent('salesforce_last_sync')) {
-      $entity->content['salesforce_last_sync'] = array(
+      $build['salesforce_last_sync'] = array(
         '#type' => 'item',
         '#title' => t('Salesforce last sync'),
         '#markup' => format_date($mapping_object->last_sync->value),

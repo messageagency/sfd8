@@ -1,0 +1,5 @@
+salesforce_mapping.admin:
+  title: Salesforce Mappings
+  description: 'Salesforce Mappings'
+  parent: salesforce.structure_index
+  route_name: entity.salesforce_mapping.list

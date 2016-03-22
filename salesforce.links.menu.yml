@@ -1,0 +1,11 @@
+salesforce.structure_index:
+  title: Salesforce
+  description: 'Salesforce'
+  parent: system.admin_structure
+  route_name: salesforce.structure_index
+
+salesforce.config_index:
+  title: Salesforce
+  description: 'Manage OAuth consumer key and secret and authorize. View existing authorization details.'
+  parent: system.admin_config_services
+  route_name: salesforce.authorize

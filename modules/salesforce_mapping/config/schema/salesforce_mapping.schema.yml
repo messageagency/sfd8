@@ -4,9 +4,6 @@ salesforce.salesforce_mapping.*:
   type: mapping
   label: 'Salesforce Mapping'
   mapping:
-    uuid:
-      type: string
-      label: 'UUID'
     id:
       type: string
       label: 'machine name'

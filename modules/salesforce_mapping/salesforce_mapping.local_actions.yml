@@ -1,5 +1,0 @@
-salesforce_mapping_add:
-  route_name: salesforce_mapping.add
-  title: 'Add Salesforce Mapping'
-  appears_on:
-    - salesforce_mapping.list

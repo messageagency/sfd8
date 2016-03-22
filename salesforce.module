@@ -12,7 +12,7 @@ use \Drupal\salesforce\SalesforceClient;
  */
 function salesforce_help($path, $arg) {
   switch ($path) {
-    case 'admin/structure/salesforce':
+    case 'salesforce_mapping':
       $output = '';
       if (!module_exists('salesforce_mapping')) {
         $output .= '<p>' . t('In order to configure Salesforce Mappings, you must first enable the <a href="/admin/modules">Salesforce Mapping</a> module.') . '</p>';
@@ -78,40 +78,6 @@ function salesforce_help($path, $arg) {
     case 'admin/config/salesforce/authorize':
       return '<p>' . t('Visit !help if you need help obtaining a consumer key and secret.', array('!help' => l(t('the Salesforce module help page'), 'admin/help/salesforce'))) . '</p>';
   }
-}
-
-/**
- * Implements hook_menu().
- * @todo hook_menu is going away. this will likely be replaced by something like
- *   hook_default_menu_links()
- * @see http://drupal.org/node/1800686
- * @see http://drupal.org/node/2047633
- */
-function salesforce_menu() {
-  $items = array();
-
-  $items['admin/config/salesforce'] = array(
-    'title' => 'Salesforce',
-    'description' => 'Salesforce settings.',
-    'route_name' => 'salesforce.config_index',
-  );
-  $items['admin/config/salesforce/authorize'] = array(
-    'title' => 'Authorize',
-    'description' => 'Authorize this website to communicate with Salesforce.',
-    'route_name' => 'salesforce.authorize',
-  );
-  $items['salesforce/oauth_callback'] = array(
-    'title' => 'Salesforce oauth callback',
-    'route_name' => 'salesforce.oauth_callback',
-  );
-
-  $items['admin/structure/salesforce'] = array(
-    'title' => 'Salesforce',
-    'description' => 'Configuration for Salesforce integration.',
-    'route_name' => 'salesforce.structure_index',
-  );
-
-  return $items;
 }
 
 /**

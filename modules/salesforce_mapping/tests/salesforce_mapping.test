@@ -12,9 +12,9 @@ module_load_include('test', 'salesforce', 'tests/salesforce');
  */
 class SalesforceMappingTestCase extends SalesforceTestCase {
 
-  protected $adminPath = 'admin/structure/salesforce/mappings';
-  protected $addMapPath = 'admin/structure/salesforce/mappings/add';
-  protected $manageMapPrefix = 'admin/structure/salesforce/mappings/manage/';
+  protected $adminPath = '/salesforce_mapping/mappings';
+  protected $addMapPath = '/salesforce_mapping/mappings/add';
+  protected $manageMapPrefix = '/salesforce_mapping/mappings/manage/';
 
   /**
    * Implementation of getInfo().
