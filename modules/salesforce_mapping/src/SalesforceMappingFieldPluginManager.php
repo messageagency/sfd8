@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginManager.
+ * Contains \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager.
  */
 
-namespace Drupal\salesforce_mapping\Plugin;
+namespace Drupal\salesforce_mapping;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -30,9 +30,9 @@ class SalesforceMappingFieldPluginManager extends DefaultPluginManager {
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/salesforce/SalesforceMappingField', $namespaces, $module_handler, 'Drupal\Component\Annotation\Plugin');
+    parent::__construct('Plugin/SalesforceMappingField', $namespaces, $module_handler);
 
-    $this->alterInfo($module_handler, 'salesforce_mapping_fields_info');
+    $this->alterInfo('salesforce_mapping_fields_info');
     $this->setCacheBackend($cache_backend, 'salesforce_mapping_field', array('salesforce_mapping_plugins'));
   }
 
