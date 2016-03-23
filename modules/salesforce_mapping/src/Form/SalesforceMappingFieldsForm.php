@@ -15,6 +15,8 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Ajax\InsertCommand;
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+
 
 /**
  * Salesforce Mapping Fields Form
@@ -26,7 +28,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    * {@inheritdoc}
    * @todo add a header with Fieldmap Property information
    */
-  public function buildForm(array $form, array &$form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
     $form['#entity'] = $this->entity;
     // For each field on the map, add a row to our table.
     $form['overview'] = array('#markup' => 'Field mapping overview goes here.');
@@ -118,12 +120,11 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     }
 
     // Apply any changes from form_state to existing fields.
-    $input = array();
-    if (!empty($form_state['input']['field_mappings'])) {
-      $input = &$form_state['input']['field_mappings'];
-    }
-    while (isset($input[++$delta])) {
-      $rows[$delta] = $this->get_row($input[$delta], $form, $form_state);
+    $input = $form_state->getUserInput();
+    if (!empty($input['field_mappings'])) {
+      while (isset($input['field_mappings'][++$delta])) {
+        $rows[$delta] = $this->get_row($input['field_mappings'][$delta], $form, $form_state);
+      }
     }
     // @todo input does not contain the clicked button, have to go to values for
     // that. This may change?
@@ -132,9 +133,9 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     // required. If not, take no action. #states is already used to prevent
     // users from adding without selecting field_type. If they've worked
     // around that, they're going to have problems.
-    if (!empty($form_state['values'])
-    && $form_state['values']['add'] == $form_state['values']['op']
-    && !empty($form_state['input']['field_type'])) {
+    if (!empty($form_state->getValues())
+    && $form_state->getValue('add') == $form_state->getValue('op')
+    && !empty($input['field_type'])) {
       $rows[$delta] = $this->get_row(array(), $form, $form_state);
     }
 
@@ -164,10 +165,11 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   /**
    * Helper function to return an empty row for the field mapping form.
    */
-  private function get_row($field_configuration = array(), $form, $form_state) {
+  private function get_row($field_configuration = array(), $form, FormStateInterface $form_state) {
     $field_type = FALSE;
-    if (empty($field_configuration) && !empty($form_state['input']['field_type'])) {
-      $field_type = $form_state['input']['field_type'];
+    $input = $form_state->getUserInput();
+    if (empty($field_configuration) && !empty($input['field_type'])) {
+      $field_type = $input['field_type'];
     }
     elseif (!empty($field_configuration['drupal_field_type'])) {
       $field_type = $field_configuration['drupal_field_type'];
@@ -245,26 +247,26 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
  /**
    * {@inheritdoc}
    */
-  public function validate(array $form, array &$form_state) {
+  public function validate(array $form, FormStateInterface $form_state) {
     // @todo require a "Key" radio field to be checked
     // Assign key to special "key_field" property for easy locating.
 
     // Transform data from the operations column into the expected schema.
     // Copy the submitted values so we don't run into problems with array
     // indexing while removing delete field mappings.
-    $values = $form_state['values']['field_mappings'];
-    foreach ($values as $i => $value) {
+    $values = $form_state->getValues();
+    foreach ($values['field_mappings'] as $i => $value) {
       // If a field was deleted, delete it!
       if (!empty($value['ops']['delete'])) {
-        unset($form_state['values']['field_mappings'][$i]);
+        unset($values['field_mappings'][$i]);
         continue;
       }
-      $form_state['values']['field_mappings'][$i]['locked'] = !empty($value['ops']['lock']);
-      unset($form_state['values']['field_mappings'][$i]['ops']);
+      $values['field_mappings'][$i]['locked'] = !empty($value['ops']['lock']);
+      unset($values['field_mappings'][$i]['ops']);
     }
   }
  
-  public function field_add_callback($form, &$form_state) {
+  public function field_add_callback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
     // Requires updating itself and the field map.
     $response->addCommand(new ReplaceCommand('#edit-field-mappings-wrapper', render($form['field_mappings_wrapper'])));

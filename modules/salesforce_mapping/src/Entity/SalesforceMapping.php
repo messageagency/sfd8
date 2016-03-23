@@ -24,8 +24,8 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
  *     "access" = "Drupal\salesforce_mapping\SalesforceMappingAccessController",
  *     "list_builder" = "Drupal\salesforce_mapping\SalesforceMappingList",
  *     "form" = {
- *       "edit" = "Drupal\salesforce_mapping\Form\SalesforceMappingEditForm",
  *       "add" = "Drupal\salesforce_mapping\Form\SalesforceMappingAddForm",
+ *       "edit" = "Drupal\salesforce_mapping\Form\SalesforceMappingEditForm",
  *       "disable" = "Drupal\salesforce_mapping\Form\SalesforceMappingDisableForm",
  *       "delete" = "Drupal\salesforce_mapping\Form\SalesforceMappingDeleteForm",
  *       "enable" = "Drupal\salesforce_mapping\Form\SalesforceMappingEnableForm",
@@ -33,7 +33,6 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
  *      }
  *   },
  *   admin_permission = "administer salesforce mapping",
- *   config_prefix = "salesforce.salesforce_mapping",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label",

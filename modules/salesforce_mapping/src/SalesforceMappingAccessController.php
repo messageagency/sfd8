@@ -10,6 +10,7 @@ namespace Drupal\salesforce_mapping;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Access\AccessResult;
 use Drupal\salesforce\SalesforceClient;
 
 /**
@@ -25,11 +26,15 @@ class SalesforceMappingAccessController extends EntityAccessControlHandler {
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
     switch ($operation) {
       case 'view':
-        return $account->hasPermission('view salesforce mapping');
+        return $account->hasPermission('view salesforce mapping')
+          ? AccessResult::allowed()
+          : AccessResult::forbidden();
       default:
         // Apparently access controllers don't support dependency injection.
         if (\Drupal::service('salesforce.client')->isAuthorized()) {
-          return $account->hasPermission('administer salesforce mapping');
+          return $account->hasPermission('administer salesforce mapping')
+            ? AccessResult::allowed()
+            : AccessResult::forbidden();
         }
     }
   }

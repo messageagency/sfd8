@@ -490,8 +490,12 @@ class SalesforceClient {
    */
   public function objects($conditions = array('updateable' => TRUE), $reset = FALSE) {
     $cache = \Drupal::cache()->get('salesforce:objects');
+
+    // @TODO: CHANGE THIS
     $result = $cache->data;
     return $result['sobjects'];
+    
+    
     // Force the recreation of the cache when it is older than 5 minutes.
     if ($cache && REQUEST_TIME < ($cache->created + 300) && !$reset) {
       $result = $cache->data;
@@ -556,9 +560,15 @@ class SalesforceClient {
     if (empty($name)) {
       return array();
     }
-    $cache = \Drupal::cache()->get('salesforce:objects');
+    // $cache = \Drupal::cache()->get('salesforce:object:' . $name);
+    
 
-    $cache = \Drupal::cache()->get('salesforce:object:' . $name);
+    // @TODO CHANGE THIS BACK
+    $cache = \Drupal::cache()->get('salesforce_api_sf_objects');
+    return $cache->data[$name];
+    
+    
+    
     // Force the recreation of the cache when it is older than 5 minutes.
     if ($cache && REQUEST_TIME < ($cache->created + 300) && !$reset) {
       return $cache->data;

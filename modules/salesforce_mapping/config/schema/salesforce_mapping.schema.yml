@@ -1,6 +1,6 @@
 # Schema for the configuration files of the Salesforce Mapping module
 
-salesforce.salesforce_mapping.*:
+salesforce_mapping.salesforce_mapping.*:
   type: mapping
   label: 'Salesforce Mapping'
   mapping:
@@ -59,9 +59,6 @@ salesforce.salesforce_mapping.*:
     push_plugin:
       type: string
       label: 'Push Plugin'
-    module:
-      type: string
-      label: 'Module'
     field_mappings:
       type: sequence
       label: 'Field Mappings'

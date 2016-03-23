@@ -64,7 +64,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $is_new = $this->entity->isNew();
+    // $is_new = $this->entity->isNew();
     if (!$this->entity->save()) {
       drupal_set_message($this->t('An error occurred while trying to save the mapping.'));
       return;
@@ -72,18 +72,16 @@ abstract class SalesforceMappingFormBase extends EntityForm {
 
     drupal_set_message($this->t('The mapping has been successfully saved.'));
     // Redirect to the listing if this is not a new mapping. 
-    $route_name = 'salesforce_mapping.list';
-    $route_parameters = array();
+    // $route_name = 'salesforce_mapping.list';
+    // $route_parameters = array();
 
     // Otherwise, redirect to the fields form.
-    if ($is_new && $this->entity->id()) {
-       $route_name = 'salesforce_mapping.fields';
-       $route_parameters = array('salesforce_mapping' => $this->entity->id());
-    }
-    $form_state['redirect_route'] = array(
-      'route_name' => $route_name,
-      'route_parameters' => $route_parameters,
-    );
+    // if ($is_new && $this->entity->id()) {
+    //    $route_name = 'salesforce_mapping.fields';
+    //    $route_parameters = array('salesforce_mapping' => $this->entity->id());
+    // }
+    $form_state->setRedirect('entity.salesforce_mapping.list');
+    // parent::save($form, $form_state);
   }
 
   /**
@@ -92,9 +90,6 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *
    * @param string $salesforce_object_type
    *   The object type of whose records you want to retreive.
-   * @param array $form_state
-   *   Current state of the form to store and retreive results from to minimize
-   *   the need for recalculation.
    *
    * @return array
    *   Information about the Salesforce object as provided by Salesforce.

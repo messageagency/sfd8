@@ -35,87 +35,14 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   protected $pushPluginManager;
 
   /**
-   * Constructs a \Drupal\system\ConfigFormBase object.
-   *
-   * @param \Drupal\Core\Entity\EntityStorageControllerInterface
-   *   Need this to fetch the appropriate field mapping
-   * @param \Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginInterface
-   *   Need this to fetch the mapping field plugins
-   *
-   * @throws RuntimeException
-   */
-  public function __construct(PluginManagerInterface $SalesforceMappingFieldManager, PluginManagerInterface $pushPluginManager) {
-    $this->SalesforceMappingFieldManager = $SalesforceMappingFieldManager;
-    $this->pushPluginManager = $pushPluginManager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('plugin.manager.salesforce_mapping_field'),
-      $container->get('plugin.manager.salesforce_push')
-    );
-  }
-
-
-  /**
-   * {@inheritdoc}
-   */
-  public function save(array $form, FormStateInterface $form_state) {
-    $is_new = $this->entity->isNew();
-    if (!$this->entity->save()) {
-      drupal_set_message($this->t('An error occurred while trying to save the mapping.'));
-      return;
-    }
-
-    drupal_set_message($this->t('The mapping has been successfully saved.'));
-    // Redirect to the listing if this is not a new mapping. 
-    $route_name = 'salesforce_mapping.list';
-    $route_parameters = array();
-
-    // Otherwise, redirect to the fields form.
-    if ($is_new && $this->entity->id()) {
-       $route_name = 'salesforce_mapping.fields';
-       $route_parameters = array('salesforce_mapping' => $this->entity->id());
-    }
-    $form_state->setValue('redirect_route', array(
-      'route_name' => $route_name,
-      'route_parameters' => $route_parameters,
-    ));
-  }
-
-  /**
-   * Retreive Salesforce's information about an object type.
-   * @todo this should move to the Salesforce service
-   *
-   * @param string $salesforce_object_type
-   *   The object type of whose records you want to retreive.
-   * @param array $form_state
-   *   Current state of the form to store and retreive results from to minimize
-   *   the need for recalculation.
-   *
-   * @return array
-   *   Information about the Salesforce object as provided by Salesforce.
-   */
-  protected function get_salesforce_object($salesforce_object_type) {
-    if (empty($salesforce_object_type)) {
-      return array();
-    }
-    // No need to cache here: Salesforce::objectDescribe implements caching.
-    $sfapi = salesforce_get_api();
-    $sfobject = $sfapi->objectDescribe($salesforce_object_type);
-    return $sfobject;
-  }
-
-  /**
    * {@inheritdoc}
    * @todo this function is almost 200 lines. Look into leveraging core Entity
    *   interfaces like FieldsDefinition (or something). Look at breaking this up
    *   into smaller chunks.
    */
-  public function form(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildForm($form, $form_state);
+
     $mapping = $this->entity;
     $form['label'] = array(
       '#type' => 'textfield',
@@ -130,7 +57,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#default_value' => $mapping->id(),
       '#maxlength' => 255,
       '#machine_name' => array(
-        'exists' => array($this->storageController, 'load'),
+        'exists' => ['Drupal\salesforce_mapping\Entity\SalesforceMapping', 'load'],
         'source' => array('label'),
       ),
       '#disabled' => !$mapping->isNew(),
@@ -144,7 +71,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         'id' => array('edit-drupal-entity'),
       ),
       // Gently discourage admins from breaking existing fieldmaps:
-      '#collapsed' => !$mapping->isNew(),
+      // '#collapsed' => !$mapping->isNew(),
     );
 
     $entity_types = $this->get_entity_type_options();
@@ -164,7 +91,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       // ),
     );
 
-    $form['drupal_entity']['drupal_bundle'] = array('#tree' => TRUE, '#title' => 'Drupal Bundle');
+    $form['drupal_entity']['drupal_bundle'] = array('#title' => 'Drupal Bundle', '#tree' => TRUE);
     foreach ($entity_types as $entity_type => $label) {
       $bundle_info = \Drupal::entityManager()->getBundleInfo($entity_type);
       if (empty($bundle_info)) {
@@ -200,7 +127,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#id' => 'edit-salesforce-object',
       '#type' => 'details',
       // Gently discourage admins from breaking existing fieldmaps:
-      '#collapsed' => !$mapping->isNew(),
+      // '#collapsed' => !$mapping->isNew(),
     );
 
     $salesforce_object_type = '';
@@ -279,18 +206,22 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#empty_option' => $this->t('- Select -'),
     );
 
-    $form['actions'] = array('#type' => 'actions');
-    $form['actions']['submit'] = array(
-      '#value' => t('Save mapping'),
-      '#type' => 'submit',
-    );
-    return parent::form($form, $form_state);
+    // Stuff all the hidden stuff in here;
+    foreach (array('field_mappings', 'weight', 'status', 'locked', 'type') as $el) {
+      $form[$el] = array(
+        '#type' => 'hidden',
+        '#value' => $mapping->get($el),
+        '#title' => $el
+      );
+    }
+
+    return $form;
   }
 
  /**
    * {@inheritdoc}
    */
-  public function validate(array $form, array &$form_state) {
+  public function validate(array $form, FormStateInterface $form_state) {
     parent::validate($form, $form_state);
 
     $entity_type = $form_state->getValue('drupal_entity_type');
@@ -315,15 +246,12 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, FormStateInterface $form_state) {
-    parent::submit($form, $form_state);
-
+  public function save(array $form, FormStateInterface $form_state) {
     // Drupal bundle is still an array, but needs to be a string.
     $entity_type = $this->entity->get('drupal_entity_type');
     $bundle = $form_state->getValue('drupal_bundle')[$entity_type];
     $this->entity->set('drupal_bundle', $bundle);
-
-    return $this->entity;
+    parent::save($form, $form_state);
   }
 
   public function drupal_entity_type_bundle_callback($form, FormStateInterface $form_state) {
