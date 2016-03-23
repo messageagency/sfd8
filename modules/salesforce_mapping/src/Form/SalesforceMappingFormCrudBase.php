@@ -80,10 +80,10 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
        $route_name = 'salesforce_mapping.fields';
        $route_parameters = array('salesforce_mapping' => $this->entity->id());
     }
-    $form_state['redirect_route'] = array(
+    $form_state->setValue('redirect_route', array(
       'route_name' => $route_name,
       'route_parameters' => $route_parameters,
-    );
+    ));
   }
 
   /**
@@ -115,7 +115,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    *   interfaces like FieldsDefinition (or something). Look at breaking this up
    *   into smaller chunks.
    */
-  public function form(array $form, array &$form_state) {
+  public function form(array $form, FormStateInterface $form_state) {
     $mapping = $this->entity;
     $form['label'] = array(
       '#type' => 'textfield',
@@ -171,7 +171,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         continue;
       }
       $form['drupal_entity']['drupal_bundle'][$entity_type] = array(
-        '#title' => $this->t('!entity_type Bundle', array('!entity_type' => $label)),
+        '#title' => $this->t('@entity_type Bundle', array('@entity_type' => $label)),
         '#type' => 'select',
         '#empty_option' => $this->t('- Select -'),
         '#options' => array(),
@@ -204,8 +204,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     );
 
     $salesforce_object_type = '';
-    if (!empty($form_state['values']) && !empty($form_state['values']['salesforce_object_type'])) {
-      $salesforce_object_type = $form_state['values']['salesforce_object_type'];
+    if (!empty($form_state->getValues()) && !empty($form_state->getValue('salesforce_object_type'))) {
+      $salesforce_object_type = $form_state->getValue('salesforce_object_type');
     }
     elseif ($mapping->get('salesforce_object_type')) {
       $salesforce_object_type = $mapping->get('salesforce_object_type');
@@ -293,10 +293,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   public function validate(array $form, array &$form_state) {
     parent::validate($form, $form_state);
 
-    $values = $form_state['values'];
-
-    $entity_type = $values['drupal_entity_type'];
-    if (!empty($entity_type) && empty($values['drupal_bundle'][$entity_type])) {
+    $entity_type = $form_state->getValue('drupal_entity_type');
+    if (!empty($entity_type) && empty($form_state->getValue('drupal_bundle')[$entity_type])) {
       $element = &$form['drupal_entity']['drupal_bundle'][$entity_type];
       // @todo replace with Dependency Injection
       \Drupal::formBuilder()->setError($element, $this->t('!name field is required.', array('!name' => $element['#title'])));
@@ -304,12 +302,12 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
 
     // In case the form was submitted without javascript, we must validate the
     // salesforce record type.
-    if (empty($values['salesforce_record_type'])) {
-      $record_types = $this->get_salesforce_record_type_options($values['salesforce_object_type'], $form_state);
+    if (empty($form_state->getValue('salesforce_record_type'))) {
+      $record_types = $this->get_salesforce_record_type_options($form_state->getValue('salesforce_object_type'), $form_state);
       if (count($record_types) > 1) {
         $element = &$form['salesforce_object']['salesforce_record_type'];
         drupal_set_message($this->t('!name field is required for this Salesforce Object type.', array('!name' => $element['#title'])));
-        $form_state['rebuild'] = TRUE;
+        $form_state->setValue('rebuild', TRUE);
       }
     }
   }
@@ -317,18 +315,18 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, array &$form_state) {
+  public function submit(array $form, FormStateInterface $form_state) {
     parent::submit($form, $form_state);
 
     // Drupal bundle is still an array, but needs to be a string.
     $entity_type = $this->entity->get('drupal_entity_type');
-    $bundle = $form_state['values']['drupal_bundle'][$entity_type];
+    $bundle = $form_state->getValue('drupal_bundle')[$entity_type];
     $this->entity->set('drupal_bundle', $bundle);
 
     return $this->entity;
   }
 
-  public function drupal_entity_type_bundle_callback($form, $form_state) {
+  public function drupal_entity_type_bundle_callback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
     // Requires updating itself and the field map.
     $response->addCommand(new ReplaceCommand('#edit-salesforce-object', render($form['salesforce_object'])))->addCommand(new ReplaceCommand('#edit-salesforce-field-mappings-wrapper', render($form['salesforce_field_mappings_wrapper'])));
@@ -338,7 +336,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   /**
    * Ajax callback for salesforce_mapping_form() salesforce record type.
    */
-  public function salesforce_record_type_callback($form, $form_state) {
+  public function salesforce_record_type_callback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
     // Requires updating itself and the field map.
     $response->addCommand(new ReplaceCommand('#edit-salesforce-object', render($form['salesforce_object'])))->addCommand(new ReplaceCommand('#edit-salesforce-field-mappings-wrapper', render($form['salesforce_field_mappings_wrapper'])));
@@ -348,7 +346,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   /**
    * Ajax callback for salesforce_mapping_form() field CRUD
    */
-  public function field_callback($form, $form_state) {
+  public function field_callback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#edit-salesforce-field-mappings-wrapper', render($form['salesforce_field_mappings_wrapper'])));
     return $response;
@@ -370,10 +368,10 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     // arbitrary restriction, but otherwise there would be dozens of entities,
     // making this options list unwieldy.
     foreach ($entity_info as $info) {
-      if (!$info['fieldable']) {
+      if (!class_implements($info, 'FieldableEntityInterface')) {
         continue;
       }
-      $options[$info['id']] = $info['label'];
+      $options[$info->id()] = $info->getLabel();
     }
     return $options;
   }

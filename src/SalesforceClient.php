@@ -489,7 +489,9 @@ class SalesforceClient {
    * @addtogroup salesforce_apicalls
    */
   public function objects($conditions = array('updateable' => TRUE), $reset = FALSE) {
-    $cache = cache()->get('salesforce:objects');
+    $cache = \Drupal::cache()->get('salesforce:objects');
+    $result = $cache->data;
+    return $result['sobjects'];
     // Force the recreation of the cache when it is older than 5 minutes.
     if ($cache && REQUEST_TIME < ($cache->created + 300) && !$reset) {
       $result = $cache->data;
@@ -501,7 +503,7 @@ class SalesforceClient {
       // CACHE_TEMPORARY has been removed. Using 'content' tag to replicate
       // old functionality.
       // @see https://drupal.org/node/1534648
-      cache()->set('salesforce:objects', $result, CacheBackendInterface::CACHE_PERMANENT, array('salesforce' => TRUE, 'content' => TRUE));
+      \Drupal::cache()->set('salesforce:objects', $result, CacheBackendInterface::CACHE_PERMANENT, array('salesforce' => TRUE, 'content' => TRUE));
     }
 
     if (!empty($conditions)) {
@@ -554,7 +556,9 @@ class SalesforceClient {
     if (empty($name)) {
       return array();
     }
-    $cache = cache()->get('salesforce:object:' . $name);
+    $cache = \Drupal::cache()->get('salesforce:objects');
+
+    $cache = \Drupal::cache()->get('salesforce:object:' . $name);
     // Force the recreation of the cache when it is older than 5 minutes.
     if ($cache && REQUEST_TIME < ($cache->created + 300) && !$reset) {
       return $cache->data;
@@ -564,7 +568,7 @@ class SalesforceClient {
       // Allow the cache to clear at any time by not setting an expire time.
       // CACHE_TEMPORARY has been removed. Using 'content' tag to replicate
       // old functionality. @see https://drupal.org/node/1534648
-      cache()->set('salesforce:object:' . $name, $object, CacheBackendInterface::CACHE_PERMANENT, array('salesforce' => TRUE, 'content' => TRUE));
+      \Drupal::cache()->set('salesforce:object:' . $name, $object, CacheBackendInterface::CACHE_PERMANENT, array('salesforce' => TRUE, 'content' => TRUE));
       return $object;
     }
   }

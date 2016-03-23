@@ -1,4 +1,4 @@
 services:
   plugin.manager.salesforce_mapping_field:
-    class: Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginManager
-    arguments: ['@container.namespaces', '@cache.data', '@module_handler']
+    class: Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager
+    arguments: ['@container.namespaces', '@cache.default', '@module_handler']

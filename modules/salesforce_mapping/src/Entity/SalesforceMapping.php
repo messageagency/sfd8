@@ -8,7 +8,7 @@
 namespace Drupal\salesforce_mapping\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginManager;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
