@@ -181,7 +181,7 @@ function salesforce_mapping_object_load_by_drupal($entity_type, $entity_id, $all
 function salesforce_mapping_object_load_by_entity($entity, $all = FALSE) {
   $properties = array(
     'entity_id' => $entity->id(),
-    'entity_type' => $entity->entityType(),
+    'entity_type' => get_class($entity),
   );
   $results = entity_load_multiple_by_properties('salesforce_mapping_object', $properties);
   if (empty($results)) {
@@ -248,7 +248,7 @@ function salesforce_mapping_entity_delete(EntityInterface $entity) {
   // Only delete mapping if it won't be handled by the delete trigger in the
   // mapping. We're avoiding the issue of mapping deleting the (the what?).
   $mappings = salesforce_mapping_load_multiple(array(
-    'drupal_entity_type' => $entity->entityType(),
+    'drupal_entity_type' => get_class($entity),
     'drupal_bundle' => $entity->bundle(),
   ));
   if (empty($mappings)) {
@@ -386,7 +386,7 @@ function salesforce_mapping_field_extra_fields() {
  */
 function salesforce_mapping_entity_update(EntityInterface $entity) {
   // Check if mapping exists.
-  if (!salesforce_mapping_load_by_drupal($entity->entityType())) {
+  if (!salesforce_mapping_load_by_drupal(get_class($entity))) {
     return;
   }
   $sf_mapping_object = salesforce_mapping_object_load_by_entity($entity);

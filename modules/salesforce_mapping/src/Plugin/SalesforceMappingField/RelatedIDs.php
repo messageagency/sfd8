@@ -51,7 +51,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
   public function value(EntityInterface $entity) {
     $field_name = $this->config('drupal_field_value');
     $instances = Field::fieldInfo()->getBundleInstances(
-      $entity->entityType(),
+      get_class($entity),
       $entity->bundle()
     );
     if (empty($instances[$field_name])) {

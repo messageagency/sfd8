@@ -99,7 +99,7 @@ class REST extends SalesforcePushPluginBase {
     // @todo use a mapping object factory
     $this->mapped_object = entity_create('salesforce_mapping_object', array(
       'entity_id' => $this->entity->id(),
-      'entity_type' => $this->entity->entityType(),
+      'entity_type' => get_class($this->entity),
       'salesforce_id' => $sfid,
     ));
   }

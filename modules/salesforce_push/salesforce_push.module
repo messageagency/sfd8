@@ -58,7 +58,7 @@ function salesforce_push_entity_crud($entity, $op) {
     }
   }
 
-  if (!($mappings = salesforce_mapping_load_by_drupal($entity->entityType()))) {
+  if (!($mappings = salesforce_mapping_load_by_drupal(get_class($entity)))) {
     return;
   }
 

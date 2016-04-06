@@ -53,7 +53,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     // found it in the issue queue. So, just check first to make sure the field
     // exists.
     $instances = Field::fieldInfo()->getBundleInstances(
-      $entity->entityType(),
+      get_class($entity),
       $entity->bundle()
     );
     if (empty($instances[$field_name])) {
@@ -80,7 +80,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
 
     // Again, try to avoid some complicated fatal further downstream.
     $referenced_instances = $this->entityManager->getFieldDefinitions(
-      $referenced_entity->entityType(),
+      get_class($referenced_entity),
       $referenced_entity->bundle()
     );
     if (empty($referenced_instances[$referenced_field_name])) {

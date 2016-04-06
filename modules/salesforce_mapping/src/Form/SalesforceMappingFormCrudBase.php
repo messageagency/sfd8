@@ -348,7 +348,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $sfobject = $this->get_salesforce_object($salesforce_object_type);
     if (isset($sfobject['recordTypeInfos'])) {
       foreach ($sfobject['recordTypeInfos'] as $type) {
-        $sf_types[$type['recordTypeId']] = $type['name'];
+        $sf_types[$type->recordTypeId] = $type->name;
       }
     }
     return $sf_types;

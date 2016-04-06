@@ -65,7 +65,7 @@ class Token extends SalesforceMappingFieldPluginBase {
     // Even though everything is an entity, some token functions expect to
     // receive the entity keyed by entity type.
     $text = $this->config('drupal_field_value');
-    $data = array('entity' => $entity, $entity->entityType() => $entity);
+    $data = array('entity' => $entity, get_class($entity) => $entity);
     return $this->token->replace($text, $data);
   }
 

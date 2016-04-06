@@ -17,6 +17,7 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginInterface;
+use Drupal\Core\Url;
 
 /**
  * Salesforce Mapping Form base.
@@ -80,7 +81,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
     //    $route_name = 'salesforce_mapping.fields';
     //    $route_parameters = array('salesforce_mapping' => $this->entity->id());
     // }
-    $form_state->setRedirect('entity.salesforce_mapping.list');
+    $form_state->setRedirect('entity.salesforce_mapping.fields', array('salesforce_mapping' => $this->entity->id()));
     // parent::save($form, $form_state);
   }
 

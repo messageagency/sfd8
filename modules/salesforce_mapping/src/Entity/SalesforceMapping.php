@@ -38,7 +38,8 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
  *     "label" = "label",
  *   },
  *   links = {
- *     "edit-form" = "/admin/structure/salesforce/mappings/manage/{salesforce_mapping}"
+ *     "edit-form" = "/admin/structure/salesforce/mappings/manage/{salesforce_mapping}",
+ *     "delete-form" = "/admin/structure/salesforce/mappings/manage/{salesforce_mapping}/delete"
  *   }
  * )
  */

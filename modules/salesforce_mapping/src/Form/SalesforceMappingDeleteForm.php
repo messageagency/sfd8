@@ -8,7 +8,9 @@
 namespace Drupal\salesforce_mapping\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
-
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+  
 /**
  * Salesforce Mapping Delete Form .
  */
@@ -24,10 +26,8 @@ class SalesforceMappingDeleteForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelRoute() {
-    return array(
-      'route_name' => 'salesforce_mapping.list',
-    );
+  public function getCancelUrl() {
+    return new Url('entity.salesforce_mapping.list');
   }
 
   /**
@@ -40,13 +40,15 @@ class SalesforceMappingDeleteForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, array &$form_state) {
-    parent::submit($form, $form_state);
-
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->entity->delete();
-     $form_state['redirect_route'] = array(
-      'route_name' => 'salesforce_mapping.list',
-    );
+
+    // Set a message that the entity was deleted.
+    drupal_set_message($this->t('Salesforce %label was deleted.', array(
+      '%label' => $this->entity->label(),
+    )));
+    
+    $form_state->setRedirectUrl($this->getCancelUrl());
   }
 
 }
