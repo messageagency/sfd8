@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_push\Plugin\SalesforcePushPluginInterface.
+ * Contains \Drupal\salesforce_push\SalesforcePushPluginInterface.
  */
 
-namespace Drupal\salesforce_push\Plugin;
+namespace Drupal\salesforce_push;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce\SalesforceClient;

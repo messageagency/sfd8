@@ -190,7 +190,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $form['sync_triggers'] = array(
       '#title' => t('Action triggers'),
       '#type' => 'checkboxes',
-      '#description' => t('Select which actions on Drupal entities and Salesforce objects should trigger a synchronization. These settings are used by the salesforce_push and salesforce_pull modules respectively.'),
+      '#description' => t('Select which actions on Drupal entities and Salesforce
+        objects should trigger a synchronization. These settings are used by the
+        salesforce_push and salesforce_pull modules.'),
       '#options' => $trigger_options,
       '#required' => TRUE,
       // form.inc doesn't type-check default values. Don't pass NULL or FALSE.
@@ -205,6 +207,10 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#default_value' => $mapping->get('push_plugin'),
       '#empty_option' => $this->t('- Select -'),
     );
+    if (empty($form['push_plugin']['#options'])) {
+      $form['push_plugin']['#description'] = t('No push plugins found.
+        Please enable Salesforce Push module if you want to push data to Salesforce.');
+    }
 
     // Stuff all the hidden stuff in here;
     foreach (array('field_mappings', 'weight', 'status', 'locked', 'type') as $el) {
@@ -348,7 +354,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $sfobject = $this->get_salesforce_object($salesforce_object_type);
     if (isset($sfobject['recordTypeInfos'])) {
       foreach ($sfobject['recordTypeInfos'] as $type) {
-        $sf_types[$type->recordTypeId] = $type->name;
+        $sf_types[$type['recordTypeId']] = $type['name'];
       }
     }
     return $sf_types;
@@ -373,7 +379,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   }
 
   protected function get_push_plugin_options() {
-    $field_plugins = $this->pushPluginManager->getDefinitions();
+    return array();
+    // $field_plugins = $this->pushPluginManager->getDefinitions();
     $field_type_options = array();
     foreach ($field_plugins as $field_plugin) {
       $field_type_options[$field_plugin['id']] = $field_plugin['label'];

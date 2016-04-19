@@ -147,7 +147,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     // entities don't support Dependency Injection, so we have to build a hard
     // dependency on the container here.
     $this->SalesforceMappingFieldManager = \Drupal::service('plugin.manager.salesforce_mapping_field');
-    $this->pushManager = \Drupal::service('plugin.manager.salesforce_push');
+    // $this->pushManager = \Drupal::service('plugin.manager.salesforce_push');
     if ($this->get('push_plugin')) {
       $this->pushPlugin = $this->pushManager->createInstance($this->get('push_plugin'));
     }

@@ -82,7 +82,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     // );
     $add_field_text = !empty($field_mappings) ? t('Add another field mapping') : t('Add a field mapping to get started');
 
-    
+  
     $form['buttons'] = array('#type' => 'container');
     $form['buttons']['field_type'] = array(
       '#title' => t('Field Type'),
@@ -139,26 +139,12 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       $rows[$delta] = $this->get_row(array(), $form, $form_state);
     }
 
-    $entity_uri = $this->entity->uri();
-    $form['actions'] = array(
-      '#type' => 'actions',
-      'submit' => array(
-        '#type' => 'submit',
-        '#value' => $this->t('Save'),
-        '#validate' => array(
-          array($this, 'validate'),
-        ),
-        '#submit' => array(
-          array($this, 'submit'),
-          array($this, 'save'),
-        ),
-        '#button_type' => 'primary'
-      ),
-      'delete' => array(
-        // @todo is there a better way to get this path?
-        '#markup' => l($this->t('Delete'), $entity_uri['path']. '/delete', array('attributes' => array('class' => array('button-danger')))),
-      ),
-    );
+    // Retrieve and add the form actions array.
+    $actions = $this->actionsElement($form, $form_state);
+    if (!empty($actions)) {
+      $form['actions'] = $actions;
+    }
+
     return $form;
   }
 
@@ -265,7 +251,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       unset($values['field_mappings'][$i]['ops']);
     }
   }
- 
+
   public function field_add_callback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
     // Requires updating itself and the field map.

@@ -17,7 +17,6 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginInterface;
-use Drupal\Core\Url;
 
 /**
  * Salesforce Mapping Form base.
@@ -45,9 +44,9 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *
    * @throws RuntimeException
    */
-  public function __construct(PluginManagerInterface $SalesforceMappingFieldManager, PluginManagerInterface $pushPluginManager) {
+  public function __construct(PluginManagerInterface $SalesforceMappingFieldManager) {
     $this->SalesforceMappingFieldManager = $SalesforceMappingFieldManager;
-    $this->pushPluginManager = $pushPluginManager;
+    // $this->pushPluginManager = $pushPluginManager;
   }
 
   /**
@@ -55,8 +54,8 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('plugin.manager.salesforce_mapping_field'),
-      $container->get('plugin.manager.salesforce_push')
+      $container->get('plugin.manager.salesforce_mapping_field')
+      // $container->get('plugin.manager.salesforce_push')
     );
   }
 

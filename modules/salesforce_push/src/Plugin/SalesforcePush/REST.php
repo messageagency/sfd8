@@ -5,11 +5,11 @@
  * Contains \Drupal\salesforce_push\Plugin\salesforce\Push\REST.
  */
 
-namespace Drupal\salesforce_push\Plugin\salesforce\Push;
+namespace Drupal\salesforce_push\Plugin\SalesforcePush;
 
 use Drupal\Component\Annotation\Plugin;
 use Drupal\Core\Annotation\Translation;
-use Drupal\salesforce_push\Plugin\SalesforcePushPluginBase;
+use Drupal\salesforce_push\SalesforcePushPluginBase;
 
 /**
  * @Plugin(

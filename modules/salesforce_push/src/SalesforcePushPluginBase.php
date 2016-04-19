@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_push\Plugin\SalesforcePushPluginBase.
+ * Contains \Drupal\salesforce_push\SalesforcePushPluginBase.
  */
 
-namespace Drupal\salesforce_push\Plugin;
+namespace Drupal\salesforce_push;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -14,7 +14,7 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\salesforce\SalesforceClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingObject;
-use Drupal\salesforce_push\Plugin\SalesforcePushPluginInterface;
+use Drupal\salesforce_push\SalesforcePushPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 abstract class SalesforcePushPluginBase extends PluginBase implements SalesforcePushPluginInterface, ContainerFactoryPluginInterface {
@@ -39,7 +39,7 @@ abstract class SalesforcePushPluginBase extends PluginBase implements Salesforce
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static($configuration, $plugin_id, $plugin_definition,
       $container->get('entity.manager'),
       $container->get('salesforce.client')

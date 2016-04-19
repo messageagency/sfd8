@@ -11,6 +11,7 @@ use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingObjectInterface;
+use Drupal\Core\Entity\EntityChangedTrait;
 
 /**
  * Defines a Salesforce Mapping Object entity class. Mapping Objects are content
@@ -34,6 +35,8 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingObjectInterface;
  * )
  */
 class SalesforceMappingObject extends ContentEntityBase implements SalesforceMappingObjectInterface {
+
+  use EntityChangedTrait;
 
   /**
    * Overrides ContentEntityBase::__construct().
@@ -108,7 +111,6 @@ class SalesforceMappingObject extends ContentEntityBase implements SalesforceMap
       ->setDescription(t('The time that the object mapping was last edited.'))
       ->setRevisionable(TRUE)
       ->setTranslatable(TRUE);
-
 
     $fields['entity_updated'] = BaseFieldDefinition::create('timestamp')
       ->setLabel(t('Drupal Entity Updated'))
