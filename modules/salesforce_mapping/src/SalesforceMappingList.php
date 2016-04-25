@@ -86,12 +86,12 @@ class SalesforceMappingList extends DraggableListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getOperations(EntityInterface $entity) {
-    $operations = parent::getOperations($entity);
+  public function getDefaultOperations(EntityInterface $entity) {
+    $operations = parent::getDefaultOperations($entity);
 
     $url = Url::fromRoute('entity.salesforce_mapping.fields', array('salesforce_mapping' => $entity->id()));
-    // Ensure the edit operation exists.
-    // Fields operation depends on same access control.
+
+    // Only makes sense to expose fields operation if edit exists
     if (isset($operations['edit'])) {
       $operations['edit']['title'] = $this->t('Properties');
       $operations['fields'] = array(
@@ -100,6 +100,7 @@ class SalesforceMappingList extends DraggableListBuilder {
         'weight' => -1000,
       );
     }
+
     return $operations;
   }
 
