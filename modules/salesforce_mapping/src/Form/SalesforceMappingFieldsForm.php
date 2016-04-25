@@ -296,6 +296,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
         $sf_fields[$sf_field['name']] = $sf_field['label'];
       }
     }
+    asort($sf_fields);
     return $sf_fields;
   }
 

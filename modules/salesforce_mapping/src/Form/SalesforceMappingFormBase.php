@@ -16,7 +16,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginInterface;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 
 /**
  * Salesforce Mapping Form base.
@@ -39,7 +39,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *
    * @param \Drupal\Core\Entity\EntityStorageControllerInterface
    *   Need this to fetch the appropriate field mapping
-   * @param \Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginInterface
+   * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
    *   Need this to fetch the mapping field plugins
    *
    * @throws RuntimeException

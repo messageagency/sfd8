@@ -5,13 +5,14 @@
  * Contains \Drupal\salesforce_mapping\Plugin\salesforce\SalesforceMappingField\Properties.
  */
 
-namespace Drupal\salesforce_mapping\Plugin\salesforce\SalesforceMappingField;
+namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
 use Drupal\Component\Annotation\Plugin;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Field;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 
 /**
  * Adapter for entity properties and fields.
@@ -26,7 +27,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
   /**
    * Implementation of PluginFormInterface::buildConfigurationForm
    */
-  public function buildConfigurationForm(array $form, array &$form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     // @todo inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
     $options = $this->getConfigurationOptions($form['#entity']);
     if (empty($options)) {
@@ -58,11 +59,13 @@ class Properties extends SalesforceMappingFieldPluginBase {
     $options = array();
     foreach ($properties as $key => $property) {
       // Entity reference fields are handled elsewhere. 
-      if ($property['type'] == 'field_item:entity_reference') {
+      // @TODO: is this type still a thing even?
+      if ($property->getType() == 'field_item:entity_reference') {
         continue;
       }
-      $options[$key] = $property['label'];
+      $options[$key] = $property->getLabel();
     }
+    asort($options);
     return $options;
   }
 

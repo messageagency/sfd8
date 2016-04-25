@@ -5,24 +5,23 @@
  * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginBase.
  */
 
-namespace Drupal\salesforce_mapping\Plugin;
+namespace Drupal\salesforce_mapping;
 
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginInterface;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-
-// use Drupal\Core\Utility\Token;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a base Salesforce Mapping Field Plugin implementation.
  * Extenders need to implement SalesforceMappingFieldPluginInterface::value() and
  * PluginFormInterface::buildConfigurationForm().
- * @see Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginInterface
+ * @see Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
  * @see Drupal\Core\Plugin\PluginFormInterface
  */
 abstract class SalesforceMappingFieldPluginBase extends PluginBase implements SalesforceMappingFieldPluginInterface, PluginFormInterface, ConfigurablePluginInterface, ContainerFactoryPluginInterface {
@@ -36,7 +35,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   // public function value();
 
   // @see PluginFormInterface::buildConfigurationForm().
-  // public function buildConfigurationForm(array $form, array &$form_state);
+  // public function buildConfigurationForm(array $form, FormStateInterface $form_state);
 
   /**
    * Constructs a \Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginBase object.
@@ -53,17 +52,12 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityManagerInterface $entity_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityManager = $entity_manager;
-    if (!empty($configuration['mapping_name'])) {
-      $this->mapping = $this->entityManager
-        ->getStorageController('salesforce_mapping')
-        ->load($configuration['mapping_name']);
-    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity.manager'));
   }
 
@@ -112,14 +106,42 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   /**
    * Implements PluginFormInterface::validateConfigurationForm().
    */
-  public function validateConfigurationForm(array &$form, array &$form_state) {
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     
   }
 
   /**
    * Implements PluginFormInterface::submitConfigurationForm().
    */
-  public function submitConfigurationForm(array &$form, array &$form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    
+  }
+
+  /**
+   * @TODO: this implementation from ConfigurablePluginInterface
+   * Calculates dependencies for the configured plugin.
+   *
+   * Dependencies are saved in the plugin's configuration entity and are used to
+   * determine configuration synchronization order. For example, if the plugin
+   * integrates with specific user roles, this method should return an array of
+   * dependencies listing the specified roles.
+   *
+   * @return array
+   *   An array of dependencies grouped by type (config, content, module,
+   *   theme). For example:
+   *   @code
+   *   array(
+   *     'config' => array('user.role.anonymous', 'user.role.authenticated'),
+   *     'content' => array('node:article:f0a189e6-55fb-47fb-8005-5bef81c44d6d'),
+   *     'module' => array('node', 'user'),
+   *     'theme' => array('seven'),
+   *   );
+   *   @endcode
+   *
+   * @see \Drupal\Core\Config\Entity\ConfigDependencyManager
+   * @see \Drupal\Core\Entity\EntityInterface::getConfigDependencyName()
+   */
+  public function calculateDependencies() {
     
   }
 

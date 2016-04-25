@@ -28,7 +28,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class Constant extends SalesforceMappingFieldPluginBase {
 
-  public function buildConfigurationForm(array $form, array &$form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     return array(
       '#type' => 'textfield',
       '#default_value' => $this->config('drupal_field_value'),

@@ -16,7 +16,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginInterface;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 
 /**
  * Salesforce Mapping Form base.

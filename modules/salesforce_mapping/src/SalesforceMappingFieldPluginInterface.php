@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginInterface.
+ * Contains \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface.
  */
 
-namespace Drupal\salesforce_mapping\Plugin;
+namespace Drupal\salesforce_mapping;
 use Drupal\Core\Entity\EntityInterface;
 
 /**

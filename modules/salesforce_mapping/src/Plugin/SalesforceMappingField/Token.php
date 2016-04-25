@@ -52,7 +52,7 @@ class Token extends SalesforceMappingFieldPluginBase {
       $container->get('token'));
   }
 
-  public function buildConfigurationForm(array $form, array &$form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     // @todo expose token options on mapping form: clear, callback, sanitize
     return array(
       '#type' => 'textfield',
