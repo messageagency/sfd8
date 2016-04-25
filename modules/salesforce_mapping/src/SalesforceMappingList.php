@@ -15,6 +15,7 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Url;
 
 /**
  * Defines the filter format list controller.
@@ -85,22 +86,21 @@ class SalesforceMappingList extends DraggableListBuilder {
   /**
    * {@inheritdoc}
    */
-  // public function getOperations(EntityInterface $entity) {
-  //   $operations = parent::getOperations($entity);
-  //   $uri = $entity->uri();
-  //   // Ensure the edit operation exists.
-  //   // Fields operation depends on same access control.
-  //   // @todo is there a way to use routes, instead of string-building the URL?
-  //   if (isset($operations['edit'])) {
-  //     $operations['edit']['title'] = $this->t('Properties');
-  //     $operations['fields'] = array(
-  //       'title' => $this->t('Fields'),
-  //       'href' => $uri['path'] . '/fields',
-  //       'options' => $uri['options'],
-  //       'weight' => -1,
-  //     );
-  //   }
-  //   return $operations;
-  // }
+  public function getOperations(EntityInterface $entity) {
+    $operations = parent::getOperations($entity);
+
+    $url = Url::fromRoute('entity.salesforce_mapping.fields', array('salesforce_mapping' => $entity->id()));
+    // Ensure the edit operation exists.
+    // Fields operation depends on same access control.
+    if (isset($operations['edit'])) {
+      $operations['edit']['title'] = $this->t('Properties');
+      $operations['fields'] = array(
+        'title' => $this->t('Fields'),
+        'url' => $url,
+        'weight' => -1000,
+      );
+    }
+    return $operations;
+  }
 
 }
