@@ -8,7 +8,8 @@
 namespace Drupal\salesforce_mapping;
 
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Plugin\PluginBase;
@@ -29,7 +30,8 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   protected $label;
   protected $id;
   protected $mapping;
-  protected $entityManager;
+  protected $entityTypeBundleInfo;
+  protected $entityFieldManager;
 
   // @see SalesforceMappingFieldPluginInterface::value()
   // public function value();
@@ -46,19 +48,22 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    *   The plugin_id for the plugin instance.
    * @param array $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $mapping
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $mapping
+   *   The entity manager to get the SF listing, mapped entity, etc.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $mapping
    *   The entity manager to get the SF listing, mapped entity, etc.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityManagerInterface $entity_manager) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->entityManager = $entity_manager;
+    $this->entityTypeBundleInfo = $entity_type_bundle_info;
+    $this->entityFieldManager = $entity_field_manager;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity.manager'));
+    return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity_type.bundle.info'), $container->get('entity_field.manager'));
   }
 
   /**

@@ -8,7 +8,6 @@
 namespace Drupal\salesforce_push;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\salesforce\SalesforceClient;
@@ -24,11 +23,11 @@ abstract class SalesforcePushPluginBase extends PluginBase implements Salesforce
   protected $sf_client;
   protected $mapped_object;
 
-  protected $entity_manager;
+  // We'll need some entity manager stuff, not sure what yet though.
+  // protected $entity_manager;
 
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityManagerInterface $entity_manager, SalesforceClient $sf_client) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, SalesforceClient $sf_client) {
     $this->sf_client = $sf_client;
-    $this->entity_manager = $entity_manager;
     if (!$this->sf_client->isAuthorized()) {
       // Abort early if we can't do anything. Allows frees us from calling
       // isAuthorized() over and over.
@@ -41,7 +40,6 @@ abstract class SalesforcePushPluginBase extends PluginBase implements Salesforce
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static($configuration, $plugin_id, $plugin_definition,
-      $container->get('entity.manager'),
       $container->get('salesforce.client')
     );
   }

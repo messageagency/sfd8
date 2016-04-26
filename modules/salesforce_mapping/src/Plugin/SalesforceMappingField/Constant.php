@@ -2,21 +2,19 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_mapping\Plugin\salesforce\SalesforceMappingField\Constant.
+ * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Constant.
  */
 
-namespace Drupal\salesforce_mapping\Plugin\salesforce\SalesforceMappingField;
+namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
 use Drupal\Component\Annotation\Plugin;
-use Drupal\Core\Annotation\Translation;
-use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-// use Drupal\Core\Utility\Constant;
-use Drupal\Core\Utility\Token;
-use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-
+use Drupal\Core\Annotation\Translation;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Utility\Token;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 
 /**
  * Adapter for entity Constant and fields.

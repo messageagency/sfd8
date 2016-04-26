@@ -2,17 +2,19 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_mapping\Plugin\salesforce\SalesforceMappingField\Token.
+ * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Token.
  */
 
-namespace Drupal\salesforce_mapping\Plugin\salesforce\SalesforceMappingField;
+namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
 use Drupal\Component\Annotation\Plugin;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Utility\Token as TokenService;
-use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginBase;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -28,32 +30,24 @@ class Token extends SalesforceMappingFieldPluginBase {
   protected $token;
 
   /**
-   * Constructs a \Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginBase object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param array $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   Entity manager, for loading mappings and mapped entities.
-   * @param \Drupal\Core\Utility\Token (as TokenService) $token
-   *   The token service.
+   * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityManagerInterface $entity_manager, TokenService $token) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_manager);
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, TokenService $token) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_bundle_info, $entity_field_manager);
     $this->token = $token;
   }
 
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, 
-      $container->get('entity.manager'),
-      $container->get('token'));
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity_type.bundle.info'), $container->get('entity_field.manager'), $container->get('token'));
   }
 
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    // @todo expose token options on mapping form: clear, callback, sanitize
+    // @TODO expose token options on mapping form: clear, callback, sanitize
+    // @TODO expose token tree / selector
+    // @TODO add token validation
     return array(
       '#type' => 'textfield',
       '#default_value' => $this->config('drupal_field_value'),

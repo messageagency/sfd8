@@ -2,16 +2,17 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_mapping\Plugin\salesforce\SalesforceMappingField\RelatedIDs.
+ * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingField\RelatedIDs.
  */
 
-namespace Drupal\salesforce_mapping\Plugin\salesforce\SalesforceMappingField;
+namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
 use Drupal\Component\Annotation\Plugin;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Field;
-use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginBase;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 
 /**
  * Adapter for entity Reference and fields.
@@ -50,10 +51,11 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
    */
   public function value(EntityInterface $entity) {
     $field_name = $this->config('drupal_field_value');
-    $instances = Field::fieldInfo()->getBundleInstances(
+    $instances = $this->entityFieldManager->getFieldDefinitions(
       get_class($entity),
       $entity->bundle()
     );
+
     if (empty($instances[$field_name])) {
       return;
     }
@@ -74,17 +76,19 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
   }
 
   private function getConfigurationOptions($mapping) {
-    $instances = Field::fieldInfo()->getBundleInstances(
-      $mapping->get('drupal_entity_type'), 
+    $instances = $this->entityFieldManager->getFieldDefinitions(
+      $mapping->get('drupal_entity_type'),
       $mapping->get('drupal_bundle')
     );
     $options = array();
     foreach ($instances as $name => $instance) {
-      if ($instance->getField()->get('type') != 'entity_reference') {
+      if ($instance->getType() != 'entity_reference') {
         continue;
       }
-      $options[$name] = $instance->get('label');
+      // @TODO exclude config entities?
+      $options[$name] = $instance->getLabel();
     }
+    asort($options);
     return $options;
   }
 

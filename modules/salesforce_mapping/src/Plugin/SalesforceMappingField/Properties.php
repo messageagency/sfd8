@@ -51,7 +51,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
   }
 
   private function getConfigurationOptions($mapping) {
-    $properties = $this->entityManager->getFieldDefinitions(
+    $properties = $this->entityFieldManager->getFieldDefinitions(
       $mapping->get('drupal_entity_type'),
       $mapping->get('drupal_bundle')
     );

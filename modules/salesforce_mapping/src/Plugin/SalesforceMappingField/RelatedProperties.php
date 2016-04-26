@@ -2,16 +2,17 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_mapping\Plugin\salesforce\SalesforceMappingField\RelatedProperties.
+ * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingField\RelatedProperties.
  */
 
-namespace Drupal\salesforce_mapping\Plugin\salesforce\SalesforceMappingField;
+namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
 use Drupal\Component\Annotation\Plugin;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Field;
-use Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginBase;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 
 /**
  * Adapter for entity Reference and fields.
@@ -69,8 +70,8 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     // Now we can actually fetch the referenced entity.
     $field_settings = $field->getFieldDefinition()->getFieldSettings();
     try {
-      $referenced_entity = $this->entityManager
-        ->getStorageController($field_settings['target_type'])
+      $referenced_entity = \Drupal::entityTypeManager()
+        ->getStorage($field_settings['target_type'])
         ->load($field->value);
     }
     catch (Exception $e) {
@@ -79,7 +80,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     }
 
     // Again, try to avoid some complicated fatal further downstream.
-    $referenced_instances = $this->entityManager->getFieldDefinitions(
+    $referenced_instances = $this->entityFieldManager->getFieldDefinitions(
       get_class($referenced_entity),
       $referenced_entity->bundle()
     );
@@ -90,49 +91,66 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
   }
 
   private function getConfigurationOptions($mapping) {
-    // @todo: cache this. looping over every instance on every bundle and entity type could get expensive.
-    $instances = Field::fieldInfo()->getBundleInstances(
-      $mapping->get('drupal_entity_type'), 
+    $instances = $this->entityFieldManager->getFieldDefinitions(
+      $mapping->get('drupal_entity_type'),
       $mapping->get('drupal_bundle')
     );
+    if (empty($instances)) {
+      return;
+    }
+
     $options = array();
+
+    // Loop over every field on the mapped entity. For reference fields, expose
+    // all properties of the referenced entity.
+    $fieldMap = $this->entityFieldManager->getFieldMap();
     foreach ($instances as $instance) {
-      if ($instance->getField()->get('type') != 'entity_reference') {
+      // @TODO replace this with EntityFieldManagerInterface::getFieldMapByFieldType
+      if ($instance->getType() != 'entity_reference') {
         continue;
       }
-      $field = $instance->getField();
 
+      $settings = $instance->getSettings();
       // We must have an entity type.
-      if (!$field->getFieldSetting('target_type')) {
+
+      if (empty($settings['target_type'])) {
         continue;
       }
 
-      $entity_type = $field->getFieldSetting('target_type');
+      $entity_type = $settings['target_type'];
       $properties = array();
-      $settings = $instance->getFieldSettings();
-      if ($settings['handler'] == 'default') {
-        // If no target bundles, the entity type probably doesn't support them.
-        // Fudge the settings array.
-        if (empty($settings['handler_settings']['target_bundles'])) {
-          $settings['handler_settings']['target_bundles'] = array(NULL);
+
+      // If handler is default and allowed bundles are set, include all fields 
+      // from all allowed bundles.
+      try {
+        if (!empty($settings['handler_settings']['target_bundles'])) {
+          foreach ($settings['handler_settings']['target_bundles'] as $bundle) {
+            $properties += $this->entityFieldManager->getFieldDefinitions($entity_type, $bundle);
+          }
         }
-        // @todo: expose all fields for all target bundles. Figure out how to indicate in UI that it's possible to mis-configure this.
-        foreach ($settings['handler_settings']['target_bundles'] as $bundle) {
-          $properties += $this->entityManager->getFieldDefinitions(
-            $entity_type,
-            $bundle
-          );
+        else {
+          $properties += $this->entityFieldManager->getBaseFieldDefinitions($entity_type);
         }
       }
-      else {
-      // @todo: right now we only support simple reference fields. Work out support for views references by somehow gathering bundles from view settings.
-        $properties = $this->entityManager
-          ->getFieldDefinitions($field->getFieldSetting('target_type'));
+      catch (\LogicException $e) {
+        // @TODO is there a better way to exclude non-fieldables?
+        continue;
       }
+
       foreach ($properties as $key => $property) {
-        $options[$instance->label][$field->name.':'.$key] = $property['label'];
+        $options[$instance->getLabel()][$instance->getName().':'.$key] = $property->getLabel();
       }
     }
+
+    if (empty($options)) {
+      return;
+    }
+
+    // Alphabetize options for UI
+    foreach ($options as $group => &$option_set) {
+      asort($option_set);
+    }
+    asort($options);
     return $options;
   }
 

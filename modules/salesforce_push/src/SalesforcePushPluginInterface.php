@@ -14,7 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 interface SalesforcePushPluginInterface {
 
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityManagerInterface $entity_manager, SalesforceClient $sf_client);
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, SalesforceClient $sf_client);
 
   public function push_create();
 
