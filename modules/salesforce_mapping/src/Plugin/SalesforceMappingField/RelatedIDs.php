@@ -70,7 +70,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     $field_settings = $field->getFieldDefinition()->getFieldSettings();
     // @todo this procedural call will go away when sf mapping object becomes a service or field
     if ($referenced_mapping =
-      salesforce_mapping_object_load_by_drupal($field_settings['target_type'], $field->value)) {
+      salesforce_mapped_object_load_by_drupal($field_settings['target_type'], $field->value)) {
       return $referenced_mapping->sfid();
     }
   }

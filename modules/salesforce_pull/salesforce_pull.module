@@ -156,15 +156,15 @@ function salesforce_pull_process_records($sf_object) {
 
   foreach ($sf_mappings as $sf_mapping) {
     // Mapping object exists?
-    $mapping_object = salesforce_mapping_object_load_by_sfid($sf_object['Id']);
-    if ($mapping_object && ($sf_mapping->sync_triggers & SALESFORCE_MAPPING_SYNC_SF_UPDATE)) {
+    $mapped_object = salesforce_mapped_object_load_by_sfid($sf_object['Id']);
+    if ($mapped_object && ($sf_mapping->sync_triggers & SALESFORCE_MAPPING_SYNC_SF_UPDATE)) {
       try {
-        $entity = entity_load_single($mapping_object->entity_type, $mapping_object->entity_id);
+        $entity = entity_load_single($mapped_object->entity_type, $mapped_object->entity_id);
 
         // Flag this entity as having been processed. This does not persist,
         // but is used by salesforce_push to avoid duplicate processing.
         $entity->salesforce_pull = TRUE;
-        $entity_updated = isset($entity->updated) ? $entity->updated : $mapping_object->entity_updated;
+        $entity_updated = isset($entity->updated) ? $entity->updated : $mapped_object->entity_updated;
 
         $sf_object_updated = strtotime($sf_object['LastModifiedDate']);
         if ($sf_object_updated > $entity_updated) {
@@ -177,8 +177,8 @@ function salesforce_pull_process_records($sf_object) {
           $wrapper->save();
 
           // Update mapping object.
-          $mapping_object->last_sync = REQUEST_TIME;
-          $mapping_object->entity_update = REQUEST_TIME;
+          $mapped_object->last_sync = REQUEST_TIME;
+          $mapped_object->entity_update = REQUEST_TIME;
           watchdog('Salesforce Pull',
             'Updated entity %label associated with Salesforce Object ID: %sfid',
             array(
@@ -240,7 +240,7 @@ function salesforce_pull_process_records($sf_object) {
           }
 
           // Create mapping object.
-          $mapping_object = entity_create('salesforce_mapping_object', array(
+          $mapped_object = entity_create('salesforce_mapped_object', array(
             'salesforce_id' => $sf_object['Id'],
             'entity_type' => $sf_mapping->drupal_entity_type,
             'entity_id' => $entity_id,
@@ -268,8 +268,8 @@ function salesforce_pull_process_records($sf_object) {
     }
 
     // Save our mapped objects.
-    if ($mapping_object) {
-      $mapping_object->save();
+    if ($mapped_object) {
+      $mapped_object->save();
     }
   }
 }
@@ -301,28 +301,28 @@ function salesforce_pull_process_deleted_records() {
         array('salesforce_object_type' => $type)
       );
       foreach ($deleted->deletedRecords as $record) {
-        $mapping_object = salesforce_mapping_object_load_by_sfid($record->id);
-        if ($mapping_object) {
-          $entity = entity_load_single($mapping_object->entity_type, $mapping_object->entity_id);
-          $entity_label = entity_label($mapping_object->entity_type, $entity);
+        $mapped_object = salesforce_mapped_object_load_by_sfid($record->id);
+        if ($mapped_object) {
+          $entity = entity_load_single($mapped_object->entity_type, $mapped_object->entity_id);
+          $entity_label = entity_label($mapped_object->entity_type, $entity);
           foreach ($sf_mappings as $sf_mapping) {
             if ($sf_mapping->sync_triggers & SALESFORCE_MAPPING_SYNC_SF_DELETE) {
               // Delete mapping object.
               $transaction = db_transaction();
-              entity_delete('salesforce_mapping_object', $mapping_object->salesforce_mapping_object_id);
-              entity_delete($sf_mapping->drupal_entity_type, $mapping_object->entity_id);
+              entity_delete('salesforce_mapped_object', $mapped_object->salesforce_mapped_object_id);
+              entity_delete($sf_mapping->drupal_entity_type, $mapped_object->entity_id);
 
               watchdog('Salesforce Pull',
                 'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid',
                 array(
                   '%label' => $entity_label,
-                  '%id' => $mapping_object->entity_id,
+                  '%id' => $mapped_object->entity_id,
                   '%sfid' => $record->id,
                 )
               );
             }
           }
-          $mapping_object->delete();
+          $mapped_object->delete();
         }
       }
     }

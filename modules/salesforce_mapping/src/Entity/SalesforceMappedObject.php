@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_mapping\Entity\SalesforceMappingObject.
+ * Contains \Drupal\salesforce_mapping\Entity\SalesforceMappedObject.
  */
 
 namespace Drupal\salesforce_mapping\Entity;
@@ -10,22 +10,22 @@ namespace Drupal\salesforce_mapping\Entity;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingObjectInterface;
+use Drupal\salesforce_mapping\Entity\SalesforceMappedObjectInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
 
 /**
- * Defines a Salesforce Mapping Object entity class. Mapping Objects are content
+ * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
  * entities, since they're defined by references to other content entities.
  *
  * @ContentEntityType(
- *   id = "salesforce_mapping_object",
- *   label = @Translation("Salesforce Mapping Object"),
+ *   id = "salesforce_mapped_object",
+ *   label = @Translation("Salesforce Mapped Object"),
  *   module = "salesforce_mapping",
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "access" = "Drupal\Core\Entity\EntityAccessController",
  *   },
- *   base_table = "salesforce_mapping_object",
+ *   base_table = "salesforce_mapped_object",
  *   admin_permission = "administer salesforce mapping",
  *   entity_keys = {
  *      "id" = "id",
@@ -34,7 +34,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
  *   }
  * )
  */
-class SalesforceMappingObject extends ContentEntityBase implements SalesforceMappingObjectInterface {
+class SalesforceMappedObject extends ContentEntityBase implements SalesforceMappedObjectInterface {
 
   use EntityChangedTrait;
 
@@ -42,7 +42,7 @@ class SalesforceMappingObject extends ContentEntityBase implements SalesforceMap
    * Overrides ContentEntityBase::__construct().
    */
   public function __construct(array $values) {
-    parent::__construct($values, 'salesforce_mapping_object');
+    parent::__construct($values, 'salesforce_mapped_object');
 }
 
   public function save() {
@@ -70,7 +70,7 @@ class SalesforceMappingObject extends ContentEntityBase implements SalesforceMap
 
     $fields['id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Salesforce Mapping Object ID'))
-      ->setDescription(t('Primary Key: Unique salesforce_mapping_object entity ID.'))
+      ->setDescription(t('Primary Key: Unique salesforce_mapped_object entity ID.'))
       ->setReadOnly(TRUE)
       ->setSetting('unsigned', TRUE);
 
@@ -89,7 +89,7 @@ class SalesforceMappingObject extends ContentEntityBase implements SalesforceMap
       ->setLabel(t('Salesforce object identifier'))
       ->setDescription(t('Reference to the mapped Salesforce object (SObject)'))
       ->setSetting('is_ascii', TRUE)
-      ->setSetting('max_length', SalesforceMappingObjectInterface::SFID_MAX_LENGTH);
+      ->setSetting('max_length', SalesforceMappedObjectInterface::SFID_MAX_LENGTH);
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Authored on'))

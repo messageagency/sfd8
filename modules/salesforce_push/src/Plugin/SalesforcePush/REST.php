@@ -97,7 +97,7 @@ class REST extends SalesforcePushPluginBase {
     // If we get this far, there was no error and sfid must have been assigned.
     // Create mapping object, saved in caller.
     // @todo use a mapping object factory
-    $this->mapped_object = entity_create('salesforce_mapping_object', array(
+    $this->mapped_object = entity_create('salesforce_mapped_object', array(
       'entity_id' => $this->entity->id(),
       'entity_type' => get_class($this->entity),
       'salesforce_id' => $sfid,

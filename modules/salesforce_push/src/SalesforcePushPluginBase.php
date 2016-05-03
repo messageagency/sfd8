@@ -12,7 +12,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\salesforce\SalesforceClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingObject;
+use Drupal\salesforce_mapping\Entity\SalesforceMappedObject;
 use Drupal\salesforce_push\SalesforcePushPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -47,7 +47,7 @@ abstract class SalesforcePushPluginBase extends PluginBase implements Salesforce
   public function init(EntityInterface $entity, SalesforceMapping $mapping) {
     $this->entity = $entity;
     $this->mapping = $mapping;
-    $this->mapped_object = salesforce_mapping_object_load_by_entity($entity);
+    $this->mapped_object = salesforce_mapped_object_load_by_entity($entity);
     return $this;
   }
 

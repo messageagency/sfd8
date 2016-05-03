@@ -1,0 +1,4 @@
+comment.admin:
+  title: Salesforce
+  route_name: salesforce_mapped_object.list
+  base_route: system.admin_content

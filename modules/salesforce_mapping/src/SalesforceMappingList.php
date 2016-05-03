@@ -89,7 +89,7 @@ class SalesforceMappingList extends DraggableListBuilder {
   public function getDefaultOperations(EntityInterface $entity) {
     $operations = parent::getDefaultOperations($entity);
 
-    $url = Url::fromRoute('entity.salesforce_mapping.fields', array('salesforce_mapping' => $entity->id()));
+    $url = Url::fromRoute('salesforce_mapping.fields', array('salesforce_mapping' => $entity->id()));
 
     // Only makes sense to expose fields operation if edit exists
     if (isset($operations['edit'])) {

@@ -110,7 +110,7 @@ function salesforce_push_sync_rest($entity, $mapping, $op) {
   }
 
   list($entity_id) = entity_extract_ids($entity_type, $entity);
-  $mapped_objects = salesforce_mapping_object_load_by_drupal($entity_type, $entity_id);
+  $mapped_objects = salesforce_mapped_object_load_by_drupal($entity_type, $entity_id);
 
   // Generate parameter array from field mappings.
   $entity_wrapper = entity_metadata_wrapper($entity_type, $entity);
@@ -154,7 +154,7 @@ function salesforce_push_sync_rest($entity, $mapping, $op) {
     // Success.
     if (empty($data['errorCode'])) {
       // Create mapping object, saved below.
-      $mapped_objects = entity_create('salesforce_mapping_object', array(
+      $mapped_objects = entity_create('salesforce_mapped_object', array(
         'entity_id' => $entity_id,
         'entity_type' => $entity_type,
         'salesforce_id' => $data['id'],
@@ -254,7 +254,7 @@ function salesforce_push_cron() {
     $entity_type = $item->data['entity_type'];
     $entity_id = $item->data['entity_id'];
     $entity = entity_load($entity_type, $entity_id);
-    $mapped_object = salesforce_mapping_object_load_by_entity($entity);
+    $mapped_object = salesforce_mapped_object_load_by_entity($entity);
     if ($use_soap) {
       if ($item->data['trigger'] == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE && $mapped_object) {
         $delete_list[$delta] = $mapped_object->salesforce_id;
@@ -347,7 +347,7 @@ function salesforce_push_process_soap_results($op, $results, $synced_entities) {
         // Create mapping object, saved below.
         $wrapper = $synced_entities[$key]['entity_wrapper'];
         list($entity_id) = entity_extract_ids($wrapper->type(), $wrapper->value());
-        $mapped_object = entity_create('salesforce_mapping_object', array(
+        $mapped_object = entity_create('salesforce_mapped_object', array(
           'entity_id' => $entity_id,
           'entity_type' => $wrapper->type(),
           'salesforce_id' => $result->id,

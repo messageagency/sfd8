@@ -27,7 +27,7 @@ class SalesforceMappingDeleteForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return new Url('entity.salesforce_mapping.list');
+    return new Url('salesforce_mapping.list');
   }
 
   /**

@@ -8,7 +8,7 @@ In progress:
 - Need interfaces for entites and classes:
   - SalesforceClientInterface
   - SalesforceMappingInterface
-  - SalesforceMappingObjectInterface
+  - SalesforceMappedObjectInterface
   - SalesforceMappingFieldPluginManagerInterface
 
 - Need to build an entity definition for Salesforce Objects as defined by instance schema
