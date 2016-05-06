@@ -2,3 +2,8 @@ services:
   plugin.manager.salesforce_mapping_field:
     class: Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager
     arguments: ['@container.namespaces', '@cache.default', '@module_handler']
+
+  salesforce_mapping.route_subscriber:
+    class: Drupal\salesforce_mapping\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }

@@ -12,4 +12,4 @@ salesforce_mapping.list_action:
   appears_on:
     - salesforce_mapping.add_form
     - salesforce_mapping.edit_form
-    - salesforce_mapping.delete_form
+    - entity.salesforce_mapping.delete_form

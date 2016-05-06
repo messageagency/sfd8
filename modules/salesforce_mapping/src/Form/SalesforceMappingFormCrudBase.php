@@ -93,7 +93,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
 
     $form['drupal_entity']['drupal_bundle'] = array('#title' => 'Drupal Bundle', '#tree' => TRUE);
     foreach ($entity_types as $entity_type => $label) {
-      $bundle_info = \Drupal::entityTypeBundleInfo()->getBundleInfo($entity_type);
+      $bundle_info = \Drupal::entityManager()->getBundleInfo($entity_type);
       if (empty($bundle_info)) {
         continue;
       }
