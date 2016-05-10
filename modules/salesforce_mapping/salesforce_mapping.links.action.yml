@@ -1,15 +1,14 @@
 # Add some local task links to facilitate navigation.
 
 salesforce_mapping.add_action:
-  route_name: salesforce_mapping.add_form
+  route_name: entity.salesforce_mapping.add_form
   title: 'Add Mapping'
   appears_on:
-    - salesforce_mapping.list
+    - entity.salesforce_mapping.list
 
 salesforce_mapping.list_action:
-  route_name: salesforce_mapping.list
+  route_name: entity.salesforce_mapping.list
   title: 'List Mappings'
   appears_on:
-    - salesforce_mapping.add_form
-    - salesforce_mapping.edit_form
-    - entity.salesforce_mapping.delete_form
+    - entity.salesforce_mapping.add_form
+    - entity.salesforce_mapping.edit_form

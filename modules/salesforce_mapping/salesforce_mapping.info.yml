@@ -3,6 +3,6 @@ type: module
 description: Map Drupal entities to Salesforce objects.
 package: Salesforce
 core: 8.x
-configure: salesforce_mapping.list
+configure: entity.salesforce_mapping.list
 dependencies:
   - salesforce

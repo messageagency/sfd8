@@ -33,7 +33,7 @@ class SalesforceMappingDisableForm extends EntityConfirmFormBase {
    */
   public function getCancelRoute() {
     return array(
-      'route_name' => 'salesforce_mapping.list',
+      'route_name' => 'entity.salesforce_mapping.list',
     );
   }
 
@@ -52,7 +52,7 @@ class SalesforceMappingDisableForm extends EntityConfirmFormBase {
 
     $this->entity->disable()->save();
      $form_state['redirect_route'] = array(
-      'route_name' => 'salesforce_mapping.list',
+      'route_name' => 'entity.salesforce_mapping.list',
     );
   }
 

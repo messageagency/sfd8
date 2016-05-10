@@ -68,7 +68,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#title' => $this->t('Drupal entity'),
       '#type' => 'details',
       '#attributes' => array(
-        'id' => array('edit-drupal-entity'),
+        'id' => 'edit-drupal-entity',
       ),
       // Gently discourage admins from breaking existing fieldmaps:
       // '#collapsed' => !$mapping->isNew(),

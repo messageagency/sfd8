@@ -21,7 +21,6 @@ class RouteSubscriber extends RouteSubscriberBase {
    */
   public function alterRoutes(RouteCollection $collection) {
     $mappings = \Drupal::entityTypeManager()->getStorage('salesforce_mapping')->loadMultiple();
-    dpm($mappings);
     if (empty($mappings)) {
       return array();
     }

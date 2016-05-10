@@ -2,10 +2,10 @@ salesforce_mapping.admin:
   title: Salesforce Mappings
   description: 'Salesforce Mappings'
   parent: salesforce.structure_index
-  route_name: salesforce_mapping.list
+  route_name: entity.salesforce_mapping.list
 
 salesforce_mapped_object.admin:
   title: Salesforce Mapped Objects
   description: 'Salesforce Mapped Objects'
   parent: system.admin_content
-  route_name: salesforce_mapped_object.list
+  route_name: entity.salesforce_mapped_object.list

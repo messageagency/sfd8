@@ -85,7 +85,6 @@ class SalesforceClient {
    * @throws SalesforceException
    */
   public function apiCall($path, $params = array(), $method = 'GET') {
-
     if (!$this->getAccessToken()) {
       $this->refreshToken();
     }
@@ -169,6 +168,7 @@ class SalesforceClient {
       throw new SalesforceException('Missing OAuth Token');
     }
     $url = $this->getApiEndPoint() . $path;
+
     $headers = array(
       'Authorization' => 'OAuth ' . $this->getAccessToken(),
       'Content-type' => 'application/json',
@@ -200,7 +200,6 @@ class SalesforceClient {
    */
   protected function httpRequest($url, $data = NULL, $headers = array(), $method = 'GET') {
     // Build the request, including path and headers. Internal use.
-
     $request = $this->httpClient->$method($url, array('headers' => $headers, 'body' => $data));
     return $request;
   }

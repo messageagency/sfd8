@@ -64,7 +64,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $form['field_mappings_wrapper']['ajax_warning'] = array(
       '#type' => 'container',
       '#attributes' => array(
-        'id' => array('edit-ajax-warning'),
+        'id' => 'edit-ajax-warning',
       ),
     );
 
@@ -88,7 +88,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       '#title' => t('Field Type'),
       '#type' => 'select',
       '#options' => $this->get_drupal_type_options(),
-      '#attributes' => array('id' => array('edit-mapping-add-field-type')),
+      '#attributes' => array('id' => 'edit-mapping-add-field-type'),
       '#empty_option' => $this->t('- Select -'),
     );
     $form['buttons']['add'] = array(
