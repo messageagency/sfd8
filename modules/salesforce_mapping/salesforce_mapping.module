@@ -15,6 +15,36 @@ use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappedObject;
 
 /**
+ * Implements hook_entity_type_alter().
+ */
+function salesforce_mapping_entity_type_alter(array &$entity_types) {
+  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    if ($entity_type->hasViewBuilderClass() && $entity_type->hasLinkTemplate('canonical')) {
+      $entity_type->setLinkTemplate('salesforce', "/$entity_type_id/{{$entity_type_id}}/salesforce");
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function salesforce_mapping_entity_operation(EntityInterface $entity) {
+  $operations = array();
+  if (\Drupal::currentUser()->hasPermission('administer salesforce')) {
+    if ($entity->hasLinkTemplate('salesforce')) {
+      $operations['salesforce'] = array(
+        'title' => t('Salesforce'),
+        'weight' => 200,
+        'url' => $entity->toUrl('salesforce'),
+      );
+    }
+  }
+  return $operations;
+}
+
+
+/**
  * Bit flags defining when a data sync should take place for a given mapping.
  */
 define('SALESFORCE_MAPPING_SYNC_OFF', 0x0000);

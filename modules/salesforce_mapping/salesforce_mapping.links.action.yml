@@ -8,7 +8,8 @@ salesforce_mapping.add_action:
 
 salesforce_mapping.list_action:
   route_name: entity.salesforce_mapping.list
-  title: 'List Mappings'
+  title: 'List Salesforce Mappings'
   appears_on:
     - entity.salesforce_mapping.add_form
     - entity.salesforce_mapping.edit_form
+    - entity.salesforce_mapped_object.list

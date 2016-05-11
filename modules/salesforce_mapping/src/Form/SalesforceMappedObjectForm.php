@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\salesforce_mapping\SalesforceMappedObjectForm
+ * Contains Drupal\salesforce_mapping\Form\SalesforceMappedObjectForm
  */
 
 namespace Drupal\salesforce_mapping\Form;
@@ -17,11 +17,12 @@ use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
+use Drupal\salesforce\SalesforceClient;
 
 /**
  * Salesforce Mapping Form base.
  */
-abstract class SalesforceMappedObjectForm extends ContentEntityForm {
+class SalesforceMappedObjectForm extends ContentEntityForm {
 
   /**
    * The storage controller.
@@ -33,6 +34,11 @@ abstract class SalesforceMappedObjectForm extends ContentEntityForm {
   protected $SalesforceMappingFieldManager;
 
   protected $pushPluginManager;
+  
+  /**
+   * @var \Drupal\salesforce\SalesforceClient
+   */
+  protected $salesforceClient;
 
   /**
    * Constructs a \Drupal\system\ConfigFormBase object.
@@ -44,35 +50,59 @@ abstract class SalesforceMappedObjectForm extends ContentEntityForm {
    *
    * @throws RuntimeException
    */
-  public function __construct(PluginManagerInterface $SalesforceMappingFieldManager) {
-    $this->SalesforceMappingFieldManager = $SalesforceMappingFieldManager;
-    // $this->pushPluginManager = $pushPluginManager;
-  }
+  // public function __construct(PluginManagerInterface $SalesforceMappingFieldManager, SalesforceClient $salesforceClient) {
+  //   $this->SalesforceMappingFieldManager = $SalesforceMappingFieldManager;
+  //   $this->salesforceClient = $salesforceClient;
+  // }
+  //
+  // /**
+  //  * {@inheritdoc}
+  //  */
+  // public static function create(ContainerInterface $container) {
+  //   return new static(
+  //     $container->get('plugin.manager.salesforce_mapping_field'),
+  //     $container->get('salesforce.client')
+  //   );
+  // }
+  //
+  // public function getBaseFormId() {
+  //   return 'salesforce_mapped_object_form';
+  // }
+  //
+  // public function getFormId() {
+  //   return 'salesforce_mapped_object_form';
+  // }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('plugin.manager.salesforce_mapping_field')
-      // $container->get('plugin.manager.salesforce_push')
-    );
-  }
-
+  // public function buildForm(array $form, FormStateInterface $form_state) {
+  //   /* @var $entity \Drupal\content_entity_example\Entity\Contact */
+  //   $form = parent::buildForm($form, $form_state);
+  //   $entity = $this->entity;
+  //
+  //   $form['langcode'] = array(
+  //     '#title' => $this->t('Language'),
+  //     '#type' => 'language_select',
+  //     '#default_value' => $entity->getUntranslated()->language()->getId(),
+  //     '#languages' => Language::STATE_ALL,
+  //   );
+  //   return $form;
+  // }
 
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, FormStateInterface $form_state) {
-    if (!$this->entity->save()) {
-      drupal_set_message($this->t('An error occurred while trying to save the mapping.'));
-      return;
-    }
-
-    drupal_set_message($this->t('The mapping has been successfully saved.'));
-    $form_state->setRedirect('entity.salesforce_mapping.fields', array('salesforce_mapping' => $this->entity->id()));
-  }
-
+  // public function save(array $form, FormStateInterface $form_state) {
+  //   if (!$this->entity->save()) {
+  //     drupal_set_message($this->t('An error occurred while trying to save the mapping.'));
+  //     return;
+  //   }
+  //
+  //   drupal_set_message($this->t('The mapping has been successfully saved.'));
+  //   $form_state->setRedirect('entity.salesforce_mapping.fields', array('salesforce_mapping' => $this->entity->id()));
+  // }
+  //
   /**
    * Retreive Salesforce's information about an object type.
    * @todo this should move to the Salesforce service

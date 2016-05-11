@@ -1,4 +1,3 @@
-comment.admin:
-  title: Salesforce
-  route_name: salesforce_mapped_object.list
-  base_route: system.admin_content
+salesforce_mapping.entities:
+  class: \Drupal\Core\Menu\LocalTaskDefault
+  deriver: \Drupal\salesforce_mapping\Plugin\Derivative\SalesforceMappingLocalTask

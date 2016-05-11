@@ -23,7 +23,13 @@ use Drupal\Core\Entity\EntityChangedTrait;
  *   module = "salesforce_mapping",
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
- *     "access" = "Drupal\Core\Entity\EntityAccessController",
+ *     "list_builder" = "Drupal\salesforce_mapping\SalesforceMappedObjectList",
+ *     "form" = {
+ *       "add" = "Drupal\salesforce_mapping\Form\SalesforceMappedObjectForm",
+ *       "edit" = "Drupal\salesforce_mapping\Form\SalesforceMappedObjectForm",
+ *       "delete" = "Drupal\salesforce_mapping\Form\SalesforceMappedObjectForm",
+ *      },
+ *     "access" = "Drupal\salesforce_mapping\SalesforceMappedObjectAccessControlHandler",
  *   },
  *   base_table = "salesforce_mapped_object",
  *   admin_permission = "administer salesforce mapping",
