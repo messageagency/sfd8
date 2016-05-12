@@ -57,14 +57,6 @@ entity.salesforce_mapped_object.list:
     _title: 'Salesforce Mapped Objects'
   requirements:
     _permission: 'administer salesforce mapped objects'
-
-salesforce_mapped_object.add:
-  path: '/admin/content/salesforce/add'
-  defaults:
-    _entity_form: salesforce_mapped_object.add
-    _title: 'Add Salesforce Mapped Object'
-  requirements:
-    _entity_create_access: 'salesforce_mapped_object'
   
 entity.salesforce_mapped_object.edit:
   path: '/admin/content/salesforce/{entity_type}/{entity}'

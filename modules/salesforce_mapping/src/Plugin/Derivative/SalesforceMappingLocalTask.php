@@ -65,7 +65,7 @@ class SalesforceMappingLocalTask extends DeriverBase implements ContainerDeriver
           'base_route' => "entity.$entity_type_id." . ($has_canonical_path ? "canonical" : "edit_form"),
           'weight' => 200,
         );
-        foreach (array('view', 'add', 'edit', 'delete') as $op) {
+        foreach (array('view', 'edit', 'delete') as $op) {
           $this->derivatives["$entity_type_id.salesforce_$op"] = array(
             'route_name' => "entity.$entity_type_id.salesforce_$op",
             'weight' => 200,

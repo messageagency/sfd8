@@ -41,68 +41,25 @@ class SalesforceMappedObjectForm extends ContentEntityForm {
   protected $salesforceClient;
 
   /**
-   * Constructs a \Drupal\system\ConfigFormBase object.
-   *
-   * @param \Drupal\Core\Entity\EntityStorageControllerInterface
-   *   Need this to fetch the appropriate field mapping
-   * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
-   *   Need this to fetch the mapping field plugins
-   *
-   * @throws RuntimeException
+   * {@inheritdoc}
    */
-  // public function __construct(PluginManagerInterface $SalesforceMappingFieldManager, SalesforceClient $salesforceClient) {
-  //   $this->SalesforceMappingFieldManager = $SalesforceMappingFieldManager;
-  //   $this->salesforceClient = $salesforceClient;
-  // }
-  //
-  // /**
-  //  * {@inheritdoc}
-  //  */
-  // public static function create(ContainerInterface $container) {
-  //   return new static(
-  //     $container->get('plugin.manager.salesforce_mapping_field'),
-  //     $container->get('salesforce.client')
-  //   );
-  // }
-  //
-  // public function getBaseFormId() {
-  //   return 'salesforce_mapped_object_form';
-  // }
-  //
-  // public function getFormId() {
-  //   return 'salesforce_mapped_object_form';
-  // }
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    /* @var $entity \Drupal\content_entity_example\Entity\Contact */
+    $form = parent::buildForm($form, $form_state);
+    $entity = $this->entity;
+    return $form;
+  }
 
   /**
    * {@inheritdoc}
    */
-  // public function buildForm(array $form, FormStateInterface $form_state) {
-  //   /* @var $entity \Drupal\content_entity_example\Entity\Contact */
-  //   $form = parent::buildForm($form, $form_state);
-  //   $entity = $this->entity;
-  //
-  //   $form['langcode'] = array(
-  //     '#title' => $this->t('Language'),
-  //     '#type' => 'language_select',
-  //     '#default_value' => $entity->getUntranslated()->language()->getId(),
-  //     '#languages' => Language::STATE_ALL,
-  //   );
-  //   return $form;
-  // }
+  public function save(array $form, FormStateInterface $form_state) {
+    $entity = $this->getEntity();
+    dpm($entity);
+    $this->entity->save();
+    drupal_set_message($this->t('The mapping has been successfully saved.'));
+  }
 
-  /**
-   * {@inheritdoc}
-   */
-  // public function save(array $form, FormStateInterface $form_state) {
-  //   if (!$this->entity->save()) {
-  //     drupal_set_message($this->t('An error occurred while trying to save the mapping.'));
-  //     return;
-  //   }
-  //
-  //   drupal_set_message($this->t('The mapping has been successfully saved.'));
-  //   $form_state->setRedirect('entity.salesforce_mapping.fields', array('salesforce_mapping' => $this->entity->id()));
-  // }
-  //
   /**
    * Retreive Salesforce's information about an object type.
    * @todo this should move to the Salesforce service

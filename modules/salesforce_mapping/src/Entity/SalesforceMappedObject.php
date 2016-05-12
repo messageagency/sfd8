@@ -25,6 +25,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\salesforce_mapping\SalesforceMappedObjectList",
  *     "form" = {
+ *       "default" = "Drupal\salesforce_mapping\Form\SalesforceMappedObjectForm",
  *       "add" = "Drupal\salesforce_mapping\Form\SalesforceMappedObjectForm",
  *       "edit" = "Drupal\salesforce_mapping\Form\SalesforceMappedObjectForm",
  *       "delete" = "Drupal\salesforce_mapping\Form\SalesforceMappedObjectForm",
@@ -43,7 +44,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
 class SalesforceMappedObject extends ContentEntityBase implements SalesforceMappedObjectInterface {
 
   use EntityChangedTrait;
-
+  
   /**
    * Overrides ContentEntityBase::__construct().
    */
@@ -73,7 +74,6 @@ class SalesforceMappedObject extends ContentEntityBase implements SalesforceMapp
     // @todo Do we really have to define this, and hook_schema, and entity_keys?
     // so much redundancy.
     $fields = array();
-
     $fields['id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Salesforce Mapping Object ID'))
       ->setDescription(t('Primary Key: Unique salesforce_mapped_object entity ID.'))
@@ -83,19 +83,46 @@ class SalesforceMappedObject extends ContentEntityBase implements SalesforceMapp
     $fields['entity_id'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Entity ID'))
       ->setDescription(t('Reference to the mapped Drupal entity.'))
-      ->setRequired(TRUE);
+      ->setRequired(TRUE)
+      ->setDisplayOptions('form', array(
+        'type' => 'hidden',
+      ));
 
     $fields['entity_type'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Entity type'))
       ->setDescription(t('The entity type to which this comment is attached.'))
       ->setSetting('is_ascii', TRUE)
-      ->setSetting('max_length', EntityTypeInterface::ID_MAX_LENGTH);
+      ->setSetting('max_length', EntityTypeInterface::ID_MAX_LENGTH)
+      ->setDisplayOptions('form', array(
+        'type' => 'hidden',
+      ));
+
+    $fields['salesforce_mapping'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Salesforce mapping'))
+      ->setDescription(t('Salesforce mapping used to push/pull this mapped object'))
+      ->setSetting('target_type', 'salesforce_mapping')
+      ->setSetting('handler', 'default')
+      ->setDisplayOptions('form', array(
+        'type' => 'options_select',
+        'weight' => -4,
+      ))
+      ->setSettings(array(
+        'allowed_values' => array(
+          // SF Mappings for this entity type go here.
+          'female' => 'female',
+          'male' => 'male',
+        ),
+      ));
 
     $fields['salesforce_id'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Salesforce object identifier'))
       ->setDescription(t('Reference to the mapped Salesforce object (SObject)'))
       ->setSetting('is_ascii', TRUE)
-      ->setSetting('max_length', SalesforceMappedObjectInterface::SFID_MAX_LENGTH);
+      ->setSetting('max_length', SalesforceMappedObjectInterface::SFID_MAX_LENGTH)
+      ->setDisplayOptions('form', array(
+        'type' => 'string_textfield',
+        'weight' => 0,
+      ));
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Authored on'))
@@ -104,13 +131,8 @@ class SalesforceMappedObject extends ContentEntityBase implements SalesforceMapp
       ->setDisplayOptions('view', array(
         'label' => 'hidden',
         'type' => 'timestamp',
-        'weight' => 0,
-      ))
-      ->setDisplayOptions('form', array(
-        'type' => 'datetime_timestamp',
-        'weight' => 10,
-      ))
-      ->setDisplayConfigurable('form', TRUE);
+        'weight' => $i++,
+      ));
 
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))

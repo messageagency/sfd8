@@ -41,7 +41,7 @@ class RouteSubscriber extends RouteSubscriberBase {
    */
   protected function alterRoutes(RouteCollection $collection) {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
-      foreach (array('view', 'add', 'edit', 'delete') as $op) {
+      foreach (array('view', 'edit', 'delete') as $op) {
         if ($route = $this->getSalesforceMappedObjectRoute($entity_type, $op)) {
           $routename = "entity.$entity_type_id.salesforce_$op";
           $collection->add($routename, $route);
