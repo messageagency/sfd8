@@ -43,20 +43,20 @@ class SalesforceMappedObjectForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
-    /* @var $entity \Drupal\content_entity_example\Entity\Contact */
-    $form = parent::buildForm($form, $form_state);
-    $entity = $this->entity;
-    return $form;
-  }
+  // Nothing yet
+  // public function buildForm(array $form, FormStateInterface $form_state) {
+  //   /* @var $entity \Drupal\content_entity_example\Entity\Contact */
+  //   $form = parent::buildForm($form, $form_state);
+  //   $entity = $this->entity;
+  //   return $form;
+  // }
 
   /**
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $entity = $this->getEntity();
-    dpm($entity);
-    $this->entity->save();
+    $this->getEntity()->save();
+    // $this->entity->save();
     drupal_set_message($this->t('The mapping has been successfully saved.'));
   }
 

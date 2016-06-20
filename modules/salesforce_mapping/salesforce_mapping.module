@@ -22,6 +22,8 @@ function salesforce_mapping_entity_type_alter(array &$entity_types) {
   foreach ($entity_types as $entity_type_id => $entity_type) {
     if ($entity_type->hasViewBuilderClass() && $entity_type->hasLinkTemplate('canonical')) {
       $entity_type->setLinkTemplate('salesforce', "/$entity_type_id/{{$entity_type_id}}/salesforce");
+      $entity_type->setLinkTemplate('salesforce_edit', "/$entity_type_id/{{$entity_type_id}}/salesforce/edit");
+      $entity_type->setLinkTemplate('salesforce_delete', "/$entity_type_id/{{$entity_type_id}}/salesforce/delete");
     }
   }
 }
@@ -93,6 +95,7 @@ define('SALESFORCE_MAPPING_NAME_LENGTH', 128);
  *   was not specified
  */
 function salesforce_mapping_load($name = NULL) {
+  return;
   if ($name) {
     return SalesforceMappedObject::load($name);
   }
@@ -116,6 +119,7 @@ function salesforce_mapping_load($name = NULL) {
  *   indexed by id
  */
 function salesforce_mapping_load_multiple($properties = array()) {
+  return;
   if (empty($properties)) {
     return SalesforceMappedObject::loadMultiple();
   }
@@ -140,6 +144,7 @@ function salesforce_mapping_load_multiple($properties = array()) {
  *   empty array if no maps were found.
  */
 function salesforce_mapping_load_by_drupal($entity_type = null, $reset = FALSE) {
+  return;
   // Use a local static cache since this is not a pass-thru function.
   if ($reset) {
     drupal_static_reset(__FUNCTION__);
@@ -183,6 +188,8 @@ function salesforce_mapping_load_by_drupal($entity_type = null, $reset = FALSE) 
  * @see SalesforceMappedObject
  */
 function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id, $all = FALSE) {
+  // @TODO this is broken
+  return;
   $properties = array(
     'entity_id' => $entity_id,
     'entity_type' => $entity_type,
@@ -209,6 +216,8 @@ function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id, $all 
  * @see SalesforceMappedObject
  */
 function salesforce_mapped_object_load_by_entity($entity, $all = FALSE) {
+  // @TODO this is broken
+  return;
   $properties = array(
     'entity_id' => $entity->id(),
     'entity_type' => get_class($entity),
@@ -267,6 +276,7 @@ function salesforce_mapping_sort($mapping_a, $mapping_b) {
  * Implements hook_entity_delete().
  */
 function salesforce_mapping_entity_delete(EntityInterface $entity) {
+  return;
   // Delete any Salesforce object mappings with this entity.
   $mapped_object = salesforce_mapped_object_load_by_entity($entity);
 
@@ -349,6 +359,8 @@ function salesforce_mapping_permission() {
  * Implements hook_entity_view().
  */
 function salesforce_mapping_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  // @TODO there must be a better way now.
+  return;
   // Don't bother with any further processing if there are no map for this
   // entity type.
   if (!salesforce_mapping_load_by_drupal(get_class($entity))) {

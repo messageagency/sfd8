@@ -71,7 +71,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         'id' => 'edit-drupal-entity',
       ),
       // Gently discourage admins from breaking existing fieldmaps:
-      // '#collapsed' => !$mapping->isNew(),
+      '#collapsible' => TRUE,
+      '#collapsed' => !$mapping->isNew(),
     );
 
     $entity_types = $this->get_entity_type_options();
@@ -127,7 +128,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#id' => 'edit-salesforce-object',
       '#type' => 'details',
       // Gently discourage admins from breaking existing fieldmaps:
-      // '#collapsed' => !$mapping->isNew(),
+      '#collapsed' => !$mapping->isNew(),
     );
 
     $salesforce_object_type = '';
