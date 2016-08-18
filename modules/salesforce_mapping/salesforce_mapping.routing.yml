@@ -71,8 +71,8 @@ entity.salesforce_mapped_object.edit:
         type: entity:{entity_type}
   
 
-# @todo: make enable/disable work like views:
-# @todo: remove it from tabs and make it a checkbox on the properties form
+# @TODO: make enable/disable work like views:
+# @TODO: remove it from tabs and make it a checkbox on the properties form
 # views_ui.operation:
 #   path: '/admin/structure/views/view/{view}/{op}'
 #   defaults:

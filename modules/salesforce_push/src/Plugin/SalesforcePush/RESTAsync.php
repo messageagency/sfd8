@@ -23,7 +23,7 @@ class RESTAsync {
     // Create queues by fieldmap name for increased efficiency of API ops. Queue
     // name can be up to 255 characters, so we have room for lots of data.
     // @see system.install
-    // @todo determine optimal naming convention w.r.t API usage efficiency.
+    // @TODO determine optimal naming convention w.r.t API usage efficiency.
     // prefix + uuid + $op + delims = about 64 chars; plenty more room
     $queue = \Drupal::queue("salesforce_push:{$this->mapping->uuid()}:$op");
     $queue->createItem(array(

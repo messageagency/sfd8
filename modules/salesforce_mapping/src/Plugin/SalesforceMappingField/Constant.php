@@ -35,11 +35,11 @@ class Constant extends SalesforceMappingFieldPluginBase {
   }
 
   public function value(EntityInterface $entity) {
-    // @todo token replace goes here:
+    // @TODO token replace goes here:
     return $this->config('drupal_field_value');
   }
 
-  // @todo add validation handler. Prevent user from submitting anything that
+  // @TODO add validation handler. Prevent user from submitting anything that
   // isn't a token.
 
 }

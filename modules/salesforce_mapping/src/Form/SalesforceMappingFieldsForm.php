@@ -26,7 +26,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   /**
    * Previously "Field Mapping" table on the map edit form.
    * {@inheritdoc}
-   * @todo add a header with Fieldmap Property information
+   * @TODO add a header with Fieldmap Property information
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['#entity'] = $this->entity;
@@ -46,10 +46,10 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $field_mappings_wrapper['field_mappings'] = array(
       '#tree' => TRUE,
       '#type' => 'table',
-      // @todo there's probably a better way to tie ajax callbacks to this element than by hard-coding an HTML DOM ID here.
+      // @TODO there's probably a better way to tie ajax callbacks to this element than by hard-coding an HTML DOM ID here.
       '#id' => 'edit-field-mappings',
       '#header' => array(
-        // @todo: there must be a better way to get two fields in the same cell than to create an extraneous column
+        // @TODO: there must be a better way to get two fields in the same cell than to create an extraneous column
         'drupal_field_type' => '',
         'drupal_field_type_label' => $this->t('Field type'),
         'drupal_field_value' => $this->t('Drupal field'),
@@ -68,7 +68,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       ),
     );
 
-    // @todo figure out how D8 does tokens
+    // @TODO figure out how D8 does tokens
     // $form['field_mappings_wrapper']['token_tree'] = array(
     //   '#type' => 'container',
     //   '#attributes' => array(
@@ -100,7 +100,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
         'callback' => array($this, 'field_add_callback'),
         'wrapper' => 'edit-field-mappings-wrapper',
       ),
-      // @todo add validation to field_add_callback()
+      // @TODO add validation to field_add_callback()
       '#states' => array(
         'disabled' => array(
           ':input#edit-mapping-add-field-type' => array('value' => ''),
@@ -126,7 +126,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
         $rows[$delta] = $this->get_row($input['field_mappings'][$delta], $form, $form_state);
       }
     }
-    // @todo input does not contain the clicked button, have to go to values for
+    // @TODO input does not contain the clicked button, have to go to values for
     // that. This may change?
 
     // Add button was clicked. See if we have a field_type value -- it's
@@ -162,18 +162,18 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     }
     else {
       // Can't provide a row without a field type.
-      // @todo throw an exception here
+      // @TODO throw an exception here
       return;
     }
     $field_plugin_definition = $this->get_field_plugin($field_type);
     if (empty($field_plugin_definition)) {
-      // @todo throw an exception here
+      // @TODO throw an exception here
       return;
     }
 
     $field_plugin = $this->SalesforceMappingFieldManager->createInstance($field_plugin_definition['id'], $field_configuration);
 
-    // @todo allow plugins to override forms for all these fields
+    // @TODO allow plugins to override forms for all these fields
     $row['drupal_field_type'] = array(
         '#type' => 'hidden',
         '#value' => $field_type,
@@ -211,8 +211,8 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       '#default_value' => $field_plugin->config('direction') ? $field_plugin->config('direction') : SALESFORCE_MAPPING_DIRECTION_SYNC,
     );
 
-    // @todo implement "lock/unlock" logic here:
-    // @todo convert these to AJAX operations
+    // @TODO implement "lock/unlock" logic here:
+    // @TODO convert these to AJAX operations
     $operations = array('lock' => $this->t('Lock'), 'delete' => $this->t('Delete'));
     $defaults = array();
     if ($field_plugin->config('locked')) {
@@ -234,7 +234,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function validate(array $form, FormStateInterface $form_state) {
-    // @todo require a "Key" radio field to be checked
+    // @TODO require a "Key" radio field to be checked
     // Assign key to special "key_field" property for easy locating.
 
     // Transform data from the operations column into the expected schema.
@@ -269,7 +269,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   }
 
   protected function get_field_plugin($field_type) {
-    // @todo not sure if it's best practice to static cache definitions, or just
+    // @TODO not sure if it's best practice to static cache definitions, or just
     // get them from SalesforceMappingFieldManager each time.
     $field_plugins = $this->SalesforceMappingFieldManager->getDefinitions();
     return $field_plugins[$field_type];

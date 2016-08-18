@@ -75,7 +75,7 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
-    // @todo Do we really have to define this, and hook_schema, and entity_keys?
+    // @TODO Do we really have to define this, and hook_schema, and entity_keys?
     // so much redundancy.
     $i = 0;
     $fields = array();
@@ -206,7 +206,7 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
   }
 
   public function getSalesforceUrl() {
-    // @todo dependency injection here:
+    // @TODO dependency injection here:
     $sfapi = salesforce_get_api();
     if (!$sfapi) {
       return $this->salesforce_id->value;

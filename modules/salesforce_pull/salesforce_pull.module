@@ -339,7 +339,7 @@ function salesforce_pull_process_deleted_records() {
  *   Entity wrapper object.
  * @param object $sf_object
  *   sObject of the Salesforce record.
- * @todo this should move into SalesforceMapping.php
+ * @TODO this should move into SalesforceMapping.php
  */
 function salesforce_pull_map_fields($field_maps, &$entity_wrapper, $sf_object) {
   foreach ($field_maps as $field_map) {

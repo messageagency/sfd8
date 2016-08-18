@@ -1,31 +1,27 @@
-In progress:
-- salesforce.module
-- salesforce_mapping
+Basics completed so far:
+- module basics - permissions, @TODOs, routes, etc.
+- mapping interface
+- REST client and OAuth
+- push
 
-@TODOS
-- rewrite all tests for D8
 
-- Need interfaces for entites and classes:
-  - SalesforceClientInterface
-  - SalesforceMappingInterface
-  - MappedObjectInterface
-  - SalesforceMappingFieldPluginManagerInterface
+Minimum viable product targets:
+- port "salesforce_pull"
+- error handling
+- forward-port bug fixes and updates from D7
+- purge D7 code
+- migration paths from D7
+- docs
 
-- Need to build an entity definition for Salesforce Objects as defined by instance schema
 
-- extend mapping plugins to be able to override all aspects of field mappings
+Additional major goals:
+- tests, including mock testing services
+- use SOAP for things that make sense
+- polling and queueing
+- proper support for multiple mappings per entity / entity type
 
-- Modules yet untouched:
-  - salesforce_pull
-    - EventSubscriberInterface?
-  - salesforce_push
-    - EventSubscriberInterface?
-  - salesforce_soap
 
-- abstract and rip out as much of old .module files as possible
-  
-- replace Drupal:: calls in class files with Dependency Injection
-
+Additional details:
 - replace strings with consistent, drupal-wide text
   e.g. "-- Select --", "--" . t('Select') . "--", "Select Object Type", etc.
   Nobody wants to translate all those.
@@ -35,8 +31,6 @@ In progress:
 - Automatically pre-add all required Salesforce fields to mappings
   - require that they be mapped
   - require a key radio button be ticked
-
-- restore Salesforce local action for entities
 
 - Salesforce Push / Salesforce Mapping Object should be turned into a mock fields
   similar to drupal core Path
@@ -58,3 +52,156 @@ the advanced features of SOAP.
   
 - Migration paths for mapping object
   -- wait for dust to settle on mapping object schema
+
+
+List of @TODO tags from code:
+modules/salesforce_mapping/salesforce_mapping.routing.yml
+74:# @TODO: make enable/disable work like views:
+75:# @TODO: remove it from tabs and make it a checkbox on the properties form
+
+modules/salesforce_mapping/salesforce_mapping.module
+191:  // @TODO this is broken
+219:  // @TODO this is broken
+252: * @TODO: add parameter to limit by trigger: http://drupal.org/node/1915668
+362:  // @TODO there must be a better way now.
+430:  // @TODO: update this. it is broked.
+
+modules/salesforce_mapping/src/Controller/MappedObjectController.php
+33:   * @TODO find a more specific exception class 
+58:    // @TODO this probably belongs in a service
+67:    // @TODO change this to allow one-to-many mapping support.
+114:    // @TODO add validation for fieldmap options
+115:    // @TODO add validation of SFID input
+116:    // @TODO create a new field / data type for SFID (?)
+
+modules/salesforce_mapping/src/Entity/MappedObject.php
+68:    // @TODO do we still need this if we're not using entity ref field?
+78:    // @TODO Do we really have to define this, and hook_schema, and entity_keys?
+209:    // @TODO dependency injection here:
+222:    // @TODO better way to handle push/pull:
+227:    // @TODO This is deprecated, but docs contain no pointer to the non-deprecated way to do it.
+235:    // @TODO is this the right place for this logic to live?
+262:    // @TODO make this a class with reliable properties, methods.
+
+modules/salesforce_mapping/src/Entity/MappedObjectInterface.php
+12:  // @TODO figure out what to abstract out of MappedObject
+
+modules/salesforce_mapping/src/Entity/SalesforceMapping.php
+51:  // @TODO a little overboard on the properties. Can probably ditch these and force callers to use ->get or ->config
+134:   * @TODO documentation
+199:    // @TODO This should probably be delegated to a field plugin bag?
+208:    // @TODO make this an event
+
+modules/salesforce_mapping/src/Entity/SalesforceMappingInterface.php
+12:  // @TODO figure out what to abstract out of SalesforceMapping
+
+modules/salesforce_mapping/src/Form/MappedObjectForm.php
+81:    // @TODO what if there's more than one entity in route params?
+142:   * @TODO this should move to the Salesforce service
+
+modules/salesforce_mapping/src/Form/SalesforceMappingFormBase.php
+78:   * @TODO this should move to the Salesforce service
+
+modules/salesforce_mapping/src/Form/SalesforceMappingFieldsForm.php
+29:   * @TODO add a header with Fieldmap Property information
+49:      // @TODO there's probably a better way to tie ajax callbacks to this element than by hard-coding an HTML DOM ID here.
+52:        // @TODO: there must be a better way to get two fields in the same cell than to create an extraneous column
+71:    // @TODO figure out how D8 does tokens
+103:      // @TODO add validation to field_add_callback()
+129:    // @TODO input does not contain the clicked button, have to go to values for
+165:      // @TODO throw an exception here
+170:      // @TODO throw an exception here
+176:    // @TODO allow plugins to override forms for all these fields
+214:    // @TODO implement "lock/unlock" logic here:
+215:    // @TODO convert these to AJAX operations
+237:    // @TODO require a "Key" radio field to be checked
+272:    // @TODO not sure if it's best practice to static cache definitions, or just
+
+modules/salesforce_mapping/src/Form/SalesforceMappingFormCrudBase.php
+39:   * @TODO this function is almost 200 lines. Look into leveraging core Entity
+189:    // @TODO either change sync_triggers to human readable values, or make them work as hex flags again.
+237:      // @TODO replace with Dependency Injection
+
+modules/salesforce_mapping/src/Plugin/SalesforceMappingField/Constant.php
+38:    // @TODO token replace goes here:
+42:  // @TODO add validation handler. Prevent user from submitting anything that
+
+modules/salesforce_mapping/src/Plugin/SalesforceMappingField/Properties.php
+31:    // @TODO inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
+62:      // @TODO: is this type still a thing even?
+
+modules/salesforce_mapping/src/Plugin/SalesforceMappingField/RelatedIDs.php
+32:    // @TODO inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
+71:    // @TODO this procedural call will go away when sf mapping object becomes a service or field
+88:      // @TODO exclude config entities?
+
+modules/salesforce_mapping/src/Plugin/SalesforceMappingField/RelatedProperties.php
+32:    // @TODO inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
+78:      // @TODO something about this exception
+108:      // @TODO replace this with EntityFieldManagerInterface::getFieldMapByFieldType
+136:        // @TODO is there a better way to exclude non-fieldables?
+
+modules/salesforce_mapping/src/Plugin/SalesforceMappingField/Token.php
+48:    // @TODO expose token options on mapping form: clear, callback, sanitize
+49:    // @TODO expose token tree / selector
+50:    // @TODO add token validation
+
+modules/salesforce_mapping/src/SalesforceMappingFieldPluginBase.php
+126:   * @TODO: this implementation from ConfigurablePluginInterface
+177:   * @TODO This needs a better name. Could be mistaken for a verb.
+186:   * @TODO This needs a better name. Could be mistaken for a verb.
+
+modules/salesforce_mapping/src/SalesforceMappingList.php
+42:    // @TODO rename old "Status" field
+
+modules/salesforce_mapping/tests/salesforce_mapping.test
+284:            // @TODO Ajax commands can target any jQuery selector, but these are
+
+modules/salesforce_pull/salesforce_pull.module
+342: * @TODO this should move into SalesforceMapping.php
+365:        // @TODO: might wrongly assumes an individual value wouldn't be an
+
+modules/salesforce_push/salesforce_push.module
+11:// @TODO this will be come SalesforcePushInterface, or similar
+45: * @TODO
+51:  // @TODO: REFACTOR ALL THIS
+53:  // @TODO consider asking the entity itself whether it allows push/pull, instead of asking modules. This will give us better readability and granularity. E.g. using a field.
+54:  // @TODO module_implements/module_invoke pattern is deprecated
+68:    // @TODO make sync_triggers human readable or convert them back to hex flags
+76:      // @TODO init() is weird, but since the mapping is not attached to the
+240:  // @TODO SOAP put limit is 200 per op. Why does this default to 50?
+
+modules/salesforce_push/src/Plugin/SalesforcePush/REST.php
+99:    // @TODO use a mapping object factory
+127:      // @TODO reconsider whether we really want to delete the mapping here.
+
+modules/salesforce_push/src/Plugin/SalesforcePush/RESTAsync.php
+26:    // @TODO determine optimal naming convention w.r.t API usage efficiency.
+
+modules/salesforce_push/src/Plugin/SalesforcePush/SOAPBatch.php
+26:    // @TODO determine optimal naming convention w.r.t API usage efficiency.
+
+salesforce.routing.yml
+17:# @TODO at some point, hopefully, the configure path from info.yml will be included automatically and we won't need these two routes:
+
+src/Entity/SObject.php.todo
+14: * @TODO figure out if this is the right approach
+15: * @TODO implement a storage controller that makes sense
+28: * @TODO we'll probably need Dependency Injection of salesforce.client service
+57:    // @TODO get the SF instance_url and build the correct URL here:
+58:    // @TODO respet the $rel param
+
+salesforce.drush.inc
+116:  // @TODO add remaining field objects?
+163: * @TODO implement this function
+
+src/Plugin/DataType/SalesforceReference.php
+41:  // @TODO add useful things like object type and/or record type, and an actual reference to the data instead of just the ID
+54:   * @TODO retrieve the Salesforce Object record from cache instead of just the id.
+
+src/RestClient.php
+66:   * @TODO: Consider making a test API call.
+178:      // @TODO: convert this into Dependency Injection
+280:    // @TODO There is probably a better way to do this in D8.
+335:    //  // @TODO: Deal with error better.
+623:    // @TODO handle "duplicate external id" response

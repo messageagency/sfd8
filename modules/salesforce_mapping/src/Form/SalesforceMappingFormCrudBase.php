@@ -36,7 +36,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
 
   /**
    * {@inheritdoc}
-   * @todo this function is almost 200 lines. Look into leveraging core Entity
+   * @TODO this function is almost 200 lines. Look into leveraging core Entity
    *   interfaces like FieldsDefinition (or something). Look at breaking this up
    *   into smaller chunks.
    */
@@ -186,7 +186,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       }
     }
 
-    // @todo either change sync_triggers to human readable values, or make them work as hex flags again.
+    // @TODO either change sync_triggers to human readable values, or make them work as hex flags again.
     $trigger_options = $this->get_sync_trigger_options();
     $form['sync_triggers'] = array(
       '#title' => t('Action triggers'),
@@ -234,7 +234,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $entity_type = $form_state->getValue('drupal_entity_type');
     if (!empty($entity_type) && empty($form_state->getValue('drupal_bundle')[$entity_type])) {
       $element = &$form['drupal_entity']['drupal_bundle'][$entity_type];
-      // @todo replace with Dependency Injection
+      // @TODO replace with Dependency Injection
       \Drupal::formBuilder()->setError($element, $this->t('!name field is required.', array('!name' => $element['#title'])));
     }
 

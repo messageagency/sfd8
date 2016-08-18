@@ -281,7 +281,7 @@ class SalesforceMappingTestCase extends SalesforceTestCase {
             if (!isset($command['selector'])) {
               $wrapper_node = $xpath->query('//*[@id="' . $ajax_settings['wrapper'] . '"]')->item(0);
             }
-            // @todo Ajax commands can target any jQuery selector, but these are
+            // @TODO Ajax commands can target any jQuery selector, but these are
             //   hard to fully emulate with XPath. For now, just handle 'head'
             //   and 'body', since these are used by ajax_render().
             elseif (in_array($command['selector'], array('head', 'body'))) {

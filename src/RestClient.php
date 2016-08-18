@@ -175,7 +175,7 @@ class RestClient {
     );
     $data = NULL;
     if (!empty($params)) {
-      // @todo: convert this into Dependency Injection
+      // @TODO: convert this into Dependency Injection
       $data =  Json::encode($params);
     }
     return $this->httpRequest($url, $data, $headers, $method);
@@ -277,7 +277,7 @@ class RestClient {
    *   Access token from Salesforce.
    */
   protected function setAccessToken($token) {
-    // @todo There is probably a better way to do this in D8.
+    // @TODO There is probably a better way to do this in D8.
     // Why not put it in settings?
     $this->configEditable->set('access_token', $token)->save();
   }
@@ -620,7 +620,7 @@ class RestClient {
     if (isset($params[$key])) {
       unset($params[$key]);
     }
-    // @todo handle "duplicate external id" response
+    // @TODO handle "duplicate external id" response
     // @see https://drupal.org/node/2140417
     $data = $this->apiCall("sobjects/{$name}/{$key}/{$value}", $params, 'PATCH');
     return $data;

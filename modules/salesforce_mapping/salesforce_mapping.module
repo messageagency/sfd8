@@ -188,7 +188,7 @@ function salesforce_mapping_load_by_drupal($entity_type = null, $reset = FALSE) 
  * @see MappedObject
  */
 function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id, $all = FALSE) {
-  // @TODO this is broken
+  // @TODO expose D8-ified "load mapped object by drupal property"
   return;
   $properties = array(
     'entity_id' => $entity_id,

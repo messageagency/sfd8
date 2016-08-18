@@ -96,7 +96,7 @@ class Rest {
 
     // If we get this far, there was no error and sfid must have been assigned.
     // Create mapping object, saved in caller.
-    // @todo use a mapping object factory
+    // @TODO use a mapping object factory
     $this->mapped_object = entity_create('salesforce_mapped_object', array(
       'entity_id' => $this->entity->id(),
       'entity_type' => get_class($this->entity),
@@ -124,7 +124,7 @@ class Rest {
       $data = $this->sf_client->objectUpdate($this->mapping->salesforce_object_type, $this->mapped_object->sfid(), $this->mapping->getPushParams($this->entity));
     }
     catch(Exception $e) {
-      // @todo reconsider whether we really want to delete the mapping here.
+      // @TODO reconsider whether we really want to delete the mapping here.
       // e.g. Probably shouldn't delete a mapping for response code 500
       $this->mapped_object->delete();
       salesforce_set_message(t('Error message: "@msg".  The Salesforce link has been removed.', array('@msg' => $e->getMessage())), 'error');

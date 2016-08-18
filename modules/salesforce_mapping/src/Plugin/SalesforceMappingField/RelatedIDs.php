@@ -29,7 +29,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
    * This is basically the inverse of Properties::buildConfigurationForm()
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    // @todo inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
+    // @TODO inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
     $options = $this->getConfigurationOptions($form['#entity']);
 
     if (empty($options)) {
@@ -68,7 +68,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
 
     // Now we can actually fetch the referenced entity.
     $field_settings = $field->getFieldDefinition()->getFieldSettings();
-    // @todo this procedural call will go away when sf mapping object becomes a service or field
+    // @TODO this procedural call will go away when sf mapping object becomes a service or field
     if ($referenced_mapping =
       salesforce_mapped_object_load_by_drupal($field_settings['target_type'], $field->value)) {
       return $referenced_mapping->sfid();

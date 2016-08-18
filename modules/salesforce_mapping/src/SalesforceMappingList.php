@@ -39,7 +39,7 @@ class SalesforceMappingList extends DraggableListBuilder {
     $header['drupal_bundle'] = $this->t('Drupal Bundle');
     $header['salesforce_object_type'] = $this->t('Salesforce Object');
     // "status" means something new now.
-    // @todo rename old "Status" field
+    // @TODO rename old "Status" field
     $header['status'] = $this->t('Status');
     return $header + parent::buildHeader();
   }

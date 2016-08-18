@@ -8,7 +8,7 @@
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\entity\EntityInterface;
 
-// @todo this will be come SalesforcePushInterface, or similar
+// @TODO this will be come SalesforcePushInterface, or similar
 use Drupal\salesforce_push\Rest;
 use Drupal\salesforce_push\RestAsync;
 
@@ -42,7 +42,7 @@ function salesforce_push_entity_delete($entity) {
  * @param int $op
  *   The trigger being responded to. 
  *   One of push_create, push_update, push_delete.
- * @todo
+ * @TODO
  *   at some point all these hook_entity_* implementations will go away. We'll
  *   create an event subscriber class to respond to entity events and delegate
  *   actions to the appropriate Push procedures.
@@ -50,8 +50,8 @@ function salesforce_push_entity_delete($entity) {
 function salesforce_push_entity_crud($entity, $op) {
   // @TODO: REFACTOR ALL THIS
   return;
-  // @todo consider asking the entity itself whether it allows push/pull, instead of asking modules. This will give us better readability and granularity. E.g. using a field.
-  // @todo module_implements/module_invoke pattern is deprecated
+  // @TODO consider asking the entity itself whether it allows push/pull, instead of asking modules. This will give us better readability and granularity. E.g. using a field.
+  // @TODO module_implements/module_invoke pattern is deprecated
   // Trigger a hook to allow other modules to prevent this entity/operation from
   // triggering a sync with Salesforce.
   foreach (module_implements('salesforce_push_entity_allowed') as $module) {
@@ -65,7 +65,7 @@ function salesforce_push_entity_crud($entity, $op) {
   }
 
   foreach ($mappings as $mapping) {
-    // @todo make sync_triggers human readable or convert them back to hex flags
+    // @TODO make sync_triggers human readable or convert them back to hex flags
     if (!isset($mapping->sync_triggers[$op]) || !$mapping->pushPlugin) {
       continue;
     }
@@ -73,7 +73,7 @@ function salesforce_push_entity_crud($entity, $op) {
       // SFPush decides what to do with entity values, mapping flags, op, etc:
       // The module layer is only responsible for gathering objects and calling
       // the appropriate methods.
-      // @todo init() is weird, but since the mapping is not attached to the
+      // @TODO init() is weird, but since the mapping is not attached to the
       // entity (e.g. as a field), we have to feed it somehow. Seems like the plugin should be able to get at the mapping container at least...
       $mapping->pushPlugin->init($entity, $mapping)->$op();
     }
@@ -237,7 +237,7 @@ function salesforce_push_cron() {
   // -- -- Build a list of sf params and send it
   
   $queue = \Drupal::queue('salesforce_push');
-  // @todo SOAP put limit is 200 per op. Why does this default to 50?
+  // @TODO SOAP put limit is 200 per op. Why does this default to 50?
   $limit = \Drupal::state()->get('salesforce.push_limit', 50);
   $use_soap = module_exists('salesforce_soap');
   for ($delta = 0; $delta < $limit; $delta++) {

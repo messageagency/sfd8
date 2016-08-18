@@ -38,7 +38,7 @@ class SalesforceReference extends DataReferenceBase {
    */
   protected $sfid;
 
-  // @todo add useful things like object type and/or record type, and an actual reference to the data instead of just the ID
+  // @TODO add useful things like object type and/or record type, and an actual reference to the data instead of just the ID
   
   /**
    * {@inheritdoc}
@@ -51,7 +51,7 @@ class SalesforceReference extends DataReferenceBase {
 
   /**
    * {@inheritdoc}
-   * @todo retrieve the Salesforce Object record from cache instead of just the id.
+   * @TODO retrieve the Salesforce Object record from cache instead of just the id.
    */
   public function getTarget() {
     return $this->sfid;

@@ -29,7 +29,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
    * This is basically the inverse of Properties::buildConfigurationForm()
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    // @todo inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
+    // @TODO inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
     $options = $this->getConfigurationOptions($form['#entity']);
     if (empty($options)) {
       return array(
@@ -75,7 +75,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
         ->load($field->value);
     }
     catch (Exception $e) {
-      // @todo something about this exception
+      // @TODO something about this exception
       return;
     }
 

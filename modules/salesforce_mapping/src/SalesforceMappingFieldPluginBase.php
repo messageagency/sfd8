@@ -174,7 +174,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   /**
    * @return bool
    *  Whether or not this field should be pushed to Salesforce.
-   * @todo This needs a better name. Could be mistaken for a verb.
+   * @TODO This needs a better name. Could be mistaken for a verb.
    */
   public function push() {
     return in_array($this->config('direction'), array(SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF, SALESFORCE_MAPPING_DIRECTION_SYNC));
@@ -183,7 +183,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   /**
    * @return bool
    *  Whether or not this field should be pulled from Salesforce to Drupal.
-   * @todo This needs a better name. Could be mistaken for a verb.
+   * @TODO This needs a better name. Could be mistaken for a verb.
    */
   public function pull() {
     return in_array($this->config('direction'), array(SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL));

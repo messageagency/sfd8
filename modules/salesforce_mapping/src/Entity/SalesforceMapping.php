@@ -48,7 +48,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   // Only one bundle type for now.
   public $type = 'salesforce_mapping';
 
-  // @todo a little overboard on the properties. Can probably ditch these and force callers to use ->get or ->config
+  // @TODO a little overboard on the properties. Can probably ditch these and force callers to use ->get or ->config
 
   /**
    * ID (machine name) of the Mapping
@@ -131,7 +131,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   private $has_key = NULL;
 
   /**
-   * @todo documentation
+   * @TODO documentation
    */
   public $field_mappings = array();
   public $sync_triggers = array();
@@ -196,7 +196,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * @see salesforce_push_map_params (from d7)
    */
   public function getPushParams(EntityInterface $entity) {
-    // @todo This should probably be delegated to a field plugin bag?
+    // @TODO This should probably be delegated to a field plugin bag?
     foreach ($this->field_mappings as $fieldmap) {
       $field_plugin = $this->SalesforceMappingFieldManager->createInstance($fieldmap['drupal_field_type'], $fieldmap);
       // Skip fields that aren't being pushed to Salesforce.
@@ -205,7 +205,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
       }
       $params[$field_plugin->config('salesforce_field')] = $field_plugin->value($entity);
     }
-    // @todo make this an event
+    // @TODO make this an event
     // drupal_alter('salesforce_push_params', $params, $mapping, $entity_wrapper);
     return $params;
   }
