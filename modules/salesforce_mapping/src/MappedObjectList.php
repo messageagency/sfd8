@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_mapping\SalesforceMappedObjectList.
+ * Contains \Drupal\salesforce_mapping\MappedObjectList.
  */
 
 namespace Drupal\salesforce_mapping;
@@ -13,14 +13,14 @@ use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce_mapping\SalesforceMappedObject;
+use Drupal\salesforce_mapping\MappedObject;
 
 /**
  * Provides a list controller for salesforce_mapping entity.
  *
  * @ingroup salesforce_mapping
  */
-class SalesforceMappedObjectList extends EntityListBuilder {
+class MappedObjectList extends EntityListBuilder {
 
   /**
    * The url generator.
@@ -42,7 +42,7 @@ class SalesforceMappedObjectList extends EntityListBuilder {
   }
 
   /**
-   * Constructs a new SalesforceMappedObjectList object.
+   * Constructs a new MappedObjectList object.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type definition.
@@ -66,7 +66,7 @@ class SalesforceMappedObjectList extends EntityListBuilder {
    */
   public function render() {
     $build['description'] = array(
-      '#markup' => $this->t('SalesforceMappedObject implements a Contacts model. These contacts are fieldable entities. You can manage the fields on the <a href="@adminlink">Mappings</a>.', array(
+      '#markup' => $this->t('Manage the fields on the <a href="@adminlink">Mappings</a>.', array(
         '@adminlink' => $this->urlGenerator->generateFromRoute('entity.salesforce_mapping.list'),
       )),
     );
@@ -95,7 +95,7 @@ class SalesforceMappedObjectList extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    /* @var $entity \Drupal\salesforce_mapping\SalesforceMappedObject */
+    /* @var $entity \Drupal\salesforce_mapping\MappedObject */
     $row['id'] = $entity->id();
     $row['entity_id'] = $entity->entity_id->value;
     $row['entity_type'] = $entity->entity_type->value;

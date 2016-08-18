@@ -5,7 +5,7 @@
  * Contains \Drupal\salesforce\Plugin\DataType\SalesforceReference
  */
 
-namespace Drupal\salesforce\Plugin\DataType\;
+namespace Drupal\salesforce\Plugin\DataType;
 
 use Drupal\Core\TypedData\Annotation\DataType;
 use Drupal\Core\Annotation\Translation;

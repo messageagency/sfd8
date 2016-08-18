@@ -17,7 +17,7 @@ use Drupal\salesforce_push\Plugin\SalesforcePushPluginBase;
  *   label = @Translation("REST Async")
  * )
  */
-class RESTAsync extends SalesforcePushPluginBase {
+class RESTAsync {
 
   protected function queue($op) {
     // Create queues by fieldmap name for increased efficiency of API ops. Queue

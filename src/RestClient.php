@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce\SalesforceClient.
+ * Contains \Drupal\salesforce\RestClient.
  */
 
 namespace Drupal\salesforce;
@@ -26,7 +26,7 @@ use Drupal\Component\Serialization\Json;
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
  */
-class SalesforceClient {
+class RestClient {
 
   public $response;
   protected $httpClient;
@@ -82,7 +82,7 @@ class SalesforceClient {
    * @return mixed
    *   The requested response.
    *
-   * @throws SalesforceException
+   * @throws Exception
    */
   public function apiCall($path, $params = array(), $method = 'GET') {
     if (!$this->getAccessToken()) {
@@ -98,7 +98,7 @@ class SalesforceClient {
     }
 
     if (!is_object($this->response)) {
-      throw new SalesforceException('Unknown error occurred during API call');
+      throw new Exception('Unknown error occurred during API call');
     }
 
     switch ($this->response->getStatusCode()) {
@@ -111,8 +111,8 @@ class SalesforceClient {
           $this->response = $this->apiHttpRequest($path, $params, $method);
         }
         catch (RequestException $e) {
-          $this->response = $e->getRequest()->getResponse();
-          throw new SalesforceException($this->response->getReasonPhrase(), $this->response->getStatusCode());
+          $this->response = $e->getResponse();
+          throw new Exception($this->response->getReasonPhrase(), $this->response->getStatusCode());
         }
         break;
       case 200:
@@ -124,7 +124,7 @@ class SalesforceClient {
       default:
         // We have problem and no specific Salesforce error provided.
         if (empty($this->response)) {
-          throw new SalesforceException('Unknown error occurred during API call');
+          throw new Exception('Unknown error occurred during API call');
         }
     }
 
@@ -132,7 +132,7 @@ class SalesforceClient {
       $data = Json::decode($this->response->getBody()->getContents());
     }
     catch (\RuntimeException $e) {
-      throw new SalesforceException('Unable to parse API response.');
+      throw new Exception('Unable to parse API response.');
     }
 
     if (!empty($data[0]) && count($data) == 1) {
@@ -140,11 +140,11 @@ class SalesforceClient {
     }
 
     if (isset($data['error'])) {
-      throw new SalesforceException($data['error_description'], $data['error']);
+      throw new Exception($data['error_description'], $data['error']);
     }
 
     if (!empty($data['errorCode'])) {
-      throw new SalesforceException($data['message'], $this->response->getStatusCode());
+      throw new Exception($data['message'], $this->response->getStatusCode());
     }
 
     return $data;
@@ -165,7 +165,7 @@ class SalesforceClient {
    */
   protected function apiHttpRequest($path, $params, $method) {
     if (!$this->getAccessToken()) {
-      throw new SalesforceException('Missing OAuth Token');
+      throw new Exception('Missing OAuth Token');
     }
     $url = $this->getApiEndPoint() . $path;
 
@@ -302,12 +302,12 @@ class SalesforceClient {
   /**
    * Refresh access token based on the refresh token. Updates session variable.
    *
-   * @throws SalesforceException
+   * @throws Exception
    */
   protected function refreshToken() {
     $refresh_token = $this->getRefreshToken();
     if (empty($refresh_token)) {
-      throw new SalesforceException(t('There is no refresh token.'));
+      throw new Exception(t('There is no refresh token.'));
     }
 
     $data = UrlHelper::buildQuery(array(
@@ -328,23 +328,23 @@ class SalesforceClient {
       $response = $this->httpRequest($url, $data, $headers, 'POST');
     }
     catch (RequestException $e) {
-      throw new SalesforceException(t('Unable to get a Salesforce access token.'), $e->getCode());
+      throw new Exception(t('Unable to get a Salesforce access token.'), $e->getCode());
     }
 
     //if ($response->isError()) {
     //  // @TODO: Deal with error better.
-    //  throw new SalesforceException(t('Unable to get a Salesforce access// token.'), $response->getStatusCode());
+    //  throw new Exception(t('Unable to get a Salesforce access// token.'), $response->getStatusCode());
     //}
 
     try {
       $data = Json::decode($response->getBody()->getContents());
     }
     catch (\RuntimeException $e) {
-      throw new SalesforceException($e->getMessage(), $e->getCode());
+      throw new Exception($e->getMessage(), $e->getCode());
     }
 
     if (isset($data['error'])) {
-      throw new SalesforceException($data['error_description'], $data['error']);
+      throw new Exception($data['error_description'], $data['error']);
     }
 
     $this->setAccessToken($data['access_token']);
@@ -360,7 +360,7 @@ class SalesforceClient {
    * @param string $id
    *   Identity URL.
    *
-   * @throws SalesforceException
+   * @throws Exception
    */
   protected function setIdentity($id) {
     $headers = array(
@@ -371,14 +371,14 @@ class SalesforceClient {
     // @FIXME: isError doesn't exist on the Response Guzzle object.
     if ($response->getStatusCode() != 200) {
     //if ($response->isError()) {
-      throw new SalesforceException(t('Unable to access identity service.'), $response->getStatusCode());
+      throw new Exception(t('Unable to access identity service.'), $response->getStatusCode());
     }
 
     try {
       $data = Json::decode($response->getBody()->getContents());
     }
     catch (\RuntimeException $e) {
-      throw new SalesforceException($e->getMessage(), $e->getCode());
+      throw new Exception($e->getMessage(), $e->getCode());
     }
 
     $this->configEditable->set('identity', $data)->save();
@@ -437,14 +437,14 @@ class SalesforceClient {
     // @FIXME: isError doesn't exist on the Response Guzzle object.
     if ($response->getStatusCode() != 200) {
     //if ($response->isError()) {
-      throw new SalesforceException($response->getReasonPhrase(), $response->getStatusCode());
+      throw new Exception($response->getReasonPhrase(), $response->getStatusCode());
     }
 
     try {
       $data = Json::decode($response->getBody()->getContents());
     }
     catch (\RuntimeException $e) {
-      throw new SalesforceException($e->getMessage(), $e->getCode());
+      throw new Exception($e->getMessage(), $e->getCode());
     }
 
 
@@ -677,7 +677,7 @@ class SalesforceClient {
    * @addtogroup salesforce_apicalls
    */
   public function objectReadKey($name, $key_field, $key_value) {
-    return $this->apiCall("sobjects/{$naem}/{$key_field}/{$key_value}", 'GET');
+    return $this->apiCall("sobjects/{$name}/{$key_field}/{$key_value}", 'GET');
   }
 
   /**

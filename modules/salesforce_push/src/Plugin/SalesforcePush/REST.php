@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_push\Plugin\salesforce\Push\REST.
+ * Contains \Drupal\salesforce_push\Plugin\salesforce\Push\Rest.
  */
 
 namespace Drupal\salesforce_push\Plugin\SalesforcePush;
@@ -17,7 +17,7 @@ use Drupal\salesforce_push\SalesforcePushPluginBase;
  *   label = @Translation("REST")
  * )
  */
-class REST extends SalesforcePushPluginBase {
+class Rest {
 
   /**
    * @{inheritdoc}
@@ -38,7 +38,7 @@ class REST extends SalesforcePushPluginBase {
 
   /**
    * Wrapper for SalesforceClient->delete()
-   * @throws SalesforceException
+   * @throws Exception
    */
   public function push_delete() {
     if (!$this->get_mapped_object()) {
@@ -123,7 +123,7 @@ class REST extends SalesforcePushPluginBase {
     try {
       $data = $this->sf_client->objectUpdate($this->mapping->salesforce_object_type, $this->mapped_object->sfid(), $this->mapping->getPushParams($this->entity));
     }
-    catch(SalesforceException $e) {
+    catch(Exception $e) {
       // @todo reconsider whether we really want to delete the mapping here.
       // e.g. Probably shouldn't delete a mapping for response code 500
       $this->mapped_object->delete();
@@ -147,4 +147,40 @@ class REST extends SalesforcePushPluginBase {
     return $data['id'];
   }
 
+
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, SalesforceClient $sf_client) {
+    $this->sf_client = $sf_client;
+    if (!$this->sf_client->isAuthorized()) {
+      // Abort early if we can't do anything. Allows frees us from calling
+      // isAuthorized() over and over.
+      throw new Exception('Salesforce needs to be authorized to connect to this website.');
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static($configuration, $plugin_id, $plugin_definition,
+      $container->get('salesforce.client')
+    );
+  }
+
+  public function setMapping(SalesforceMapping $mapping) {
+    $this->mapping = $mapping;
+    return $this;
+  }
+
+  public function getMapping() {
+    return $this->mapping;
+  }
+
+  public function setEntity(EntityInterface $entity) {
+    $this->entity = $entity;
+    return $this;
+  }
+
+  public function getEntity() {
+    return $this->entity;
+  }
 }

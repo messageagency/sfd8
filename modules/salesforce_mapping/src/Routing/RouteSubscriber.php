@@ -34,7 +34,15 @@ class RouteSubscriber extends RouteSubscriberBase {
    */
   public function __construct(EntityTypeManagerInterface $entity_manager) {
     $this->entityTypeManager = $entity_manager;
-  }
+  } 
+ //  *   links = {
+ // *     "canonical" = "/node/{node}",
+ // *     "delete-form" = "/node/{node}/delete",
+ // *     "edit-form" = "/node/{node}/edit",
+ // *     "version-history" = "/node/{node}/revisions",
+ // *     "revision" = "/node/{node}/revisions/{node_revision}/view",
+ // *   }
+
 
   /**
    * {@inheritdoc}
@@ -43,7 +51,7 @@ class RouteSubscriber extends RouteSubscriberBase {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
       // Note the empty operation, so we get the nice clean route "entity.entity-type.salesforce"
       foreach (array('', 'edit', 'delete') as $op) {
-        if ($route = $this->getSalesforceMappedObjectRoute($entity_type, $op)) {
+        if ($route = $this->getMappedObjectRoute($entity_type, $op)) {
           $sf_route = !empty($op) ? "salesforce_$op" : 'salesforce';
           $routename = "entity.$entity_type_id.$sf_route";
           $collection->add($routename, $route);
@@ -63,7 +71,7 @@ class RouteSubscriber extends RouteSubscriberBase {
    * @return \Symfony\Component\Routing\Route|null
    *   The generated route, if available.
    */
-  protected function getSalesforceMappedObjectRoute(EntityTypeInterface $entity_type, $op) {
+  protected function getMappedObjectRoute(EntityTypeInterface $entity_type, $op) {
     if ($path = $entity_type->getLinkTemplate('salesforce')) {
       $entity_type_id = $entity_type->id();
       if (empty($op)) {
@@ -75,7 +83,7 @@ class RouteSubscriber extends RouteSubscriberBase {
       }
       $route
         ->addDefaults([
-          '_controller' => "\Drupal\salesforce_mapping\Controller\SalesforceMappedObjectController::$op",
+          '_controller' => "\Drupal\salesforce_mapping\Controller\MappedObjectController::$op",
           '_title' => "Salesforce mapped object $op",
         ])
         ->addRequirements([

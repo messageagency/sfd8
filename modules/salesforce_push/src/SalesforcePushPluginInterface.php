@@ -10,16 +10,15 @@ namespace Drupal\salesforce_push;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce\SalesforceClient;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Salesforce\salesforce_mapping\Entity\MappedObject;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 interface SalesforcePushPluginInterface {
 
   public function __construct(array $configuration, $plugin_id, array $plugin_definition, SalesforceClient $sf_client);
 
-  public function push_create();
+  public function push();
 
-  public function push_update();
+  public function delete();
 
-  public function push_delete();
-  
 }

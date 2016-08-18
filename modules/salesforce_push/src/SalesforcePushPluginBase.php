@@ -12,7 +12,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\salesforce\SalesforceClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-use Drupal\salesforce_mapping\Entity\SalesforceMappedObject;
+use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_push\SalesforcePushPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -31,7 +31,7 @@ abstract class SalesforcePushPluginBase extends PluginBase implements Salesforce
     if (!$this->sf_client->isAuthorized()) {
       // Abort early if we can't do anything. Allows frees us from calling
       // isAuthorized() over and over.
-      throw new SalesforceException('Salesforce needs to be authorized to connect to this website.');
+      throw new Exception('Salesforce needs to be authorized to connect to this website.');
     }
   }
 
@@ -44,11 +44,22 @@ abstract class SalesforcePushPluginBase extends PluginBase implements Salesforce
     );
   }
 
-  public function init(EntityInterface $entity, SalesforceMapping $mapping) {
-    $this->entity = $entity;
+  public function setMapping(SalesforceMapping $mapping) {
     $this->mapping = $mapping;
-    $this->mapped_object = salesforce_mapped_object_load_by_entity($entity);
     return $this;
+  }
+
+  public function getMapping() {
+    return $this->mapping;
+  }
+
+  public function setEntity(EntityInterface $entity) {
+    $this->entity = $entity;
+    return $this;
+  }
+
+  public function getEntity() {
+    return $this->entity;
   }
 
 }

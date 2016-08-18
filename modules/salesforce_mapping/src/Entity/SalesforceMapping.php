@@ -135,7 +135,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   public $field_mappings = array();
   public $sync_triggers = array();
-  public $push_plugin;
 
   protected $SalesforceMappingFieldManager;
 
@@ -147,10 +146,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     // entities don't support Dependency Injection, so we have to build a hard
     // dependency on the container here.
     $this->SalesforceMappingFieldManager = \Drupal::service('plugin.manager.salesforce_mapping_field');
-    // $this->pushManager = \Drupal::service('plugin.manager.salesforce_push');
-    if ($this->get('push_plugin')) {
-      $this->pushPlugin = $this->pushManager->createInstance($this->get('push_plugin'));
-    }
     // Initialize our private key field tracker for easy access.
     foreach ($this->field_mappings as $key => $value) {
       if ($value['key']) {
@@ -162,8 +157,8 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
       $this->has_key = FALSE;
       return;
     }
-    $fieldmap = $this->field_mappings[$this->key_field_id];
-    $this->key_field_plugin = $this->SalesforceMappingFieldManager->createInstance($fieldmap['drupal_field_type'], $fieldmap);
+    $key_field = $this->field_mappings[$this->key_field_id];
+    $this->key_field_plugin = $this->SalesforceMappingFieldManager->createInstance($fieldmap['drupal_field_type'], $key_field);
     // Just double-check that we have something there:
     if ($this->key_field_plugin->config('salesforce_field')) {
       $this->has_key = TRUE;
@@ -190,10 +185,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     return parent::save();
   }
 
-  public function getPushPlugins() {
-    
-  }
-
   /**
    * Given a Drupal entity, return an array of Salesforce key-value pairs 
    *
@@ -215,7 +206,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
       $params[$field_plugin->config('salesforce_field')] = $field_plugin->value($entity);
     }
     // @todo make this an event
-    drupal_alter('salesforce_push_params', $params, $mapping, $entity_wrapper);
+    // drupal_alter('salesforce_push_params', $params, $mapping, $entity_wrapper);
     return $params;
   }
 

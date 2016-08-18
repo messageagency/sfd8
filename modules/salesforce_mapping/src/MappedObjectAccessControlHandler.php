@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_mapping\SalesforceMappedObjectAccessControlHandler.
+ * Contains \Drupal\salesforce_mapping\MappedObjectAccessControlHandler.
  */
 
 namespace Drupal\salesforce_mapping;
@@ -17,7 +17,7 @@ use Drupal\Core\Session\AccountInterface;
  *
  * @see \Drupal\comment\Entity\Comment.
  */
-class SalesforceMappedObjectAccessControlHandler extends EntityAccessControlHandler {
+class MappedObjectAccessControlHandler extends EntityAccessControlHandler {
 
   /**
    * {@inheritdoc}

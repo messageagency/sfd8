@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce_mapping\Controller\SalesforceMappedObjectController.
+ * Contains \Drupal\salesforce_mapping\Controller\MappedObjectController.
  */
 
 namespace Drupal\salesforce_mapping\Controller;
@@ -16,12 +16,12 @@ use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Symfony\Component\HttpFoundation\Request;
-use Drupal\salesforce_mapping\Entity\SalesforceMappedObject;
+use Drupal\salesforce_mapping\Entity\MappedObject;
 
 /**
  * Returns responses for devel module routes.
  */
-class SalesforceMappedObjectController extends ControllerBase {
+class MappedObjectController extends ControllerBase {
 
   /**
    * Helper function to get entity from router path
@@ -47,12 +47,12 @@ class SalesforceMappedObjectController extends ControllerBase {
   }
 
   /**
-   * Helper function to fetch existing SalesforceMappedObject or create a new one
+   * Helper function to fetch existing MappedObject or create a new one
    *
    * @param EntityInterface $entity
    *   The entity to be mapped.
    *
-   * @return SalesforceMappedObject
+   * @return MappedObject
    */
   private function getMappedObject(EntityInterface $entity) {
     // @TODO this probably belongs in a service
@@ -69,7 +69,7 @@ class SalesforceMappedObjectController extends ControllerBase {
       return current($result);
     }
     // If an existing mapping was not found, return a new stub instead.
-    return new SalesforceMappedObject(array(
+    return new MappedObject(array(
       'entity_id' => array(LanguageInterface::LANGCODE_DEFAULT => $entity->id()),
       'entity_type_id' => array(LanguageInterface::LANGCODE_DEFAULT => $entity->getEntityTypeId()),
     ));    
@@ -100,7 +100,7 @@ class SalesforceMappedObjectController extends ControllerBase {
   }
 
   /**
-   * Show the SalesforceMappedObject entity add/edit form
+   * Show the MappedObject entity add/edit form
    *
    * @param RouteMatchInterface $route_match
    * @return array
@@ -118,7 +118,7 @@ class SalesforceMappedObjectController extends ControllerBase {
   }
 
   /**
-   * Show the SalesforceMappedObject delete form.
+   * Show the MappedObject delete form.
    *
    * @param RouteMatchInterface $route_match 
    * @return array

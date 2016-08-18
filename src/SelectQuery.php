@@ -6,7 +6,7 @@
 
 namespace Drupal\salesforce;
 
-class SalesforceSelectQuery {
+class SelectQuery {
 
   public $fields = array();
   public $order = array();

@@ -17,7 +17,7 @@ use Drupal\salesforce_push\Plugin\SalesforcePushPluginBase;
  *   label = @Translation("SOAP Batch")
  * )
  */
-class SOAPBatch extends SalesforcePushPluginBase {
+class SOAPBatch  {
 
   protected function queue($op) {
     // Create queues by fieldmap name for increased efficiency of API ops. Queue

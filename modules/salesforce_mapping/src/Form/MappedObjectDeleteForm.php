@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Contains Drupal\salesforce_mapping\Form\SalesforceMappedObjectDeleteForm
+ * Contains Drupal\salesforce_mapping\Form\MappedObjectDeleteForm
  */
 
 namespace Drupal\salesforce_mapping\Form;
@@ -17,7 +17,7 @@ use Drupal\Core\Url;
  *
  * @ingroup content_entity_example
  */
-class SalesforceMappedObjectDeleteForm extends ContentEntityConfirmFormBase {
+class MappedObjectDeleteForm extends ContentEntityConfirmFormBase {
 
   /**
    * {@inheritdoc}
@@ -54,7 +54,7 @@ class SalesforceMappedObjectDeleteForm extends ContentEntityConfirmFormBase {
     $form_state->setRedirect($mapped_object->getMappedEntity()->toUrl('salesforce'));
     $this
       ->logger('salesforce_mapped_oject')
-      ->notice('SalesforceMappedObject @sfid deleted.', array(
+      ->notice('MappedObject @sfid deleted.', array(
         '@sfid' => $mapped_object->salesforce_id->value
       ));
     $mapped_object->delete();

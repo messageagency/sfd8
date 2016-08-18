@@ -5,11 +5,13 @@
  * Push updates to Salesforce when a Drupal entity is updated.
  */
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\entity\EntityInterface;
 
 // @todo this will be come SalesforcePushInterface, or similar
-use Drupal\salesforce_push\SalesforcePushRest;
-use Drupal\salesforce_push\SalesforcePushRestAsync;
+use Drupal\salesforce_push\Rest;
+use Drupal\salesforce_push\RestAsync;
+
 
 /**
  * Implements hook_entity_insert().
@@ -75,7 +77,7 @@ function salesforce_push_entity_crud($entity, $op) {
       // entity (e.g. as a field), we have to feed it somehow. Seems like the plugin should be able to get at the mapping container at least...
       $mapping->pushPlugin->init($entity, $mapping)->$op();
     }
-    catch (SalesforceException $e) {
+    catch (Exception $e) {
       $vars = array(
         'entity' => $entity,
         'mapping' => $mapping,
@@ -138,7 +140,7 @@ function salesforce_push_sync_rest($entity, $mapping, $op) {
         $data = $sfapi->objectCreate($mapping->salesforce_object_type, $params);
       }
     }
-    catch(SalesforceException $e) {
+    catch(Exception $e) {
       $vars = array(
         'entity_type' => $entity_type,
         'entity' => $entity,
@@ -190,7 +192,7 @@ function salesforce_push_sync_rest($entity, $mapping, $op) {
     try {
       $sfapi->objectUpdate($mapping->salesforce_object_type, $mapped_objects->salesforce_id, $params);
     }
-    catch(SalesforceException $e) {
+    catch(Exception $e) {
       $mapped_objects->delete();
       $vars = array(
         'entity_type' => $entity_type,
@@ -220,6 +222,8 @@ function salesforce_push_sync_rest($entity, $mapping, $op) {
  * Implements hook_cron().
  */
 function salesforce_push_cron() {
+  return;
+
   $sfapi = salesforce_get_api();
   if (!$sfapi->isAuthorized()) {
     return;

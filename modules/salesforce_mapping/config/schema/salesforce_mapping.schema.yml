@@ -56,9 +56,6 @@ salesforce_mapping.salesforce_mapping.*:
     drupal_bundle:
       type: string
       label: 'Drupal Bundle'
-    push_plugin:
-      type: string
-      label: 'Push Plugin'
     field_mappings:
       type: sequence
       label: 'Field Mappings'

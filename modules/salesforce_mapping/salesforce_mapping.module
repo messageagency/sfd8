@@ -12,7 +12,7 @@ use Drupal\Core\Entity\EntityInterface;
 use \Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 // Not sure if we'll actually need these, since entity API seems to provide everything:
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-use Drupal\salesforce_mapping\Entity\SalesforceMappedObject;
+use Drupal\salesforce_mapping\Entity\MappedObject;
 
 /**
  * Implements hook_entity_type_alter().
@@ -97,9 +97,9 @@ define('SALESFORCE_MAPPING_NAME_LENGTH', 128);
 function salesforce_mapping_load($name = NULL) {
   return;
   if ($name) {
-    return SalesforceMappedObject::load($name);
+    return MappedObject::load($name);
   }
-  return SalesforceMappedObject::loadMultiple();
+  return MappedObject::loadMultiple();
 }
 
 /**
@@ -121,9 +121,9 @@ function salesforce_mapping_load($name = NULL) {
 function salesforce_mapping_load_multiple($properties = array()) {
   return;
   if (empty($properties)) {
-    return SalesforceMappedObject::loadMultiple();
+    return MappedObject::loadMultiple();
   }
-  return SalesforceMappedObject::loadByProperties($properties);
+  return MappedObject::loadByProperties($properties);
 }
 
 /**
@@ -185,7 +185,7 @@ function salesforce_mapping_load_by_drupal($entity_type = null, $reset = FALSE) 
  * @return bool | array | salesforce_mapped_object 
  *   The requested salesforce_mapped_object, or array of
  *   salesforce_mapped_objects, or FALSE if none was found.
- * @see SalesforceMappedObject
+ * @see MappedObject
  */
 function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id, $all = FALSE) {
   // @TODO this is broken
@@ -213,7 +213,7 @@ function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id, $all 
  * @return bool | array | salesforce_mapped_object 
  *   The requested salesforce_mapped_object, or array of
  *   salesforce_mapped_objects, or FALSE if none was found.
- * @see SalesforceMappedObject
+ * @see MappedObject
  */
 function salesforce_mapped_object_load_by_entity($entity, $all = FALSE) {
   // @TODO this is broken

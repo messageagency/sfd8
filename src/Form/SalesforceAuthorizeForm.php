@@ -11,7 +11,8 @@ use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\SalesforceClient;
-use Drupal\salesforce\SalesforceException;
+use Drupal\salesforce\Exception;
+use Drupal\salesforce\RestClient;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -31,7 +32,7 @@ class SalesforceAuthorizeForm extends ConfigFormBase {
    * @param \Drupal\salesforce\SalesforceClient $sf_client
    *   The factory for configuration objects.
    */
-  public function __construct(ConfigFactory $config_factory, SalesforceClient $salesforce_client) {
+  public function __construct(ConfigFactory $config_factory, RestClient $salesforce_client) {
     parent::__construct($config_factory);
     $this->sf_client = $salesforce_client;
   }
