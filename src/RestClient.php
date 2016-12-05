@@ -7,20 +7,18 @@
 
 namespace Drupal\salesforce;
 
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Routing\UrlGeneratorInterface;
-use Drupal\Core\Url;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
-use Drupal\salesforce\SalesforceSelectQuery;
-#use Guzzle\Http\Exception\RequestException;
-use Guzzle\Http\ClientInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use GuzzleHttp\Client;
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
+use Drupal\Core\State\StateInterface;
+use Drupal\Core\Url;
+use Drupal\salesforce\SelectQuery;
 use GuzzleHttp\Exception\RequestException;
-
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\ClientInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Component\Serialization\Json;
 
 /**
@@ -34,6 +32,7 @@ class RestClient {
   protected $urlGenerator;
   private $config;
   private $configEditable;
+  private $state;
 
   /**
    * Constructor which initializes the consumer.
@@ -42,22 +41,13 @@ class RestClient {
    * @param \Guzzle\Http\ClientInterface $http_client
    *   The config factory
    */
-  public function __construct(Client $http_client, ConfigFactory $config_factory, UrlGeneratorInterface $url_generator) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, UrlGeneratorInterface $url_generator, StateInterface $state) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
     $this->urlGenerator = $url_generator;
     $this->config = $this->configFactory->get('salesforce.settings');
     $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('http_default_client'),
-      $container->get('config.factory')
-    );
+    $this->state = $state;
   }
 
   /**
@@ -84,7 +74,7 @@ class RestClient {
    *
    * @throws Exception
    */
-  public function apiCall($path, $params = array(), $method = 'GET') {
+  public function apiCall($path, array $params = [], $method = 'GET') {
     if (!$this->getAccessToken()) {
       $this->refreshToken();
     }
@@ -128,25 +118,13 @@ class RestClient {
         }
     }
 
-    try {
-      $data = Json::decode($this->response->getBody()->getContents());
+    // Parse a json response, if body is not empty. Sometimes an empty body is valid, e.g. for upsert.
+    $data = '';
+    $response_body = $this->response->getBody()->getContents();
+    if (!empty($response_body)) {
+      $this->response->getBody()->rewind();
+      $data = $this->handleJsonResponse($this->response);
     }
-    catch (\RuntimeException $e) {
-      throw new Exception('Unable to parse API response.');
-    }
-
-    if (!empty($data[0]) && count($data) == 1) {
-      $data = $data[0];
-    }
-
-    if (isset($data['error'])) {
-      throw new Exception($data['error_description'], $data['error']);
-    }
-
-    if (!empty($data['errorCode'])) {
-      throw new Exception($data['message'], $this->response->getStatusCode());
-    }
-
     return $data;
   }
 
@@ -163,16 +141,16 @@ class RestClient {
    * @return object
    *   The requested data.
    */
-  protected function apiHttpRequest($path, $params, $method) {
+  protected function apiHttpRequest($path, array $params, $method) {
     if (!$this->getAccessToken()) {
       throw new Exception('Missing OAuth Token');
     }
     $url = $this->getApiEndPoint() . $path;
 
-    $headers = array(
+    $headers = [
       'Authorization' => 'OAuth ' . $this->getAccessToken(),
       'Content-type' => 'application/json',
-    );
+    ];
     $data = NULL;
     if (!empty($params)) {
       // @TODO: convert this into Dependency Injection
@@ -198,9 +176,9 @@ class RestClient {
    * @return object
    *   Salesforce response object.
    */
-  protected function httpRequest($url, $data = NULL, $headers = array(), $method = 'GET') {
+  protected function httpRequest($url, $data = NULL, array $headers = [], $method = 'GET') {
     // Build the request, including path and headers. Internal use.
-    $request = $this->httpClient->$method($url, array('headers' => $headers, 'body' => $data));
+    $request = $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
     return $request;
   }
 
@@ -229,25 +207,35 @@ class RestClient {
   }
 
   public function getConsumerKey() {
-    return $this->config->get('consumer_key');
+    return $this->state->get('salesforce.consumer_key');
   }
 
   public function setConsumerKey($value) {
-    return $this->configEditable->set('consumer_key', $value)->save();
+    return $this->state->set('salesforce.consumer_key', $value);
   }
 
   public function getConsumerSecret() {
-    return $this->config->get('consumer_secret');
+    return $this->state->get('salesforce.consumer_secret');
   }
 
   public function setConsumerSecret($value) {
-    return $this->configEditable->set('consumer_secret', $value)->save();
+    return $this->state->set('salesforce.consumer_secret', $value);
   }
+
+  public function getLoginUrl() {
+    $login_url = $this->state->get('salesforce.login_url');
+    return empty($login_url) ? 'https://login.salesforce.com' : $login_url;
+  }
+
+  public function setLoginUrl($value) {
+    return $this->state->set('salesforce.login_url', $value);
+  }
+
   /**
    * Get the SF instance URL. Useful for linking to objects.
    */
   public function getInstanceUrl() {
-    return $this->config->get('instance_url');
+    return $this->state->get('salesforce.instance_url');
   }
 
   /**
@@ -257,36 +245,32 @@ class RestClient {
    *   URL to set.
    */
   protected function setInstanceUrl($url) {
-    $this->configEditable->set('instance_url', $url)->save();
+    $this->state->set('salesforce.instance_url', $url);
   }
 
   /**
    * Get the access token.
    */
   public function getAccessToken() {
-    $access_token = $this->config->get('access_token');
+    $access_token = $this->state->get('salesforce.access_token');
     return isset($access_token) && Unicode::strlen($access_token) !== 0 ? $access_token : FALSE;
   }
 
   /**
    * Set the access token.
    *
-   * It is stored in session.
-   *
    * @param string $token
    *   Access token from Salesforce.
    */
-  protected function setAccessToken($token) {
-    // @TODO There is probably a better way to do this in D8.
-    // Why not put it in settings?
-    $this->configEditable->set('access_token', $token)->save();
+  public function setAccessToken($token) {
+    $this->state->set('salesforce.access_token', $token);
   }
 
   /**
    * Get refresh token.
    */
   protected function getRefreshToken() {
-    return $this->config->get('refresh_token');
+    return $this->state->get('salesforce.refresh_token');
   }
 
   /**
@@ -296,11 +280,11 @@ class RestClient {
    *   Refresh token from Salesforce.
    */
   protected function setRefreshToken($token) {
-    $this->configEditable->set('refresh_token', $token)->save();
+    $this->state->set('salesforce.refresh_token', $token);
   }
 
   /**
-   * Refresh access token based on the refresh token. Updates session variable.
+   * Refresh access token based on the refresh token.
    *
    * @throws Exception
    */
@@ -310,48 +294,76 @@ class RestClient {
       throw new Exception(t('There is no refresh token.'));
     }
 
-    $data = UrlHelper::buildQuery(array(
+    $data = UrlHelper::buildQuery([
       'grant_type' => 'refresh_token',
       'refresh_token' => urldecode($refresh_token),
       'client_id' => $this->getConsumerKey(),
       'client_secret' => $this->getConsumerSecret(),
-    ));
+    ]);
 
-    $url = $this->config->get('login_url') . '/services/oauth2/token';
-    $headers = array(
+    $url = $this->getAuthTokenUrl();
+    $headers = [
       // This is an undocumented requirement on Salesforce's end.
       'Content-Type' => 'application/x-www-form-urlencoded',
-    );
+    ];
     $response = $this->httpRequest($url, $data, $headers, 'POST');
 
-    try {
-      $response = $this->httpRequest($url, $data, $headers, 'POST');
-    }
-    catch (RequestException $e) {
-      throw new Exception(t('Unable to get a Salesforce access token.'), $e->getCode());
+    $this->handleAuthResponse($response);
+  }
+
+  /**
+   * Helper callback for OAuth handshake, and refreshToken()
+   *
+   * @param GuzzleHttp\Psr7\Response $response
+   *   Response object from refreshToken or authToken endpoints
+   *
+   * @see SalesforceController::oauthCallback()
+   * @see self::refreshToken()
+   */
+  public function handleAuthResponse(Response $response) {
+    if ($response->getStatusCode() != 200) {
+     throw new Exception($response->getReasonPhrase(), $response->getStatusCode());
     }
 
-    //if ($response->isError()) {
-    //  // @TODO: Deal with error better.
-    //  throw new Exception(t('Unable to get a Salesforce access// token.'), $response->getStatusCode());
-    //}
+    $data = $this->handleJsonResponse($response);
 
-    try {
-      $data = Json::decode($response->getBody()->getContents());
-    }
-    catch (\RuntimeException $e) {
-      throw new Exception($e->getMessage(), $e->getCode());
+    $this->setAccessToken($data['access_token']);
+    $this->setRefreshToken($data['refresh_token']);
+    $this->initializeIdentity($data['id']);
+    $this->setInstanceUrl($data['instance_url']);
+  }
+
+  /**
+   * Helper function to eliminate repetitive json parsing.
+   *
+   * @param Response $response 
+   * @return array
+   * @throws Drupal\salesforce\Exception
+   */
+  private function handleJsonResponse($response) {
+    // Allow any exceptions here to bubble up:
+    $data = Json::decode($response->getBody()->getContents());
+    if (empty($data)) {
+      throw new Exception('Invalid response ' . print_r($response->getBody()->getContents(), 1));
     }
 
     if (isset($data['error'])) {
       throw new Exception($data['error_description'], $data['error']);
     }
 
-    $this->setAccessToken($data['access_token']);
-    $this->setIdentity($data['id']);
-    $this->configEditable
-      ->set('instance_url', $data['instance_url'])
-      ->save();
+    if (!empty($data[0]) && count($data) == 1) {
+      $data = $data[0];
+    }
+
+    if (isset($data['error'])) {
+      throw new Exception($data['error_description'], $data['error']);
+    }
+
+    if (!empty($data['errorCode'])) {
+      throw new Exception($data['message'], $this->response->getStatusCode());
+    }
+
+    return $data;
   }
 
   /**
@@ -362,26 +374,23 @@ class RestClient {
    *
    * @throws Exception
    */
-  protected function setIdentity($id) {
-    $headers = array(
+  public function initializeIdentity($id) {
+    $headers = [
       'Authorization' => 'OAuth ' . $this->getAccessToken(),
       'Content-type' => 'application/json',
-    );
+    ];
     $response = $this->httpRequest($id, NULL, $headers);
-    // @FIXME: isError doesn't exist on the Response Guzzle object.
+
     if ($response->getStatusCode() != 200) {
-    //if ($response->isError()) {
       throw new Exception(t('Unable to access identity service.'), $response->getStatusCode());
     }
 
-    try {
-      $data = Json::decode($response->getBody()->getContents());
-    }
-    catch (\RuntimeException $e) {
-      throw new Exception($e->getMessage(), $e->getCode());
-    }
+    $data = $this->handleJsonResponse($response);
+    $this->setIdentity($data);
+  }
 
-    $this->configEditable->set('identity', $data)->save();
+  protected function setIdentity(array $data) {
+    $this->state->set('salesforce.identity', $data);
   }
 
   /**
@@ -391,69 +400,7 @@ class RestClient {
    *   Returns FALSE is no identity has been stored.
    */
   public function getIdentity() {
-    return $this->config->get('identity');
-  }
-
-  /**
-   * OAuth step 1: Redirect to Salesforce and request and authorization code.
-   */
-  public function getAuthorizationCode() {
-    $path = $this->config->get('login_url') . '/services/oauth2/authorize';
-
-    $query = array(
-      'redirect_uri' => $this->redirectUrl(),
-      'response_type' => 'code',
-      'client_id' => $this->getConsumerKey(),
-    );
-
-    $response = new RedirectResponse(
-      Url::fromUri($path, array('query' => $query, 'absolute' => TRUE))->toUriString()
-    );
-    $response->send();
-  }
-
-  /**
-   * OAuth step 2: Exchange an authorization code for an access token.
-   *
-   * @param string $code
-   *   Code from Salesforce.
-   */
-  public function requestToken($code) {
-    $data = urldecode(UrlHelper::buildQuery(array(
-      'code' => $code,
-      'grant_type' => 'authorization_code',
-      'client_id' => $this->getConsumerKey(),
-      'client_secret' => $this->getConsumerSecret(),
-      'redirect_uri' => $this->redirectUrl(),
-    )));
-    $url = $this->config->get('login_url') . '/services/oauth2/token';
-    $headers = array(
-      // This is an undocumented requirement on SF's end.
-      'Content-Type' => 'application/x-www-form-urlencoded',
-    );
-
-    $response = $this->httpRequest($url, $data, $headers, 'POST');
-
-    // @FIXME: isError doesn't exist on the Response Guzzle object.
-    if ($response->getStatusCode() != 200) {
-    //if ($response->isError()) {
-      throw new Exception($response->getReasonPhrase(), $response->getStatusCode());
-    }
-
-    try {
-      $data = Json::decode($response->getBody()->getContents());
-    }
-    catch (\RuntimeException $e) {
-      throw new Exception($e->getMessage(), $e->getCode());
-    }
-
-
-    $this->setAccessToken($data['access_token']);
-    $this->setIdentity($data['id']);
-    $this->configEditable
-      ->set('refresh_token', $data['refresh_token'])
-      ->set('instance_url', $data['instance_url'])
-      ->save();
+    return $this->state->get('salesforce.identity');
   }
 
   /**
@@ -461,12 +408,34 @@ class RestClient {
    *
    * @return string
    *   Redirect URL.
+   *
+   * @see Drupal\salesforce\Controller\SalesforceController
    */
-  protected function redirectUrl() {
-    return \Drupal::url('salesforce.oauth_callback', array(), array(
+  public function getAuthCallbackUrl() {
+    return \Drupal::url('salesforce.oauth_callback', [], [
       'absolute' => TRUE,
       'https' => TRUE,
-    ));
+    ]);
+  }
+
+  /**
+   * Get Salesforce oauth login endpoint. (OAuth step 1)
+   *
+   * @return string
+   *   REST OAuth Login URL.
+   */
+  public function getAuthEndpointUrl() {
+    return $this->getLoginUrl() . '/services/oauth2/authorize';
+  }
+
+  /**
+   * Get Salesforce oauth token endpoint. (OAuth step 2)
+   *
+   * @return string
+   *   REST OAuth Token URL.
+   */
+  public function getAuthTokenUrl() {
+    return $this->getLoginUrl() . '/services/oauth2/token';
   }
 
   /**
@@ -487,7 +456,7 @@ class RestClient {
    *
    * @addtogroup salesforce_apicalls
    */
-  public function objects($conditions = array('updateable' => TRUE), $reset = FALSE) {
+  public function objects(array $conditions = ['updateable' => TRUE], $reset = FALSE) {
     $cache = \Drupal::cache()->get('salesforce:objects');
 
     // Force the recreation of the cache when it is older than 5 minutes.
@@ -496,12 +465,7 @@ class RestClient {
     }
     else {
       $result = $this->apiCall('sobjects');
-
-      // Allow the cache to clear at any time by not setting an expire time.
-      // CACHE_TEMPORARY has been removed. Using 'content' tag to replicate
-      // old functionality.
-      // @see https://drupal.org/node/1534648
-      \Drupal::cache()->set('salesforce:objects', $result, CacheBackendInterface::CACHE_PERMANENT, array('salesforce' => TRUE, 'content' => TRUE));
+      \Drupal::cache()->set('salesforce:objects', $result, 0, ['salesforce']);
     }
 
     if (!empty($conditions)) {
@@ -528,7 +492,7 @@ class RestClient {
    *
    * @addtogroup salesforce_apicalls
    */
-  public function query(SalesforceSelectQuery $query) {
+  public function query(SelectQuery $query) {
     //$this->moduleHander->alter('salesforce_query', $query);
     // Casting $query as a string calls SalesforceSelectQuery::__toString().
 
@@ -552,19 +516,22 @@ class RestClient {
    */
   public function objectDescribe($name, $reset = FALSE) {
     if (empty($name)) {
-      return array();
+      return [];
     }
-    $cache = \Drupal::cache()->get('salesforce:object:' . $name);    
+    $cache = \Drupal::cache()->get('salesforce:object:' . $name);
     // Force the recreation of the cache when it is older than 5 minutes.
     if ($cache && REQUEST_TIME < ($cache->created + 300) && !$reset) {
       return $cache->data;
     }
     else {
       $object = $this->apiCall("sobjects/{$name}/describe");
-      // Allow the cache to clear at any time by not setting an expire time.
-      // CACHE_TEMPORARY has been removed. Using 'content' tag to replicate
-      // old functionality. @see https://drupal.org/node/1534648
-      \Drupal::cache()->set('salesforce:object:' . $name, $object, CacheBackendInterface::CACHE_PERMANENT, array('salesforce' => TRUE, 'content' => TRUE));
+      // Index fields by machine name, so we don't have to search every time.
+      $new_fields = [];
+      foreach ($object['fields'] as $field) {
+        $new_fields[$field['name']] = $field;
+      }
+      $object['fields'] = $new_fields;
+      \Drupal::cache()->set('salesforce:object:' . $name, $object, 0, ['salesforce']);
       return $object;
     }
   }
@@ -584,7 +551,7 @@ class RestClient {
    *
    * @addtogroup salesforce_apicalls
    */
-  public function objectCreate($name, $params) {
+  public function objectCreate($name, array $params) {
     return $this->apiCall("sobjects/{$name}", $params, 'POST');
   }
 
@@ -593,7 +560,7 @@ class RestClient {
    *
    * The new records or updated records are based on the value of the specified
    * field.  If the value is not unique, REST API returns a 300 response with
-   * the list of matching records.
+   * the list of matching records and throws an Exception.
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account.
@@ -605,24 +572,33 @@ class RestClient {
    *   Values of the fields to set for the object.
    *
    * @return array
-   *   successful create:
+   *   1) successful create:
    *     "id" : "00190000001pPvHAAU",
    *     "errors" : [ ],
    *     "success" : true
-   *   error:
+   *
+   *   2) unsuccessful upsert:
    *     "message" : "The requested resource does not exist"
    *     "errorCode" : "NOT_FOUND"
    *
    * @addtogroup salesforce_apicalls
    */
-  public function objectUpsert($name, $key, $value, $params) {
+  public function objectUpsert($name, $key, $value, array $params) {
     // If key is set, remove from $params to avoid UPSERT errors.
     if (isset($params[$key])) {
       unset($params[$key]);
     }
-    // @TODO handle "duplicate external id" response
-    // @see https://drupal.org/node/2140417
+
     $data = $this->apiCall("sobjects/{$name}/{$key}/{$value}", $params, 'PATCH');
+
+    // On update, upsert method returns an empty body. Retreive object id, so that we can return a consistent response.
+    if ($this->response->getStatusCode() == 204) {
+      $sf_object = $this->objectReadbyExternalId($name, $key, $value);
+      $data['id'] = $sf_object['Id'];
+      $data['success'] = TRUE;
+      $data['errors'] = [];
+    }
+
     return $data;
   }
 
@@ -640,7 +616,7 @@ class RestClient {
    *
    * @addtogroup salesforce_apicalls
    */
-  public function objectUpdate($name, $id, $params) {
+  public function objectUpdate($name, $id, array $params) {
     $this->apiCall("sobjects/{$name}/{$id}", $params, 'PATCH');
   }
 
@@ -658,26 +634,26 @@ class RestClient {
    * @addtogroup salesforce_apicalls
    */
   public function objectRead($name, $id) {
-    return $this->apiCall("sobjects/{$name}/{$id}", array(), 'GET');
+    return $this->apiCall("sobjects/{$name}/{$id}", [], 'GET');
   }
 
   /**
-   * Return a full loaded Salesforce object given an external key
+   * Return a full loaded Salesforce object from External ID.
    *
    * @param string $name
-   *   Object type name, e.g. Contact, Account
-   * @param string $key_field
-   *   External key field name, e.g. External_ID__c
-   * @param string $key_value
-   *   External key value, e.g. $node->nid, $user->uid
+   *   Object type name, E.g., Contact, Account.
+   * @param string $field
+   *   Salesforce external id field name.
+   * @param string $value
+   *   Value of external id.
    *
-   * @return array
-   *   Object of the requested Salesforce object
+   * @return object
+   *   Object of the requested Salesforce object.
    *
    * @addtogroup salesforce_apicalls
    */
-  public function objectReadKey($name, $key_field, $key_value) {
-    return $this->apiCall("sobjects/{$name}/{$key_field}/{$key_value}", 'GET');
+  public function objectReadbyExternalId($name, $field, $value) {
+    return $this->apiCall("sobjects/{$name}/{$field}/{$value}");
   }
 
   /**
@@ -691,7 +667,7 @@ class RestClient {
    * @addtogroup salesforce_apicalls
    */
   public function objectDelete($name, $id) {
-    $this->apiCall("sobjects/{$name}/{$id}", array(), 'DELETE');
+    $this->apiCall("sobjects/{$name}/{$id}", [], 'DELETE');
   }
 
   /**

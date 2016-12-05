@@ -16,21 +16,21 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
    * Implementation of getInfo().
    */
   public static function getInfo() {
-    return array(
+    return [
       'name' => 'Mapping Entities',
       'description' => 'Tests the entities storing the Drupal to Salesforce mapping.',
       'group' => 'Salesforce',
-    );
+    ];
   }
 
   /**
    * Implementation of setUp().
    */
-  public function setUp($modules = array(), $permissions = array()) {
+  public function setUp($modules = [], $permissions = []) {
     parent::setUp($modules, $permissions);
 
     // Create an example map.
-    $this->example_map = array(
+    $this->example_map = [
       'name' => 'foobar',
       'label' => 'Foo Bar',
       'type' => 'bazbang',
@@ -39,26 +39,26 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
       'salesforce_record_type' => 'baz',
       'drupal_entity_type' => 'node',
       'drupal_bundle' => 'story',
-      'field_mappings' => array(
+      'field_mappings' => [
         'foo' => 'bar',
-        'baz' => array(
+        'baz' => [
           'bang' => 'boom',
           'fizz' => 'buzz',
-        ),
+        ],
         'hello' => 'world',
-      ),
+      ],
       'push_async' => 1,
       'push_batch' => 1,
       'weight' => 0,
       'status' => TRUE,
-    );
+    ];
 
     // Create an example record.
-    $this->example_map_object = array(
+    $this->example_map_object = [
       'salesforce_id' => uniqid(),
       'entity_id' => 3,
       'entity_type' => 'foobar',
-    );
+    ];
   }
 
   /**
@@ -84,7 +84,7 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
     // Save the entity to the database.
     $result = entity_save('salesforce_mapping', $test_map);
     $this->assertEqual(SAVED_NEW, $result, 'Entity saved as new.');
-    $test_map_dbs = entity_load_multiple_by_name('salesforce_mapping', array($this->example_map['name']));
+    $test_map_dbs = entity_load_multiple_by_name('salesforce_mapping', [$this->example_map['name']]);
     $test_map_db = reset($test_map_dbs);
     $this->assertEqual('bar', $test_map_db->salesforce_object_type, 'Newly created entity has the correct object type.');
 
@@ -137,25 +137,25 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
     $this->assertEqual(2, count($result), 'Loading maps without stating a specific property returned 2 maps.');
 
     // salesforce_mapping_load_multiple() single property.
-    $result = salesforce_mapping_load_multiple(array('drupal_bundle' => 'event'));
+    $result = salesforce_mapping_load_multiple(['drupal_bundle' => 'event']);
     $this->assertTrue(is_array($result), 'Loading maps stating the drupal_bundle returned an array.');
     $this->assertEqual(1, count($result), 'Loading maps stating the drupal_bundle property returned 1 map.');
     $map = reset($result);
     $this->assertEqual($test_map2->label, $map->label, 'Loading maps stating the drupal_bundle property returned the expected map.');
-    $result = salesforce_mapping_load_multiple(array('drupal_entity_type' => 'node'));
+    $result = salesforce_mapping_load_multiple(['drupal_entity_type' => 'node']);
     $this->assertEqual(2, count($result), 'Loading maps stating the drupal_entity_type property returned 2 maps.');
 
     // salesforce_mapping_load_multiple() multiple property.
-    $result = salesforce_mapping_load_multiple(array('drupal_entity_type' => 'node', 'drupal_bundle' => 'event'));
+    $result = salesforce_mapping_load_multiple(['drupal_entity_type' => 'node', 'drupal_bundle' => 'event']);
     $this->assertTrue(is_array($result), 'Loading maps stating the drupal_entity_type and drupal_bundle properties returned an array.');
     $this->assertEqual(1, count($result), 'Loading maps stating the drupal_entity_type and drupal_bundle properties returned 1 map.');
     $map = reset($result);
     $this->assertEqual($test_map2->label, $map->label, 'Loading maps stating the drupal_entity_type and drupal_bundle properties returned the expected map.');
-    $result = salesforce_mapping_load_multiple(array('salesforce_object_type' => 'bar', 'salesforce_record_type' => 'baz'));
+    $result = salesforce_mapping_load_multiple(['salesforce_object_type' => 'bar', 'salesforce_record_type' => 'baz']);
     $this->assertEqual(2, count($result), 'Loading maps stating the salesforce_object_type and salesforce_record_type returned 2 maps.');
 
     // salesforce_mapping_load_multiple() retreive nothing.
-    $result = salesforce_mapping_load_multiple(array('drupal_entity_type' => 'nothing'));
+    $result = salesforce_mapping_load_multiple(['drupal_entity_type' => 'nothing']);
     $this->assertFalse(is_object($result), 'Loading maps stating a drupal_entity_type that does not exist does not return an object.');
     $this->assertTrue(is_array($result), 'Loading maps stating a drupal_entity_type that does not exist does returns an array.');
     $this->assertTrue(empty($result), 'Loading maps stating a drupal_entity_type that does not exist returns an empty array.');
@@ -177,7 +177,7 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
     // Save the entity to the database.
     $result = entity_save('salesforce_mapped_object', $test_map);
     $this->assertEqual(SAVED_NEW, $result, 'Entity saved as new.');
-    $test_map_dbs = entity_load('salesforce_mapped_object', FALSE, array('entity_type' => 'foobar', 'entity_id' => 3));
+    $test_map_dbs = entity_load('salesforce_mapped_object', FALSE, ['entity_type' => 'foobar', 'entity_id' => 3]);
     $test_map_db = reset($test_map_dbs);
     $this->assertEqual($this->example_map_object['salesforce_id'], $test_map_db->salesforce_id, 'Newly created entity has the correct object type.');
 
@@ -196,18 +196,18 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
    */
   public function testRecordMapCrud() {
     // Create two records to work with.
-    $record = array(
+    $record = [
       'salesforce_id' => uniqid(),
       'entity_id' => 3,
       'entity_type' => 'foobar',
-    );
+    ];
     $record_map = entity_create('salesforce_mapped_object', $record);
     entity_save('salesforce_mapped_object', $record_map);
-    $record2 = array(
+    $record2 = [
       'salesforce_id' => uniqid(),
       'entity_id' => 4,
       'entity_type' => 'foobar',
-    );
+    ];
     $record_map2 = entity_create('salesforce_mapped_object', $record2);
     entity_save('salesforce_mapped_object', $record_map2);
 

@@ -44,9 +44,9 @@ class SalesforceReference extends DataReferenceBase {
    * {@inheritdoc}
    */
   public function getTargetDefinition() {
-    return array(
+    return [
       'type' => 'sobject',
-    );
+    ];
   }
 
   /**

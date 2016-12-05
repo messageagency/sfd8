@@ -16,17 +16,17 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
    * Implementation of getInfo().
    */
   public static function getInfo() {
-    return array(
+    return [
       'name' => 'Mapping UI',
       'description' => 'Tests the user interface for mapping Drupal entities to Salesforce objects.',
       'group' => 'Salesforce',
-    );
+    ];
   }
 
   /**
    * Implementation of setUp().
    */
-  public function setUp($modules = array(), $permissions = array()) {
+  public function setUp($modules = [], $permissions = []) {
     parent::setUp($modules);
   }
 
@@ -66,7 +66,7 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
 
     // Delete map.
     $this->clickLink('delete');
-    $this->drupalPost(NULL, array(), 'Confirm');
+    $this->drupalPost(NULL, [], 'Confirm');
     $this->assertText('Deleted Salesforce Mapping foo.', 'Delete request posted correctly.');
     $this->assertRaw('<td colspan="10" class="empty message">None.</td>', 'Map listing table is empty after deleting map.');
   }
@@ -101,7 +101,7 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     $this->assertNoFieldChecked('edit-push-async', 'Push async field has correct default value.');
     $this->assertNoFieldChecked('edit-push-batch', 'Push batch field has correct default value.');
 
-    $edit = array();
+    $edit = [];
 
     // Select a Drupal entity type.
     $this->assertRaw('<select disabled="disabled" id="edit-drupal-bundle"', 'Drupal bundle field is disabled when Drupal entity type is not selected.');
@@ -157,7 +157,7 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
 
     // Add a new row.
     $this->assertNoFieldById('edit-fieldmap-type-1', '', 'A second row does not exist yet.');
-    $this->drupalPostAjax(NULL, $edit, array('salesforce_add_field' => 'Add another field mapping'));
+    $this->drupalPostAjax(NULL, $edit, ['salesforce_add_field' => 'Add another field mapping']);
     $this->assertFieldById('edit-fieldmap-type-0', '', 'Original row still exists.');
     $this->assertFieldById('edit-fieldmap-type-1', '', 'Another row appeared after pressing the add field button.');
     $this->assertOptionSelected('edit-fieldmap-type-0', 'property', 'Original row has retained its previous value.');
@@ -165,8 +165,8 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     // Add another two rows.
     $this->assertNoFieldById('edit-fieldmap-type-2', '', 'A third row does not exist yet.');
     $this->assertNoFieldById('edit-fieldmap-type-3', '', 'A fourth row does not exist yet.');
-    $this->drupalPostAjax(NULL, $edit, array('salesforce_add_field' => 'Add another field mapping'));
-    $this->drupalPostAjax(NULL, $edit, array('salesforce_add_field' => 'Add another field mapping'));
+    $this->drupalPostAjax(NULL, $edit, ['salesforce_add_field' => 'Add another field mapping']);
+    $this->drupalPostAjax(NULL, $edit, ['salesforce_add_field' => 'Add another field mapping']);
     $this->assertFieldById('edit-fieldmap-type-0', '', 'Original row still exists.');
     $this->assertFieldById('edit-fieldmap-type-1', '', 'Second row still exists.');
     $this->assertFieldById('edit-fieldmap-type-2', '', 'Third row added successfully.');
@@ -186,7 +186,7 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     // Add another row.
     $this->assertNoFieldById('edit-fieldmap-type-1', '', 'The deleted row has not reappeared.');
     $this->assertNoFieldById('edit-fieldmap-type-4', '', 'A fourth row / 5th key has not appeared.');
-    $this->drupalPostAjax(NULL, $edit, array('salesforce_add_field' => 'Add another field mapping'));
+    $this->drupalPostAjax(NULL, $edit, ['salesforce_add_field' => 'Add another field mapping']);
     $this->assertFieldById('edit-fieldmap-type-0', '', 'Row 0 still exists.');
     $this->assertNoFieldById('edit-fieldmap-type-1', '', 'Row 1 still deleted.');
     $this->assertFieldById('edit-fieldmap-type-2', '', 'Row 2 still exists.');
@@ -237,7 +237,7 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     $this->assertNoFieldChecked('edit-push-batch', 'Push batch field has correct value.');
 
     // Delete row.
-    $edit = array('delete_field_mapping-2' => TRUE);
+    $edit = ['delete_field_mapping-2' => TRUE];
     $this->drupalPostAjax(NULL, $edit, 'delete_field_mapping-2');
     $this->assertFieldById('edit-fieldmap-type-0', '', 'First row still exists.');
     $this->assertOptionSelected('edit-fieldmap-value-0', 'name', 'Row 0 fieldmap value still has correct value.');
@@ -245,10 +245,10 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     $this->assertOptionSelected('edit-fieldmap-value-1', 'mail', 'Row 1 fieldmap value still has correct value.');
     $this->assertNoFieldById('edit-fieldmap-type-2', '', 'Third row successfully deleted.');
 
-    $edit = array();
+    $edit = [];
 
     // Add row.Initial_Registration_Date__c
-    $this->drupalPostAjax(NULL, $edit, array('salesforce_add_field' => 'Add another field mapping'));
+    $this->drupalPostAjax(NULL, $edit, ['salesforce_add_field' => 'Add another field mapping']);
     $this->assertFieldById('edit-fieldmap-type-2', '', 'New row now exists.');
     $edit['salesforce_field_mappings[2][drupal_field][fieldmap_type]'] = 'property';
     $this->drupalPostAjax(NULL, $edit, 'salesforce_field_mappings[2][drupal_field][fieldmap_type]');
@@ -291,7 +291,7 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     $this->assertNoFieldChecked('edit-push-batch', 'Push batch field has correct value.');
 
     // Change the Salesforce object type.
-    $edit = array('salesforce_object_type' => 'Account');
+    $edit = ['salesforce_object_type' => 'Account'];
     $this->drupalPostAjax(NULL, $edit, 'salesforce_object_type');
     $this->assertOptionSelected('edit-fieldmap-type-0', 'property', 'Row 0 fieldmap type has correct value.');
     $this->assertOptionSelected('edit-fieldmap-type-1', 'property', 'Row 1 fieldmap type has correct value.');
@@ -318,7 +318,7 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     $this->createSalesforceMapping('foo', 'foobar');
 
     // Cannot map the same entity, bundle and salesforce object combo.
-    $edit = array();
+    $edit = [];
     $this->drupalGet($this->addMapPath);
     $edit['drupal_entity_type'] = 'user';
     $this->drupalPostAjax(NULL, $edit, 'drupal_entity_type');
@@ -332,134 +332,134 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     // Label cannot exceed SALESFORCE_MAPPING_NAME_LENGTH.
     $this->drupalGet($this->manageMapPrefix . 'foobar');
     $length = SALESFORCE_MAPPING_NAME_LENGTH + 1;
-    $edit = array('label' => $this->randomName($length));
+    $edit = ['label' => $this->randomName($length)];
     $this->drupalPost(NULL, $edit, 'Save mapping');
     $this->assertText('Label cannot be longer than 128 characters but is currently 129 characters long.', 'Validation rejected label length that was too long.');
 
     // When sync trigger Salesforce Create selected, at least one row must have
     // direction 'sync' or 'sf_drupal'.
-    $edit = array(
+    $edit = [
       'salesforce_field_mappings[0][direction]' => 'drupal_sf',
       'salesforce_field_mappings[1][direction]' => 'drupal_sf',
       'salesforce_field_mappings[2][direction]' => 'drupal_sf',
       'sync_triggers[8]' => TRUE,
-    );
+    ];
     $this->drupalPost(NULL, $edit, 'Save mapping');
     $this->assertText('One mapping must be set to "Sync" or "SF to Drupal" when "Salesforce object create" is selected', 'Validation rejected when salesforce create sync trigger is selected and no row had either "sync" or "sf to drupal" direction selected.');
 
     // Key must be set on a field that is configured to be externalId.
-    $edit = array('key' => '0');
+    $edit = ['key' => '0'];
     $this->drupalPost(NULL, $edit, 'Save mapping');
     $this->assertText('is not configured as an external id', 'Validation rejected when row selected as "key" was not a salesforce field with a valid external id field.');
-    $edit = array('key' => '2');
+    $edit = ['key' => '2'];
     $this->drupalPost(NULL, $edit, 'Save mapping');
     $this->assertText('s not configured as an external id', 'Validation rejected when row selected as "key" was not a salesforce field with a valid external id field.');
 
     // Verify salesforce_mapping_property_validation().
-    $property_tests = array(
-      'sync' => array(
-        'datetime' => array(
+    $property_tests = [
+      'sync' => [
+        'datetime' => [
           'sf_value' => 'CreatedDate',
-          'drupal_value' => array(
+          'drupal_value' => [
             'integer' => 'uid',
             'text' => 'name',
             'uri' => 'url',
-          ),
-        ),
-        'email' => array(
+          ],
+        ],
+        'email' => [
           'sf_value' => 'Email',
-          'drupal_value' => array(
+          'drupal_value' => [
             'date' => 'created',
             'integer' => 'uid',
             'uri' => 'url',
-          ),
-        ),
-        'id' => array(
+          ],
+        ],
+        'id' => [
           'sf_value' => 'Id',
-          'drupal_value' => array(
+          'drupal_value' => [
             'date' => 'created',
             'uri' => 'url',
-          ),
-        ),
-        'string' => array(
+          ],
+        ],
+        'string' => [
           'sf_value' => 'LastName',
-          'drupal_value' => array(
+          'drupal_value' => [
             'date' => 'created',
             'integer' => 'uid',
-          ),
-        ),
-      ),
-      'drupal_sf' => array(
-        'datetime' => array(
+          ],
+        ],
+      ],
+      'drupal_sf' => [
+        'datetime' => [
           'sf_value' => 'CreatedDate',
-          'drupal_value' => array(
+          'drupal_value' => [
             'integer' => 'uid',
             'text' => 'name',
             'uri' => 'url',
-          ),
-        ),
-        'email' => array(
+          ],
+        ],
+        'email' => [
           'sf_value' => 'Email',
-          'drupal_value' => array(
+          'drupal_value' => [
             'date' => 'created',
             'integer' => 'uid',
             'uri' => 'url',
-          ),
-        ),
-        'id' => array(
+          ],
+        ],
+        'id' => [
           'sf_value' => 'Id',
-          'drupal_value' => array(
+          'drupal_value' => [
             'date' => 'created',
             'uri' => 'url',
-          ),
-        ),
-        'string' => array(
+          ],
+        ],
+        'string' => [
           'sf_value' => 'LastName',
-          'drupal_value' => array(),
-        ),
-      ),
-      'sf_drupal' => array(
-        'datetime' => array(
+          'drupal_value' => [],
+        ],
+      ],
+      'sf_drupal' => [
+        'datetime' => [
           'sf_value' => 'CreatedDate',
-          'drupal_value' => array(
+          'drupal_value' => [
             'integer' => 'uid',
             'text' => 'name',
             'uri' => 'url',
-          ),
-        ),
-        'email' => array(
+          ],
+        ],
+        'email' => [
           'sf_value' => 'Email',
-          'drupal_value' => array(
+          'drupal_value' => [
             'date' => 'created',
             'integer' => 'uid',
             'uri' => 'url',
-          ),
-        ),
-        'id' => array(
+          ],
+        ],
+        'id' => [
           'sf_value' => 'Id',
-          'drupal_value' => array(
+          'drupal_value' => [
             'date' => 'created',
             'uri' => 'url',
-          ),
-        ),
-        'string' => array(
+          ],
+        ],
+        'string' => [
           'sf_value' => 'LastName',
-          'drupal_value' => array(
+          'drupal_value' => [
             'date' => 'created',
             'uri' => 'url',
-          ),
-        ),
-      ),
-    );
+          ],
+        ],
+      ],
+    ];
     foreach ($property_tests as $direction => $sf_field_types) {
       foreach ($sf_field_types as $sf_field_type => $data) {
         $sf_field = $data['sf_value'];
         foreach ($data['drupal_value'] as $drupal_field_type => $drupal_field) {
-          $edit = array(
+          $edit = [
             'salesforce_field_mappings[0][direction]' => $direction,
             'salesforce_field_mappings[0][salesforce_field]' => $sf_field,
             'salesforce_field_mappings[0][drupal_field][fieldmap_value]' => $drupal_field,
-          );
+          ];
           $this->drupalPost(NULL, $edit, 'Save mapping');
           $this->assertText('and cannot be mapped in the ' . $direction . ' direction', 'Validation failed when direction is "' . $direction . '", salesforce field type is "' . $sf_field_type . '" and drupal field type is "' . $drupal_field_type . '".');
         }

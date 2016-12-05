@@ -59,20 +59,20 @@ class MappedObjectController extends ControllerBase {
     $result = $this
       ->entityManager()
       ->getStorage('salesforce_mapped_object')
-      ->loadByProperties(array(
+      ->loadByProperties([
         'entity_id' => $entity->id(),
         'entity_type_id' => $entity->getEntityTypeId()
-    ));
+    ]);
 
     // @TODO change this to allow one-to-many mapping support.
     if (!empty($result)) {
       return current($result);
     }
     // If an existing mapping was not found, return a new stub instead.
-    return new MappedObject(array(
-      'entity_id' => array(LanguageInterface::LANGCODE_DEFAULT => $entity->id()),
-      'entity_type_id' => array(LanguageInterface::LANGCODE_DEFAULT => $entity->getEntityTypeId()),
-    ));    
+    return new MappedObject([
+      'entity_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->id()],
+      'entity_type_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->getEntityTypeId()],
+    ]);    
   }
 
   /**
@@ -85,13 +85,13 @@ class MappedObjectController extends ControllerBase {
    *    Array of page elements to render.
    */
   public function view(RouteMatchInterface $route_match) {
-    $output = array();
+    $output = [];
     $entity = $this->getEntity($route_match);
     $salesforce_mapped_object = $this->getMappedObject($entity);
     if ($salesforce_mapped_object->isNew()) {
-      return array('#markup' => $this->t(
+      return ['#markup' => $this->t(
         'Object is not mapped. <a href="@href">Use the edit form</a> to push or manually set mapping.',
-        array('@href' => $entity->toUrl('salesforce_edit')->toString())));
+        ['@href' => $entity->toUrl('salesforce_edit')->toString()])];
     }
 
     // show the entity view for the mapped object
@@ -128,7 +128,7 @@ class MappedObjectController extends ControllerBase {
     $entity = $this->getEntity($route_match);
     $salesforce_mapped_object = $this->getMappedObject($entity);
     if ($salesforce_mapped_object->isNew()) {
-      return array('#markup' => 'Object is not mapped. Use the edit form to push or manually set mapping.');
+      return ['#markup' => 'Object is not mapped. Use the edit form to push or manually set mapping.'];
     }
     $form = $this->entityFormBuilder()->getForm($salesforce_mapped_object, 'delete');
     return $form;

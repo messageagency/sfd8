@@ -67,47 +67,33 @@ class MappedObjectForm extends ContentEntityForm {
     $form = parent::buildForm($form, $form_state);
     $url_params = \Drupal::routeMatch()->getParameters();
     $form['salesforce_mapping']['widget']['#reqiured'] = TRUE;
-    $form['actions']['push'] = array(
+    $form['actions']['push'] = [
       '#type' => 'submit',
       '#value' => t('Push'),
       '#weight' => 10,
       '#submit' => [[$this, 'submitPush']],
-    );
+    ];
+    $form['actions']['pull'] = [
+      '#type' => 'submit',
+      '#value' => t('Pull'),
+      '#weight' => 15,
+      '#submit' => [[$this, 'submitPull']],
+    ];
     return $form;
   }
 
   public function submitPush(array &$form, FormStateInterface $form_state) {
-    // Fetch the current entity from context.
-    // @TODO what if there's more than one entity in route params?
-    $params = \Drupal::routeMatch()->getParameters();
-    
-    if (empty($params)) {
-      throw new \Exception('Invalid route parameters when attempting push to Salesforce.');
-    }
+    $drupal_entity = $this->getDrupalEntityFromUrl();
+
     $mapped_object = $this->entity;
+    $mapped_object
+      ->set('salesforce_id', $form_state->getValue('salesforce_id'))
+      ->set('entity_id', $drupal_entity->id())
+      ->set('entity_type_id', $drupal_entity->getEntityTypeId())
+      ->set('salesforce_mapping', $form_state->getValue('salesforce_mapping'));
 
-    // Still a ridiculous process to extract parameters from URL.
-    $keys = $params->keys();
-    $key = reset($keys);
-    $drupal_entity = $params->get($key);
-
-    if (!is_object($drupal_entity)) {
-      var_dump($drupal_entity);
-      throw new \Exception('Invalid parameter when attempting push to Salesforce');
-    }
-
-    // Fetch the sfid from form input, if given
-    $sfid =  $form_state->getValue('salesforce_id');
-
-    // Create a mapped object
-    $mapped_object = new MappedObject(    array(
-      'salesforce_id' => $sfid,
-      'entity_id' => $drupal_entity->id(),
-      'entity_type_id' => $drupal_entity->getEntityTypeId()
-    ));
-    $mapped_object->set('salesforce_mapping', $form_state->getValue('salesforce_mapping'));
-
-    // Validate mapped object. Upon failure, rebuild form. Do not pass go, do not collect $200.
+    // Validate mapped object. Upon failure, rebuild form.
+    // Do not pass go, do not collect $200.
 
     $errors = $mapped_object->validate();
 
@@ -121,11 +107,40 @@ class MappedObjectForm extends ContentEntityForm {
 
     // Push to SF.
     $result = $mapped_object->push();
+    $mapped_object
+      ->set('salesforce_id', $result['id'])
+      ->save();
 
-    $mapped_object->set('salesforce_id', $result['id']);
+    // @TODO: more verbose feedback for successful push.
+    drupal_set_message('Push successful.');
+  }
 
-    // Save mapped object.
-    $mapped_object->save();
+  public function submitPull(array &$form, FormStateInterface $form_state) {
+    $drupal_entity = $this->getDrupalEntityFromUrl();
+    $mapped_object = $this->entity;
+
+    $errors = $mapped_object
+      ->set('salesforce_id', $form_state->getValue('salesforce_id'))
+      ->set('entity_id', $drupal_entity->id())
+      ->set('entity_type_id', $drupal_entity->getEntityTypeId())
+      ->set('salesforce_mapping', $form_state->getValue('salesforce_mapping'))
+      ->validate();
+
+    if ($errors->count() > 0) {
+      foreach ($errors as $error) {
+        drupal_set_message($error->getMessage(), 'error');
+      }
+      $form_state->setRebuild();
+      return;
+    }
+
+    // Pull from SF.
+    $mapped_object
+      ->pull()
+      ->save();
+
+    // @TODO: more verbose feedback for successful pull.
+    drupal_set_message('Pull successful.');
   }
 
   /**
@@ -144,18 +159,43 @@ class MappedObjectForm extends ContentEntityForm {
    * @param string $salesforce_object_type
    *   The object type of whose records you want to retreive.
    *
-   * 
+   *
    * @return array
    *   Information about the Salesforce object as provided by Salesforce.
    */
   protected function get_salesforce_object($salesforce_object_type) {
     if (empty($salesforce_object_type)) {
-      return array();
+      return [];
     }
     // No need to cache here: Salesforce::objectDescribe implements caching.
     $sfapi = salesforce_get_api();
     $sfobject = $sfapi->objectDescribe($salesforce_object_type);
     return $sfobject;
   }
+
+  /**
+   * @TODO: There must be a better way to do this.
+   */
+  private function getDrupalEntityFromUrl() {
+    // Fetch the current entity from context.
+    // @TODO what if there's more than one entity in route params?
+    $params = \Drupal::routeMatch()->getParameters();
+
+    if (empty($params)) {
+      throw new \Exception('Invalid route parameters when attempting push to Salesforce.');
+    }
+
+    // Still a ridiculous process to extract parameters from URL.
+    $keys = $params->keys();
+    $key = reset($keys);
+    $drupal_entity = $params->get($key);
+
+    if (!is_object($drupal_entity)) {
+      var_dump($drupal_entity);
+      throw new \Exception('Invalid parameter when attempting push to Salesforce');
+    }
+    return $drupal_entity;
+  }
+
 
 }

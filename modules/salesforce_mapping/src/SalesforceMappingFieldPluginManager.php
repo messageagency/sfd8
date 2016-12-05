@@ -33,7 +33,7 @@ class SalesforceMappingFieldPluginManager extends DefaultPluginManager {
     parent::__construct('Plugin/SalesforceMappingField', $namespaces, $module_handler);
 
     $this->alterInfo('salesforce_mapping_fields_info');
-    $this->setCacheBackend($cache_backend, 'salesforce_mapping_field', array('salesforce_mapping_plugins'));
+    $this->setCacheBackend($cache_backend, 'salesforce_mapping_field', ['salesforce_mapping_plugins']);
   }
 
 }

@@ -1,9 +1,4 @@
 services:
   salesforce.client:
     class: Drupal\salesforce\RestClient
-    arguments: ['@http_client', '@config.factory', '@url_generator']
-
-# services:
-#   salesforce.soap_client:
-#     class: Drupal\salesforce\SalesforceSoapClient
-#     arguments: ['@http_client', '@config.factory', '@url_generator']
+    arguments: ['@http_client', '@config.factory', '@url_generator', '@state']

@@ -55,24 +55,24 @@ class SalesforceMappingLocalTask extends DeriverBase implements ContainerDeriver
    * {@inheritdoc}
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
-    $this->derivatives = array();
+    $this->derivatives = [];
 
     foreach ($this->entityManager->getDefinitions() as $entity_type_id => $entity_type) {
       if ($has_canonical_path = $entity_type->hasLinkTemplate('salesforce')) {
-        $this->derivatives["$entity_type_id.salesforce_tab"] = array(
+        $this->derivatives["$entity_type_id.salesforce_tab"] = [
           'route_name' => "entity.$entity_type_id.salesforce",
           'title' => $this->t('Salesforce'),
           'base_route' => "entity.$entity_type_id." . ($has_canonical_path ? "canonical" : "edit_form"),
           'weight' => 200,
-        );
-        foreach (array('', 'edit', 'delete') as $op) {
+        ];
+        foreach (['', 'edit', 'delete'] as $op) {
           $sf_route = !empty($op) ? "salesforce_$op" : 'salesforce';
-          $this->derivatives["$entity_type_id.$sf_route"] = array(
+          $this->derivatives["$entity_type_id.$sf_route"] = [
             'route_name' => "entity.$entity_type_id.$sf_route",
             'weight' => 200,
             'title' => !empty($op) ? $this->t(ucfirst($op)) : $this->t('View'),
             'parent_id' => "salesforce_mapping.entities:$entity_type_id.salesforce_tab",
-          );
+          ];
         }
       }
     }

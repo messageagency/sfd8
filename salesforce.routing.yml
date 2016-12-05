@@ -8,7 +8,7 @@ salesforce.oauth_callback:
 salesforce.authorize:
   path: '/admin/config/salesforce/authorize'
   defaults:
-    _form: '\Drupal\salesforce\Form\SalesforceAuthorizeForm'
+    _form: '\Drupal\salesforce\Form\AuthorizeForm'
     _title: 'Authorize'
     _description: 'Authorize this website to communicate with Salesforce.'
   requirements:

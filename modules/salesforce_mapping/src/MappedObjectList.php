@@ -65,11 +65,11 @@ class MappedObjectList extends EntityListBuilder {
    * buildHeader() and buildRow() implementations.
    */
   public function render() {
-    $build['description'] = array(
-      '#markup' => $this->t('Manage the fields on the <a href="@adminlink">Mappings</a>.', array(
+    $build['description'] = [
+      '#markup' => $this->t('Manage the fields on the <a href="@adminlink">Mappings</a>.', [
         '@adminlink' => $this->urlGenerator->generateFromRoute('entity.salesforce_mapping.list'),
-      )),
-    );
+      ]),
+    ];
     $build['table'] = parent::render();
     return $build;
   }

@@ -97,15 +97,14 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return array(
-      'key' => FALSE,
+    return [
       'direction' => SALESFORCE_MAPPING_DIRECTION_SYNC,
-      'salesforce_field' => array(),
+      'salesforce_field' => [],
       'drupal_field_type' => $this->id,
       'drupal_field_value' => '',
       'locked' => FALSE,
       'mapping_name' => '',
-    );
+    ];
   }
 
   /**
@@ -161,7 +160,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * Implements SalesforceMappingFieldPluginInterface::get().
    */
   public function get($key) {
-    return property_exists($this, $key) ? $this->$key : NULL;
+    return $this->config($key);
   }
 
   /**
@@ -177,7 +176,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * @TODO This needs a better name. Could be mistaken for a verb.
    */
   public function push() {
-    return in_array($this->config('direction'), array(SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF, SALESFORCE_MAPPING_DIRECTION_SYNC));
+    return in_array($this->config('direction'), [SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF, SALESFORCE_MAPPING_DIRECTION_SYNC]);
   }
 
   /**
@@ -186,7 +185,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * @TODO This needs a better name. Could be mistaken for a verb.
    */
   public function pull() {
-    return in_array($this->config('direction'), array(SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL));
+    return in_array($this->config('direction'), [SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL]);
   }
 
 }

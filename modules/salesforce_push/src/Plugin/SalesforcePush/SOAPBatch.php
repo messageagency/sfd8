@@ -26,12 +26,12 @@ class SOAPBatch  {
     // @TODO determine optimal naming convention w.r.t API usage efficiency.
     // prefix + uuid + $op + delims = about 64 chars; plenty more room
     $queue = \Drupal::queue("salesforce_push:{$this->mapping->uuid()}:$op");
-    $queue->createItem(array(
+    $queue->createItem([
       'entity_type' => $this->entity->entityType(),
       'entity_id' => $this->entity->id(),
       'mapping_id' => $this->mapping->id(),
       'trigger' => $op,
-    ));
+    ]);
   }
 
   public function push_create() {

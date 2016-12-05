@@ -50,7 +50,7 @@ class RouteSubscriber extends RouteSubscriberBase {
   protected function alterRoutes(RouteCollection $collection) {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
       // Note the empty operation, so we get the nice clean route "entity.entity-type.salesforce"
-      foreach (array('', 'edit', 'delete') as $op) {
+      foreach (['', 'edit', 'delete'] as $op) {
         if ($route = $this->getMappedObjectRoute($entity_type, $op)) {
           $sf_route = !empty($op) ? "salesforce_$op" : 'salesforce';
           $routename = "entity.$entity_type_id.$sf_route";
@@ -104,7 +104,7 @@ class RouteSubscriber extends RouteSubscriberBase {
    */
   public static function getSubscribedEvents() {
     $events = parent::getSubscribedEvents();
-    $events[RoutingEvents::ALTER] = array('onAlterRoutes', 100);
+    $events[RoutingEvents::ALTER] = ['onAlterRoutes', 100];
     return $events;
   }
 

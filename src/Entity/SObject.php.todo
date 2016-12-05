@@ -64,10 +64,10 @@ class SObject extends Entity {
    */
   protected function uriPlaceholderReplacements() {
     if (empty($this->uriPlaceholderReplacements)) {
-      $this->uriPlaceholderReplacements = array(
+      $this->uriPlaceholderReplacements = [
         '{salesforce}' => $this->id(),
         '{salesforce_type}' => $this->bundle(),
-      );
+      ];
     }
     return $this->uriPlaceholderReplacements;
   }

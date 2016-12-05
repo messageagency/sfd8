@@ -15,6 +15,38 @@ use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 
 /**
+ * Define when a data sync should take place for a given mapping.
+ */
+const SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE = 'push_create';
+const SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE = 'push_update';
+const SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE = 'push_delete';
+const SALESFORCE_MAPPING_SYNC_SF_CREATE = 'pull_create';
+const SALESFORCE_MAPPING_SYNC_SF_UPDATE = 'pull_update';
+const SALESFORCE_MAPPING_SYNC_SF_DELETE = 'pull_delete';
+
+/**
+ * Field mapping direction constants.
+ */
+const SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF = 'drupal_sf';
+const SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL = 'sf_drupal';
+const SALESFORCE_MAPPING_DIRECTION_SYNC = 'sync';
+
+/**
+ * Field mapping Master or no record type (default) constant.
+ */
+const SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE = 'default';
+
+/**
+ * Delimiter used in Salesforce multipicklists.
+ */
+const SALESFORCE_MAPPING_ARRAY_DELIMITER =';';
+
+/**
+ * Field mapping maximum name length.
+ */
+const SALESFORCE_MAPPING_NAME_LENGTH = 128;
+
+/**
  * Implements hook_entity_type_alter().
  */
 function salesforce_mapping_entity_type_alter(array &$entity_types) {
@@ -32,231 +64,136 @@ function salesforce_mapping_entity_type_alter(array &$entity_types) {
  * Implements hook_entity_operation().
  */
 function salesforce_mapping_entity_operation(EntityInterface $entity) {
-  $operations = array();
+  $operations = [];
   if (\Drupal::currentUser()->hasPermission('administer salesforce')) {
     if ($entity->hasLinkTemplate('salesforce')) {
-      $operations['salesforce'] = array(
+      $operations['salesforce'] = [
         'title' => t('Salesforce'),
         'weight' => 200,
         'url' => $entity->toUrl('salesforce'),
-      );
+      ];
     }
   }
   return $operations;
 }
 
-
-/**
- * Bit flags defining when a data sync should take place for a given mapping.
- */
-define('SALESFORCE_MAPPING_SYNC_OFF', 0x0000);
-define('SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE', 'push_create');
-define('SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE', 'push_update');
-define('SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE', 'push_delete');
-define('SALESFORCE_MAPPING_SYNC_SF_CREATE', 'pull_create');
-define('SALESFORCE_MAPPING_SYNC_SF_UPDATE', 'pull_update');
-define('SALESFORCE_MAPPING_SYNC_SF_DELETE', 'pull_delete');
-
-/**
- * Field mapping direction constants.
- */
-define('SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF', 'drupal_sf');
-define('SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL', 'sf_drupal');
-define('SALESFORCE_MAPPING_DIRECTION_SYNC', 'sync');
-
-/**
- * Field mapping Master or no record type (default) constant.
- */
-define('SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE', 'default');
-
-/**
- * Delimiter used in Salesforce multipicklists.
- */
-define('SALESFORCE_MAPPING_ARRAY_DELIMITER', ';');
-
-/**
- * Field mapping maximum name length.
- */
-
-define('SALESFORCE_MAPPING_NAME_LENGTH', 128);
-
 /**
  * Loads a single salesforce_mapping or all of them if no name provided.
  *
- * @param string $name (optional)
+ * @param string $name
  *   Name of the map to load, or NULL to load all
- * @param bool $reset (optional)
- *   Whether to reset the sf mapping storage controller cache. N/A if $name is
- *   not provided. If a caller needs to reset the *entire* cache, they should do
- *   so explicitly.
  *
- * @return array | SalesforceMapping
+ * @return \Drupal\salesforce_mapping\Entity\SalesforceMapping
  *   The requested mapping or an array of all mappings, indexed by id, if $name
  *   was not specified
+ *
+ * @throws Exception if no mapping is found
  */
-function salesforce_mapping_load($name = NULL) {
-  return;
-  if ($name) {
-    return MappedObject::load($name);
+function salesforce_mapping_load($name) {
+  $mapping = \Drupal::entityTypeManager()
+    ->getStorage('salesforce_mapping')
+    ->load($name);
+  if (empty($mapping)) {
+    throw new Exception("No mapping found for $name.");
   }
-  return MappedObject::loadMultiple();
+  return $mapping;
 }
 
 /**
  * Loads multiple salesforce_mappings based on a set of matching conditions.
  *
  * @param array $properties (optional)
- *   An array of properties on the {salesforce_mapping} table in the form
+ *   An array of properties on the \Drupal\salesforce_mapping\Entity\SalesforceMapping in the form
  *     'field' => $value.
- *   If $properties is empty, return an all mappings.
+ *   If $properties is empty, return an array of all mappings.
+ *
+ * @return array
+ *   An array of \Drupal\salesforce_mapping\Entity\SalesforceMapping objects, indexed by id
+ *
+ * @throws Exception if not mappings are found
+ */
+function salesforce_mapping_load_multiple($properties = []) {
+  $mappings = [];
+  $mappings = \Drupal::entityTypeManager()
+    ->getStorage('salesforce_mapping')
+    ->loadByProperties($properties);
+  if (empty($mappings)) {
+    throw new Exception('No mappings found.');
+  }
+  return $mappings;
+}
+
+/**
+ * pass-through for salesforce_mapping_load_multiple()
+ */
+function salesforce_mapping_load_by_drupal($entity_type) {
+  return salesforce_mapping_load_multiple(["drupal_entity_type" => $entity_type]);
+}
+
+/**
+ * Returns Salesforce mapped objects for given properties.
+ *
+ * @param array $properties
+ *   An array of properties on the {salesforce_mapping_object} table in the form
+ *     'field' => $value.
  *
  * Note, entity_load_multiple_by_properties() does not provide a reset
  * parameter, and neither do we. If clearing the entire salesforce mapping cache
  * is necessary, it should be done explicitly by the caller.
  *
  * @return array
- *   An array of SalesforceMapping objects,
- *   indexed by id
+ *   An array of \Drupal\salesforce_mapping\Entity\MappedObject objects, indexed by id
+ *
+ * @throws Exception if not mapped objects are found
  */
-function salesforce_mapping_load_multiple($properties = array()) {
-  return;
-  if (empty($properties)) {
-    return MappedObject::loadMultiple();
+function salesforce_mapped_object_load_multiple($properties = []) {
+  $mappings = \Drupal::entityTypeManager()
+    ->getStorage('salesforce_mapping')
+    ->loadByProperties($properties);
+  if (empty($mappings)) {
+    throw new Exception('No mapped objects found');
   }
-  return MappedObject::loadByProperties($properties);
+  return $mappings;
 }
 
 /**
- * Loads salesforce_mappings based on entity type.
- *
- * @param string (optional)
- *   If provided, a single entity type by which to load salesforce_mapping
- *   objects. If empty, return all salesforce mappings, by entity type.
- *
- * @param bool $reset (optional)
- *   Whether to reset the drupal_static cache for this function. If a caller
- *   needs to reset the entire salesforce_mapping storage controller cache, they
- *   must do so explicitly.
- *
- * @return array
- *   An array of SalesforceMapping objects for the given entity_type, or an
- *   array of all SalesforceMapping objects indexed by entity_type, or an
- *   empty array if no maps were found.
+ * pass-through for salesforce_mapped_object_load_multiple()
  */
-function salesforce_mapping_load_by_drupal($entity_type = null, $reset = FALSE) {
-  return;
-  // Use a local static cache since this is not a pass-thru function.
-  if ($reset) {
-    drupal_static_reset(__FUNCTION__);
-  }
-  $return = &drupal_static(__FUNCTION__);
-  if (!isset($return)) {
-    // Just load all the maps and build the static cache all at once. Maps are
-    // configuration, which means callers should expect all of them may be
-    // loaded on any given pageload.
-    $maps = salesforce_mapping_load_multiple();
-    $return = array();
-    foreach ($maps as $map) {
-      $type = $map->get('drupal_entity_type');
-      if (!isset($return[$type])) {
-        $return[$type] = array();
-      }
-      $return[$type][$map->id()] = $map;
-    }
-  }
-  // Use if/else instead of ternary operator to avoid PHP undefined index notice
-  if ($entity_type) {
-    return isset($return[$entity_type]) ? $return[$entity_type] : array();
-  }
-  return $return;
+function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id) {
+  return salesforce_mapped_object_load_multiple([
+    'entity_type_id' => $entity_type, 
+    'entity_id' => $entity_id
+  ]);
 }
 
 /**
- * Returns Salesforce object mappings for given Drupal entity properties.
- *
- * @param string $entity_type
- *   Type of entity to load.
- * @param int $entity_id
- *   Unique identifier of the target entity to load.
- * @param bool $all (optional)
- *   If TRUE, return all object mappings if more than one. Otherwise, return 
- *   only the first. Default FALSE.
- *
- * @return bool | array | salesforce_mapped_object 
- *   The requested salesforce_mapped_object, or array of
- *   salesforce_mapped_objects, or FALSE if none was found.
- * @see MappedObject
- */
-function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id, $all = FALSE) {
-  // @TODO expose D8-ified "load mapped object by drupal property"
-  return;
-  $properties = array(
-    'entity_id' => $entity_id,
-    'entity_type' => $entity_type,
-  );
-  $results = entity_load_multiple_by_properties('salesforce_mapped_object', $properties);
-  if (empty($results)) {
-    return FALSE;
-  }
-  return $all ? $results : reset($results);
-}
-
-/**
- * Returns Salesforce object mappings for a given Drupal entity.
- *
- * @param string $entity
- *   The entity for which to load object mappings
- * @param bool $all (optional)
- *   If TRUE, return all object mappings if more than one. Otherwise, return 
- *   only the first. Default FALSE.
- *
- * @return bool | array | salesforce_mapped_object 
- *   The requested salesforce_mapped_object, or array of
- *   salesforce_mapped_objects, or FALSE if none was found.
- * @see MappedObject
+ * pass-through for salesforce_mapped_object_load_multiple()
  */
 function salesforce_mapped_object_load_by_entity($entity, $all = FALSE) {
-  // @TODO this is broken
-  return;
-  $properties = array(
-    'entity_id' => $entity->id(),
-    'entity_type' => get_class($entity),
-  );
-  $results = entity_load_multiple_by_properties('salesforce_mapped_object', $properties);
-  if (empty($results)) {
-    return FALSE;
-  }
-  return $all ? $results : reset($results);
+  return salesforce_mapped_object_load_multiple([
+    'entity_type_id' => get_class($entity),
+    'entity_id' => $entity->id()
+  ]);
 }
 
 /**
- * Return Salesforce object mappings for a given Salesforce object.
- *
- * @param string $salesforce_id
- *   Unique Id provided by Salesforce for the Salesforce record.
- *
- * @see salesforce_mapping_load() for notes about $reset param being removed.
- *
- * @return array
- *   Entities that match the given $salesforce_id.
+ * pass-through for salesforce_mapped_object_load_multiple()
  */
 function salesforce_mapped_object_load_by_sfid($salesforce_id) {
-  $conditions = array('salesforce_id' => $salesforce_id);
-  $results = entity_load_multiple_by_properties('salesforce_mapped_object', $conditions);
-  return !empty($results) ? reset($results) : FALSE;
+  return salesforce_mapped_object_load_multiple(['salesforce_id' => $salesforce_id]);
 }
 
 /**
  * Return a unique list of mapped Salesforce object types.
- *
- * @TODO: add parameter to limit by trigger: http://drupal.org/node/1915668
+ * @see salesforce_mapping_load_multiple()
+ * @throws Exception if no mappings have been created yet.
  */
 function salesforce_mapping_get_mapped_objects() {
-  $object_types = array();
-  $mappings = salesforce_mapping_load();
+  $object_types = [];
+  $mappings = salesforce_mapping_load_multiple();
   usort($mappings, 'salesforce_mapping_sort');
   foreach ($mappings as $mapping) {
-    $object_types[$mapping->salesforce_object_type] = $mapping->salesforce_object_type;
+    $object_types[$mapping->getSalesforceObjectType()] = $mapping->$mapping->getSalesforceObjectType();
   }
   return $object_types;
 }
@@ -276,30 +213,24 @@ function salesforce_mapping_sort($mapping_a, $mapping_b) {
  * Implements hook_entity_delete().
  */
 function salesforce_mapping_entity_delete(EntityInterface $entity) {
-  return;
+  // Avoid recursion. Mapped Objects cannot be mapped themselves.
+  if ($entity instanceof MappedObject) {
+    return;
+  }
+
   // Delete any Salesforce object mappings with this entity.
-  $mapped_object = salesforce_mapped_object_load_by_entity($entity);
-
-  // No mapping object for this entity, return.
-  if (!$mapped_object) {
+  try {
+    $mapped_objects = salesforce_mapped_object_load_by_entity($entity);
+  }
+  catch (Exception $e) {
+    // No mapped objects, nothing to do.
     return;
   }
 
-  // Only delete mapping if it won't be handled by the delete trigger in the
-  // mapping. We're avoiding the issue of mapping deleting the (the what?).
-  $mappings = salesforce_mapping_load_multiple(array(
-    'drupal_entity_type' => get_class($entity),
-    'drupal_bundle' => $entity->bundle(),
-  ));
-  if (empty($mappings)) {
-    return;
-  }
-
-  foreach ($mappings as $mapping) {
-    if (!($mapping->sync_triggers & SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE)) {
-      $mapped_object->delete();
-      return;
-    }
+  // We only deal with mapped objects here. If SF records need to be deleted,
+  // salesforce_push will handle them.
+  foreach ($mapped_objects as $mapped_object) {
+    $mapped_object->delete();
   }
 }
 
@@ -309,7 +240,7 @@ function salesforce_mapping_entity_delete(EntityInterface $entity) {
 function salesforce_mapping_entity_load($entities, $entity_type) {
   // just stop doing this for now
   return;
-  
+
   if ($entity_type == 'salesforce_mapping') {
     // Best to avoid infinite recursion...
     return;
@@ -341,18 +272,18 @@ function salesforce_mapping_entity_load($entities, $entity_type) {
  * Implements hook_permission().
  */
 function salesforce_mapping_permission() {
-  return array(
-    'administer salesforce mapping' => array(
+  return [
+    'administer salesforce mapping' => [
       'title' => t('Administer Salesforce mapping'),
       'description' => t('Administer Salesforce field maps.'),
       'restrict access' => TRUE,
-    ),
-    'view salesforce mapping' => array(
+    ],
+    'view salesforce mapping' => [
       'title' => t('View Salesforce mapping'),
       'description' => t('View Salesforce mapping data.'),
       'restrict access' => TRUE,
-    ),
-  );
+    ],
+  ];
 }
 
 /**
@@ -375,22 +306,22 @@ function salesforce_mapping_entity_view(array &$build, EntityInterface $entity, 
     // #field_type property, or hook_entity_view_alter() to override the theme
     // of this.
     if ($conf = $display->getComponent('salesforce_id')) {
-      $build['salesforce_id'] = array(
+      $build['salesforce_id'] = [
         '#type' => 'item',
         '#title' => t('Salesforce ID'),
         '#markup' => $mapped_object->getSalesforceLink(),
         '#weight' => $conf['weight'],
         '#field_type' => 'salesforce',
-      );
+      ];
     }
     if ($conf = $display->getComponent('salesforce_last_sync')) {
-      $build['salesforce_last_sync'] = array(
+      $build['salesforce_last_sync'] = [
         '#type' => 'item',
         '#title' => t('Salesforce last sync'),
         '#markup' => format_date($mapped_object->last_sync->value),
         '#weight' => $conf['weight'],
         '#field_type' => 'salesforce',
-      );
+      ];
     }
   }
 }
@@ -400,23 +331,23 @@ function salesforce_mapping_entity_view(array &$build, EntityInterface $entity, 
  */
 function salesforce_mapping_field_extra_fields() {
   // Include Salesforce data for mapped entities.
-  $extra = array();
+  $extra = [];
   $mappings = salesforce_mapping_load_multiple();
   foreach ($mappings as $mapping) {
-    $extra[$mapping->drupal_entity_type][$mapping->drupal_bundle] = array(
-      'display' => array(
-        'salesforce_id' => array(
+    $extra[$mapping->drupal_entity_type][$mapping->drupal_bundle] = [
+      'display' => [
+        'salesforce_id' => [
           'label' => t('Salesforce Id'),
           'description' => t('ID of a linked Salesforce object.'),
           'weight' => 0,
-        ),
-        'salesforce_last_sync' => array(
+        ],
+        'salesforce_last_sync' => [
           'label' => t('Salesforce last sync'),
           'description' => t('Timestamp for the latest sync with Salesforce.'),
           'weight' => 0,
-        ),
-      ),
-    );
+        ],
+      ],
+    ];
   }
   return $extra;
 }
@@ -469,7 +400,7 @@ function salesforce_mapping_get_fieldmap_types($fieldmap_type = NULL) {
 
       // Let other modules alter the fieldmap type.
       drupal_alter('salesforce_fieldmap_type', $salesforce_fieldmap_type);
-      cache()->set('salesforce:fieldmap_type', $salesforce_fieldmap_type, CacheBackendInterface::CACHE_PERMANENT, array('salesforce' => TRUE));
+      cache()->set('salesforce:fieldmap_type', $salesforce_fieldmap_type, CacheBackendInterface::CACHE_PERMANENT, ['salesforce' => TRUE]);
 
     }
   }

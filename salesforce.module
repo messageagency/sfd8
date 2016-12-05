@@ -6,24 +6,26 @@
  */
 
 use \Drupal\salesforce\SalesforceClient;
+use Drupal\Core\Routing\RouteMatchInterface;
+use \Drupal\Core\Url;
 
 /**
  * Implements hook_help().
  */
-function salesforce_help($path, $arg) {
-  switch ($path) {
-    case 'salesforce_mapping':
+function salesforce_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'salesforce.structure_index':
       $output = '';
-      if (!module_exists('salesforce_mapping')) {
-        $output .= '<p>' . t('In order to configure Salesforce Mappings, you must first enable the <a href="/admin/modules">Salesforce Mapping</a> module.') . '</p>';
+      if (!\Drupal::moduleHandler()->moduleExists('salesforce_mapping')) {
+        $output .= '<p>' . t('In order to configure Salesforce Mappings, you must first enable the <a href=":url">Salesforce Mapping</a> module.', [':url' => (new Url('system.modules_list'))->toString()]) . '</p>';
       }
-      $config = \Drupal::config('salesforce.settings');
-      if (!$config->get('consumer_secret') || !$config->get('consumer_key') || !$config->get('refresh_token')) {
-        $output .= '<p>' . t('You must !authorize in order to configure Salesforce Mappings.', array('!authorize' => l(t('authorize your account with Salesforce'), 'admin/config/salesforce/authorize'))) . '</p>';
+      $client = \Drupal::service('salesforce.client');
+      if (!$client->isAuthorized()) {
+        $output .= '<p>' . t('You must <a href=":authorize">authorize your account with Salesforce</a> in order to configure Salesforce Mappings.', [':authorize' => (new Url('salesforce.authorize'))->toString()]) . '</p>';
       }
       return $output;
 
-    case 'admin/help#salesforce':
+    case 'help.page.salesforce':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
       $output .= '<p>' . t('This module suite implements a mapping functionality between Salesforce
@@ -39,27 +41,24 @@ function salesforce_help($path, $arg) {
       $output .= '<p>' . t('For a more detailed description of each component module, see below.') . '</p>';
       $output .= '<h3>' . t('Requirements') . '</h3>';
       $output .= '<ol>';
-      $output .= '<li>' . t('You need a Salesforce account. Developers can !register_here.', array('!register_here' => l(t('register here'), 'http://www.developerforce.com/events/regular/registration.php'))) . '</li>';
+      $output .= '<li>' . t('You need a Salesforce account. Developers can <a href=":url">@text</a>.', [':url' => 'http://www.developerforce.com/events/regular/registration.php', '@text' => 'register here']) . '</li>';
       $output .= '<li>' . t('You will need to create a remote application/connected app for authorization.') . '</li>';
       $output .= '<ul>';
       $output .= '<li>' . t('In Salesforce go to Your Name > Setup > Create > Apps then create a new Connected App. (Depending on your Salesforce instance, you may need to go to Your Name > Setup > Develop > Remote Access.)') . '</li>';
-      $output .= '<li>' . t('Set the callback URL to: !url (SSL is required)', array('!url' => '<code>' . 'https://' . $_SERVER['HTTP_HOST'] . '/salesforce/oauth_callback' . '</code>')) . '</li>';
+      $output .= '<li>' . t('Set the callback URL to: :url (SSL is required)', 
+      [':url' => str_replace('http:', 'https:', (new Url('salesforce.oauth_callback', [], ['absolute' => TRUE]))->toString())]) . '</li>';
       $output .= '<li>' . t('Select at least "Perform requests on your behalf at any time" for OAuth Scope
-  as well as the appropriate other scopes for your application. Note that "Full access" does not include the "Perform requests on your behalf at any time" scope! !info.', array('!info' => l(t('Additional information'), 'https://help.salesforce.com/help/doc/en/remoteaccess_about.htm'))) . '</li>';
-      $output .= '<li>' . t('For more help see !salesforce.', array('!salesforce' => l(t('the salesforce.com documentation'), 'https://www.salesforce.com/us/developer/docs/api_rest/Content/quickstart_oauth.htm'))) . '</li>';
+  as well as the appropriate other scopes for your application. Note that "Full access" does not include the "Perform requests on your behalf at any time" scope! <a href=":url">Additional Information</a>.', [':url' => 'https://help.salesforce.com/help/doc/en/remoteaccess_about.htm']) . '</li>';
+      $output .= '<li>' . t('For more help see <a href=":url">the salesforce.com documentation</a>.', [':url' =>  'https://www.salesforce.com/us/developer/docs/api_rest/Content/quickstart_oauth.htm']) . '</li>';
       $output .= '</ul>';
       $output .= '<li>' . t('Your site needs to be SSL enabled to authorize the remote application using OAUTH.') . '</li>';
-      $output .= '<li>' . t('If using the SOAP API, PHP must be compiled with !SOAP and !SSL.',
-        array(
-          '!SOAP' => l(t('SOAP web services'), 'http://php.net/soap'),
-          '!SSL' => l(t('OpenSSL support'), 'http://php.net/openssl'))
-        ) . '</li>';
+      // $output .= '<li>' . t('If using the SOAP API, PHP must be compiled with <a href=":soap">SOAP web services</a> and <a href=":ssl">OpenSSL support</a>.', [':soap' =>  'http://php.net/soap', ':ssl' => 'http://php.net/openssl']) . '</li>';
       $output .= '</ol>';
-      $output .= '<h4>' . t('Required modules') . '</h4>';
-      $output .= '<ul>';
-      $output .= '<li>' . l(t('Entity API'), 'http://drupal.org/project/entity') . '</li>';
-      $output .= '<li>' . l(t('Libraries, only for SOAP API'), 'http://drupal.org/project/libraries') . '</li>';
-      $output .= '</ul>';
+      // $output .= '<h4>' . t('Required modules') . '</h4>';
+      // $output .= '<ul>';
+      // $output .= '<li>' . l(t('Entity API'), 'http://drupal.org/project/entity') . '</li>';
+      // $output .= '<li>' . l(t('Libraries, only for SOAP API'), 'http://drupal.org/project/libraries') . '</li>';
+      // $output .= '</ul>';
       $output .= '<h3>' . t('Modules') . '</h3>';
       $output .= '<h4>' . t('Salesforce (salesforce)') . '</h4>';
       $output .= '<p>' . t('OAUTH2 authorization and wrapper around the Salesforce REST API.') . '</p>';
@@ -69,24 +68,14 @@ function salesforce_help($path, $arg) {
       $output .= '<p>' . t('Push Drupal entity updates into Salesforce.') . '</p>';
       $output .= '<h4>' . t('Salesforce Pull (salesforce_pull)') . '</h4>';
       $output .= '<p>' . t('Pull Salesforce object updates into Drupal on cron run. (Salesforce Outbound Notifications are not supported.)') . '</p>';
-      $output .= '<h4>' . t('Salesforce Soap (salesforce_soap)') . '</h4>';
-      $output .= '<p>' . t('Lightweight wrapper around the SOAP API, using the OAUTH access token, to fill in functional gaps missing in the REST API. Requires the Salesforce PHP Toolkit.') . '</p>';
-      $output .= '<p>' . t('Example installation of the Salesforce PHP Toolkit using the provided Drush Make file:') . ' <code>drush make /path/to/salesforce/modules/salesforce_soap/salesforce_soap.make.example --no-core -y</code>' . '</p>';
+      // $output .= '<h4>' . t('Salesforce Soap (salesforce_soap)') . '</h4>';
+      // $output .= '<p>' . t('Lightweight wrapper around the SOAP API, using the OAUTH access token, to fill in functional gaps missing in the REST API. Requires the Salesforce PHP Toolkit.') . '</p>';
+      // $output .= '<p>' . t('Example installation of the Salesforce PHP Toolkit using the provided Drush Make file:') . ' <code>drush make /path/to/salesforce/modules/salesforce_soap/salesforce_soap.make.example --no-core -y</code>' . '</p>';
       return $output;
 
-    case 'admin/config/salesforce':
-    case 'admin/config/salesforce/authorize':
-      return '<p>' . t('Visit !help if you need help obtaining a consumer key and secret.', array('!help' => l(t('the Salesforce module help page'), 'admin/help/salesforce'))) . '</p>';
+    case 'salesforce.authorize':
+      return '<p>' . t('Visit <a href=":help">the Salesforce module help page</a> if you need help obtaining a consumer key and secret.', [':help' => (new Url('help.page', array('name' => 'salesforce')))->toString()]) . '</p>';
   }
-}
-
-/**
- * Implements hook_flush_caches().
- */
-function salesforce_cache_flush() {
-  // flush static caches only.
-  // do not rebuild.
-  // see hook_rebiuld()
 }
 
 /**
@@ -105,7 +94,7 @@ function salesforce_get_api() {
  *
  * Wrapper around drupal_set_message(), checks for proper permissions.
  */
-function salesforce_set_message($message = NULL, $type = 'status', $repeat = TRUE) {
+function salesforce_set_message($message = NULL, $type = 'status', $repeat = FALSE) {
   if (Drupal::currentUser()->hasPermission('administer salesforce')) {
     drupal_set_message($message, $type, $repeat);
   }

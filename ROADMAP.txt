@@ -12,6 +12,7 @@ Minimum viable product targets:
 - purge D7 code
 - migration paths from D7
 - docs
+- #fieldMappingField : convert SalesforceMapping::field_mappings property to some kind of entity collection. Promote mapped fields from dumb arrays to entities.
 
 
 Additional major goals:

@@ -1,7 +1,7 @@
 # Schema for the configuration files of the Salesforce Mapping module
 
 salesforce_mapping.salesforce_mapping.*:
-  type: mapping
+  type: config_object
   label: 'Salesforce Mapping'
   mapping:
     id:
@@ -11,7 +11,7 @@ salesforce_mapping.salesforce_mapping.*:
       type: label
       label: 'Human readable name'
     weight:
-      type: int
+      type: integer
       label: 'Weight'
     locked:
       type: boolean
@@ -22,28 +22,34 @@ salesforce_mapping.salesforce_mapping.*:
     type:
       type: string
       label: 'Type'
+    key:
+      type: string
+      label: 'Upsert Key'
+    pull_trigger_date:
+      type: string
+      label: 'Pull Trigger Date Field'
     sync_triggers:
       type: mapping
       label: 'Sync triggers'
       mapping:
-        drupal_create:
+        push_create:
           type: boolean
           label: 'Drupal entity create'
-        drupal_update:
+        push_update:
           type: boolean
           label: 'Drupal entity update'
-        drupal_delete:
+        push_delete:
           type: boolean
           label: 'Drupal entity delete'
-        salesforce_create:
+        pull_create:
           type: boolean
           label: 'Salesforce object create'
-        salesforce_update:
+        pull_update:
           type: boolean
           label: 'Salesforce object update'
-        salesforce_delete:
+        pull_delete:
           type: boolean
-          label: 'Salesforce object delete'          
+          label: 'Salesforce object delete'
     salesforce_object_type:
       type: string
       label: 'Salesforce Object Type'
@@ -69,9 +75,6 @@ salesforce_mapping.salesforce_mapping.*:
             drupal_field_value:
               type: string
               label: 'Fieldmap Value'
-            key:
-              type: boolean
-              label: 'Key'
             locked:
               type: boolean
               label: 'Locked'
@@ -79,141 +82,16 @@ salesforce_mapping.salesforce_mapping.*:
               type: string
               label: 'Direction'
             salesforce_field:
-              type: mapping
-              label: 'Salesforce Field'
-              mapping:
-                restrictedPicklist:
-                  type: boolean
-                  label: 'restrictedPicklist'
-                length:
-                  type: int
-                  label: 'length'
-                name:
-                  type: string
-                  label: 'name'
-                type:
-                  type: string
-                  label: 'type'
-                defaultValue:
-                  type: string
-                  label: 'defaultValue'
-                filterable:
-                  type: boolean
-                  label: 'filterable'
-                nillable:
-                  type: boolean
-                  label: 'nillable'
-                unique:
-                  type: boolean
-                  label: 'unique'
-                caseSensitive:
-                  type: boolean
-                  label: 'caseSensitive'
-                calculated:
-                  type: boolean
-                  label: 'calculated'
-                scale:
-                  type: int
-                  label: 'scale'
-                nameField:
-                  type: boolean
-                  label: 'nameField'
-                sortable:
-                  type: boolean
-                  label: 'sortable'
-                displayLocationInDecimal:
-                  type: boolean
-                  label: 'displayLocationInDecimal'
-                cascadeDelete:
-                  type: boolean
-                  label: 'cascadeDelete'
-                restrictedDelete:
-                  type: boolean
-                  label: 'restrictedDelete'
-                deprecatedAndHidden:
-                  type: boolean
-                  label: 'deprecatedAndHidden'
-                picklistValues:
-                  type: sequence
-                  label: 'picklistValues'
-                  sequence:
-                    - type: string
-                      label: 'picklistEntry'
-                byteLength:
-                  type: int
-                  label: 'byteLength'
-                label:
-                  type: string
-                  label: 'label'
-                precision:
-                  type: int
-                  label: 'precision'
-                autoNumber:
-                  type: boolean
-                  label: 'autoNumber'
-                controllerName:
-                  type: string
-                  label: 'controllerName'
-                externalId:
-                  type: boolean
-                  label: 'externalId'
-                idLookup:
-                  type: boolean
-                  label: 'idLookup'
-                createable:
-                  type: boolean
-                  label: 'createable'
-                updateable:
-                  type: boolean
-                  label: 'updateable'
-                namePointing:
-                  type: boolean
-                  label: 'namePointing'
-                relationshipName:
-                  type: string
-                  label: 'relationshipName'
-                relationshipOrder:
-                  type: int
-                  label: 'relationshipOrder'
-                referenceTo:
-                  type: sequence
-                  label: 'referenceTo'
-                  sequence:
-                    - type: 'string'
-                      label: 'reference'
-                groupable:
-                  type: boolean
-                  label: 'groupable'
-                permissionable:
-                  type: boolean
-                  label: 'permissionable'
-                soapType:
-                  type: string
-                  label: 'soapType'
-                calculatedFormula:
-                  type: string
-                  label: 'calculatedFormula'
-                defaultValueFormula:
-                  type: string
-                  label: 'defaultValueFormula'
-                defaultedOnCreate:
-                  type: boolean
-                  label: 'defaultedOnCreate'
-                digits:
-                  type: int
-                  label: 'digits'
-                inlineHelpText:
-                  type: string
-                  label: 'inlineHelpText'
-                writeRequiresMasterRead:
-                  type: boolean
-                  label: 'writeRequiresMasterRead'
-                custom:
-                  type: boolean
-                  label: 'custom'
-                htmlFormatted:
-                  type: boolean
-                  label: 'htmlFormatted'
-                dependentPicklist:
-                  type: boolean
-                  label: 'dependentPicklist'
+              type: string
+              label: 'Salesforce Field Name'
+
+# Schema / Config API requires that we add these:
+    langcode:
+      type: string
+      label: 'Default language'
+    dependencies:
+      type: config_dependencies
+      label: 'Dependencies'
+    uuid:
+      type: string
+      label: 'UUID'

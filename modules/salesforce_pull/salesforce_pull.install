@@ -5,10 +5,18 @@
  * Install/uninstall tasks for the Salesforce Pull module.
  */
 
+ /**
+  * Implements hook_install().
+  */
+function salesforce_pull_install() {
+  \Drupal::state()->set('salesforce.pull_max_queue_size', 100000);
+}
+
 /**
  * Implements hook_uninstall().
  */
 function salesforce_pull_uninstall() {
+  // TODO: revisit
   // Remove salesforce_pull* variables.
   db_delete('variable')
     ->condition('name', 'salesforce_pull%', 'LIKE')

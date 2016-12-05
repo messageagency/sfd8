@@ -20,7 +20,7 @@ class SalesforceMappingDeleteForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to delete the mapping %name?', array('%name' => $this->entity->label()));
+    return $this->t('Are you sure you want to delete the mapping %name?', ['%name' => $this->entity->label()]);
   }
 
   /**
@@ -44,9 +44,9 @@ class SalesforceMappingDeleteForm extends EntityConfirmFormBase {
     $this->entity->delete();
 
     // Set a message that the entity was deleted.
-    drupal_set_message($this->t('Salesforce %label was deleted.', array(
+    drupal_set_message($this->t('Salesforce %label was deleted.', [
       '%label' => $this->entity->label(),
-    )));
+    ]));
     
     $form_state->setRedirectUrl($this->getCancelUrl());
   }

@@ -9,29 +9,29 @@
  * Implements hook_drush_command().
  */
 function salesforce_drush_command() {
-  $items['sf-rest-version'] = array(
+  $items['sf-rest-version'] = [
     'description' => 'Displays information about the current REST API version',
-    'aliases' => array('sfrv'),
-  );
-  $items['sf-list-objects'] = array(
+    'aliases' => ['sfrv'],
+  ];
+  $items['sf-list-objects'] = [
     'description' => 'List the objects that are available in your organization and available to the logged-in user.',
-    'aliases' => array('sflo'),
-  );
-  $items['sf-describe-object'] = array(
+    'aliases' => ['sflo'],
+  ];
+  $items['sf-describe-object'] = [
     'description' => 'Retrieve all the metadata for an object, including information about each field, URLs, and child relationships.',
-    'aliases' => array('sfdo'),
-    'arguments' => array(
+    'aliases' => ['sfdo'],
+    'arguments' => [
       'object' => 'The object name in Salesforce.',
-    ),
-    'options' => array(
+    ],
+    'options' => [
       'fields' => 'Display information about fields that are part of the object.',
       'field-data' => 'Display information about a specific field that is part of an object',
-    ),
-  );
-  $items['sf-list-resources'] = array(
+    ],
+  ];
+  $items['sf-list-resources'] = [
     'description' => 'Lists the resources available for the specified API version. It provides the name and URI of each resource.',
-    'aliases' => array('sflr'),
-  );
+    'aliases' => ['sflr'],
+  ];
   return $items;
 }
 
@@ -44,9 +44,9 @@ function drush_salesforce_sf_list_resources() {
   $salesforce = _drush_salesforce_drush_get_api();
   $resources = $salesforce->listResources();
   if ($resources) {
-    $items[] = array('Resource', 'URL');
+    $items[] = ['Resource', 'URL'];
     foreach ($resources as $resource => $url) {
-      $items[] = array($resource, $url);
+      $items[] = [$resource, $url];
     }
     drush_print("The following resources are available:\n");
     drush_print_table($items);
@@ -77,13 +77,13 @@ function drush_salesforce_sf_describe_object($object_name = NULL) {
 
   // Return if we cannot load any data.
   if (!is_array($object)) {
-    return drush_log(dt('Could not load data for object !object', array('!object' => $object)), 'error');
+    return drush_log(dt('Could not load data for object !object', ['!object' => $object]), 'error');
   }
   // Display only information about fields for an option,
   if (drush_get_option('fields')) {
-    $rows = array(array('Name', 'Type', 'Label'));
+    $rows = [['Name', 'Type', 'Label']];
     foreach ($object['fields'] as $field) {
-      $rows[] = array($field['name'], $field['type'], $field['label']);
+      $rows[] = [$field['name'], $field['type'], $field['label']];
     }
     drush_print_r($rows);
     drush_print_table($rows, TRUE);
@@ -100,10 +100,10 @@ function drush_salesforce_sf_describe_object($object_name = NULL) {
       }
     }
     if (!$field_data) {
-      drush_log(dt('Could not load data for field !field on !object object', array(
+      drush_log(dt('Could not load data for field !field on !object object', [
         '!field' => $fieldname,
         '!object' => $object_name,
-      )), 'error');
+      ]), 'error');
     }
     else {
       drush_print_r($field);
@@ -114,24 +114,24 @@ function drush_salesforce_sf_describe_object($object_name = NULL) {
 
   // Display information about the object.
   // @TODO add remaining field objects?
-  $rows = array();
-  $rows[] = array('Name', $object['name']);
-  $rows[] = array(
+  $rows = [];
+  $rows[] = ['Name', $object['name']];
+  $rows[] = [
     'Fields',
     isset($object['fields']) ? count($object['fields']) : 0,
-  );
-  $rows[] = array(
+  ];
+  $rows[] = [
     'Child Relationships',
     isset($object['childRelationships']) ? count($object['childRelationships']) : 0,
-  );
-  $rows[] = array(
+  ];
+  $rows[] = [
     'Searchable',
     ($object['searchable'] == 1) ? 'TRUE' : 'FALSE',
-  );
-  $rows[] = array('Creatable', ($object['createable'] == 1) ? 'TRUE' : 'FALSE');
-  $rows[] = array('Deletable', ($object['deletable'] == 1) ? 'TRUE' : 'FALSE');
-  $rows[] = array('Mergeable', ($object['mergeable'] == 1) ? 'TRUE' : 'FALSE');
-  $rows[] = array('Queryable', ($object['queryable'] == 1) ? 'TRUE' : 'FALSE');
+  ];
+  $rows[] = ['Creatable', ($object['createable'] == 1) ? 'TRUE' : 'FALSE'];
+  $rows[] = ['Deletable', ($object['deletable'] == 1) ? 'TRUE' : 'FALSE'];
+  $rows[] = ['Mergeable', ($object['mergeable'] == 1) ? 'TRUE' : 'FALSE'];
+  $rows[] = ['Queryable', ($object['queryable'] == 1) ? 'TRUE' : 'FALSE'];
   drush_print_table($rows);
 }
 
@@ -141,11 +141,11 @@ function drush_salesforce_sf_describe_object($object_name = NULL) {
 function drush_salesforce_sf_rest_version() {
   $salesforce = _drush_salesforce_drush_get_api();
   if (isset($salesforce->rest_api_version)) {
-    $rows[] = array('Salesforce', 'Value');
+    $rows[] = ['Salesforce', 'Value'];
     foreach ($salesforce->rest_api_version as $key => $value) {
-      $rows[] = array($key, $value);
+      $rows[] = [$key, $value];
     }
-    $rows[] = array('login url', $salesforce->login_url);
+    $rows[] = ['login url', $salesforce->login_url];
     drush_print_table($rows, TRUE);
   }
   else {
@@ -178,13 +178,13 @@ function drush_salesforce_sf_list_objects() {
   $salesforce = _drush_salesforce_drush_get_api();
   if ($objects = $salesforce->objects()) {
     drush_print('The following objects are available in your organization and available to the logged-in user.');
-    $rows[] = array('Name', 'Label', 'Label Plural');
+    $rows[] = ['Name', 'Label', 'Label Plural'];
     foreach ($objects as $object) {
-      $rows[] = array(
+      $rows[] = [
         $object['name'],
         $object['label'],
         $object['labelPlural'],
-      );
+      ];
     }
     drush_print_table($rows, TRUE);
   }

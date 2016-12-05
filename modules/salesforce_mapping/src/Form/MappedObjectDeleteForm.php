@@ -54,9 +54,9 @@ class MappedObjectDeleteForm extends ContentEntityConfirmFormBase {
     $form_state->setRedirect($mapped_object->getMappedEntity()->toUrl('salesforce'));
     $this
       ->logger('salesforce_mapped_oject')
-      ->notice('MappedObject @sfid deleted.', array(
+      ->notice('MappedObject @sfid deleted.', [
         '@sfid' => $mapped_object->salesforce_id->value
-      ));
+      ]);
     $mapped_object->delete();
   }
 

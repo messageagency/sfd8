@@ -14,25 +14,25 @@ class SalesforceTestCase extends DrupalWebTestCase {
    * Implementation of getInfo().
    */
   public static function getInfo() {
-    return array(
+    return [
       'name' => 'Salesforce API',
       'description' => 'Sets up basic tools for testing Salesforce integration',
       'group' => 'Salesforce',
-    );
+    ];
   }
 
   /**
    * Implementation of setUp().
    */
-  public function setUp($modules = array(), $permissions = array()) {
-    $modules = array_merge($modules, array(
+  public function setUp($modules = [], $permissions = []) {
+    $modules = array_merge($modules, [
       'salesforce',
-    ));
+    ]);
     parent::setUp($modules);
 
-    $permissions = array_merge($permissions, array(
+    $permissions = array_merge($permissions, [
       'administer salesforce',
-    ));
+    ]);
     $this->admin_user = $this->drupalCreateUser($permissions);
     $this->drupalLogin($this->admin_user);
   }
@@ -41,7 +41,7 @@ class SalesforceTestCase extends DrupalWebTestCase {
    * Implementation of tearDown().
    */
   public function tearDown() {
-    user_cancel(array(), $this->admin_user->uid, 'user_cancel_delete');
+    user_cancel([], $this->admin_user->uid, 'user_cancel_delete');
     parent::tearDown();
   }
 
@@ -55,13 +55,13 @@ class SalesforceTestCase extends DrupalWebTestCase {
     // Steal the Salesforce configuration from the live database.
     global $db_prefix;
     $table = empty($db_prefix) ? 'variable' : $db_prefix . '_variable';
-    $salesforce_vars = array(
+    $salesforce_vars = [
       'salesforce_consumer_key',
       'salesforce_consumer_secret',
       'salesforce_instance_url',
       'salesforce_refresh_token',
       'salesforce_identity',
-    );
+    ];
     $vars = "'" . implode("', '", $salesforce_vars) . "'";
     $sql = "SELECT v.name, v.value FROM $table v WHERE v.name IN ($vars)";
     $result = db_query($sql);

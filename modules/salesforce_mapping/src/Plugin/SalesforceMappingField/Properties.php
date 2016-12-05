@@ -31,17 +31,17 @@ class Properties extends SalesforceMappingFieldPluginBase {
     // @TODO inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
     $options = $this->getConfigurationOptions($form['#entity']);
     if (empty($options)) {
-      return array(
+      return [
         '#markup' => t('No available properties.')
-      );
+      ];
     }
-    return array(
+    return [
       '#type' => 'select',
       '#options' => $options,
       '#empty_option' => $this->t('- Select -'),
       '#default_value' => $this->config('drupal_field_value'),
       '#description' => $this->t('Select a Drupal field or property to map to a Salesforce field.<br />Entity Reference fields should be handled using Related Entity Ids or Token field types.'),
-    );
+    ];
   }
 
   public function value(EntityInterface $entity) {
@@ -56,7 +56,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
       $mapping->get('drupal_bundle')
     );
 
-    $options = array();
+    $options = [];
     foreach ($properties as $key => $property) {
       // Entity reference fields are handled elsewhere. 
       // @TODO: is this type still a thing even?

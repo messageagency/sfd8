@@ -70,7 +70,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
     }
 
     drupal_set_message($this->t('The mapping has been successfully saved.'));
-    $form_state->setRedirect('entity.salesforce_mapping.fields', array('salesforce_mapping' => $this->entity->id()));
+    $form_state->setRedirect('entity.salesforce_mapping.fields', ['salesforce_mapping' => $this->entity->id()]);
   }
 
   /**
@@ -83,9 +83,12 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    * @return array
    *   Information about the Salesforce object as provided by Salesforce.
    */
-  protected function get_salesforce_object($salesforce_object_type) {
+  protected function get_salesforce_object($salesforce_object_type = '') {
     if (empty($salesforce_object_type)) {
-      return array();
+      $salesforce_object_type = $this->entity->get('salesforce_object_type');
+    }
+    if (empty($salesforce_object_type)) {
+      throw new Exception('No salesforce object configured for this mapping.');
     }
     // No need to cache here: Salesforce::objectDescribe implements caching.
     $sfapi = salesforce_get_api();

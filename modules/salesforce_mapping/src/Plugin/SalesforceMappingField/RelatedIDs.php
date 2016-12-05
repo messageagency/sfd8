@@ -33,17 +33,17 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     $options = $this->getConfigurationOptions($form['#entity']);
 
     if (empty($options)) {
-      return array(
+      return [
         '#markup' => t('No available entity reference fields.')
-      );
+      ];
     }
-    return array(
+    return [
       '#type' => 'select',
       '#options' => $options,
       '#empty_option' => $this->t('- Select -'),
       '#default_value' => $this->config('drupal_field_value'),
       '#description' => $this->t('If an existing connection is found with the selected entity reference, the linked identifier will be used.<br />For example, Salesforce ID for Drupal to SF, or Node ID for SF to Drupal.<br />If more than one entity is referenced, the entity at delta zero will be used.'),
-    );
+    ];
   }
 
   /**
@@ -80,7 +80,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
       $mapping->get('drupal_entity_type'),
       $mapping->get('drupal_bundle')
     );
-    $options = array();
+    $options = [];
     foreach ($instances as $name => $instance) {
       if ($instance->getType() != 'entity_reference') {
         continue;

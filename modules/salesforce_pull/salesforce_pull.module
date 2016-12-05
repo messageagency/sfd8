@@ -5,20 +5,24 @@
  * Pull updates from Salesforce when a Salesforce object is updated.
  */
 
+use \Drupal\salesforce\SelectQuery;
+use \Drupal\salesforce\RestClient;
+
 /**
  * Implements hook_cron().
  */
 function salesforce_pull_cron() {
   $sfapi = salesforce_get_api();
   if ($sfapi->isAuthorized()) {
-    salesforce_pull_get_updated_records();
-    salesforce_pull_process_deleted_records();
+    salesforce_pull_get_updated_records($sfapi);
+    salesforce_pull_process_deleted_records($sfapi);
   }
 }
 
 /**
  * Implements hook_queue_info().
  */
+ /*
 function salesforce_pull_queue_info() {
   $queues['salesforce_pull'] = array(
     'title' => t('Salesforce Pull Queue'),
@@ -30,32 +34,34 @@ function salesforce_pull_queue_info() {
   );
   return $queues;
 }
-
+*/
 /**
  * Pull updated records from Salesforce and place them in the queue.
  *
  * Executes a SOQL query based on defined mappings, loops through the results,
  * and places each updated SF object into the queue for later processing.
  */
-function salesforce_pull_get_updated_records() {
-  $queue = \Drupal::queue('salesforce_pull');
+function salesforce_pull_get_updated_records(RestClient $sfapi) {
+  // @TODO: Refactor all this.
+  return;
+  $queue = \Drupal::queue('cron_salesforce_pull');
 
   // Avoid overloading the processing queue and pass this time around if it's
   // over a configurable limit.
-  if ($queue->numberOfItems() > variable_get('salesforce_pull_max_queue_size', 100000)) {
+
+  if ($queue->numberOfItems() > \Drupal::state()->get('salesforce_pull_max_queue_size', 100000)) {
     return;
   }
 
-  $sfapi = salesforce_get_api();
   foreach (salesforce_mapping_get_mapped_objects() as $type) {
-    $mapped_fields = array();
-    $mapped_record_types = array();
+    $mapped_fields = [];
+    $mapped_record_types = [];
 
     // Iterate over each field mapping to determine our query parameters.
-    foreach (salesforce_mapping_load_multiple(array('salesforce_object_type' => $type)) as $mapping) {
+    foreach (salesforce_mapping_load_multiple(['salesforce_object_type' => $type]) as $mapping) {
       foreach ($mapping->field_mappings as $field_map) {
         // Exclude field mappings that are only drupal to SF.
-        if (in_array($field_map['direction'], array(SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL))) {
+        if (in_array($field_map['direction'], [SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL])) {
           // Some field map types (Relation) store a collection of SF objects.
           if (is_array($field_map['salesforce_field']) && !isset($field_map['salesforce_field']['name'])) {
             foreach ($field_map['salesforce_field'] as $sf_field) {
@@ -64,16 +70,17 @@ function salesforce_pull_get_updated_records() {
           }
           // The rest of are just a name/value pair.
           else {
-            $mapped_fields[$field_map['salesforce_field']['name']] = $field_map['salesforce_field']['name'];
+            $mapped_fields[$field_map['salesforce_field']] = $field_map['salesforce_field'];
           }
         }
       }
 
       if (!empty($mapped_fields) && isset($mapping->salesforce_record_type)  && $mapping->salesforce_record_type != SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE) {
-        $mapped_record_types[$mapping->salesforce_record_type] = $mapping->salesforce_record_type;
+        // @TODO: Get this next statement working as indented. See lines 110-112.ß
+        //$mapped_record_types[$mapping->salesforce_record_type] = $mapping->salesforce_record_type;
         // Add the RecordTypeId field so we can use it when processing the
         // queued SF objects.
-        $mapped_fields['RecordTypeId'] = 'RecordTypeId';
+        //$mapped_fields['RecordTypeId'] = 'RecordTypeId';
       }
     }
 
@@ -83,9 +90,10 @@ function salesforce_pull_get_updated_records() {
       continue;
     }
 
-    $soql = new SalesforceSelectQuery($type);
+    // @TODO figure out the new way to build the query.
+    $soql = new SelectQuery($type);
     // Convert field mappings to SOQL.
-    $soql->fields = array('Id', 'LastModifiedDate');
+    $soql->fields = ['Id', 'LastModifiedDate'];
     foreach ($mapped_fields as $field) {
       // Don't add the Id field to the SOQL query.
       if ($field == 'Id') {
@@ -95,7 +103,7 @@ function salesforce_pull_get_updated_records() {
     }
 
     // If no lastupdate, get all records, else get records since last pull.
-    $sf_last_sync = variable_get('salesforce_pull_last_sync_' . $type, NULL);
+    $sf_last_sync = \Drupal::state()->get('salesforce_pull_last_sync_' . $type, NULL);
     if ($sf_last_sync) {
       $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
       $soql->addCondition('LastModifiedDate', $last_sync, '>');
@@ -132,10 +140,13 @@ function salesforce_pull_get_updated_records() {
           str_replace($version_path, '', $new_result['nextRecordsUrl']) : FALSE;
       }
 
-      variable_set('salesforce_pull_last_sync_' . $type, REQUEST_TIME);
+      \Drupal::state()->set('salesforce_pull_last_sync_' . $type, REQUEST_TIME);
     }
     else {
-      watchdog('Salesforce Pull', $results['errorCode'] . ':' . $results['message'], array(), WATCHDOG_ERROR);
+      \Drupal::logger('Salesforce Pull')->error('%code:%msg', [
+        '%code' => $results['errorCode'],
+        '%msg' => $results['message'],
+      ]);
     }
   }
 }
@@ -144,151 +155,23 @@ function salesforce_pull_get_updated_records() {
  * Process records in the queue.
  */
 function salesforce_pull_process_records($sf_object) {
-  // Get Mapping.
-  $mapping_conditions = array(
-    'salesforce_object_type' => $sf_object['attributes']['type'],
-  );
-  if (isset($sf_object['RecordTypeId']) && $sf_object['RecordTypeId'] != SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE) {
-    $mapping_conditions['salesforce_record_type'] = $sf_object['RecordTypeId'];
-  }
-
-  $sf_mappings = salesforce_mapping_load_multiple($mapping_conditions);
-
-  foreach ($sf_mappings as $sf_mapping) {
-    // Mapping object exists?
-    $mapped_object = salesforce_mapped_object_load_by_sfid($sf_object['Id']);
-    if ($mapped_object && ($sf_mapping->sync_triggers & SALESFORCE_MAPPING_SYNC_SF_UPDATE)) {
-      try {
-        $entity = entity_load_single($mapped_object->entity_type, $mapped_object->entity_id);
-
-        // Flag this entity as having been processed. This does not persist,
-        // but is used by salesforce_push to avoid duplicate processing.
-        $entity->salesforce_pull = TRUE;
-        $entity_updated = isset($entity->updated) ? $entity->updated : $mapped_object->entity_updated;
-
-        $sf_object_updated = strtotime($sf_object['LastModifiedDate']);
-        if ($sf_object_updated > $entity_updated) {
-          $wrapper = entity_metadata_wrapper($sf_mapping->drupal_entity_type, $entity);
-
-          // Set fields values on the Drupal entity.
-          salesforce_pull_map_fields($sf_mapping->field_mappings, $wrapper, $sf_object);
-
-          // Update entity.
-          $wrapper->save();
-
-          // Update mapping object.
-          $mapped_object->last_sync = REQUEST_TIME;
-          $mapped_object->entity_update = REQUEST_TIME;
-          watchdog('Salesforce Pull',
-            'Updated entity %label associated with Salesforce Object ID: %sfid',
-            array(
-              '%label' => $wrapper->label(),
-              '%sfid' => $sf_object['Id'],
-            )
-          );
-
-        }
-      }
-      catch (Exception $e) {
-        $message = t('Failed to update entity %label from Salesforce object %sfobjectid. Error: @msg',
-          array(
-            '%label' => $wrapper->label(),
-            '%sfobjectid' => $sf_object['Id'],
-            '@msg' => $e->getMessage(),
-          )
-        );
-        watchdog('Salesforce Pull', $message, array(), WATCHDOG_ERROR);
-        salesforce_set_message($message, 'error', FALSE);
-      }
-    }
-    else {
-      if ($sf_mapping->sync_triggers & SALESFORCE_MAPPING_SYNC_SF_CREATE) {
-        try {
-          // Create entity from mapping object and field maps.
-          $entity_info = entity_get_info($sf_mapping->drupal_entity_type);
-
-          // Define values to pass to entity_create().
-          $values = array();
-          if (isset($entity_info['entity keys']['bundle']) &&
-            !empty($entity_info['entity keys']['bundle'])) {
-            $values[$entity_info['entity keys']['bundle']] = $sf_mapping->drupal_bundle;
-          }
-          else {
-            // Not all entities will have bundle defined under entity keys,
-            // e.g. the User entity.
-            $values[$sf_mapping->drupal_bundle] = $sf_mapping->drupal_bundle;
-          }
-
-          // See note above about flag.
-          $values['salesforce_pull'] = TRUE;
-
-          // Create entity.
-          $entity = entity_create($sf_mapping->drupal_entity_type, $values);
-
-          // Flag this entity as having been processed. This does not persist,
-          // but is used by salesforce_push to avoid duplicate processing.
-          $entity->salesforce_pull = TRUE;
-
-          $wrapper = entity_metadata_wrapper($sf_mapping->drupal_entity_type, $entity);
-          salesforce_pull_map_fields($sf_mapping->field_mappings, $wrapper, $sf_object);
-          $wrapper->save();
-
-          // If no id exists, the insert failed.
-          list($entity_id) = entity_extract_ids($sf_mapping->drupal_entity_type, $entity);
-          if (!$entity_id) {
-            throw new Exception('Entity ID not returned, insert failed.');
-          }
-
-          // Create mapping object.
-          $mapped_object = entity_create('salesforce_mapped_object', array(
-            'salesforce_id' => $sf_object['Id'],
-            'entity_type' => $sf_mapping->drupal_entity_type,
-            'entity_id' => $entity_id,
-          ));
-
-          watchdog('Salesforce Pull',
-            'Created entity %label associated with Salesforce Object ID: %sfid',
-            array(
-              '%label' => $wrapper->label(),
-              '%sfid' => $sf_object['Id'],
-            )
-          );
-        }
-        catch (Exception $e) {
-          $message = $e->getMessage() . ' ' . t('Processing failed for entity %label associated with Salesforce Object ID: %sfobjectid',
-            array(
-              '%label' => $wrapper->label(),
-              '%sfobjectid' => $sf_object['Id'],
-            )
-          );
-          watchdog('Salesforce Pull', $message, array(), WATCHDOG_ERROR);
-          salesforce_set_message('There were failures processing data from SalesForce. Please check the error logs.', 'error', FALSE);
-        }
-      }
-    }
-
-    // Save our mapped objects.
-    if ($mapped_object) {
-      $mapped_object->save();
-    }
-  }
+  // Moved to QueueWorker plugin class PullBase
 }
 
 /**
  * Process deleted records from salesforce.
  */
-function salesforce_pull_process_deleted_records() {
-  if (!module_exists('salesforce_soap')) {
+function salesforce_pull_process_deleted_records(RestClient $sfapi) {
+  if (!\Drupal::moduleHandler()->moduleExists('salesforce_soap')) {
     salesforce_set_message('Enable Salesforce SOAP to process deleted records');
     return;
   }
-  $sfapi = salesforce_get_api();
   module_load_include('inc', 'salesforce_soap');
   $soap = new SalesforceSoapPartner($sfapi);
 
   foreach (array_reverse(salesforce_mapping_get_mapped_objects()) as $type) {
 
-    $last_delete_sync = variable_get('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
+    $last_delete_sync = \Drupal::state()->get('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
     $now = time();
     // SOAP getDeleted() restraint: startDate must be at least one minute
     // greater than endDate.
@@ -298,27 +181,34 @@ function salesforce_pull_process_deleted_records() {
     $deleted = $soap->getDeleted($type, $last_delete_sync_sf, $now_sf);
     if (!empty($deleted->deletedRecords)) {
       $sf_mappings = salesforce_mapping_load_multiple(
-        array('salesforce_object_type' => $type)
+        ['salesforce_object_type' => $type]
       );
       foreach ($deleted->deletedRecords as $record) {
         $mapped_object = salesforce_mapped_object_load_by_sfid($record->id);
         if ($mapped_object) {
-          $entity = entity_load_single($mapped_object->entity_type, $mapped_object->entity_id);
-          $entity_label = entity_label($mapped_object->entity_type, $entity);
+          $entity = \Drupal::entityTypeManager()
+            ->getStorage($mapped_object->entity_type)
+            ->load($mapped_object->entity_id);
           foreach ($sf_mappings as $sf_mapping) {
             if ($sf_mapping->sync_triggers & SALESFORCE_MAPPING_SYNC_SF_DELETE) {
               // Delete mapping object.
               $transaction = db_transaction();
-              entity_delete('salesforce_mapped_object', $mapped_object->salesforce_mapped_object_id);
-              entity_delete($sf_mapping->drupal_entity_type, $mapped_object->entity_id);
+              $map_entity = \Drupal::entityTypeManager()
+                ->getStorage('salesforce_mapped_object')
+                ->load($mapped_object->salesforce_mapped_object_id);
+              $map_entity->delete();
+              $map_entity = \Drupal::entityTypeManager()
+                ->getStorage($sf_mapping->drupal_entity_type)
+                ->load($mapped_object->entity_id);
+              $map_entity->delete();
 
-              watchdog('Salesforce Pull',
+              \Drupal::logger('Salesforce Pull')->notice(
                 'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid',
-                array(
-                  '%label' => $entity_label,
+                [
+                  '%label' => $entity->label(),
                   '%id' => $mapped_object->entity_id,
                   '%sfid' => $record->id,
-                )
+                ]
               );
             }
           }
@@ -326,7 +216,7 @@ function salesforce_pull_process_deleted_records() {
         }
       }
     }
-    variable_set('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
+    \Drupal::state()->set('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
   }
 }
 
@@ -382,5 +272,3 @@ function salesforce_pull_map_fields($field_maps, &$entity_wrapper, $sf_object) {
 function salesforce_pull_salesforce_push_entity_allowed($entity, $op) {
   return !isset($entity->salesforce_pull) || !$entity->salesforce_pull;
 }
-
-

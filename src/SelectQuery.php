@@ -8,11 +8,11 @@ namespace Drupal\salesforce;
 
 class SelectQuery {
 
-  public $fields = array();
-  public $order = array();
+  public $fields = [];
+  public $order = [];
   public $objectType;
   public $limit;
-  public $conditions = array();
+  public $conditions = [];
 
   /**
    * Constructor which sets the query object type.
@@ -46,11 +46,11 @@ class SelectQuery {
       }
     }
 
-    $this->conditions[] = array(
+    $this->conditions[] = [
       'field' => $field,
       'operator' => $operator,
       'value' => $value,
-    );
+    ];
   }
 
   /**
@@ -65,20 +65,20 @@ class SelectQuery {
   public function __toString() {
 
     $query = 'SELECT+';
-    $query .= implode(',+', $this->fields);
+    $query .= implode(',', $this->fields);
     $query .= "+FROM+" . $this->objectType;
 
     if (count($this->conditions) > 0) {
-      $where = array();
+      $where = [];
       foreach ($this->conditions as $condition) {
-        $where[] = implode('+', $condition);
+        $where[] = implode('', $condition);
       }
       $query .= '+WHERE+' . implode('+AND+', $where);
     }
 
     if ($this->order) {
       $query .= "+ORDER BY+";
-      $fields = array();
+      $fields = [];
       foreach ($this->order as $field => $direction) {
         $fields[] = $field . ' ' . $direction;
       }

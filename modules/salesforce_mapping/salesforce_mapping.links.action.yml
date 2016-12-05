@@ -5,11 +5,33 @@ salesforce_mapping.add_action:
   title: 'Add Mapping'
   appears_on:
     - entity.salesforce_mapping.list
+    - entity.salesforce_mapping.edit_form
+    - entity.salesforce_mapping.fields
 
+salesforce_mapping.fields_action:
+  route_name: entity.salesforce_mapping.fields
+  title: 'Edit Fields'
+  appears_on:
+    - entity.salesforce_mapping.edit_form
+    
+salesforce_mapping.delete_action:
+  route_name: entity.salesforce_mapping.delete_form
+  title: 'Delete Mapping'
+  appears_on:
+    - entity.salesforce_mapping.edit_form
+    - entity.salesforce_mapping.fields
+    
 salesforce_mapping.list_action:
   route_name: entity.salesforce_mapping.list
-  title: 'List Salesforce Mappings'
+  title: 'List Mappings'
   appears_on:
     - entity.salesforce_mapping.add_form
     - entity.salesforce_mapping.edit_form
     - entity.salesforce_mapped_object.list
+    - entity.salesforce_mapping.fields
+
+salesforce_mapping.edit_action:
+  route_name: entity.salesforce_mapping.edit_form
+  title: 'Edit Properties'
+  appears_on:
+    - entity.salesforce_mapping.fields

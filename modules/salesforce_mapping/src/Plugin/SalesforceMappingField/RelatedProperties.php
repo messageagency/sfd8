@@ -32,17 +32,17 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     // @TODO inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
     $options = $this->getConfigurationOptions($form['#entity']);
     if (empty($options)) {
-      return array(
+      return [
         '#markup' => t('No available entity reference fields.')
-      );
+      ];
     }
-    return array(
+    return [
       '#type' => 'select',
       '#options' => $options,
       '#empty_option' => $this->t('- Select -'),
       '#default_value' => $this->config('drupal_field_value'),
       '#description' => $this->t('Select a property from the referenced field.<br />If more than one entity is referenced, the entity at delta zero will be used.<br />An entity reference field will be used to sync an identifier, e.g. Salesforce ID and Node ID.'),
-    );
+    ];
   }
 
   public function value(EntityInterface $entity) {
@@ -99,7 +99,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
       return;
     }
 
-    $options = array();
+    $options = [];
 
     // Loop over every field on the mapped entity. For reference fields, expose
     // all properties of the referenced entity.
@@ -118,7 +118,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
       }
 
       $entity_type = $settings['target_type'];
-      $properties = array();
+      $properties = [];
 
       // If handler is default and allowed bundles are set, include all fields 
       // from all allowed bundles.

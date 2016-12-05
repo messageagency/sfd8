@@ -7,6 +7,7 @@
 
 namespace Drupal\salesforce\Controller;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -17,9 +18,10 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 class SalesforceController extends ControllerBase {
 
   /**
-   * Callback for the oauth redirect URI.
+   * OAuth step 2: Callback for the oauth redirect URI.
    *
-   * Exchanges an authorization code for an access token.
+   * Complete OAuth handshake by exchanging an authorization code for an access
+   * token.
    */
   public function oauthCallback() {
     // If no code is provided, return access denied.
@@ -27,10 +29,26 @@ class SalesforceController extends ControllerBase {
       throw new AccessDeniedHttpException();
     }
     $salesforce = salesforce_get_api();
-    $salesforce->requestToken($_GET['code']);
 
-    salesforce_set_message('Salesforce OAUTH2 authorization successful.');
+    $data = urldecode(UrlHelper::buildQuery([
+      'code' => $_GET['code'],
+      'grant_type' => 'authorization_code',
+      'client_id' => $salesforce->getConsumerKey(),
+      'client_secret' => $salesforce->getConsumerSecret(),
+      'redirect_uri' => $salesforce->getAuthCallbackUrl(),
+    ]));
+    $url = $salesforce->getAuthTokenUrl();
+    $headers = [
+      // This is an undocumented requirement on SF's end.
+      'Content-Type' => 'application/x-www-form-urlencoded',
+    ];
 
-    return new RedirectResponse(\Drupal::url('salesforce.authorize', array(), array('absolute' => TRUE)));
+    $http_client = \Drupal::service('http_client');
+    $response = $http_client->post($url, ['headers' => $headers, 'body' => $data]);
+
+    $salesforce->handleAuthResponse($response);
+
+    return new RedirectResponse(\Drupal::url('salesforce.authorize', [], ['absolute' => TRUE]));
   }
+
 }

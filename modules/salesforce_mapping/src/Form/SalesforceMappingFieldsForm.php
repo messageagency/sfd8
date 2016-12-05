@@ -16,7 +16,7 @@ use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Ajax\InsertCommand;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface as FieldPluginInterface;
 
 /**
  * Salesforce Mapping Fields Form
@@ -31,42 +31,68 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['#entity'] = $this->entity;
     // For each field on the map, add a row to our table.
-    $form['overview'] = array('#markup' => 'Field mapping overview goes here.');
-    $form['field_mappings_wrapper'] = array(
+    $form['overview'] = ['#markup' => 'Field mapping overview goes here.'];
+
+    $form['key_wrapper'] = [
+      '#title' => t('Upsert Key'),
+      '#type' => 'details',
+      '#open' => TRUE,
+      '#description' => t('An Upsert Key can be assigned to map a Drupal property to a Salesforce External Identifier. If specified an UPSERT will be used to limit data duplication.'),
+    ];
+
+    $key_options = $this->getUpsertKeyOptions();
+    if (empty($key_options)) {
+      $form['key_wrapper']['#description'] .= ' ' . t('To add an upsert key for @sobject_name, assign a field as an External Identifier in Salesforce.', ['@sobject_name' => $this->entity->get('salesforce_object_type')]);
+      $form['key_wrapper']['key'] = [
+        '#type' => 'value',
+        '#value' => '',
+      ];
+    }
+    else {
+      $form['key_wrapper']['key'] = [
+        '#type' => 'select',
+        '#title' => t('Upsert Key'),
+        '#options' => $key_options,
+        '#default_value' => $this->entity->getKeyField(),
+        '#empty_option' => t('(none)'),
+        '#empty_value' => '',
+      ];
+    }
+
+    $form['field_mappings_wrapper'] = [
       '#title' => t('Field map'),
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#id' => 'edit-field-mappings-wrapper',
-      '#description' => '* Key refers to an property mapped to a Salesforce external ID. if specified an UPSERT will be used to avoid duplicate data when possible.',
-    );
+      '#open' => TRUE,
+    ];
 
     $field_mappings_wrapper = &$form['field_mappings_wrapper'];
     // Check to see if we have enough information to allow mapping fields.  If
     // not, tell the user what is needed in order to have the field map show up.
 
-    $field_mappings_wrapper['field_mappings'] = array(
+    $field_mappings_wrapper['field_mappings'] = [
       '#tree' => TRUE,
       '#type' => 'table',
       // @TODO there's probably a better way to tie ajax callbacks to this element than by hard-coding an HTML DOM ID here.
       '#id' => 'edit-field-mappings',
-      '#header' => array(
+      '#header' => [
         // @TODO: there must be a better way to get two fields in the same cell than to create an extraneous column
         'drupal_field_type' => '',
         'drupal_field_type_label' => $this->t('Field type'),
         'drupal_field_value' => $this->t('Drupal field'),
         'salesforce_field' => $this->t('Salesforce field'),
-        'key' => $this->t('Key') . '*',
         'direction' => $this->t('Direction'),
         'ops' => $this->t('Operations'),
-      ),
-    );
+      ],
+    ];
     $rows = &$field_mappings_wrapper['field_mappings'];
 
-    $form['field_mappings_wrapper']['ajax_warning'] = array(
+    $form['field_mappings_wrapper']['ajax_warning'] = [
       '#type' => 'container',
-      '#attributes' => array(
+      '#attributes' => [
         'id' => 'edit-ajax-warning',
-      ),
-    );
+      ],
+    ];
 
     // @TODO figure out how D8 does tokens
     // $form['field_mappings_wrapper']['token_tree'] = array(
@@ -83,40 +109,40 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $add_field_text = !empty($field_mappings) ? t('Add another field mapping') : t('Add a field mapping to get started');
 
   
-    $form['buttons'] = array('#type' => 'container');
-    $form['buttons']['field_type'] = array(
+    $form['buttons'] = ['#type' => 'container'];
+    $form['buttons']['field_type'] = [
       '#title' => t('Field Type'),
       '#type' => 'select',
       '#options' => $this->get_drupal_type_options(),
-      '#attributes' => array('id' => 'edit-mapping-add-field-type'),
+      '#attributes' => ['id' => 'edit-mapping-add-field-type'],
       '#empty_option' => $this->t('- Select -'),
-    );
-    $form['buttons']['add'] = array(
+    ];
+    $form['buttons']['add'] = [
       '#value' => $add_field_text,
       '#type' => 'submit',
       '#executes_submit_callback' => FALSE,
-      '#limit_validation_errors' => array(),
-      '#ajax' => array(
-        'callback' => array($this, 'field_add_callback'),
+      '#limit_validation_errors' => [],
+      '#ajax' => [
+        'callback' => [$this, 'field_add_callback'],
         'wrapper' => 'edit-field-mappings-wrapper',
-      ),
+      ],
       // @TODO add validation to field_add_callback()
-      '#states' => array(
-        'disabled' => array(
-          ':input#edit-mapping-add-field-type' => array('value' => ''),
-        ),
-      ),
-    );
+      '#states' => [
+        'disabled' => [
+          ':input#edit-mapping-add-field-type' => ['value' => ''],
+        ],
+      ],
+    ];
 
     // Field mapping form.
-    $field_mappings = array_filter($this->entity->get('field_mappings'));
     $has_token_type = FALSE;
 
     // Add a row for each saved mapping
     $delta = 0;
-    foreach ($field_mappings as $delta => $value) {
+    foreach ($this->entity->getFieldMappings() as $field_plugin) {
       $value['delta'] = $delta;
-      $rows[$delta] = $this->get_row($value, $form, $form_state);
+      $rows[$delta] = $this->get_row($field_plugin, $form, $form_state);
+      $delta++;
     }
 
     // Apply any changes from form_state to existing fields.
@@ -136,7 +162,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     if (!empty($form_state->getValues())
     && $form_state->getValue('add') == $form_state->getValue('op')
     && !empty($input['field_type'])) {
-      $rows[$delta] = $this->get_row(array(), $form, $form_state);
+      $rows[$delta] = $this->get_row([], $form, $form_state);
     }
 
     // Retrieve and add the form actions array.
@@ -148,108 +174,139 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     return $form;
   }
 
+  private function getUpsertKeyOptions() {
+    $options = [];
+    $describe = $this->get_salesforce_object();
+    foreach ($describe['fields'] as $field) {
+      if ($field['externalId']) {
+        $options[$field['name']] = $field['label'];
+      }
+    }
+    return $options;
+  }
+
   /**
    * Helper function to return an empty row for the field mapping form.
    */
-  private function get_row($field_configuration = array(), $form, FormStateInterface $form_state) {
-    $field_type = FALSE;
+  private function get_row(FieldPluginInterface $field_plugin = NULL, $form, FormStateInterface $form_state) {
     $input = $form_state->getUserInput();
-    if (empty($field_configuration) && !empty($input['field_type'])) {
-      $field_type = $input['field_type'];
-    }
-    elseif (!empty($field_configuration['drupal_field_type'])) {
-      $field_type = $field_configuration['drupal_field_type'];
+
+    $field_type = NULL;
+    if ($field_plugin != NULL) {
+      $field_type = $field_plugin->config('drupal_field_type');
     }
     else {
-      // Can't provide a row without a field type.
-      // @TODO throw an exception here
+      $field_type = $input['field_type'];
+      $field_plugin = $this->SalesforceMappingFieldManager->createInstance(
+        $field_plugin_definition['id'],
+        $field_configuration
+      );
+    }
+    if (empty($field_type)) {
+      // @TODO throw an exception here ?
       return;
     }
+
     $field_plugin_definition = $this->get_field_plugin($field_type);
     if (empty($field_plugin_definition)) {
-      // @TODO throw an exception here
+      // @TODO throw an exception here ?
       return;
     }
 
-    $field_plugin = $this->SalesforceMappingFieldManager->createInstance($field_plugin_definition['id'], $field_configuration);
-
     // @TODO allow plugins to override forms for all these fields
-    $row['drupal_field_type'] = array(
+    $row['drupal_field_type'] = [
         '#type' => 'hidden',
         '#value' => $field_type,
-    );
-    $row['drupal_field_type_label'] = array(
+    ];
+    $row['drupal_field_type_label'] = [
         '#markup' => $field_plugin_definition['label'],
-    );
+    ];
 
     // Display the plugin config form here:
     $row['drupal_field_value'] = $field_plugin->buildConfigurationForm($form, $form_state);
 
-    $row['salesforce_field'] = array(
+    $row['salesforce_field'] = [
       '#type' => 'select',
       '#description' => t('Select a Salesforce field to map.'),
       '#multiple' => (isset($drupal_field_type['salesforce_multiple_fields']) && $drupal_field_type['salesforce_multiple_fields']) ? TRUE : FALSE,
       '#options' => $this->get_salesforce_field_options(),
       '#default_value' => $field_plugin->config('salesforce_field'),
       '#empty_option' => $this->t('- Select -'),
-    );
+    ];
 
-    $row['key'] = array(
-      '#name' => 'key',
-      '#type' => 'radio',
-      '#default_value' => $field_plugin->config('key'),
-    );
-
-    $row['direction'] = array(
+    $row['direction'] = [
       '#type' => 'radios',
-      '#options' => array(
+      '#options' => [
         SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => t('Drupal to SF'),
         SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL => t('SF to Drupal'),
         SALESFORCE_MAPPING_DIRECTION_SYNC => t('Sync'),
-      ),
+      ],
       '#required' => TRUE,
       '#default_value' => $field_plugin->config('direction') ? $field_plugin->config('direction') : SALESFORCE_MAPPING_DIRECTION_SYNC,
-    );
+    ];
+
+    if (!$field_plugin->pull()) {
+      unset($row['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_SYNC], $row['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL]);
+      $row['direction']['#default_value'] = SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF;
+    }
+
+    if (!$field_plugin->push()) {
+      unset($row['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_SYNC], $row['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF]);
+      $row['direction']['#default_value'] = SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL;
+    }
 
     // @TODO implement "lock/unlock" logic here:
     // @TODO convert these to AJAX operations
-    $operations = array('lock' => $this->t('Lock'), 'delete' => $this->t('Delete'));
-    $defaults = array();
+    $operations = [
+      'locked' => $this->t('Lock'),
+      'delete' => $this->t('Delete')
+    ];
+    $defaults = [];
     if ($field_plugin->config('locked')) {
-      $defaults = array('lock');
+      $defaults = ['lock'];
     }
-    $row['ops'] = array(
+    $row['ops'] = [
       '#type' => 'checkboxes',
       '#options' => $operations,
       '#default_value' => $defaults,
-    );
-    $row['mapping_name'] = array(
-        '#type' => 'value',
-        '#value' => $this->entity->id(),
-    );
+    ];
     return $row;
   }
 
  /**
    * {@inheritdoc}
    */
-  public function validate(array $form, FormStateInterface $form_state) {
-    // @TODO require a "Key" radio field to be checked
-    // Assign key to special "key_field" property for easy locating.
-
+  public function validateForm(array &$form, FormStateInterface $form_state) {
     // Transform data from the operations column into the expected schema.
     // Copy the submitted values so we don't run into problems with array
     // indexing while removing delete field mappings.
+
     $values = $form_state->getValues();
+    $key = $values['key'];
+    $key_mapped = FALSE;
+
+    $sfobject = $this->get_salesforce_object();
     foreach ($values['field_mappings'] as $i => $value) {
+      if ($value['salesforce_field'] == $key) {
+        $key_mapped = TRUE;
+      }
       // If a field was deleted, delete it!
       if (!empty($value['ops']['delete'])) {
-        unset($values['field_mappings'][$i]);
+        $form_state->unsetValue(["field_mappings", "$i"]);
         continue;
       }
       $values['field_mappings'][$i]['locked'] = !empty($value['ops']['lock']);
-      unset($values['field_mappings'][$i]['ops']);
+
+      // Remove UI crud from form state array:
+      $form_state->unsetValue(['field_mappings', $i, 'ops']);
+      $form_state->unsetValue('field_type');
     }
+
+    if (!empty($key) && !$key_mapped) {
+      // Do not allow saving mapping when key field is not mapped.
+      $form_state->setErrorByName('key', t('You must add the selected field to the field mapping in order set an Upsert Key.'));
+    }
+
   }
 
   public function field_add_callback($form, FormStateInterface $form_state) {
@@ -261,7 +318,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
 
   protected function get_drupal_type_options() {
     $field_plugins = $this->SalesforceMappingFieldManager->getDefinitions();
-    $field_type_options = array();
+    $field_type_options = [];
     foreach ($field_plugins as $field_plugin) {
       $field_type_options[$field_plugin['id']] = $field_plugin['label'];
     }
@@ -285,12 +342,9 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    *   An array of values keyed by machine name of the field with the label as
    *   the value, formatted to be appropriate as a value for #options.
    */
-  protected function get_salesforce_field_options($salesforce_object_type = '') {
-    if (empty($salesforce_object_type)) {
-      $salesforce_object_type = $this->entity->get('salesforce_object_type');
-    }
-    $sfobject = $this->get_salesforce_object($salesforce_object_type);
-    $sf_fields = array();
+  protected function get_salesforce_field_options() {
+    $sfobject = $this->get_salesforce_object();
+    $sf_fields = [];
     if (isset($sfobject['fields'])) {
       foreach ($sfobject['fields'] as $sf_field) {
         $sf_fields[$sf_field['name']] = $sf_field['label'];

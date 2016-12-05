@@ -18,7 +18,7 @@ class SalesforceMappingEnableForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to enable the mapping %name?', array('%name' => $this->entity->label()));
+    return $this->t('Are you sure you want to enable the mapping %name?', ['%name' => $this->entity->label()]);
   }
 
   /**
@@ -32,9 +32,9 @@ class SalesforceMappingEnableForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelRoute() {
-    return array(
+    return [
       'route_name' => 'entity.salesforce_mapping.list',
-    );
+    ];
   }
 
   /**
@@ -51,10 +51,10 @@ class SalesforceMappingEnableForm extends EntityConfirmFormBase {
     parent::submit($form, $form_state);
 
     $this->entity->enable()->save();
-    $form_state['redirect_route'] = array(
+    $form_state['redirect_route'] = [
       'route_name' => 'entity.salesforce_mapping.edit_form',
-      'route_parameters' => array('salesforce_mapping' => $this->entity->id()),
-    );
+      'route_parameters' => ['salesforce_mapping' => $this->entity->id()],
+    ];
   }
 
 }

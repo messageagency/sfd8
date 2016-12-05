@@ -48,19 +48,23 @@ class Token extends SalesforceMappingFieldPluginBase {
     // @TODO expose token options on mapping form: clear, callback, sanitize
     // @TODO expose token tree / selector
     // @TODO add token validation
-    return array(
+    return [
       '#type' => 'textfield',
       '#default_value' => $this->config('drupal_field_value'),
       '#description' => $this->t('Enter a token to map a Salesforce field..'),
-    );
+    ];
   }
 
   public function value(EntityInterface $entity) {
     // Even though everything is an entity, some token functions expect to
     // receive the entity keyed by entity type.
     $text = $this->config('drupal_field_value');
-    $data = array('entity' => $entity, get_class($entity) => $entity);
+    $data = ['entity' => $entity, get_class($entity) => $entity];
     return $this->token->replace($text, $data);
+  }
+
+  public function pull() {
+    return FALSE;
   }
 
 }

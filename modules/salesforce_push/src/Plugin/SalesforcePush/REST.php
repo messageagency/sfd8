@@ -47,7 +47,7 @@ class Rest {
     // Delete API method returns nothing.
     // May throw an exception, which we allow to bubble up to the caller.
     $this->sf_client->objectDelete($this->mapping->salesforce_object_type, $this->mapped_object->sfid());
-    salesforce_set_message(t('Salesforce object %sfid has been deleted.', array('%sfid' => $this->mapped_object->sfid())));
+    salesforce_set_message(t('Salesforce object %sfid has been deleted.', ['%sfid' => $this->mapped_object->sfid()]));
     $this->mapped_object->delete();
   }
 
@@ -60,10 +60,10 @@ class Rest {
     }
 
     // If we get this far, there was no error.
-    salesforce_set_message(t('%name has been synchronized with Salesforce record %sfid.', array(
+    salesforce_set_message(t('%name has been synchronized with Salesforce record %sfid.', [
       '%name' => $this->entity->label(),
       '%sfid' => $this->mapped_object->sfid(),
-    )));
+    ]));
     $this->mapped_object->entity_updated = $this->entity->get('changed');
     $this->mapped_object->save();
   }
@@ -97,11 +97,11 @@ class Rest {
     // If we get this far, there was no error and sfid must have been assigned.
     // Create mapping object, saved in caller.
     // @TODO use a mapping object factory
-    $this->mapped_object = entity_create('salesforce_mapped_object', array(
+    $this->mapped_object = entity_create('salesforce_mapped_object', [
       'entity_id' => $this->entity->id(),
       'entity_type' => get_class($this->entity),
       'salesforce_id' => $sfid,
-    ));
+    ]);
   }
 
   /**
@@ -127,7 +127,7 @@ class Rest {
       // @TODO reconsider whether we really want to delete the mapping here.
       // e.g. Probably shouldn't delete a mapping for response code 500
       $this->mapped_object->delete();
-      salesforce_set_message(t('Error message: "@msg".  The Salesforce link has been removed.', array('@msg' => $e->getMessage())), 'error');
+      salesforce_set_message(t('Error message: "@msg".  The Salesforce link has been removed.', ['@msg' => $e->getMessage()]), 'error');
       throw $e;
     }
   }
@@ -140,9 +140,18 @@ class Rest {
   private function _upsert() {
     // An upsert only returns an Id if the record was created. If no Id was
     // returned, go and fetch the Id. @see https://drupal.org/node/1992260
-    $data = $this->sf_client->objectUpsert($this->mapping->salesforce_object_type, $this->mapping->getKeyField(), $this->mapping->getKeyValue($this->entity), $this->mapping->getPushParams($this->entity));
+    $data = $this->sf_client->objectUpsert(
+      $this->mapping->salesforce_object_type,
+      $this->mapping->getKeyField(), 
+      $this->mapping->getKeyValue($this->entity),
+      $this->mapping->getPushParams($this->entity)
+    );
     if (empty($data['id'])) {
-      $data = $this->sf_client->objectReadKey($this->mapping->salesforce_object_type, $this->mapping->getKeyField(), $this->mapping->getKeyValue($this->entity));
+      $data = $this->sf_client->objectReadKey(
+        $this->mapping->salesforce_object_type,
+        $this->mapping->getKeyField(), 
+        $this->mapping->getKeyValue($this->entity)
+      );
     }
     return $data['id'];
   }

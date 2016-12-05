@@ -20,25 +20,25 @@ class SalesforceMappingTestCase extends SalesforceTestCase {
    * Implementation of getInfo().
    */
   public static function getInfo() {
-    return array(
+    return [
       'name' => 'Salesforce Mapping',
       'description' => 'Sets up basic tools for the testing of mapping Drupal to Salesforce.',
       'group' => 'Salesforce',
-    );
+    ];
   }
 
   /**
    * Implementation of setUp().
    */
-  public function setUp($modules = array(), $permissions = array()) {
-    $modules = array_merge($modules, array(
+  public function setUp($modules = [], $permissions = []) {
+    $modules = array_merge($modules, [
       'entity',
       'salesforce_mapping',
-    ));
-    $permissions = array_merge($permissions, array(
+    ]);
+    $permissions = array_merge($permissions, [
       'administer salesforce mapping',
       'view salesforce mapping',
-    ));
+    ]);
     parent::setUp($modules, $permissions);
   }
 
@@ -61,47 +61,47 @@ class SalesforceMappingTestCase extends SalesforceTestCase {
    *   Desired mapping configuration.  If none is provided, a default mapping
    *   configuration will be generated.
    */
-  protected function createSalesforceMapping($label, $machine_name = NULL, $config = array()) {
+  protected function createSalesforceMapping($label, $machine_name = NULL, $config = []) {
     // Give a default configuration if one is not provided for us.
     if (empty($config)) {
-      $config = array(
+      $config = [
         'drupal_entity_type' => 'user',
         'drupal_bundle' => 'user',
         'salesforce_object_type' => 'Contact',
         'key' => 1,
-        'mapping' => array(
-          array(
+        'mapping' => [
+          [
             'fieldmap_type' => 'property',
             'fieldmap_value' => 'name',
             'salesforce_field' => 'Name',
             'direction' => 'drupal_sf',
-          ),
-          array(
+          ],
+          [
             'fieldmap_type' => 'property',
             'fieldmap_value' => 'mail',
             'salesforce_field' => 'Email',
             'direction' => 'sync',
-          ),
-          array(
+          ],
+          [
             'fieldmap_type' => 'property',
             'fieldmap_value' => 'name',
             'salesforce_field' => 'LastName',
             'direction' => 'sf_drupal',
-          ),
-        ),
-        'sync_triggers' => array(
+          ],
+        ],
+        'sync_triggers' => [
           '1' => TRUE,
           '2' => TRUE,
           '4' => TRUE,
           '8' => TRUE,
           '16' => TRUE,
           '32' => TRUE,
-        ),
+        ],
         'push_async' => TRUE,
-      );
+      ];
     }
 
-    $edit = array();
+    $edit = [];
     $machine_name = is_null($machine_name) ? str_replace(' ', '_', strtolower($label)) : $machine_name;
     $this->drupalGet($this->addMapPath);
     $this->assertNoText('You are not authorized to access this page.', 'Able to access the create map page.');
@@ -119,7 +119,7 @@ class SalesforceMappingTestCase extends SalesforceTestCase {
     foreach ($config['mapping'] as $delta => $map) {
       $edit['salesforce_field_mappings[' . $delta . '][drupal_field][fieldmap_type]'] = $map['fieldmap_type'];
       $this->drupalPostAjax(NULL, $edit, 'salesforce_field_mappings[' . $delta . '][drupal_field][fieldmap_type]');
-      $this->drupalPostAjax(NULL, $edit, array('salesforce_add_field' => 'Add another field mapping'));
+      $this->drupalPostAjax(NULL, $edit, ['salesforce_add_field' => 'Add another field mapping']);
       unset($config['mapping'][$delta]['fieldmap_type']);
     }
 
@@ -199,7 +199,7 @@ class SalesforceMappingTestCase extends SalesforceTestCase {
    * @return array
    *   An array of Ajax commands.
    */
-  protected function drupalPostAJAX($path, $edit, $triggering_element, $ajax_path = NULL, array $options = array(), array $headers = array(), $form_html_id = NULL, $ajax_settings = NULL) {
+  protected function drupalPostAJAX($path, $edit, $triggering_element, $ajax_path = NULL, array $options = [], array $headers = [], $form_html_id = NULL, $ajax_settings = NULL) {
     // Get the content of the initial page prior to calling drupalPost(), since
     // drupalPost() replaces $this->content.
     if (isset($path)) {
@@ -253,15 +253,15 @@ class SalesforceMappingTestCase extends SalesforceTestCase {
     }
 
     // Submit the POST request.
-    $return = drupal_json_decode($this->drupalPost(NULL, $edit, array('path' => $ajax_path, 'triggering_element' => $triggering_element), $options, $headers, $form_html_id, $extra_post));
+    $return = drupal_json_decode($this->drupalPost(NULL, $edit, ['path' => $ajax_path, 'triggering_element' => $triggering_element], $options, $headers, $form_html_id, $extra_post));
 
     // Change the page content by applying the returned commands.
     if (!empty($ajax_settings) && !empty($return)) {
       // ajax.js applies some defaults to the settings object, so do the same
       // for what's used by this function.
-      $ajax_settings += array(
+      $ajax_settings += [
         'method' => 'replaceWith',
-      );
+      ];
       // DOM can load HTML soup. But, HTML soup can throw warnings, suppress
       // them.
       $dom = new DOMDocument();
@@ -284,7 +284,7 @@ class SalesforceMappingTestCase extends SalesforceTestCase {
             // @TODO Ajax commands can target any jQuery selector, but these are
             //   hard to fully emulate with XPath. For now, just handle 'head'
             //   and 'body', since these are used by ajax_render().
-            elseif (in_array($command['selector'], array('head', 'body'))) {
+            elseif (in_array($command['selector'], ['head', 'body'])) {
               $wrapper_node = $xpath->query('//' . $command['selector'])->item(0);
             }
             // Begin modification.  When a custom command declares a single id

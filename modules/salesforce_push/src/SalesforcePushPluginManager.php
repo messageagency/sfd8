@@ -33,7 +33,7 @@ class SalesforcePushPluginManager extends DefaultPluginManager {
     parent::__construct('Plugin/SalesforcePush', $namespaces, $module_handler);
 
     $this->alterInfo('salesforce_push_fields_info');
-    $this->setCacheBackend($cache_backend, 'salesforce_push', array('salesforce_push_plugins'));
+    $this->setCacheBackend($cache_backend, 'salesforce_push', ['salesforce_push_plugins']);
   }
 
 }

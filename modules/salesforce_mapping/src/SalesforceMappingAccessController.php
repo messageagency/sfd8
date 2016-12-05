@@ -30,12 +30,9 @@ class SalesforceMappingAccessController extends EntityAccessControlHandler {
           ? AccessResult::allowed()
           : AccessResult::forbidden();
       default:
-        // Apparently access controllers don't support dependency injection.
-        if (\Drupal::service('salesforce.client')->isAuthorized()) {
-          return $account->hasPermission('administer salesforce mapping')
-            ? AccessResult::allowed()
-            : AccessResult::forbidden();
-        }
+        return $account->hasPermission('administer salesforce mapping')
+          ? AccessResult::allowed()
+          : AccessResult::forbidden();
     }
   }
 }

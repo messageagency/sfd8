@@ -44,39 +44,38 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $form = parent::buildForm($form, $form_state);
 
     $mapping = $this->entity;
-    $form['label'] = array(
+    $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
       '#default_value' => $mapping->label(),
       '#required' => TRUE,
       '#weight' => -30,
-    );
-    $form['id'] = array(
+    ];
+    $form['id'] = [
       '#type' => 'machine_name',
       '#required' => TRUE,
       '#default_value' => $mapping->id(),
       '#maxlength' => 255,
-      '#machine_name' => array(
+      '#machine_name' => [
         'exists' => ['Drupal\salesforce_mapping\Entity\SalesforceMapping', 'load'],
-        'source' => array('label'),
-      ),
+        'source' => ['label'],
+      ],
       '#disabled' => !$mapping->isNew(),
       '#weight' => -20,
-    );
+    ];
 
-    $form['drupal_entity'] = array(
+    $form['drupal_entity'] = [
       '#title' => $this->t('Drupal entity'),
       '#type' => 'details',
-      '#attributes' => array(
+      '#attributes' => [
         'id' => 'edit-drupal-entity',
-      ),
+      ],
       // Gently discourage admins from breaking existing fieldmaps:
-      '#collapsible' => TRUE,
-      '#collapsed' => !$mapping->isNew(),
-    );
+      '#open' => $mapping->isNew(),
+    ];
 
     $entity_types = $this->get_entity_type_options();
-    $form['drupal_entity']['drupal_entity_type'] = array(
+    $form['drupal_entity']['drupal_entity_type'] = [
       '#title' => $this->t('Drupal Entity Type'),
       '#id' => 'edit-drupal-entity-type',
       '#type' => 'select',
@@ -90,31 +89,31 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       //   'callback' => array($this, 'drupal_entity_type_bundle_callback'),
       //   'wrapper' => 'edit-drupal-entity',
       // ),
-    );
+    ];
 
-    $form['drupal_entity']['drupal_bundle'] = array('#title' => 'Drupal Bundle', '#tree' => TRUE);
+    $form['drupal_entity']['drupal_bundle'] = ['#title' => 'Drupal Bundle', '#tree' => TRUE];
     foreach ($entity_types as $entity_type => $label) {
       $bundle_info = \Drupal::entityManager()->getBundleInfo($entity_type);
       if (empty($bundle_info)) {
         continue;
       }
-      $form['drupal_entity']['drupal_bundle'][$entity_type] = array(
-        '#title' => $this->t('@entity_type Bundle', array('@entity_type' => $label)),
+      $form['drupal_entity']['drupal_bundle'][$entity_type] = [
+        '#title' => $this->t('@entity_type Bundle', ['@entity_type' => $label]),
         '#type' => 'select',
         '#empty_option' => $this->t('- Select -'),
-        '#options' => array(),
-        '#states' => array(
-          'visible' => array(
-            ':input#edit-drupal-entity-type' => array('value' => $entity_type),
-          ),
-          'required' => array(
-            ':input#edit-drupal-entity-type, dummy1' => array('value' => $entity_type),
-          ),
-          'disabled' => array(
-            ':input#edit-drupal-entity-type, dummy2' => array('!value' => $entity_type),
-          ),
-        ),
-      );
+        '#options' => [],
+        '#states' => [
+          'visible' => [
+            ':input#edit-drupal-entity-type' => ['value' => $entity_type],
+          ],
+          'required' => [
+            ':input#edit-drupal-entity-type, dummy1' => ['value' => $entity_type],
+          ],
+          'disabled' => [
+            ':input#edit-drupal-entity-type, dummy2' => ['!value' => $entity_type],
+          ],
+        ],
+      ];
       foreach ($bundle_info as $key => $info) {
         $form['drupal_entity']['drupal_bundle'][$entity_type]['#options'][$key] = $info['label'];
         if ($key == $mapping->get('drupal_bundle')) {
@@ -123,13 +122,13 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       }
     }
 
-    $form['salesforce_object'] = array(
+    $form['salesforce_object'] = [
       '#title' => $this->t('Salesforce object'),
       '#id' => 'edit-salesforce-object',
       '#type' => 'details',
       // Gently discourage admins from breaking existing fieldmaps:
-      '#collapsed' => !$mapping->isNew(),
-    );
+      '#open' => $mapping->isNew(),
+    ];
 
     $salesforce_object_type = '';
     if (!empty($form_state->getValues()) && !empty($form_state->getValue('salesforce_object_type'))) {
@@ -138,24 +137,24 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     elseif ($mapping->get('salesforce_object_type')) {
       $salesforce_object_type = $mapping->get('salesforce_object_type');
     }
-    $form['salesforce_object']['salesforce_object_type'] = array(
+    $form['salesforce_object']['salesforce_object_type'] = [
       '#title' => $this->t('Salesforce Object'),
       '#id' => 'edit-salesforce-object-type',
       '#type' => 'select',
       '#description' => $this->t('Select a Salesforce object to map.'),
       '#default_value' => $salesforce_object_type,
       '#options' => $this->get_salesforce_object_type_options(),
-      '#ajax' => array(
-        'callback' => array($this, 'salesforce_record_type_callback'),
+      '#ajax' => [
+        'callback' => [$this, 'salesforce_record_type_callback'],
         'wrapper' => 'edit-salesforce-object',
-      ),
+      ],
       '#required' => TRUE,
       '#empty_option' => $this->t('- Select -'),
-    );
+    ];
 
-    $form['salesforce_object']['salesforce_record_type'] = array(
+    $form['salesforce_object']['salesforce_record_type'] = [
       '#id' => 'edit-salesforce-record-type',
-    );
+    ];
 
     if ($salesforce_object_type) {
       // Check for custom record types.
@@ -164,7 +163,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       if (count($salesforce_record_type_options) > 1) {
         // There are multiple record types for this object type, so the user
         // must choose one of them.  Provide a select field.
-        $form['salesforce_object']['salesforce_record_type'] = array(
+        $form['salesforce_object']['salesforce_record_type'] = [
           '#title' => $this->t('Salesforce Record Type'),
           '#type' => 'select',
           '#description' => $this->t('Select a Salesforce record type to map.'),
@@ -173,53 +172,56 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
           '#empty_option' => $this->t('- Select -'),
           // Do not make it required to preserve graceful degradation:
           // '#required' => TRUE,
-        );
+        ];
       }
       else {
         // There is only one record type for this object type.  Don't bother the
         // user and just set the single record type by default.
-        $form['salesforce_object']['salesforce_record_type'] = array(
+        $form['salesforce_object']['salesforce_record_type'] = [
           '#title' => $this->t('Salesforce Record Type'),
           '#type' => 'hidden',
           '#value' => '',
-        );
+        ];
       }
     }
 
+    $form['salesforce_object']['pull_trigger_date'] = [
+      '#type' => 'select',
+      '#title' => t('Date field to trigger pull'),
+      '#description' => t('Select a date field to base pull triggers on. (Default of "Last Modified Date" is usually appropriate).'),
+      '#required' => TRUE,
+      '#default_value' => $this->entity->get('pull_trigger_date')
+        ? $this->entity->get('pull_trigger_date')
+        : 'LastModifiedDate',
+      '#options' => $this->get_pull_trigger_options(),
+    ];
+
     // @TODO either change sync_triggers to human readable values, or make them work as hex flags again.
     $trigger_options = $this->get_sync_trigger_options();
-    $form['sync_triggers'] = array(
+    $form['sync_triggers'] = [
       '#title' => t('Action triggers'),
-      '#type' => 'checkboxes',
+      '#type' => 'container',
+      '#tree' => TRUE,
       '#description' => t('Select which actions on Drupal entities and Salesforce
         objects should trigger a synchronization. These settings are used by the
-        salesforce_push and salesforce_pull modules.'),
-      '#options' => $trigger_options,
-      '#required' => TRUE,
-      // form.inc doesn't type-check default values. Don't pass NULL or FALSE.
-      '#default_value' => $mapping->get('sync_triggers'),
-    );
+        salesforce_push and salesforce_pull modules.'
+        ),
+    ];
 
-    $form['push_plugin'] = array(
-      '#title' => t('Push Plugin'),
-      '#type' => 'select',
-      '#options' => $this->get_push_plugin_options(),
-      '#description' => t('Choose a plugin to handle synching with Salesforce.'),
-      '#default_value' => $mapping->get('push_plugin'),
-      '#empty_option' => $this->t('- Select -'),
-    );
-    if (empty($form['push_plugin']['#options'])) {
-      $form['push_plugin']['#description'] = t('No push plugins found.
-        Please enable Salesforce Push module if you want to push data to Salesforce.');
+    foreach ($trigger_options as $option => $label) {
+      $form['sync_triggers'][$option] = [
+        '#title' => $label,
+        '#type' => 'checkbox',
+        '#default_value' => @$mapping->get('sync_triggers')[$option],
+      ];
     }
 
-    // Stuff all the hidden stuff in here;
-    foreach (array('field_mappings', 'weight', 'status', 'locked', 'type') as $el) {
-      $form[$el] = array(
-        '#type' => 'hidden',
+    // Hide all the hidden stuff in here;
+    foreach (['weight', 'status', 'locked', 'type'] as $el) {
+      $form[$el] = [
+        '#type' => 'value',
         '#value' => $mapping->get($el),
-        '#title' => $el
-      );
+      ];
     }
 
     return $form;
@@ -228,14 +230,14 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
  /**
    * {@inheritdoc}
    */
-  public function validate(array $form, FormStateInterface $form_state) {
-    parent::validate($form, $form_state);
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
 
     $entity_type = $form_state->getValue('drupal_entity_type');
     if (!empty($entity_type) && empty($form_state->getValue('drupal_bundle')[$entity_type])) {
       $element = &$form['drupal_entity']['drupal_bundle'][$entity_type];
       // @TODO replace with Dependency Injection
-      \Drupal::formBuilder()->setError($element, $this->t('!name field is required.', array('!name' => $element['#title'])));
+      \Drupal::formBuilder()->setError($element, $this->t('!name field is required.', ['!name' => $element['#title']]));
     }
 
     // In case the form was submitted without javascript, we must validate the
@@ -244,7 +246,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $record_types = $this->get_salesforce_record_type_options($form_state->getValue('salesforce_object_type'), $form_state);
       if (count($record_types) > 1) {
         $element = &$form['salesforce_object']['salesforce_record_type'];
-        drupal_set_message($this->t('!name field is required for this Salesforce Object type.', array('!name' => $element['#title'])));
+        drupal_set_message($this->t('!name field is required for this Salesforce Object type.', ['!name' => $element['#title']]));
         $form_state->setValue('rebuild', TRUE);
       }
     }
@@ -296,7 +298,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    *   the value, formatted to be appropriate as a value for #options.
    */
   protected function get_entity_type_options() {
-    $options = array();
+    $options = [];
     $entity_info = \Drupal::entityTypeManager()->getDefinitions();
 
     // For now, let's only concern ourselves with fieldable entities. This is an
@@ -323,14 +325,14 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    *   the value, formatted to be appropriate as a value for #options.
    */
   protected function get_salesforce_object_type_options() {
-    $sfobject_options = array();
+    $sfobject_options = [];
     // No need to cache here: Salesforce::objects() implements its own caching.
     $sfapi = salesforce_get_api();
     // Note that we're filtering SF object types to a reasonable subset.
-    $sfobjects = $sfapi->objects(array(
+    $sfobjects = $sfapi->objects([
       'updateable' => TRUE,
       'triggerable' => TRUE,
-    ));
+    ]);
     foreach ($sfobjects as $object) {
       $sfobject_options[$object['name']] = $object['label'];
     }
@@ -351,7 +353,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    *   the value, formatted to be appropriate as a value for #options.
    */
   protected function get_salesforce_record_type_options($salesforce_object_type) {
-    $sf_types = array();
+    $sf_types = [];
     $sfobject = $this->get_salesforce_object($salesforce_object_type);
     if (isset($sfobject['recordTypeInfos'])) {
       foreach ($sfobject['recordTypeInfos'] as $type) {
@@ -369,20 +371,37 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    *   label as the value.
    */
   protected function get_sync_trigger_options() {
-    return array(
+    return [
       SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => t('Drupal entity create'),
       SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => t('Drupal entity update'),
       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE => t('Drupal entity delete'),
       SALESFORCE_MAPPING_SYNC_SF_CREATE => t('Salesforce object create'),
       SALESFORCE_MAPPING_SYNC_SF_UPDATE => t('Salesforce object update'),
       SALESFORCE_MAPPING_SYNC_SF_DELETE => t('Salesforce object delete'),
-    );
+    ];
+  }
+
+  /**
+   * Helper function which returns an array of Date fields suitable for use a
+   * pull trigger field.
+   *
+   * @return array
+   */
+  private function get_pull_trigger_options() {
+    $options = [];
+    $describe = $this->get_salesforce_object();
+    foreach ($describe['fields'] as $field) {
+      if ($field['type'] == 'datetime') {
+        $options[$field['name']] = $field['label'];
+      }
+    }
+    return $options;
   }
 
   protected function get_push_plugin_options() {
-    return array();
+    return [];
     // $field_plugins = $this->pushPluginManager->getDefinitions();
-    $field_type_options = array();
+    $field_type_options = [];
     foreach ($field_plugins as $field_plugin) {
       $field_type_options[$field_plugin['id']] = $field_plugin['label'];
     }

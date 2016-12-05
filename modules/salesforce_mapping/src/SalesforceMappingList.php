@@ -7,7 +7,6 @@
 
 namespace Drupal\salesforce_mapping;
 
-use Drupal\Component\Utility\String;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Config\Entity\DraggableListBuilder;
 use Drupal\Core\Entity\EntityInterface;
@@ -33,7 +32,7 @@ class SalesforceMappingList extends DraggableListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header = array();
+    $header = [];
     $header['label'] = $this->t('Label');
     $header['drupal_entity_type'] = $this->t('Drupal Entity');
     $header['drupal_bundle'] = $this->t('Drupal Bundle');
@@ -43,37 +42,29 @@ class SalesforceMappingList extends DraggableListBuilder {
     $header['status'] = $this->t('Status');
     return $header + parent::buildHeader();
   }
-  
+
   /**
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    $row = array();
+    $row = [];
     $row['label'] = $entity->label();
-    $properties = array('drupal_entity_type', 'drupal_bundle', 'salesforce_object_type');
+    $properties = ['drupal_entity_type', 'drupal_bundle', 'salesforce_object_type'];
     foreach ($properties as $property) {
       $row[$property] = $entity->get($property);
     }
 
     // If this mapping is disabled, denote it visually.
     if (!$entity->status()) {
-      $row['status'] = array('#markup' => $this->t('Disabled'));
-      foreach ($row as &$value) {
-        if (is_string($value)) {
-          $value = String::placeholder($value);
-        }
-        elseif (is_array($value) && is_string($value['#markup'])) {
-          $value['#markup'] = String::placeholder($value['#markup']);
-        }
-      }
+      $row['status'] = ['#markup' => $this->t('Disabled')];
     }
     else {
-      $row['status'] = array('#markup' => $this->t('Enabled'));
+      $row['status'] = ['#markup' => $this->t('Enabled')];
     }
 
     return $row + parent::buildRow($entity);
   }
-  
+
   /**
    * {@inheritdoc}
    */
@@ -89,16 +80,16 @@ class SalesforceMappingList extends DraggableListBuilder {
   public function getDefaultOperations(EntityInterface $entity) {
     $operations = parent::getDefaultOperations($entity);
 
-    $url = Url::fromRoute('entity.salesforce_mapping.fields', array('salesforce_mapping' => $entity->id()));
+    $url = Url::fromRoute('entity.salesforce_mapping.fields', ['salesforce_mapping' => $entity->id()]);
 
     // Only makes sense to expose fields operation if edit exists
     if (isset($operations['edit'])) {
       $operations['edit']['title'] = $this->t('Properties');
-      $operations['fields'] = array(
+      $operations['fields'] = [
         'title' => $this->t('Fields'),
         'url' => $url,
         'weight' => -1000,
-      );
+      ];
     }
 
     return $operations;
