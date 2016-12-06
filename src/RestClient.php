@@ -593,10 +593,15 @@ class RestClient {
 
     // On update, upsert method returns an empty body. Retreive object id, so that we can return a consistent response.
     if ($this->response->getStatusCode() == 204) {
+      // We need a way to allow callers to distinguish updates and inserts. To
+      // that end, cache the original response and reset it after fetching the
+      // ID.
+      $response = $this->response;
       $sf_object = $this->objectReadbyExternalId($name, $key, $value);
       $data['id'] = $sf_object['Id'];
       $data['success'] = TRUE;
       $data['errors'] = [];
+      $this->response = $response;
     }
 
     return $data;
