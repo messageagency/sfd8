@@ -161,7 +161,7 @@ function salesforce_mapped_object_load_multiple($properties = []) {
  */
 function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id) {
   return salesforce_mapped_object_load_multiple([
-    'entity_type_id' => $entity_type, 
+    'entity_type_id' => $entity_type,
     'entity_id' => $entity_id
   ]);
 }
@@ -193,7 +193,10 @@ function salesforce_mapping_get_mapped_objects() {
   $mappings = salesforce_mapping_load_multiple();
   usort($mappings, 'salesforce_mapping_sort');
   foreach ($mappings as $mapping) {
-    $object_types[$mapping->getSalesforceObjectType()] = $mapping->$mapping->getSalesforceObjectType();
+    $type = $mapping->getSalesforceObjectType();
+    // @TODO Why is the assignment $mapping->$mapping?
+    //$object_types[$mapping->getSalesforceObjectType()] = $mapping->$mapping->getSalesforceObjectType();
+    $object_types[$type] = $type;
   }
   return $object_types;
 }
