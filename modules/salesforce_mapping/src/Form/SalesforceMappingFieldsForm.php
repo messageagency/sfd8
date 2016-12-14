@@ -108,7 +108,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     // );
     $add_field_text = !empty($field_mappings) ? t('Add another field mapping') : t('Add a field mapping to get started');
 
-  
+
     $form['buttons'] = ['#type' => 'container'];
     $form['buttons']['field_type'] = [
       '#title' => t('Field Type'),
@@ -149,7 +149,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $input = $form_state->getUserInput();
     if (!empty($input['field_mappings'])) {
       while (isset($input['field_mappings'][++$delta])) {
-        $rows[$delta] = $this->get_row($input['field_mappings'][$delta], $form, $form_state);
+        $rows[$delta] = $this->get_row($this->entity->getFieldMapping($input['field_mappings'][$delta]), $form, $form_state);
       }
     }
     // @TODO input does not contain the clicked button, have to go to values for
@@ -201,7 +201,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       $field_plugin_definition = $this->get_field_plugin($field_type);
       $field_plugin = $this->SalesforceMappingFieldManager->createInstance(
         $field_plugin_definition['id']
-      );      
+      );
     }
 
     if (empty($field_type)) {
