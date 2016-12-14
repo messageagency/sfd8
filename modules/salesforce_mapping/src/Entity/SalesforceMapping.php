@@ -235,7 +235,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     if (!$this->hasKey()) {
       throw new Exception('No key defined for this mapping.');
     }
-    
+
     // @TODO #fieldMappingField
     foreach ($this->getFieldMappings() as $field_plugin) {
       if ($field_plugin->get('salesforce_field') == $this->getKeyField()) {
@@ -254,11 +254,18 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     $mappings = [];
     foreach ($this->field_mappings as $field) {
        $mappings[] = $this->fieldManager->createInstance(
-         $field['drupal_field_type'], 
+         $field['drupal_field_type'],
          $field
        );
     }
     return $mappings;
+  }
+
+  public function getFieldMapping($field) {
+    return $this->fieldManager->createInstance(
+      $field['drupal_field_type'],
+      $field
+    );
   }
 
   public function pull() {
