@@ -83,7 +83,10 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   /**
    * In order to set a config value to null, use setConfiguration()
    */
-  public function config($key, $value = NULL) {
+  public function config($key = NULL, $value = NULL) {
+    if ($key === NULL) {
+      return $this->configuration;
+    }
     if ($value !== NULL) {
       $this->configuration[$key] = $value;
     }

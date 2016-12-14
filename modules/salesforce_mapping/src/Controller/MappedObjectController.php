@@ -85,7 +85,6 @@ class MappedObjectController extends ControllerBase {
    *    Array of page elements to render.
    */
   public function view(RouteMatchInterface $route_match) {
-    $output = [];
     $entity = $this->getEntity($route_match);
     $salesforce_mapped_object = $this->getMappedObject($entity);
     if ($salesforce_mapped_object->isNew()) {
