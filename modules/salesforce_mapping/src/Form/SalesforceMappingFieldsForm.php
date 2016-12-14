@@ -138,20 +138,18 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $has_token_type = FALSE;
 
     // Add a row for each saved mapping
-    $delta = 0;
     foreach ($this->entity->getFieldMappings() as $field_plugin) {
-      $value['delta'] = $delta;
-      $rows[$delta] = $this->get_row($field_plugin, $form, $form_state);
-      $delta++;
+      $rows[] = $this->get_row($field_plugin, $form, $form_state);
     }
 
     // Apply any changes from form_state to existing fields.
     $input = $form_state->getUserInput();
     if (!empty($input['field_mappings'])) {
-      while (isset($input['field_mappings'][++$delta])) {
-        $rows[$delta] = $this->get_row($this->entity->getFieldMapping($input['field_mappings'][$delta]), $form, $form_state);
+      for ($i = count($this->entity->getFieldMappings()); $i < count($input['field_mappings']); $i++) {
+        $rows[] = $this->get_row($this->entity->getFieldMapping($input['field_mappings'][$i]), $form, $form_state);
       }
     }
+
     // @TODO input does not contain the clicked button, have to go to values for
     // that. This may change?
 
@@ -162,7 +160,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     if (!empty($form_state->getValues())
     && $form_state->getValue('add') == $form_state->getValue('op')
     && !empty($input['field_type'])) {
-      $rows[$delta] = $this->get_row(NULL, $form, $form_state);
+      $rows[] = $this->get_row(NULL, $form, $form_state);
     }
 
     // Retrieve and add the form actions array.
