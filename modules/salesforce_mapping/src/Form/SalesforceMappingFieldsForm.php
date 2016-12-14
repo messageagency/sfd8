@@ -162,7 +162,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     if (!empty($form_state->getValues())
     && $form_state->getValue('add') == $form_state->getValue('op')
     && !empty($input['field_type'])) {
-      $rows[$delta] = $this->get_row([], $form, $form_state);
+      $rows[$delta] = $this->get_row(NULL, $form, $form_state);
     }
 
     // Retrieve and add the form actions array.
@@ -191,23 +191,24 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   private function get_row(FieldPluginInterface $field_plugin = NULL, $form, FormStateInterface $form_state) {
     $input = $form_state->getUserInput();
 
-    $field_type = NULL;
     if ($field_plugin != NULL) {
       $field_type = $field_plugin->config('drupal_field_type');
+      $field_plugin_definition = $this->get_field_plugin($field_type);
     }
     else {
+      $field_plugin_definition = $field_type = NULL;
       $field_type = $input['field_type'];
+      $field_plugin_definition = $this->get_field_plugin($field_type);
       $field_plugin = $this->SalesforceMappingFieldManager->createInstance(
-        $field_plugin_definition['id'],
-        $field_configuration
-      );
+        $field_plugin_definition['id']
+      );      
     }
+
     if (empty($field_type)) {
       // @TODO throw an exception here ?
       return;
     }
 
-    $field_plugin_definition = $this->get_field_plugin($field_type);
     if (empty($field_plugin_definition)) {
       // @TODO throw an exception here ?
       return;
@@ -244,16 +245,6 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       '#required' => TRUE,
       '#default_value' => $field_plugin->config('direction') ? $field_plugin->config('direction') : SALESFORCE_MAPPING_DIRECTION_SYNC,
     ];
-
-    if (!$field_plugin->pull()) {
-      unset($row['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_SYNC], $row['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL]);
-      $row['direction']['#default_value'] = SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF;
-    }
-
-    if (!$field_plugin->push()) {
-      unset($row['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_SYNC], $row['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF]);
-      $row['direction']['#default_value'] = SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL;
-    }
 
     // @TODO implement "lock/unlock" logic here:
     // @TODO convert these to AJAX operations
