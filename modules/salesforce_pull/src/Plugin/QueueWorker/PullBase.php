@@ -45,11 +45,24 @@ abstract class PullBase extends QueueWorkerBase {
       $mapping_conditions['salesforce_record_type'] = $sf_object['RecordTypeId'];
     }
 
-    $sf_mappings = salesforce_mapping_load_multiple($mapping_conditions);
+    try {
+      $sf_mappings = salesforce_mapping_load_multiple($mapping_conditions);
+    }
+    catch (Exception $e) {
+      return;
+    }
 
     foreach ($sf_mappings as $sf_mapping) {
       // Mapping object exists?
-      $mapped_object = salesforce_mapped_object_load_by_sfid($sf_object['Id']);
+      // @TODO: alex to make this work more better =]
+      try {
+        $mapped_object = salesforce_mapped_object_load_by_sfid($sf_object['Id']);
+        $this->doUpdate($sf_mapping, $mapped_object);
+      }
+      catch (Exception $e) {
+        $this->doCreate();
+      }
+
       if (!empty($mapped_object) && $sf_mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
         try {
           $entity = \Drupal::entityTypeManager()
