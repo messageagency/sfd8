@@ -188,32 +188,44 @@ abstract class PullBase extends QueueWorkerBase {
     //$drupal_field = $field->get('drupal_field_value');
 
     foreach ($sf_mapping->getPullFields($entity) as $field_map) {
-      $poop = $field_map->get('drupal_field_value');
-      $drupal_fields_array = explode(':', $field_map->get('drupal_field_value'));
-      $parent = $entity;
-      foreach ($drupal_fields_array as $drupal_field) {
-        if ($parent instanceof EntityListWrapper) {
-          $child_wrapper = $parent->get(0)->{$drupal_field};
-        }
-        else {
-          $child_wrapper = $parent->{$drupal_field};
-        }
-        $parent = $child_wrapper;
+      // $poop = $field_map->get('drupal_field_value');
+      // $drupal_fields_array = explode(':', $field_map->get('drupal_field_value'));
+      // $parent = $entity;
+      $mapping_field_plugin_id = $field_map->get('drupal_field_type');
+      $mapping_field_plugin = $this->pluginManager->create($mapping_field_plugin_id, $field_map);
+
+      // $drupal_field_value = $field_map->get('drupal_field_value');
+        
+      try {
+        $value = $mapping_field_plugin->getPullValue($entity);
       }
-      $fieldmap_type = salesforce_mapping_get_fieldmap_types($field_map->get('drupal_field_type'));
-      $value = call_user_func($fieldmap_type['pull_value_callback'], $parent, $sf_object, $field_map);
+      catch (Exception $e) {
+        watchdog_exception('sfpull', $e);
+        continue;
+      }
+
+      // @TODO: make this work for reference fields. There must be a better way than a semi-colon delimited string to represent this.
+      // It should look more like this in the future:
+      // $drupal_field->getValue($entity);
+
+      // Traverse through the field_value identifier to the child-most element. Practically this is in order to fine referenced entities. Right now we're ignoring that those exist and assuming that the field will have a value.
+      // foreach ($drupal_fields_array as $drupal_field) {
+      // }
+
+      // $fieldmap_type = salesforce_mapping_get_fieldmap_types($field_map->get('drupal_field_type'));
+      // $value = call_user_func($fieldmap_type['pull_value_callback'], $parent, $sf_object, $field_map);
 
       // Allow this value to be altered before assigning to the entity.
       drupal_alter('salesforce_pull_entity_value', $value, $field_map, $sf_object);
-      if (isset($value)) {
-        // @TODO: might wrongly assumes an individual value wouldn't be an
-        // array.
-        if ($parent instanceof EntityListWrapper && !is_array($value)) {
-          $parent->offsetSet(0, $value);
-        }
-        else {
-          $parent->set($value);
-        }
+      // if (isset($value)) {
+      //   // @TODO: might wrongly assumes an individual value wouldn't be an
+      //   // array.
+      //   if ($parent instanceof EntityListWrapper && !is_array($value)) {
+      //     $parent->offsetSet(0, $value);
+      //   }
+      //   else {
+      //     $parent->set($value);
+      //   }
       }
     }
   }
