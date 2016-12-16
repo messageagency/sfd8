@@ -27,7 +27,7 @@ function salesforce_pull_cron() {
  */
 function salesforce_pull_get_updated_records(RestClient $sfapi) {
   // @TODO: Refactor all this.
-  return;
+  //return;
   $queue = \Drupal::queue('cron_salesforce_pull');
 
   // Avoid overloading the processing queue and pass this time around if it's
@@ -43,7 +43,7 @@ function salesforce_pull_get_updated_records(RestClient $sfapi) {
 
     // Iterate over each field mapping to determine our query parameters.
     foreach (salesforce_mapping_load_multiple(['salesforce_object_type' => $type]) as $mapping) {
-      foreach ($mapping->field_mappings as $field_map) {
+      foreach ($mapping->get('field_mappings') as $field_map) {
         // Exclude field mappings that are only drupal to SF.
         if (in_array($field_map['direction'], [SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL])) {
           // Some field map types (Relation) store a collection of SF objects.
@@ -219,6 +219,8 @@ function salesforce_pull_process_deleted_records(RestClient $sfapi) {
  *   sObject of the Salesforce record.
  * @TODO this should move into SalesforceMapping.php
  */
+ /*
+  * Moved to queueworker
 function salesforce_pull_map_fields($field_maps, &$entity_wrapper, $sf_object) {
   foreach ($field_maps as $field_map) {
     if ($field_map['direction'] == 'sync' || $field_map['direction'] == 'sf_drupal') {
@@ -252,6 +254,7 @@ function salesforce_pull_map_fields($field_maps, &$entity_wrapper, $sf_object) {
     }
   }
 }
+ */
 
 /**
  * Implements hook_salesforce_push_entity_allowed()
