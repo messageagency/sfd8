@@ -261,7 +261,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     return $mappings;
   }
 
-  public function getFieldMapping($field) {
+  public function getFieldMapping(array $field) {
     return $this->fieldManager->createInstance(
       $field['drupal_field_type'],
       $field
