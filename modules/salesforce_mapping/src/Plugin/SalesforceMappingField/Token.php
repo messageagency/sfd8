@@ -45,14 +45,18 @@ class Token extends SalesforceMappingFieldPluginBase {
   }
 
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $pluginForm = parent::buildConfigurationForm($form, $form_state);
+
     // @TODO expose token options on mapping form: clear, callback, sanitize
     // @TODO expose token tree / selector
     // @TODO add token validation
-    return [
+    $pluginForm['drupal_field_value'] += [
       '#type' => 'textfield',
       '#default_value' => $this->config('drupal_field_value'),
       '#description' => $this->t('Enter a token to map a Salesforce field..'),
     ];
+
+    return $pluginForm;
   }
 
   public function value(EntityInterface $entity) {

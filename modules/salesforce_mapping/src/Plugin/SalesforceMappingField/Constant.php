@@ -27,11 +27,18 @@ use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 class Constant extends SalesforceMappingFieldPluginBase {
 
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    return [
+    $pluginForm = parent::buildConfigurationForm($form, $form_state);
+
+    $pluginForm['drupal_field_value'] += [
       '#type' => 'textfield',
       '#default_value' => $this->config('drupal_field_value'),
       '#description' => $this->t('Enter a constant value to map to a Salesforce field.'),
     ];
+
+    // @TODO: "Constant" as it's implemented now should only be allowed to be set to "Push". Remove other directionality options. In the future: create "Pull" logic for constant, which pulls a constant value to a Drupal field. Probably a separate mapping field plugin.
+    
+    return $pluginForm;
+
   }
 
   public function value(EntityInterface $entity) {

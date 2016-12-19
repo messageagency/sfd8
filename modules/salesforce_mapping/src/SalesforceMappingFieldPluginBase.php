@@ -111,6 +111,44 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $pluginForm = array();
+    $plugin_def = $this->getPluginDefinition();
+
+    // Extending plugins will probably inject most of their own logic here:
+    $pluginForm['drupal_field_value'] = [
+      '#title' => $plugin_def['label'],
+    ];
+
+    $pluginForm['salesforce_field'] = [
+      '#title' => t('Salesforce field'),
+      '#type' => 'select',
+      '#description' => t('Select a Salesforce field to map.'),
+      // @TODO MULTIPLE SF FIELDS FOR ONE MAPPING FIELD NOT IN USE:
+      // '#multiple' => (isset($drupal_field_type['salesforce_multiple_fields']) && $drupal_field_type['salesforce_multiple_fields']) ? TRUE : FALSE,
+      '#options' => $this->get_salesforce_field_options($form['#entity']->getSalesforceObjectType()),
+      '#default_value' => $this->config('salesforce_field'),
+      '#empty_option' => $this->t('- Select -'),
+    ];
+
+    $pluginForm['direction'] = [
+      '#type' => 'radios',
+      '#options' => [
+        SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => t('Drupal to SF'),
+        SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL => t('SF to Drupal'),
+        SALESFORCE_MAPPING_DIRECTION_SYNC => t('Sync'),
+      ],
+      '#required' => TRUE,
+      '#default_value' => $this->config('direction') ? $this->config('direction') : SALESFORCE_MAPPING_DIRECTION_SYNC,
+    ];
+
+    return $pluginForm;
+  }
+
+
+  /**
    * Implements PluginFormInterface::validateConfigurationForm().
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
@@ -189,6 +227,34 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    */
   public function pull() {
     return in_array($this->config('direction'), [SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL]);
+  }
+
+  /**
+   * Helper to retreive a list of fields for a given object type.
+   *
+   * @param string $salesforce_object_type
+   *   The object type of whose fields you want to retreive.
+   *
+   * @return array
+   *   An array of values keyed by machine name of the field with the label as
+   *   the value, formatted to be appropriate as a value for #options.
+   */
+  protected function get_salesforce_field_options($sfobject_name) {
+    static $options;
+    if (!empty($options[$sfobject_name])) {
+      return $options[$sfobject_name];
+    }
+    $sfapi = salesforce_get_api();
+    $sfobject = $sfapi->objectDescribe($sfobject_name);
+    $sf_fields = [];
+    if (isset($sfobject['fields'])) {
+      foreach ($sfobject['fields'] as $sf_field) {
+        $sf_fields[$sf_field['name']] = $sf_field['label'];
+      }
+    }
+    asort($sf_fields);
+    $options[$sfobject_name] = $sf_fields;
+    return $sf_fields;
   }
 
 }
