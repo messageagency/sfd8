@@ -213,6 +213,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     //   $defaults = ['lock'];
     // }
     $row['ops'] = [
+      '#title' => t('Operations'),
       '#type' => 'checkboxes',
       '#options' => $operations,
       '#default_value' => $defaults,
@@ -243,8 +244,10 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
         continue;
       }
 
-      // Delegate validation to field plugins before performing mapping validation.
-      $this->pluginConfigurationFormAction('validate', $value, $form, $form_state);
+      // Pass validation to field plugins before performing mapping validation.
+      $field_plugin = $this->entity->getFieldMapping($value);
+      $sub_form_state = SubformState::createForSubform($form['field_mappings_wrapper']['field_mappings'][$i], $form, $form_state);
+      $field_plugin->validateConfigurationForm($form['field_mappings_wrapper']['field_mappings'][$i], $sub_form_state);
 
       // Send to drupal field plugin for additional validation.
       if ($field_plugin->config('salesforce_field') == $key) {
@@ -268,25 +271,15 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
 
     $values = &$form_state->getValues();
     foreach ($values['field_mappings'] as $i => &$value) {
-      $this->pluginConfigurationFormAction('submit', $value, $form, $form_state);
+      // Pass submit values to plugin submit handler.
+      $field_plugin = $this->entity->getFieldMapping($value);
+      $sub_form_state = SubformState::createForSubform($form['field_mappings_wrapper']['field_mappings'][$i], $form, $form_state);
+      $field_plugin->submitConfigurationForm($form['field_mappings_wrapper']['field_mappings'][$i], $sub_form_state);
 
       $value = $value + $value['config'];
       unset($value['config'], $value['ops']);
     }
     parent::submitForm($form, $form_state);
-  }
-
-  private function pluginConfigurationFormAction($action, array $value, array &$form, FormStateInterface $form_state) {
-    $field_plugin = $this->entity->getFieldMapping($value);
-    $sub_form_state = SubformState::createForSubform($form['field_mappings_wrapper']['field_mappings'][$i], $form, $form_state);
-    switch ($action) {
-      case 'validate':
-        $field_plugin->validateConfigurationForm($form['field_mappings_wrapper']['field_mappings'][$i], $sub_form_state);
-        break;
-      case 'submit':
-        $field_plugin->submitConfigurationForm($form['field_mappings_wrapper']['field_mappings'][$i], $sub_form_state);
-        break;
-    }
   }
 
   public function field_add_callback($form, FormStateInterface $form_state) {

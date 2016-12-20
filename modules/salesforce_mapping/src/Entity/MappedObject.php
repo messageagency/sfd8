@@ -137,6 +137,7 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
     $fields['salesforce_id'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Salesforce ID'))
       ->setDescription(t('Reference to the mapped Salesforce object (SObject)'))
+      ->setTranslatable(FALSE)
       ->setSetting('is_ascii', TRUE)
       ->setSetting('max_length', MappedObjectInterface::SFID_MAX_LENGTH)
       ->setDisplayOptions('form', [
@@ -163,7 +164,6 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
       ->setLabel(t('Changed'))
       ->setDescription(t('The time that the object mapping was last edited.'))
       ->setRevisionable(TRUE)
-      ->setTranslatable(TRUE)
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'string',

@@ -134,6 +134,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
     ];
 
     $pluginForm['direction'] = [
+      '#title' => t('Direction'),
       '#type' => 'radios',
       '#options' => [
         SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => t('Drupal to SF'),

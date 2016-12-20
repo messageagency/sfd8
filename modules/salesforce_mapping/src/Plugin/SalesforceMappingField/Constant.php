@@ -35,8 +35,12 @@ class Constant extends SalesforceMappingFieldPluginBase {
       '#description' => $this->t('Enter a constant value to map to a Salesforce field.'),
     ];
 
-    // @TODO: "Constant" as it's implemented now should only be allowed to be set to "Push". Remove other directionality options. In the future: create "Pull" logic for constant, which pulls a constant value to a Drupal field. Probably a separate mapping field plugin.
-    
+    // @TODO: "Constant" as it's implemented now should only be allowed to be set to "Push". In the future: create "Pull" logic for constant, which pulls a constant value to a Drupal field. Probably a separate mapping field plugin.
+    $pluginForm['direction']['#options'] = [
+      SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => $pluginForm['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF]
+    ];
+    $pluginForm['direction']['#default_value'] = SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF;
+
     return $pluginForm;
 
   }
