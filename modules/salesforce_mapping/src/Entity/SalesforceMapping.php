@@ -12,6 +12,8 @@ use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce_mapping\PushParamsEvent;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -175,24 +177,32 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
 
   /**
    * Given a Drupal entity, return an array of Salesforce key-value pairs
+   * previously salesforce_push_map_params (d7)
    *
    * @param object $entity
    *   Entity wrapper object.
    *
-   * @return array
-   *   Associative array of key value pairs.
-   * @see salesforce_push_map_params (from d7)
+   * @return Drupal\salesforce_mapping\PushParams
    */
   public function getPushParams(EntityInterface $entity) {
     // @TODO This should probably be delegated to a field plugin bag?
+    $params = new PushParams(['fieldsToNull' => []]);
     foreach ($this->getFieldMappings() as $field_plugin) {
       // Skip fields that aren't being pushed to Salesforce.
       if (!$field_plugin->push()) {
         continue;
       }
-      $params[$field_plugin->config('salesforce_field')] = $field_plugin->value($entity);
+      $value = $field_plugin->value($entity);
+      if ($value === NULL) {
+        $fieldsToNull = $params->getParam('fieldsToNull');
+        $fieldsToNull[] = $field_plugin->config('salesforce_field');
+        $params->setParam('fieldsToNull', $fieldsToNull);
+      }
+      else {
+        $params->setParam($field_plugin->config('salesforce_field'), $value);
+      }
     }
-    // @TODO make this an event
+    // Previously:
     // drupal_alter('salesforce_push_params', $params, $mapping, $entity_wrapper);
     return $params;
   }
