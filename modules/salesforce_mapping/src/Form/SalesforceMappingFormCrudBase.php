@@ -298,6 +298,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       }
       $options[$info->id()] = $info->getLabel();
     }
+    uasort($options, function ($a, $b) {
+      return strcmp($a->render(), $b->render());
+    });
     return $options;
   }
 
