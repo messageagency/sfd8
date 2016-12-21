@@ -10,6 +10,7 @@ namespace Drupal\salesforce_mapping\Entity;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
@@ -222,6 +223,7 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
   }
 
   public function push() {
+    // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
     // @TODO better way to handle push/pull:
     $client = \Drupal::service('salesforce.client');
 
@@ -245,7 +247,9 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
     // 2. no upsert key, no sfid: use create
     // 3. no upsert key, sfid: use update
     $result = FALSE;
+    $action = '';
     if ($mapping->hasKey()) {
+      $action = 'upsert';
       $result = $client->objectUpsert(
         $mapping->getSalesforceObjectType(),
         $mapping->getKeyField(),
@@ -254,6 +258,7 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
       );
     }
     elseif ($this->sfid()) {
+      $action = 'update';
       $result = $client->objectUpdate(
         $mapping->getSalesforceObjectType(),
         $this->sfid(),
@@ -261,13 +266,42 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
       );
     }
     else {
+      $action = 'create';
       $result = $client->objectCreate(
         $mapping->getSalesforceObjectType(),
         $params
       );
     }
     // @TODO make $result a class with reliable properties, methods.
+
+    if ($drupal_entity instanceof EntityChangedInterface) {
+      // @TODO: where to get entity updated timestamp?
+      $this->set('entity_updated', $drupal_entity->getChangedTime());
+    }
+
+    // @TODO restore last_sync_action, last_sync_status, last_sync_message
+    // @TODO: catch EntityStorageException ? Others ?
+    $this
+      ->set('salesforce_id', $result['id'])
+      ->set('last_sync', REQUEST_TIME)
+      // ->set('last_sync_action', $action)
+      // ->set('last_sync_status', 'success')
+      // ->set('last_sync_message', '')
+      ->save();
+
     return $result;
+  }
+
+  public function pushDelete() {
+    $client = \Drupal::service('salesforce.client');
+    $mapping = $this->salesforce_mapping->entity;
+    $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
+    $this
+      ->set('last_sync', REQUEST_TIME)
+      // ->set('last_sync_action', 'delete')
+      // ->set('last_sync_status', 'success')
+      // ->set('last_sync_message', '')
+      ->save();
   }
 
   public function pull(array $sf_object = NULL, EntityInterface $drupal_entity = NULL) {
