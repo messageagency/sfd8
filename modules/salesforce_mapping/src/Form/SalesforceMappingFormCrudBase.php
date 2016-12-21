@@ -77,11 +77,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#default_value' => $mapping->get('drupal_entity_type'),
       '#required' => TRUE,
       '#empty_option' => $this->t('- Select -'),
-      // Bundles are based on States now. Ajax is overkill.
-      // '#ajax' => array(
-      //   'callback' => array($this, 'drupal_entity_type_bundle_callback'),
-      //   'wrapper' => 'edit-drupal-entity',
-      // ),
     ];
 
     $form['drupal_entity']['drupal_bundle'] = ['#title' => 'Drupal Bundle', '#tree' => TRUE];
