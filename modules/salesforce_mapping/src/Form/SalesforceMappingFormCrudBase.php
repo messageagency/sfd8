@@ -177,7 +177,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#type' => 'select',
       '#title' => t('Date field to trigger pull'),
       '#description' => t('Select a date field to base pull triggers on. (Default of "Last Modified Date" is usually appropriate).'),
-      '#required' => TRUE,
+      '#required' => $this->entity->get('salesforce_object_type'),
       '#default_value' => $this->entity->get('pull_trigger_date')
         ? $this->entity->get('pull_trigger_date')
         : 'LastModifiedDate',
