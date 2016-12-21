@@ -7,16 +7,9 @@
 
 namespace Drupal\salesforce_mapping\Form;
 
-// use Drupal\Core\Ajax\CommandInterface;
-// use Drupal\Core\Ajax\AjaxResponse;
-// use Drupal\Core\Ajax\ReplaceCommand;
-// use Drupal\Core\Ajax\InsertCommand;
-use Drupal\Component\Plugin\PluginManagerInterface;
-use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityStorageControllerInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 
 /**
  * Salesforce Mapping Form base.
@@ -26,7 +19,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   /**
    * The storage controller.
    *
-   * @var \Drupal\Core\Entity\EntityStorageControllerInterface
+   * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   protected $storageController;
 
