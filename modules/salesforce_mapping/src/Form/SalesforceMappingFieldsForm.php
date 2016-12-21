@@ -163,9 +163,11 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   private function getUpsertKeyOptions() {
     $options = [];
     $describe = $this->get_salesforce_object();
-    foreach ($describe['fields'] as $field) {
-      if ($field['externalId']) {
-        $options[$field['name']] = $field['label'];
+    if ($describe) {
+      foreach ($describe['fields'] as $field) {
+        if ($field['externalId']) {
+          $options[$field['name']] = $field['label'];
+        }
       }
     }
     return $options;
@@ -303,6 +305,28 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     // get them from SalesforceMappingFieldManager each time.
     $field_plugins = $this->SalesforceMappingFieldManager->getDefinitions();
     return $field_plugins[$field_type];
+  }
+
+  /**
+   * Helper to retreive a list of fields for a given object type.
+   *
+   * @param string $salesforce_object_type
+   *   The object type of whose fields you want to retreive.
+   *
+   * @return array
+   *   An array of values keyed by machine name of the field with the label as
+   *   the value, formatted to be appropriate as a value for #options.
+   */
+  protected function get_salesforce_field_options() {
+    $sf_fields = [];
+    $sfobject = $this->get_salesforce_object();
+    if ($sfobject && isset($sfobject['fields'])) {
+      foreach ($sfobject['fields'] as $sf_field) {
+        $sf_fields[$sf_field['name']] = $sf_field['label'];
+      }
+      asort($sf_fields);
+    }
+    return $sf_fields;
   }
 
 }

@@ -48,6 +48,7 @@ class RestClient {
     $this->config = $this->configFactory->get('salesforce.settings');
     $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
+    return $this;
   }
 
   /**
@@ -246,6 +247,7 @@ class RestClient {
    */
   protected function setInstanceUrl($url) {
     $this->state->set('salesforce.instance_url', $url);
+    return $this;
   }
 
   /**
@@ -264,6 +266,7 @@ class RestClient {
    */
   public function setAccessToken($token) {
     $this->state->set('salesforce.access_token', $token);
+    return $this;
   }
 
   /**
@@ -281,6 +284,7 @@ class RestClient {
    */
   protected function setRefreshToken($token) {
     $this->state->set('salesforce.refresh_token', $token);
+    return $this;
   }
 
   /**
@@ -309,6 +313,7 @@ class RestClient {
     $response = $this->httpRequest($url, $data, $headers, 'POST');
 
     $this->handleAuthResponse($response);
+    return $this;
   }
 
   /**
@@ -327,10 +332,16 @@ class RestClient {
 
     $data = $this->handleJsonResponse($response);
 
-    $this->setAccessToken($data['access_token']);
-    $this->setRefreshToken($data['refresh_token']);
-    $this->initializeIdentity($data['id']);
-    $this->setInstanceUrl($data['instance_url']);
+    $this
+      ->setAccessToken($data['access_token'])
+      ->initializeIdentity($data['id'])
+      ->setInstanceUrl($data['instance_url']);
+
+    // Do not overwrite an existing refresh token with an empty value.
+    if (!empty($data['refresh_token'])) {
+      $this->setRefreshToken($data['refresh_token']);
+    }
+    return $this;
   }
 
   /**
@@ -387,10 +398,12 @@ class RestClient {
 
     $data = $this->handleJsonResponse($response);
     $this->setIdentity($data);
+    return $this;
   }
 
   protected function setIdentity(array $data) {
     $this->state->set('salesforce.identity', $data);
+    return $this;
   }
 
   /**
@@ -618,6 +631,7 @@ class RestClient {
    *   Values of the fields to set for the object.
    *
    * @return null
+   *   Update() doesn't return any data. Examine HTTP response or Exception.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -670,6 +684,9 @@ class RestClient {
    *   Salesforce id of the object.
    *
    * @addtogroup salesforce_apicalls
+   *
+   * @return null
+   *   Delete() doesn't return any data. Examine HTTP response or Exception.
    */
   public function objectDelete($name, $id) {
     $this->apiCall("sobjects/{$name}/{$id}", [], 'DELETE');
