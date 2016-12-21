@@ -148,7 +148,7 @@ function salesforce_mapping_load_by_drupal($entity_type) {
  */
 function salesforce_mapped_object_load_multiple($properties = []) {
   $mappings = \Drupal::entityTypeManager()
-    ->getStorage('salesforce_mapping')
+    ->getStorage('salesforce_mapped_object')
     ->loadByProperties($properties);
   if (empty($mappings)) {
     throw new Exception('No mapped objects found');
@@ -171,7 +171,7 @@ function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id) {
  */
 function salesforce_mapped_object_load_by_entity($entity, $all = FALSE) {
   return salesforce_mapped_object_load_multiple([
-    'entity_type_id' => get_class($entity),
+    'entity_type_id' => $entity->getEntityTypeId(),
     'entity_id' => $entity->id()
   ]);
 }
@@ -294,7 +294,7 @@ function salesforce_mapping_entity_view(array &$build, EntityInterface $entity, 
   return;
   // Don't bother with any further processing if there are no map for this
   // entity type.
-  if (!salesforce_mapping_load_by_drupal(get_class($entity))) {
+  if (!salesforce_mapping_load_by_drupal($entity->getEntityTypeId())) {
     return;
   }
 
@@ -362,7 +362,7 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
   return;
   // Check if mapping exists.
 
-  if (!salesforce_mapping_load_by_drupal(get_class($entity))) {
+  if (!salesforce_mapping_load_by_drupal($entity->getEntityTypeId())) {
     return;
   }
   $sf_mapped_object = salesforce_mapped_object_load_by_entity($entity);
