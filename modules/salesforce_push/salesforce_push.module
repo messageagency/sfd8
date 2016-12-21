@@ -5,33 +5,38 @@
  * Push updates to Salesforce when a Drupal entity is updated.
  */
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\entity\EntityInterface;
-
-// @TODO this will be come SalesforcePushInterface, or similar
-use Drupal\salesforce_push\Rest;
-use Drupal\salesforce_push\RestAsync;
-
+use Drupal\salesforce_mapping\Entity;
 
 /**
  * Implements hook_entity_insert().
  */
-function salesforce_push_entity_insert($entity) {
+function salesforce_push_entity_insert(EntityInterface $entity) {
   salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE);
 }
 
 /**
  * Implements hook_entity_update().
  */
-function salesforce_push_entity_update($entity) {
+function salesforce_push_entity_update(EntityInterface $entity) {
   salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE);
 }
 
 /**
  * Implements hook_entity_delete().
  */
-function salesforce_push_entity_delete($entity) {
+function salesforce_push_entity_delete(EntityInterface $entity) {
   salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE);
+}
+
+function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity, $op) {
+  // Don't allow mapped objects or mappings to be pushed!
+  // @TODO can we implement this instead with a validation constraint? This is fugly.
+  if ($entity instanceof MappedObjectInterface 
+  || $entity instanceof SalesforceMappingInterface) {
+    return FALSE;
+  }
 }
 
 /**
@@ -47,181 +52,90 @@ function salesforce_push_entity_delete($entity) {
  *   create an event subscriber class to respond to entity events and delegate
  *   actions to the appropriate Push procedures.
  */
-function salesforce_push_entity_crud($entity, $op) {
-  // @TODO: REFACTOR ALL THIS
-  return;
-  // @TODO consider asking the entity itself whether it allows push/pull, instead of asking modules. This will give us better readability and granularity. E.g. using a field.
-  // @TODO module_implements/module_invoke pattern is deprecated
-  // Trigger a hook to allow other modules to prevent this entity/operation from
-  // triggering a sync with Salesforce.
-  foreach (module_implements('salesforce_push_entity_allowed') as $module) {
-    if (module_invoke($module, 'salesforce_push_entity_allowed', $entity, $op) === FALSE) {
+function salesforce_push_entity_crud(EntityInterface $entity, $op) {
+
+  // @TODO decide whether this hook is worth moving to Events framework, and how. Should subscribers throw an exception to prevent entity sync? Return false, like so? Something else entirely?
+  foreach (\Drupal::moduleHandler()->invokeAll('salesforce_push_entity_allowed', array($entity, $op)) as $value) {
+    if ($value === FALSE) {
       return;
     }
   }
 
-  if (!($mappings = salesforce_mapping_load_by_drupal(get_class($entity)))) {
+  try {
+    $mappings = salesforce_mapping_load_by_drupal($entity->getEntityTypeId());
+  }
+  catch (Exception $e) {
+    // No mappings found for this entity. We're done.
     return;
   }
 
   foreach ($mappings as $mapping) {
-    // @TODO make sync_triggers human readable or convert them back to hex flags
-    if (!isset($mapping->sync_triggers[$op]) || !$mapping->pushPlugin) {
+    $mapped_objects = [];
+    $mapped_object = FALSE;
+    if (!$mapping->checkTriggers([$op])) {
       continue;
     }
+
     try {
-      // SFPush decides what to do with entity values, mapping flags, op, etc:
-      // The module layer is only responsible for gathering objects and calling
-      // the appropriate methods.
-      // @TODO init() is weird, but since the mapping is not attached to the
-      // entity (e.g. as a field), we have to feed it somehow. Seems like the plugin should be able to get at the mapping container at least...
-      $mapping->pushPlugin->init($entity, $mapping)->$op();
+      $props = [
+        'entity_id' => $entity->id(),
+        'entity_type_id' => $entity->getEntityTypeId(),
+        'salesforce_mapping' => $mapping->id(),
+      ];
+      $mapped_objects = salesforce_mapped_object_load_multiple($props);
+      // There should really only be one, but the return value is always an array
+      $mapped_object = current($mapped_objects);
+
+      if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+        // If this is a delete, destroy the mapped object and we're done.
+        $mapped_object->pushDelete();
+        continue;
+      }
     }
     catch (Exception $e) {
-      $vars = [
-        'entity' => $entity,
-        'mapping' => $mapping,
-        'params' => $params,
-        'exception' => $e,
-        'op' => 'delete',
-      ];
-      module_invoke_all('salesforce_push_failure', $e->getMessage(), $vars);
-    }
-  }
-}
+      // No mappings found, need to create a new one and push...
 
-/**
- * Sync Drupal entities and Salesforce objects using the REST API.
- *
- * @param string $entity_type
- *   Type of Drupal entity.
- * @param object $entity
- *   The entity object.
- * @param object $mapping
- *   Salesforce mapping object.
- * @param int $op
- *   Trigger for this sync.
- * @deprecated use SalesforcePush
- */
-function salesforce_push_sync_rest($entity, $mapping, $op) {
-  $sfapi = salesforce_get_api();
-
-  // Not authorized, we need to bail this time around.
-  if (!$sfapi->isAuthorized()) {
-    return;
-  }
-
-  list($entity_id) = entity_extract_ids($entity_type, $entity);
-  $mapped_objects = salesforce_mapped_object_load_by_drupal($entity_type, $entity_id);
-
-  // Generate parameter array from field mappings.
-  $entity_wrapper = entity_metadata_wrapper($entity_type, $entity);
-  $params = salesforce_push_map_params($mapping, $entity_wrapper, $key_field, $key_value);
-
-  // Entity is not linked to an SF object.
-  if (!$mapped_objects) {
-    // Setup SF record type.
-    if ($mapping->salesforce_record_type != SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE) {
-      if ($mapping->salesforce_object_type != 'CampaignMember') {
-        $params['RecordTypeId'] = $mapping->salesforce_record_type;
+      if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+        // Unless it's a delete. Then we're done.
+        continue;
       }
-    }
-
-    $op = '';
-    try {
-      // An external key has been specified, attempt an upsert().
-      if (!empty($key_field)) {
-        $op = 'upsert';
-        $data = $sfapi->objectUpsert($mapping->salesforce_object_type, $key_field, $key_value, $params);
-      }
-      // No key or mapping, create a new object in Salesforce.
-      else {
-        $op = 'create';
-        $data = $sfapi->objectCreate($mapping->salesforce_object_type, $params);
-      }
-    }
-    catch(Exception $e) {
-      $vars = [
-        'entity_type' => $entity_type,
-        'entity' => $entity,
-        'mapping' => $mapping,
-        'params' => $params,
-        'exception' => $e,
-        'op' => $op,
-      ];
-      module_invoke_all('salesforce_push_failure', $e->getMessage(), $vars);
-      return;
-    }
-
-    // Success.
-    if (empty($data['errorCode'])) {
-      // Create mapping object, saved below.
-      $mapped_objects = entity_create('salesforce_mapped_object', [
-        'entity_id' => $entity_id,
-        'entity_type' => $entity_type,
-        'salesforce_id' => $data['id'],
+      $mapped_object = new MappedObject([
+        'entity_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->id()],
+        'entity_type_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->getEntityTypeId()],
+        'salesforce_mapping' => [LanguageInterface::LANGCODE_DEFAULT => $mapping->id()],
       ]);
     }
-    else {
-      $message = t('Failed to sync %label with Salesforce. @code: @message', [
-        '%label' => $entity_wrapper->label(),
-        '@code' => $data['errorCode'],
-        '@message' => $data['message'],
-      ]);
-      $vars = [
-        'entity_type' => $entity_type,
-        'entity' => $entity,
-        'mapping' => $mapping,
-        'params' => $params,
-        'response' => $data,
-        'op' => $op,
-      ];
-      module_invoke_all('salesforce_push_failure', $message, $vars);
-      return;
-    }
-  }
-  // Existing object link, update.
-  else {
-    // Handle the case of mapped objects last sync being more recent than
-    // the entity's timestamp, which is set by salesforce_mapping.
-    if ($mapped_objects->last_sync > $mapped_objects->entity_updated) {
-      return;
-    }
 
-    // Update SF object.
     try {
-      $sfapi->objectUpdate($mapping->salesforce_object_type, $mapped_objects->salesforce_id, $params);
+      // Push to SF. This also saves the mapped object.
+      $result = $mapped_object->push();
+      // Do something with the result?
     }
-    catch(Exception $e) {
-      $mapped_objects->delete();
-      $vars = [
-        'entity_type' => $entity_type,
-        'entity' => $entity,
-        'mapping' => $mapping,
-        'params' => $params,
-        'exception' => $e,
-        'op' => 'update',
-      ];
-      module_invoke_all('salesforce_push_failure', $e->getMessage(), $vars);
-      return;
-    }
+    catch (Exception $e) {
+      // @TODO As long as push is handled in MappedObject, this hook invocation should go there. We're only handling this exception so that we don't block the entity CRUD operation.
+      continue;
 
-    $mapped_objects->last_sync = REQUEST_TIME;
+      // $vars = [
+      //   'entity' => $entity,
+      //   'mapping' => $mapping,
+      //   'params' => $params,
+      //   'exception' => $e,
+      //   'op' => $op,
+      // ];
+      //
+      // // @TODO This should definitely be an event. See SalesforceEvents::PUSH_FAIL
+      // \Drupal::moduleHandler()->invokeAll('salesforce_push_failure', array($e->getMessage(), $vars));
+    }
   }
 
-  salesforce_set_message(t('%name has been synchronized with Salesforce record %sfid.', [
-    '%name' => $entity_wrapper->label(),
-    '%sfid' => $mapped_objects->salesforce_id,
-  ]));
 
-  // Note that last_sync time is updated automatically.
-  $mapped_objects->save();
 }
 
 /**
  * Implements hook_cron().
  */
 function salesforce_push_cron() {
+  // @TODO haven't started work on this queue yet.
   return;
 
   $sfapi = salesforce_get_api();
@@ -325,66 +239,5 @@ function salesforce_push_cron() {
         salesforce_push_process_soap_results('Upsert', $results, $synced_entities);
       }
     }
-  }
-}
-
-/**
- * Process SOAP API batch results.
- *
- * Create or update mapped object entities and log results.
- *
- * @param string $op
- *   Operation performed.
- * @param array $results
- *   Array of result objects provided by Salesforce.
- * @param array $synced_entities
- *   Entities that were synced with Salesforce.
- */
-function salesforce_push_process_soap_results($op, $results, $synced_entities) {
-  foreach ($results as $key => $result) {
-    if ($result->success) {
-      $mapped_object = $synced_entities[$key]['mapped_objects'];
-      if (drupal_strtolower($op) == 'delete' && $mapped_object) {
-        $mapped_object->delete();
-      }
-      else {
-        // Create mapping object, saved below.
-        $wrapper = $synced_entities[$key]['entity_wrapper'];
-        list($entity_id) = entity_extract_ids($wrapper->type(), $wrapper->value());
-        $mapped_object = entity_create('salesforce_mapped_object', [
-          'entity_id' => $entity_id,
-          'entity_type' => $wrapper->type(),
-          'salesforce_id' => $result->id,
-        ]);
-        $mapped_object->save();
-      }
-
-      \Drupal::logger('salesforce_push')->notice('%op: Salesforce object %id',
-        ['%id' => $result->id, '%op' => $op]
-      );
-    }
-    else {
-      foreach ($result->errors as $error) {
-        \Drupal::logger('salesforce_push')->error(
-          '%op error for Salesforce object %id. @code: @message',
-          [
-            '%id' => $result->id,
-            '@code' => $error->statusCode,
-            '@message' => $error->message,
-            '%op' => $op,
-          ]
-        );
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_salesforce_push_failure
- */
-function salesforce_push_salesforce_push_failure($message, $variables = []) {
-  salesforce_set_message($message, 'error');
-  if (isset($variables['exception'])) {
-    watchdog_exception('salesforce_push', $variables['exception'], $message);
   }
 }

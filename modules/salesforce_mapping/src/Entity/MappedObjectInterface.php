@@ -7,7 +7,9 @@
 
 namespace Drupal\salesforce_mapping\Entity;
 
-interface MappedObjectInterface {
+use Drupal\Core\Entity\EntityChangedInterface;
+
+interface MappedObjectInterface extends EntityChangedInterface {
   // Placeholder interface.
   // @TODO figure out what to abstract out of MappedObject
 

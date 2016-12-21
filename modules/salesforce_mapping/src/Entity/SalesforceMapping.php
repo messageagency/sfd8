@@ -275,10 +275,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   public function checkTriggers(array $triggers) {
     foreach ($triggers as $trigger) {
       if ($this->sync_triggers[$trigger] == 1) {
-        return true;
+        return TRUE;
       }
     }
-    return false;
+    return FALSE;
   }
 
 }
