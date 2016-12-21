@@ -7,16 +7,9 @@
 
 namespace Drupal\salesforce_mapping\Form;
 
-// use Drupal\Core\Ajax\CommandInterface;
-// use Drupal\Core\Ajax\AjaxResponse;
-// use Drupal\Core\Ajax\ReplaceCommand;
-// use Drupal\Core\Ajax\InsertCommand;
-use Drupal\Component\Plugin\PluginManagerInterface;
-use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityStorageControllerInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 
 /**
  * Salesforce Mapping Form base.
@@ -26,7 +19,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   /**
    * The storage controller.
    *
-   * @var \Drupal\Core\Entity\EntityStorageControllerInterface
+   * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   protected $storageController;
 
@@ -84,11 +77,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#default_value' => $mapping->get('drupal_entity_type'),
       '#required' => TRUE,
       '#empty_option' => $this->t('- Select -'),
-      // Bundles are based on States now. Ajax is overkill.
-      // '#ajax' => array(
-      //   'callback' => array($this, 'drupal_entity_type_bundle_callback'),
-      //   'wrapper' => 'edit-drupal-entity',
-      // ),
     ];
 
     $form['drupal_entity']['drupal_bundle'] = ['#title' => 'Drupal Bundle', '#tree' => TRUE];
@@ -189,7 +177,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#type' => 'select',
       '#title' => t('Date field to trigger pull'),
       '#description' => t('Select a date field to base pull triggers on. (Default of "Last Modified Date" is usually appropriate).'),
-      '#required' => TRUE,
+      '#required' => $this->entity->get('salesforce_object_type'),
       '#default_value' => $this->entity->get('pull_trigger_date')
         ? $this->entity->get('pull_trigger_date')
         : 'LastModifiedDate',
@@ -310,6 +298,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       }
       $options[$info->id()] = $info->getLabel();
     }
+    uasort($options, function ($a, $b) {
+      return strcmp($a->render(), $b->render());
+    });
     return $options;
   }
 
@@ -355,7 +346,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   protected function get_salesforce_record_type_options($salesforce_object_type) {
     $sf_types = [];
     $sfobject = $this->get_salesforce_object($salesforce_object_type);
-    if (isset($sfobject['recordTypeInfos'])) {
+    if ($sfobject && isset($sfobject['recordTypeInfos'])) {
       foreach ($sfobject['recordTypeInfos'] as $type) {
         $sf_types[$type['recordTypeId']] = $type['name'];
       }
@@ -390,9 +381,11 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   private function get_pull_trigger_options() {
     $options = [];
     $describe = $this->get_salesforce_object();
-    foreach ($describe['fields'] as $field) {
-      if ($field['type'] == 'datetime') {
-        $options[$field['name']] = $field['label'];
+    if ($describe) {
+      foreach ($describe['fields'] as $field) {
+        if ($field['type'] == 'datetime') {
+          $options[$field['name']] = $field['label'];
+        }
       }
     }
     return $options;

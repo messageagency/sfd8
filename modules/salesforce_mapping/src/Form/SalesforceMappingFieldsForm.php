@@ -175,9 +175,11 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   private function getUpsertKeyOptions() {
     $options = [];
     $describe = $this->get_salesforce_object();
-    foreach ($describe['fields'] as $field) {
-      if ($field['externalId']) {
-        $options[$field['name']] = $field['label'];
+    if ($describe) {
+      foreach ($describe['fields'] as $field) {
+        if ($field['externalId']) {
+          $options[$field['name']] = $field['label'];
+        }
       }
     }
     return $options;
@@ -274,7 +276,6 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $key = $values['key'];
     $key_mapped = FALSE;
 
-    $sfobject = $this->get_salesforce_object();
     foreach ($values['field_mappings'] as $i => $value) {
       if ($value['salesforce_field'] == $key) {
         $key_mapped = TRUE;
@@ -332,14 +333,14 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    *   the value, formatted to be appropriate as a value for #options.
    */
   protected function get_salesforce_field_options() {
-    $sfobject = $this->get_salesforce_object();
     $sf_fields = [];
-    if (isset($sfobject['fields'])) {
+    $sfobject = $this->get_salesforce_object();
+    if ($sfobject && isset($sfobject['fields'])) {
       foreach ($sfobject['fields'] as $sf_field) {
         $sf_fields[$sf_field['name']] = $sf_field['label'];
       }
+      asort($sf_fields);
     }
-    asort($sf_fields);
     return $sf_fields;
   }
 
