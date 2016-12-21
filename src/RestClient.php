@@ -331,6 +331,10 @@ class RestClient {
     $this->setRefreshToken($data['refresh_token']);
     $this->initializeIdentity($data['id']);
     $this->setInstanceUrl($data['instance_url']);
+    // Do not overwrite an existing refresh token with an empty value.
+    if (!empty($data['refresh_token'])) {
+      $this->setRefreshToken($data['refresh_token']);
+    }
   }
 
   /**
