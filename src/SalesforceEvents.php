@@ -24,14 +24,11 @@ final class SalesforceEvents {
   const PUSH_PARAMS = 'salesforce.push_params';
 
   /**
-<<<<<<< Updated upstream
-=======
    * hook_salesforce_push_entity_allowed
    */
   const PUSH_CRUD_ALLOWED = 'salesforce.push_crud.allowed';
 
   /**
->>>>>>> Stashed changes
     * hook_salesforce_push_success
     */
   const PUSH_SUCCESS = 'salesforce.push_success';

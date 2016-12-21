@@ -14,7 +14,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\PushParams;
-use Drupal\salesforce_mapping\SalesforceCrudEvent;
+use Drupal\salesforce_mapping\SalesforcePushEvent;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
@@ -236,7 +236,7 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
     $params = $mapping->getPushParams($drupal_entity);
     \Drupal::service('event_dispatcher')->dispatch(
       SalesforceEvents::PUSH_PARAMS,
-      new SalesforceCrudEvent($entity, $mapping, $this, $params)
+      new SalesforcePushEvent($entity, $mapping, $this, $params)
     );
 
     // @TODO is this the right place for this logic to live?

@@ -6,31 +6,26 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\entity\EntityInterface;
-
-// @TODO this will be come SalesforcePushInterface, or similar
-use Drupal\salesforce_push\Rest;
-use Drupal\salesforce_push\RestAsync;
-
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Implements hook_entity_insert().
  */
-function salesforce_push_entity_insert($entity) {
+function salesforce_push_entity_insert(EntityInterface $entity) {
   salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE);
 }
 
 /**
  * Implements hook_entity_update().
  */
-function salesforce_push_entity_update($entity) {
+function salesforce_push_entity_update(EntityInterface $entity) {
   salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE);
 }
 
 /**
  * Implements hook_entity_delete().
  */
-function salesforce_push_entity_delete($entity) {
+function salesforce_push_entity_delete(EntityInterface $entity) {
   salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE);
 }
 
@@ -47,13 +42,15 @@ function salesforce_push_entity_delete($entity) {
  *   create an event subscriber class to respond to entity events and delegate
  *   actions to the appropriate Push procedures.
  */
-function salesforce_push_entity_crud($entity, $op) {
+function salesforce_push_entity_crud(EntityInterface $entity, $op) {
   // @TODO: REFACTOR ALL THIS
-  return;
+
   // @TODO consider asking the entity itself whether it allows push/pull, instead of asking modules. This will give us better readability and granularity. E.g. using a field.
+
   // @TODO module_implements/module_invoke pattern is deprecated
   // Trigger a hook to allow other modules to prevent this entity/operation from
   // triggering a sync with Salesforce.
+
   foreach (module_implements('salesforce_push_entity_allowed') as $module) {
     if (module_invoke($module, 'salesforce_push_entity_allowed', $entity, $op) === FALSE) {
       return;
@@ -222,6 +219,7 @@ function salesforce_push_sync_rest($entity, $mapping, $op) {
  * Implements hook_cron().
  */
 function salesforce_push_cron() {
+  // @TODO refactor all this.
   return;
 
   $sfapi = salesforce_get_api();
