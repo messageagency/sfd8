@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce;
+namespace Drupal\salesforce\Rest;
 
 use GuzzleHttp\Psr7\Response;
 use Drupal\Component\Serialization\Json;

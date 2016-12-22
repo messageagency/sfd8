@@ -12,7 +12,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\salesforce\Exception;
-use Drupal\salesforce\RestClient;
+use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SalesforceClient;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -114,7 +114,7 @@ class AuthorizeForm extends ConfigFormBase {
       unset($_SESSION['messages']['salesforce_oauth_error error']);
       try {
         $resources = $this->sf_client->listResources();
-        foreach ($resources as $key => $path) {
+        foreach ($resources->getResources() as $key => $path) {
           $items[] = $key . ': ' . $path;
         }
         $form['resources'] = [

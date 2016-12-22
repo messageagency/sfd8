@@ -14,6 +14,7 @@ use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
+use Drupal\salesforce\SFID;
 use Drupal\user\UserInterface;
 
 /**
@@ -137,7 +138,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setRevisionable(TRUE)
       ->setTranslatable(FALSE)
       ->setSetting('is_ascii', TRUE)
-      ->setSetting('max_length', MappedObjectInterface::SFID_MAX_LENGTH)
+      ->setSetting('max_length', SFID::SFID_MAX_LENGTH)
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
         'weight' => 0,
@@ -258,7 +259,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     }
     elseif ($this->sfid()) {
       $action = 'update';
-      $result = $client->objectUpdate(
+      $client->objectUpdate(
         $mapping->getSalesforceObjectType(),
         $this->sfid(),
         $params
@@ -271,21 +272,18 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         $params
       );
     }
-    // @TODO make $result a class with reliable properties, methods.
 
     if ($drupal_entity instanceof EntityChangedInterface) {
-      // @TODO: where to get entity updated timestamp?
       $this->set('entity_updated', $drupal_entity->getChangedTime());
     }
-    // dpm($result);
 
-    // @TODO restore last_sync_action, last_sync_status, last_sync_message
     // @TODO: catch EntityStorageException ? Others ?
+    if ($result instanceof SFID) {
+      $this->set('salesforce_id', (string)$result);
+    }
     $this
-      ->set('salesforce_id', $result['id'])
       ->set('last_sync_action', 'push_' . $action)
       ->set('last_sync_status', TRUE)
-      // ->set('last_sync_message', '')
       ->save();
 
     return $result;
@@ -294,7 +292,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   public function pushDelete() {
     $client = \Drupal::service('salesforce.client');
     $mapping = $this->salesforce_mapping->entity;
-    $result = $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
+    $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
     $this
       ->set('last_sync_action', 'push_delete')
       ->set('last_sync_status', TRUE)
@@ -328,9 +326,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
           $mapping->getKeyField(),
           $mapping->getKeyValue($drupal_entity)
         );
-        if (!empty($sf_object['Id'])) {
-          $this->set('salesforce_id', $sf_object['Id']);
-        }
+        $this->set('salesforce_id', $sf_object->id());
       }
     }
 

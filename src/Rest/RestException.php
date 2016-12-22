@@ -5,7 +5,7 @@
  * Contains \Drupal\salesforce\Exception.
  */
 
-namespace Drupal\salesforce;
+namespace Drupal\salesforce\Rest;
 
 use Symfony\Component\Serializer\Exception\Exception as SymfonyException;
 

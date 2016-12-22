@@ -6,7 +6,7 @@
  */
 
 use \Drupal\salesforce\SelectQuery;
-use \Drupal\salesforce\RestClient;
+use \Drupal\salesforce\Rest\RestClient;
 
 /**
  * Implements hook_cron().

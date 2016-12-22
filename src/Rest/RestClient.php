@@ -2,11 +2,12 @@
 
 /**
  * @file
- * Contains \Drupal\salesforce\RestClient.
+ * Contains \Drupal\salesforce\Rest\RestClient.
  */
 
-namespace Drupal\salesforce;
+namespace Drupal\salesforce\Rest;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -14,12 +15,14 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\SelectQueryResult;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Component\Serialization\Json;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
@@ -74,7 +77,7 @@ class RestClient {
    *
    * @throws GuzzleHttp\Exception\RequestException
    */
-  public function apiCall($path, array $params = [], $method = 'GET') {
+  public function apiCall($path, array $params = [], $method = 'GET', $return = 'data') {
     if (!$this->getAccessToken()) {
       $this->refreshToken();
     }
@@ -116,7 +119,12 @@ class RestClient {
           throw new Exception('Unknown error occurred during API call');
         }
     }
-    return $this->response->data();
+    if ($return == 'object') {
+      return $this->response;
+    }
+    else {
+      return $this->response->data();
+    }
   }
 
   /**
@@ -432,7 +440,7 @@ class RestClient {
       $result = $cache->data;
     }
     else {
-      $response = $this->apiCall('sobjects');
+      $result = $this->apiCall('sobjects');
       \Drupal::cache()->set('salesforce:objects', $result, 0, ['salesforce']);
     }
 
@@ -455,17 +463,14 @@ class RestClient {
    * @param SalesforceSelectQuery $query
    *   The constructed SOQL query.
    *
-   * @return array
-   *   Array of Salesforce objects that match the query.
+   * @return SelectQueryResult
    *
    * @addtogroup salesforce_apicalls
    */
   public function query(SelectQuery $query) {
     //$this->moduleHander->alter('salesforce_query', $query);
     // Casting $query as a string calls SalesforceSelectQuery::__toString().
-
-    $result = $this->apiCall('query?q=' . (string) $query);
-    return $result;
+    return new SelectQueryResult($this->apiCall('query?q=' . (string) $query));
   }
 
   /**
@@ -512,15 +517,14 @@ class RestClient {
    * @param array $params
    *   Values of the fields to set for the object.
    *
-   * @return array
-   *   "id" : "001D000000IqhSLIAZ",
-   *   "errors" : [ ],
-   *   "success" : true
+   * @return Drupal\salesforce\SFID
    *
    * @addtogroup salesforce_apicalls
    */
   public function objectCreate($name, array $params) {
-    return $this->apiCall("sobjects/{$name}", $params, 'POST');
+    $response = $this->apiCall("sobjects/{$name}", $params, 'POST', 'object');
+    $data = $response->data();
+    return new SFID($data['id']);
   }
 
   /**
@@ -539,15 +543,7 @@ class RestClient {
    * @param array $params
    *   Values of the fields to set for the object.
    *
-   * @return array
-   *   1) successful create:
-   *     "id" : "00190000001pPvHAAU",
-   *     "errors" : [ ],
-   *     "success" : true
-   *
-   *   2) unsuccessful upsert:
-   *     "message" : "The requested resource does not exist"
-   *     "errorCode" : "NOT_FOUND"
+   * @return Drupal\salesforce\SFID or NULL
    *
    * @addtogroup salesforce_apicalls
    */
@@ -557,22 +553,19 @@ class RestClient {
       unset($params[$key]);
     }
 
-    $data = $this->apiCall("sobjects/{$name}/{$key}/{$value}", $params, 'PATCH');
+    $response = $this->apiCall("sobjects/{$name}/{$key}/{$value}", $params, 'PATCH', 'object');
 
     // On update, upsert method returns an empty body. Retreive object id, so that we can return a consistent response.
     if ($this->response->getStatusCode() == 204) {
       // We need a way to allow callers to distinguish updates and inserts. To
       // that end, cache the original response and reset it after fetching the
       // ID.
-      $response = $this->response;
+      $this->original_response = $this->response;
       $sf_object = $this->objectReadbyExternalId($name, $key, $value);
-      $data['id'] = $sf_object['Id'];
-      $data['success'] = TRUE;
-      $data['errors'] = [];
-      $this->response = $response;
+      return $sf_object->id();
     }
-
-    return $data;
+    $data = $response->data();
+    return new SFID($data['id']);
   }
 
   /**
@@ -602,13 +595,13 @@ class RestClient {
    * @param string $id
    *   Salesforce id of the object.
    *
-   * @return array
+   * @return SObject
    *   Object of the requested Salesforce object.
    *
    * @addtogroup salesforce_apicalls
    */
   public function objectRead($name, $id) {
-    return $this->apiCall("sobjects/{$name}/{$id}", [], 'GET');
+    return new SObject($this->apiCall("sobjects/{$name}/{$id}", [], 'GET'));
   }
 
   /**
@@ -621,13 +614,13 @@ class RestClient {
    * @param string $value
    *   Value of external id.
    *
-   * @return object
+   * @return SObject
    *   Object of the requested Salesforce object.
    *
    * @addtogroup salesforce_apicalls
    */
   public function objectReadbyExternalId($name, $field, $value) {
-    return $this->apiCall("sobjects/{$name}/{$field}/{$value}");
+    return new SObject($this->apiCall("sobjects/{$name}/{$field}/{$value}"));
   }
 
   /**
@@ -650,16 +643,107 @@ class RestClient {
   /**
    * Return a list of available resources for the configured API version.
    *
-   * @return array
-   *   Associative array keyed by name with a URI value.
+   * @return Drupal\salesforce\Rest\RestResponse_Resources
    *
    * @addtogroup salesforce_apicalls
    */
   public function listResources() {
-    $resources = $this->apiCall('');
-    foreach ($resources as $key => $path) {
-      $items[$key] = $path;
-    }
-    return $items;
+    return new RestResponse_Resources($this->apiCall('', [], 'GET', 'object'));
   }
+
+  /**
+   * Return a list of SFIDs for the given object, which have been created or
+   * updated in the given timeframe.
+   *
+   * @param string $name
+   *   Object type name, E.g., Contact, Account.
+   *
+   * @param int $start
+   *   unix timestamp for older timeframe for updates. 
+   *   Defaults to "-29 days" if empty.
+   *
+   * @param int $end
+   *   unix timestamp for end of timeframe for updates. 
+   *   Defaults to now if empty
+   *
+   * @return array
+   *   return array has 2 indexes:
+   *     "ids": a list of SFIDs of those records which have been created or
+   *       updated in the given timeframe.
+   *     "latestDateCovered": ISO 8601 format timestamp (UTC) of the last date
+   *       covered in the request.
+   *
+   * @see https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_getupdated.htm
+   *
+   * @addtogroup salesforce_apicalls
+   */
+  public function getUpdated($name, $start = null, $end = null) {
+    if (empty($start)) {
+      $start = strtotime('-29 days');
+    }
+    $start = urlencode(gmdate(DATE_ATOM, $start));
+  
+    if (empty($end)) {
+      $end = time();
+    }
+    $end = urlencode(gmdate(DATE_ATOM, $end));
+  
+    return $this->apiCall("sobjects/{$name}/updated/?start=$start&end=$end");
+  }
+
+  /**
+   * Given a DeveloperName and SObject Name, return the SFID of the
+   * corresponding RecordType. DeveloperName doesn't change between Salesforce
+   * environments, so it's safer to rely on compared to SFID.
+   *
+   * @param string $name
+   *   Object type name, E.g., Contact, Account.
+   *
+   * @param string $devname 
+   *   RecordType DeveloperName, e.g. Donation, Membership, etc.
+   *
+   * @return string SFID
+   *   The Salesforce ID of the given Record Type, or null.
+   */
+  public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE) {
+    // @TODO: restore caching
+    // $cache = cache_get('salesforce_record_types');
+    // Force the recreation of the cache when it is older than 5 minutes.
+    // if ($cache && REQUEST_TIME < ($cache->created + 300) && !$reset) {
+    //   return !empty($cache->data[$name][$devname])
+    //     ? $cache->data[$name][$devname]['Id']
+    //     : NULL;
+    // }
+    $query = new SalesforceSelectQuery('RecordType');
+    $query->fields = array('Id', 'Name', 'DeveloperName', 'SobjectType');
+    $result = $this->query($query);
+    // dpm($result);
+    $record_types = array();
+    foreach ($result['records'] as $rt) {
+      $record_types[$rt['SobjectType']][$rt['DeveloperName']] = $rt;
+    }
+    // cache_set('salesforce_record_types', $record_types, 'cache', CACHE_TEMPORARY);
+    return !empty($record_types[$name][$devname])
+      ? $record_types[$name][$devname]['Id']
+      : NULL;
+  }
+
+  /**
+   * Utility function to determine object type for given SFID 
+   *
+   * @param SFID $id 
+   * @return string
+   * @throws Exception if SFID doesn't match any object type
+   */
+  public static function getObjectTypeName(SFID $id) {
+    $prefix = substr((string)$id, 0, 3);
+    $describe = $this->objects();
+    foreach ($describe as $object) {
+      if ($prefix == $object['keyPrefix']) {
+        return $object['name'];
+      }
+    }
+    throw new Exception('No matching object type');
+  }
+
 }

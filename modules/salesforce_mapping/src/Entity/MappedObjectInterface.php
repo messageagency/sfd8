@@ -14,6 +14,4 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
   // Placeholder interface.
   // @TODO figure out what to abstract out of MappedObject
 
-  const SFID_MAX_LENGTH = 18;
-  
 }

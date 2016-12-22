@@ -7,7 +7,10 @@
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\salesforce_mapping\Entity;
+use Drupal\salesforce_mapping\Entity\MappedObject;
+use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
+use Drupal\salesforce_mapping\Entity\SalesforceMapping;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use GuzzleHttp\Exception\RequestException;
 
 /**
@@ -119,9 +122,9 @@ function salesforce_push_sync_rest(EntityInterface $entity, SalesforceMappingInt
       throw $e;
     }
     $mapped_object = new MappedObject([
-      'entity_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->id()],
-      'entity_type_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->getEntityTypeId()],
-      'salesforce_mapping' => [LanguageInterface::LANGCODE_DEFAULT => $mapping->id()],
+      'entity_id' => $entity->id(),
+      'entity_type_id' => $entity->getEntityTypeId(),
+      'salesforce_mapping' => $mapping->id(),
     ]);
   }
 
@@ -139,7 +142,7 @@ function salesforce_push_sync_rest(EntityInterface $entity, SalesforceMappingInt
     $mapped_object
       ->set('last_sync_action', $op)
       ->set('last_sync_status', FALSE)
-      ->set('last_sync_message', $e->getMessage())
+      ->set('revision_log_message', $e->getMessage())
       ->save();
     throw $e;
 
