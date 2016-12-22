@@ -194,8 +194,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
       }
       $params->setParam($field_plugin->config('salesforce_field'), $field_plugin->value($entity));
     }
-    // @TODO make this an event
-    // drupal_alter('salesforce_push_params', $params, $mapping, $entity_wrapper);
     return $params;
   }
 
