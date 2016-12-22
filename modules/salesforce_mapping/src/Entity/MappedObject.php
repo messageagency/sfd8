@@ -241,9 +241,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->getStorage($this->entity_type_id->value)
       ->load($this->entity_id->value);
 
-    // @TODO: I would consider moving thhe following statement into the
-    // SalesforcePushEvent constructor - both $mapping and $drupal_entity are
-    // being sent already, so why create the $params twice? - AJR
     // previously hook_salesforce_push_params_alter
     $params = new PushParams($mapping, $drupal_entity);
     \Drupal::service('event_dispatcher')->dispatch(
