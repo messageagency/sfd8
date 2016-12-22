@@ -12,6 +12,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 
 /**
@@ -66,8 +67,12 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
 
     // Set the entity type and id fields appropriately.
     // @TODO do we still need this if we're not using entity ref field?
-    $this->set('entity_id', $this->values['entity_id'][LanguageInterface::LANGCODE_DEFAULT]);
-    $this->set('entity_type_id', $this->values['entity_type_id'][LanguageInterface::LANGCODE_DEFAULT]);
+    // AJR - I guessing not, cause I had to comment these lines out to get the
+    // save to work properly. See PullBase.php, line 179. entity_id is an INT
+    // in the DB, so there is not language/translation stuff, so this following
+    // line was causing a save exception.
+    //$this->set('entity_id', $this->values['entity_id'][LanguageInterface::LANGCODE_DEFAULT]);
+    //$this->set('entity_type_id', $this->values['entity_type_id'][LanguageInterface::LANGCODE_DEFAULT]);
     return parent::save();
   }
 

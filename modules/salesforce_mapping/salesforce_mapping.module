@@ -10,6 +10,7 @@ use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\EntityInterface;
 use \Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\salesforce\Exception;
 // Not sure if we'll actually need these, since entity API seems to provide everything:
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\MappedObject;
@@ -117,9 +118,9 @@ function salesforce_mapping_load_multiple($properties = []) {
   $mappings = \Drupal::entityTypeManager()
     ->getStorage('salesforce_mapping')
     ->loadByProperties($properties);
-  //if (empty($mappings)) {
-  //  throw new Exception('No mappings found.');
-  //}
+  if (empty($mappings)) {
+    throw new Exception('No mappings found.');
+  }
   return $mappings;
 }
 
@@ -150,12 +151,9 @@ function salesforce_mapped_object_load_multiple($properties = []) {
   $mappings = \Drupal::entityTypeManager()
     ->getStorage('salesforce_mapped_object')
     ->loadByProperties($properties);
-  // Do we really want to throw an exception here?
-  // What if we're trying to load an object in a process
-  // that needs to create a new object?
-  //if (empty($mappings)) {
-  //  throw new Exception('No mapped objects found');
-  //}
+  if (empty($mappings)) {
+    throw new Exception('No mapped objects found');
+  }
   return $mappings;
 }
 

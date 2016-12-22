@@ -32,106 +32,125 @@ function salesforce_pull_get_updated_records(RestClient $sfapi) {
 
   // Avoid overloading the processing queue and pass this time around if it's
   // over a configurable limit.
-
   if ($queue->numberOfItems() > \Drupal::state()->get('salesforce_pull_max_queue_size', 100000)) {
     return;
   }
 
-  foreach (salesforce_mapping_get_mapped_objects() as $type) {
-    $mapped_fields = [];
-    $mapped_record_types = [];
+  // Grab all mapping and sort them by $mapping->salesforce_object_type.
+  $mappings = salesforce_mapping_load_multiple();
+  usort(
+    $mappings,
+    function($a, $b) {
+      return strcmp($a->get('salesforce_object_type'), $b->get('salesforce_object_type'));
+    });
 
-    // Iterate over each field mapping to determine our query parameters.
-    foreach (salesforce_mapping_load_multiple(['salesforce_object_type' => $type]) as $mapping) {
-      foreach ($mapping->get('field_mappings') as $field_map) {
-        // Exclude field mappings that are only drupal to SF.
-        if (in_array($field_map['direction'], [SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL])) {
-          // Some field map types (Relation) store a collection of SF objects.
-          if (is_array($field_map['salesforce_field']) && !isset($field_map['salesforce_field']['name'])) {
-            foreach ($field_map['salesforce_field'] as $sf_field) {
-              $mapped_fields[$sf_field['name']] = $sf_field['name'];
-            }
-          }
-          // The rest of are just a name/value pair.
-          else {
-            $mapped_fields[$field_map['salesforce_field']] = $field_map['salesforce_field'];
-          }
-        }
-      }
+  // Iterate over each field mapping to determine our query parameters.
+  $last_sf_type = '';
+  foreach ($mappings as $mapping) {
+    if ($mapping->get('salesforce_object_type') != $last_sf_type) {
+      // There are no field mappings configured to pull data from Salesforce so
+      // move on to the next mapped object. Prevents querying unmapped data.
+      if ($last_sf_type != '' && !empty($mapped_fields)) {
+        $results = _salesforce_pull_do_sfo_query($mapped_fields, $mapped_record_types, $last_sf_type, $sfapi);
 
-      if (!empty($mapped_fields) && isset($mapping->salesforce_record_type)  && $mapping->salesforce_record_type != SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE) {
-        // @TODO: Get this next statement working as indented. See lines 110-112.ß
-        //$mapped_record_types[$mapping->salesforce_record_type] = $mapping->salesforce_record_type;
-        // Add the RecordTypeId field so we can use it when processing the
-        // queued SF objects.
-        //$mapped_fields['RecordTypeId'] = 'RecordTypeId';
-      }
-    }
-
-    // There are no field mappings configured to pull data from Salesforce so
-    // move on to the next mapped object. Prevents querying unmapped data.
-    if (empty($mapped_fields)) {
-      continue;
-    }
-
-    // @TODO figure out the new way to build the query.
-    $soql = new SelectQuery($type);
-    // Convert field mappings to SOQL.
-    $soql->fields = ['Id', 'LastModifiedDate'];
-    foreach ($mapped_fields as $field) {
-      // Don't add the Id field to the SOQL query.
-      if ($field == 'Id') {
-        continue;
-      }
-      $soql->fields[] = $field;
-    }
-
-    // If no lastupdate, get all records, else get records since last pull.
-    $sf_last_sync = \Drupal::state()->get('salesforce_pull_last_sync_' . $type, NULL);
-    if ($sf_last_sync) {
-      $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
-      $soql->addCondition('LastModifiedDate', $last_sync, '>');
-    }
-
-    // If Record Type is specified, restrict query.
-    if (count($mapped_record_types) > 0) {
-      $soql->addCondition('RecordTypeId', $mapped_record_types, 'IN');
-    }
-
-    // Execute query.
-    $results = $sfapi->query($soql);
-    $version_path = parse_url($sfapi->getApiEndPoint(), PHP_URL_PATH);
-
-    if (!isset($results['errorCode'])) {
-      // Write items to the queue.
-      foreach ($results['records'] as $result) {
-        $queue->createItem($result);
-      }
-
-      // Handle requests larger than the batch limit (usually 2000).
-      $next_records_url = isset($results['nextRecordsUrl']) ?
-        str_replace($version_path, '', $results['nextRecordsUrl']) :
-        FALSE;
-      while ($next_records_url) {
-        $new_result = $sfapi->apiCall($next_records_url);
-        if (!isset($new_result['errorCode'])) {
+        if (!isset($results['errorCode'])) {
           // Write items to the queue.
-          foreach ($new_result['records'] as $result) {
+          foreach ($results['records'] as $result) {
             $queue->createItem($result);
           }
-        }
-        $next_records_url = isset($new_result['nextRecordsUrl']) ?
-          str_replace($version_path, '', $new_result['nextRecordsUrl']) : FALSE;
-      }
 
-      \Drupal::state()->set('salesforce_pull_last_sync_' . $type, REQUEST_TIME);
+          _salesforce_pull_handle_large_requests($results, $sfapi);
+
+          \Drupal::state()->set('salesforce_pull_last_sync_' . $type, REQUEST_TIME);
+        }
+        else {
+          \Drupal::logger('Salesforce Pull')->error('%code:%msg', [
+            '%code' => $results['errorCode'],
+            '%msg' => $results['message'],
+          ]);
+        }
+      }
+      $mapped_fields = [];
+      $mapped_record_types = [];
     }
-    else {
-      \Drupal::logger('Salesforce Pull')->error('%code:%msg', [
-        '%code' => $results['errorCode'],
-        '%msg' => $results['message'],
-      ]);
+    foreach ($mapping->getFieldMappings() as $field_map) {
+      // Exclude field mappings that are only drupal to SF.
+      if (in_array($field_map->get('direction'), [SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL])) {
+        $sf_field = $field_map->get('salesforce_field');
+        // Some field map types (Relation) store a collection of SF objects.
+        // @TODO: revisit this
+        if (is_array($sf_field) && !isset($sf_field['name'])) {
+          foreach ($sf_field as $sf_subfield) {
+            $mapped_fields[$sf_subfield['name']] = $sf_subfield['name'];
+          }
+        }
+        // The rest of are just a name/value pair.
+        else {
+          $mapped_fields[$sf_field] = $sf_field;
+        }
+      }
     }
+    $sf_record_type = $mapping->get('salesforce_record_type');
+    if (
+      !empty($mapped_fields)
+      && !empty($sf_record_type)
+      && $sf_record_type != SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE
+    ) {
+      $mapped_record_types[$sf_record_type] = $sf_record_type;
+      // Add the RecordTypeId field so we can use it when processing the
+      // queued SF objects.
+      $mapped_fields['RecordTypeId'] = 'RecordTypeId';
+    }
+    $last_sf_type = $mapping->get('salesforce_object_type');
+  }
+}
+
+function _salesforce_pull_do_sfo_query(array $mapped_fields, array $mapped_record_type, $type, RestClient $sfapi) {
+  // @TODO figure out the new way to build the query.
+  $soql = new SelectQuery($type);
+  // Convert field mappings to SOQL.
+  $soql->fields = ['Id', 'LastModifiedDate'];
+  foreach ($mapped_fields as $field) {
+    // Don't add the Id field to the SOQL query.
+    if ($field == 'Id') {
+      continue;
+    }
+    $soql->fields[] = $field;
+  }
+
+  // If no lastupdate, get all records, else get records since last pull.
+  $sf_last_sync = \Drupal::state()->get('salesforce_pull_last_sync_' . $type, NULL);
+  if ($sf_last_sync) {
+    $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
+    $soql->addCondition('LastModifiedDate', $last_sync, '>');
+  }
+
+  // If Record Type is specified, restrict query.
+  if (count($mapped_record_types) > 0) {
+    $soql->addCondition('RecordTypeId', $mapped_record_types, 'IN');
+  }
+
+  // Execute query.
+  return $sfapi->query($soql);
+}
+/**
+ * Handle requests larger than the batch limit (usually 2000).
+ */
+function _salesforce_pull_handle_large_requests(array $results, RestClient $sfapi) {
+  $version_path = parse_url($sfapi->getApiEndPoint(), PHP_URL_PATH);
+  $next_records_url = isset($results['nextRecordsUrl']) ?
+    str_replace($version_path, '', $results['nextRecordsUrl']) :
+    FALSE;
+  while ($next_records_url) {
+    $new_result = $sfapi->apiCall($next_records_url);
+    if (!isset($new_result['errorCode'])) {
+      // Write items to the queue.
+      foreach ($new_result['records'] as $result) {
+        $queue->createItem($result);
+      }
+    }
+    $next_records_url = isset($new_result['nextRecordsUrl']) ?
+      str_replace($version_path, '', $new_result['nextRecordsUrl']) : FALSE;
   }
 }
 
@@ -149,7 +168,6 @@ function salesforce_pull_process_deleted_records(RestClient $sfapi) {
   $soap = new SalesforceSoapPartner($sfapi);
   */
   foreach (array_reverse(salesforce_mapping_get_mapped_objects()) as $type) {
-
     $last_delete_sync = \Drupal::state()->get('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
     $now = time();
     // SOAP getDeleted() restraint: startDate must be at least one minute
@@ -206,60 +224,4 @@ function salesforce_pull_process_deleted_records(RestClient $sfapi) {
     }
     \Drupal::state()->set('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
   }
-}
-
-/**
- * Map field values.
- *
- * @param array $field_maps
- *   Array of field maps.
- * @param object $entity_wrapper
- *   Entity wrapper object.
- * @param object $sf_object
- *   sObject of the Salesforce record.
- * @TODO this should move into SalesforceMapping.php
- */
- /*
-  * Moved to queueworker
-function salesforce_pull_map_fields($field_maps, &$entity_wrapper, $sf_object) {
-  foreach ($field_maps as $field_map) {
-    if ($field_map['direction'] == 'sync' || $field_map['direction'] == 'sf_drupal') {
-
-      $drupal_fields_array = explode(':', $field_map['drupal_field']['fieldmap_value']);
-      $parent = $entity_wrapper;
-      foreach ($drupal_fields_array as $drupal_field) {
-        if ($parent instanceof EntityListWrapper) {
-          $child_wrapper = $parent->get(0)->{$drupal_field};
-        }
-        else {
-          $child_wrapper = $parent->{$drupal_field};
-        }
-        $parent = $child_wrapper;
-      }
-      $fieldmap_type = salesforce_mapping_get_fieldmap_types($field_map['drupal_field']['fieldmap_type']);
-      $value = call_user_func($fieldmap_type['pull_value_callback'], $parent, $sf_object, $field_map);
-
-      // Allow this value to be altered before assigning to the entity.
-      drupal_alter('salesforce_pull_entity_value', $value, $field_map, $sf_object);
-      if (isset($value)) {
-        // @TODO: might wrongly assumes an individual value wouldn't be an
-        // array.
-        if ($parent instanceof EntityListWrapper && !is_array($value)) {
-          $parent->offsetSet(0, $value);
-        }
-        else {
-          $parent->set($value);
-        }
-      }
-    }
-  }
-}
- */
-
-/**
- * Implements hook_salesforce_push_entity_allowed()
- * Prevent an entity from being re-synched multiple times during one request.
- */
-function salesforce_pull_salesforce_push_entity_allowed($entity, $op) {
-  return !isset($entity->salesforce_pull) || !$entity->salesforce_pull;
 }
