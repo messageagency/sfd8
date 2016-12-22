@@ -8,6 +8,7 @@
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\Entity;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Implements hook_entity_insert().
@@ -42,25 +43,18 @@ function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity,
 /**
  * Push entities to Salesforce.
  *
- * @param object $entity
+ * @param EntityInterface $entity
  *   The entity object.
- * @param int $op
+ * @param string $op
  *   The trigger being responded to.
  *   One of push_create, push_update, push_delete.
  * @TODO
  *   at some point all these hook_entity_* implementations will go away. We'll
  *   create an event subscriber class to respond to entity events and delegate
- *   actions to the appropriate Push procedures.
+ *   actions to the appropriate Push procedures. Unfortunately this point seems 
+ *   to be a very long ways away. https://www.drupal.org/node/2551893
  */
 function salesforce_push_entity_crud(EntityInterface $entity, $op) {
-
-  // @TODO decide whether this hook is worth moving to Events framework, and how. Should subscribers throw an exception to prevent entity sync? Return false, like so? Something else entirely?
-  foreach (\Drupal::moduleHandler()->invokeAll('salesforce_push_entity_allowed', array($entity, $op)) as $value) {
-    if ($value === FALSE) {
-      return;
-    }
-  }
-
   try {
     $mappings = salesforce_mapping_load_by_drupal($entity->getEntityTypeId());
   }
@@ -75,60 +69,83 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
     if (!$mapping->doesCrud([$op])) {
       continue;
     }
-
-    try {
-      $props = [
-        'entity_id' => $entity->id(),
-        'entity_type_id' => $entity->getEntityTypeId(),
-        'salesforce_mapping' => $mapping->id(),
-      ];
-      $mapped_objects = salesforce_mapped_object_load_multiple($props);
-      // There should really only be one, but the return value is always an array
-      $mapped_object = current($mapped_objects);
-
-      if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
-        // If this is a delete, destroy the mapped object and we're done.
-        $mapped_object->pushDelete();
-        continue;
+    // @TODO decide whether this hook is worth moving to Events framework, and how. Should subscribers throw an exception to prevent entity sync? Return false, like so? Something else entirely?
+    foreach (\Drupal::moduleHandler()->invokeAll('salesforce_push_entity_allowed', array($entity, $op, $mapping)) as $value) {
+      if ($value === FALSE) {
+        continue 2;
       }
     }
-    catch (Exception $e) {
-      // No mappings found, need to create a new one and push...
 
-      if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
-        // Unless it's a delete. Then we're done.
-        continue;
-      }
-      $mapped_object = new MappedObject([
-        'entity_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->id()],
-        'entity_type_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->getEntityTypeId()],
-        'salesforce_mapping' => [LanguageInterface::LANGCODE_DEFAULT => $mapping->id()],
-      ]);
-    }
+    // @TODO batch vs. real-time logic goes here.
 
     try {
-      // Push to SF. This also saves the mapped object.
-      $result = $mapped_object->push();
-      // Do something with the result?
+      $mapped_object = salesforce_push_sync_rest($entity, $mapping, $op);
     }
     catch (Exception $e) {
-      // @TODO As long as push is handled in MappedObject, this hook invocation should go there. We're only handling this exception so that we don't block the entity CRUD operation.
-      continue;
-
-      // $vars = [
-      //   'entity' => $entity,
-      //   'mapping' => $mapping,
-      //   'params' => $params,
-      //   'exception' => $e,
-      //   'op' => $op,
-      // ];
-      //
-      // // @TODO This should definitely be an event. See SalesforceEvents::PUSH_FAIL
-      // \Drupal::moduleHandler()->invokeAll('salesforce_push_failure', array($e->getMessage(), $vars));
+      // what do do here?
     }
   }
+}
 
+/**
+ * Worker function to do actual push to Salesforce.
+ *
+ * @param EntityInterface $entity
+ * @param SalesforceMappingInterface $mapping
+ * @param string $op
+ *   one of push_create, push_update, push_delete
+ * @return SF result
+ *
+ * @throws Exception if mapping object cannot be loaded or created
+ * @throws RequestException if push operations fail
+ */
+function salesforce_push_sync_rest(EntityInterface $entity, SalesforceMappingInterface $mapping, $op) {
 
+  // First, look for existing mapped object.
+  $props = [
+    'entity_id' => $entity->id(),
+    'entity_type_id' => $entity->getEntityTypeId(),
+    'salesforce_mapping' => $mapping->id(),
+  ];
+  try {
+    $mapped_objects = salesforce_mapped_object_load_multiple($props);
+    // There should really only be one, but the return value is always an array
+    $mapped_object = current($mapped_objects);
+  }
+  catch (Exception $e) {
+    // No mappings found, need to create a new one and push...
+    if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+      // Unless it's a delete. Then we're done.
+      throw $e;
+    }
+    $mapped_object = new MappedObject([
+      'entity_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->id()],
+      'entity_type_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->getEntityTypeId()],
+      'salesforce_mapping' => [LanguageInterface::LANGCODE_DEFAULT => $mapping->id()],
+    ]);
+  }
+
+  try {
+    // If this is a delete, destroy the SF object and we're done.
+    if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+      return $mapped_object->pushDelete();
+    }
+    else {
+      // Push to SF. This also saves the mapped object.
+      return $mapped_object->push();
+    }
+  }
+  catch (RequestException $e) {
+    $mapped_object
+      ->set('last_sync_action', $op)
+      ->set('last_sync_status', FALSE)
+      ->set('last_sync_message', $e->getMessage())
+      ->save();
+    throw $e;
+
+    // @TODO Can we pawn this off to an entity_save hook? implementations can look at last_sync_status to determine success vs failure.
+    // \Drupal::moduleHandler()->invokeAll('salesforce_push_failure', array($e->getMessage(), $vars));
+  }
 }
 
 /**

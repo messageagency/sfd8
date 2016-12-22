@@ -180,6 +180,18 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         'weight' => $i++,
       ]);
 
+    $fields['last_sync_status'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Status of most recent sync'))
+      ->setDescription(t('Indicates whether most recent sync was successful or not.'))
+      ->setRevisionable(TRUE);
+
+    $fields['last_sync_action'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Action of most recent sync'))
+      ->setDescription(t('Indicates acion which triggered most recent sync for this mapped object'))
+      ->setSetting('is_ascii', TRUE)
+      ->setSetting('max_length', SALESFORCE_MAPPING_TRIGGER_MAX_LENGTH)
+      ->setRevisionable(TRUE);
+
     // @see ContentEntityBase::baseFieldDefinitions 
     // and RevisionLogEntityTrait::revisionLogBaseFieldDefinitions
     $fields += parent::baseFieldDefinitions($entity_type);
@@ -214,7 +226,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   public function push() {
-    // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
+    // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context, or short of that clear documentation on how callers should handle errors and exceptions. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
     // @TODO better way to handle push/pull:
     $client = \Drupal::service('salesforce.client');
 
@@ -265,13 +277,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       // @TODO: where to get entity updated timestamp?
       $this->set('entity_updated', $drupal_entity->getChangedTime());
     }
+    // dpm($result);
 
     // @TODO restore last_sync_action, last_sync_status, last_sync_message
     // @TODO: catch EntityStorageException ? Others ?
     $this
       ->set('salesforce_id', $result['id'])
-      // ->set('last_sync_action', $action)
-      // ->set('last_sync_status', 'success')
+      ->set('last_sync_action', 'push_' . $action)
+      ->set('last_sync_status', TRUE)
       // ->set('last_sync_message', '')
       ->save();
 
@@ -281,12 +294,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   public function pushDelete() {
     $client = \Drupal::service('salesforce.client');
     $mapping = $this->salesforce_mapping->entity;
-    $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
+    $result = $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
     $this
-      // ->set('last_sync_action', 'delete')
-      // ->set('last_sync_status', 'success')
-      // ->set('last_sync_message', '')
+      ->set('last_sync_action', 'push_delete')
+      ->set('last_sync_status', TRUE)
       ->save();
+
+    return $result;
   }
 
   public function pull(array $sf_object = NULL, EntityInterface $drupal_entity = NULL) {
