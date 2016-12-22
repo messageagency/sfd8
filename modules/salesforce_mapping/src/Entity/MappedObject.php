@@ -7,7 +7,7 @@
 
 namespace Drupal\salesforce_mapping\Entity;
 
-use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityChangedInterface;
@@ -17,6 +17,7 @@ use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePushEvent;
+use Drupal\user\UserInterface;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
@@ -38,15 +39,17 @@ use Drupal\salesforce_mapping\SalesforcePushEvent;
  *     "access" = "Drupal\salesforce_mapping\MappedObjectAccessControlHandler",
  *   },
  *   base_table = "salesforce_mapped_object",
+ *   revision_table = "salesforce_mapped_object_revision",
  *   admin_permission = "administer salesforce mapping",
  *   entity_keys = {
  *      "id" = "id",
  *      "entity_id" = "entity_id",
- *      "salesforce_id" = "salesforce_id"
+ *      "salesforce_id" = "salesforce_id",
+ *      "revision" = "revision_id"
  *   }
  * )
  */
-class MappedObject extends ContentEntityBase implements MappedObjectInterface {
+class MappedObject extends RevisionableContentEntityBase implements MappedObjectInterface {
 
   use EntityChangedTrait;
 
@@ -79,21 +82,12 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
-    // @TODO Do we really have to define this, and hook_schema, and entity_keys?
-    // so much redundancy.
-    $i = 0;
-    $fields = [];
-    $fields['id'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Salesforce Mapping Object ID'))
-      ->setDescription(t('Primary Key: Unique salesforce_mapped_object entity ID.'))
-      ->setReadOnly(TRUE)
-      ->setSetting('unsigned', TRUE);
-
     // We can't use an entity reference, which requires a single entity type. We need to accommodate a reference to any entity type, as specified by entity_type_id
     $fields['entity_id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Entity ID'))
       ->setDescription(t('Reference to the mapped Drupal entity.'))
       ->setRequired(TRUE)
+      ->setRevisionable(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'hidden',
       ])
@@ -105,7 +99,8 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
 
     $fields['entity_type_id'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Entity type'))
-      ->setDescription(t('The entity type to which this comment is attached.'))
+      ->setDescription(t('The entity type to which this mapped object is attached.'))
+      ->setRevisionable(TRUE)
       ->setSetting('is_ascii', TRUE)
       ->setSetting('max_length', EntityTypeInterface::ID_MAX_LENGTH)
       ->setDisplayOptions('form', [
@@ -120,6 +115,7 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
     $fields['salesforce_mapping'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Salesforce mapping'))
       ->setDescription(t('Salesforce mapping used to push/pull this mapped object'))
+      ->setRevisionable(TRUE)
       ->setSetting('target_type', 'salesforce_mapping')
       ->setSetting('handler', 'default')
       ->setRequired(TRUE)
@@ -141,6 +137,8 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
     $fields['salesforce_id'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Salesforce ID'))
       ->setDescription(t('Reference to the mapped Salesforce object (SObject)'))
+      ->setRevisionable(TRUE)
+      ->setTranslatable(FALSE)
       ->setSetting('is_ascii', TRUE)
       ->setSetting('max_length', MappedObjectInterface::SFID_MAX_LENGTH)
       ->setDisplayOptions('form', [
@@ -156,9 +154,9 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Authored on'))
       ->setDescription(t('The time that the object mapping was created.'))
-      ->setReadOnly(TRUE)
+      ->setRevisionable(TRUE)
       ->setDisplayOptions('view', [
-        'label' => 'hidden',
+        'label' => 'above',
         'type' => 'timestamp',
         'weight' => $i++,
       ]);
@@ -174,10 +172,10 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
         'weight' => $i++,
       ]);
 
-
     $fields['entity_updated'] = BaseFieldDefinition::create('timestamp')
       ->setLabel(t('Drupal Entity Updated'))
       ->setDescription(t('The Unix timestamp when the mapped Drupal entity was last updated.'))
+      ->setRevisionable(TRUE)
       ->setDefaultValue(0)
       ->setDisplayOptions('view', [
         'label' => 'above',
@@ -185,15 +183,22 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
         'weight' => $i++,
       ]);
 
-    $fields['last_sync'] =  BaseFieldDefinition::create('timestamp')
-      ->setLabel(t('Last Sync'))
-      ->setDescription(t('The Unix timestamp when the record was last synced with Salesforce.'))
-      ->setDefaultValue(0)
-      ->setDisplayOptions('view', [
-        'label' => 'above',
-        'type' => 'string',
-        'weight' => $i++,
-      ]);
+    $fields['last_sync_status'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Status of most recent sync'))
+      ->setDescription(t('Indicates whether most recent sync was successful or not.'))
+      ->setRevisionable(TRUE);
+
+    $fields['last_sync_action'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Action of most recent sync'))
+      ->setDescription(t('Indicates acion which triggered most recent sync for this mapped object'))
+      ->setSetting('is_ascii', TRUE)
+      ->setSetting('max_length', SALESFORCE_MAPPING_TRIGGER_MAX_LENGTH)
+      ->setRevisionable(TRUE);
+
+    // @see ContentEntityBase::baseFieldDefinitions 
+    // and RevisionLogEntityTrait::revisionLogBaseFieldDefinitions
+    $fields += parent::baseFieldDefinitions($entity_type);
+
     return $fields;
   }
 
@@ -224,7 +229,7 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
   }
 
   public function push() {
-    // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
+    // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context, or short of that clear documentation on how callers should handle errors and exceptions. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
     // @TODO better way to handle push/pull:
     $client = \Drupal::service('salesforce.client');
 
@@ -282,14 +287,14 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
       // @TODO: where to get entity updated timestamp?
       $this->set('entity_updated', $drupal_entity->getChangedTime());
     }
+    // dpm($result);
 
     // @TODO restore last_sync_action, last_sync_status, last_sync_message
     // @TODO: catch EntityStorageException ? Others ?
     $this
       ->set('salesforce_id', $result['id'])
-      ->set('last_sync', REQUEST_TIME)
-      // ->set('last_sync_action', $action)
-      // ->set('last_sync_status', 'success')
+      ->set('last_sync_action', 'push_' . $action)
+      ->set('last_sync_status', TRUE)
       // ->set('last_sync_message', '')
       ->save();
 
@@ -299,13 +304,13 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
   public function pushDelete() {
     $client = \Drupal::service('salesforce.client');
     $mapping = $this->salesforce_mapping->entity;
-    $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
+    $result = $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
     $this
-      ->set('last_sync', REQUEST_TIME)
-      // ->set('last_sync_action', 'delete')
-      // ->set('last_sync_status', 'success')
-      // ->set('last_sync_message', '')
+      ->set('last_sync_action', 'push_delete')
+      ->set('last_sync_status', TRUE)
       ->save();
+
+    return $result;
   }
 
   public function pull(array $sf_object = NULL, EntityInterface $drupal_entity = NULL) {

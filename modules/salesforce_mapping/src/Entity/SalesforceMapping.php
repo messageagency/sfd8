@@ -339,8 +339,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
         SALESFORCE_MAPPING_SYNC_SF_DELETE
       ];
     }
-    dpm($ops);
-    dpm($this->sync_triggers);
     return !empty(array_intersect($ops, array_keys(array_filter($this->sync_triggers))));
   }
 

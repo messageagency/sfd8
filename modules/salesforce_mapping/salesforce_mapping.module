@@ -24,6 +24,8 @@ const SALESFORCE_MAPPING_SYNC_SF_CREATE = 'pull_create';
 const SALESFORCE_MAPPING_SYNC_SF_UPDATE = 'pull_update';
 const SALESFORCE_MAPPING_SYNC_SF_DELETE = 'pull_delete';
 
+const SALESFORCE_MAPPING_TRIGGER_MAX_LENGTH = 16;
+
 /**
  * Field mapping direction constants.
  */
@@ -45,6 +47,11 @@ const SALESFORCE_MAPPING_ARRAY_DELIMITER =';';
  * Field mapping maximum name length.
  */
 const SALESFORCE_MAPPING_NAME_LENGTH = 128;
+
+
+const SALESFORCE_MAPPING_STATUS_SUCCESS = 1;
+const SALESFORCE_MAPPING_STATUS_ERROR = 0;
+
 
 /**
  * Implements hook_entity_type_alter().
