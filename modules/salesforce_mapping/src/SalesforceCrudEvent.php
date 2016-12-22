@@ -20,23 +20,23 @@ class SalesforceCrudEvent extends Event {
     $this->params = $params;
   }
 
-  public getOperation() {
+  public function getOperation() {
     return $this->operation;
   }
 
-  public getEntity() {
+  public function getEntity() {
     return $this->entity;
   }
 
-  public getMapping() {
+  public function getMapping() {
     return $this->mapping;
   }
 
-  public getMappedObject() {
+  public function getMappedObject() {
     return $this->mapped_object;
   }
 
-  public getParams() {
+  public function getParams() {
     return $this->params;
   }
 

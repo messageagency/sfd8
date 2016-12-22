@@ -13,7 +13,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\PushParamsEvent;
+use Drupal\salesforce_mapping\PushParams;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
