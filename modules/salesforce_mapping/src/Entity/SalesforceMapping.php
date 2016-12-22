@@ -176,28 +176,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Given a Drupal entity, return an array of Salesforce key-value pairs
-   * previously salesforce_push_map_params (d7)
-   *
-   * @param object $entity
-   *   Entity wrapper object.
-   *
-   * @return Drupal\salesforce_mapping\PushParams
-   */
-  public function getPushParams(EntityInterface $entity) {
-    // @TODO This should probably be delegated to a field plugin bag?
-    $params = new PushParams([]);
-    foreach ($this->getFieldMappings() as $field_plugin) {
-      // Skip fields that aren't being pushed to Salesforce.
-      if (!$field_plugin->push()) {
-        continue;
-      }
-      $params->setParam($field_plugin->config('salesforce_field'), $field_plugin->value($entity));
-    }
-    return $params;
-  }
-
-  /**
    * Given a Salesforce object, return an array of Drupal entity key-value pairs
    *
    * @param object $entity

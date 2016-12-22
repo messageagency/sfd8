@@ -245,10 +245,10 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // SalesforcePushEvent constructor - both $mapping and $drupal_entity are
     // being sent already, so why create the $params twice? - AJR
     // previously hook_salesforce_push_params_alter
-    $params = $mapping->getPushParams($drupal_entity);
+    $params = new PushParams($drupal_entity, $mapping);
     \Drupal::service('event_dispatcher')->dispatch(
       SalesforceEvents::PUSH_PARAMS,
-      new SalesforcePushEvent($drupal_entity, $mapping, $this, $params)
+      new SalesforcePushEvent($this, $params)
     );
 
     // @TODO is this the right place for this logic to live?
