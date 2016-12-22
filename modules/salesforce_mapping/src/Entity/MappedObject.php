@@ -13,6 +13,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePushEvent;
@@ -235,10 +236,13 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
       ->getStorage($this->entity_type_id->value)
       ->load($this->entity_id->value);
 
+    // @TODO: I would consider moving thhe following statement into the
+    // SalesforcePushEvent constructor - both $mapping and $drupal_entity are
+    // being sent already, so why create the $params twice? - AJR
     $params = $mapping->getPushParams($drupal_entity);
     \Drupal::service('event_dispatcher')->dispatch(
       SalesforceEvents::PUSH_PARAMS,
-      new SalesforcePushEvent($entity, $mapping, $this, $params)
+      new SalesforcePushEvent($drupal_entity, $mapping, $this, $params)
     );
 
     // @TODO is this the right place for this logic to live?
@@ -254,7 +258,7 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
         $mapping->getSalesforceObjectType(),
         $mapping->getKeyField(),
         $mapping->getKeyValue($drupal_entity),
-        $params
+        $params->getParams()
       );
     }
     elseif ($this->sfid()) {
@@ -262,14 +266,14 @@ class MappedObject extends ContentEntityBase implements MappedObjectInterface {
       $result = $client->objectUpdate(
         $mapping->getSalesforceObjectType(),
         $this->sfid(),
-        $params
+        $params-getParams()
       );
     }
     else {
       $action = 'create';
       $result = $client->objectCreate(
         $mapping->getSalesforceObjectType(),
-        $params
+        $params-getParams()
       );
     }
     // @TODO make $result a class with reliable properties, methods.
