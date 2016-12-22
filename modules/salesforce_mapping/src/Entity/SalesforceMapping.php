@@ -186,21 +186,14 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   public function getPushParams(EntityInterface $entity) {
     // @TODO This should probably be delegated to a field plugin bag?
-    $params = new PushParams(['fieldsToNull' => []]);
+    $params = new PushParams([]);
     foreach ($this->getFieldMappings() as $field_plugin) {
       // Skip fields that aren't being pushed to Salesforce.
       if (!$field_plugin->push()) {
         continue;
       }
       $value = $field_plugin->value($entity);
-      if ($value === NULL) {
-        $fieldsToNull = $params->getParam('fieldsToNull');
-        $fieldsToNull[] = $field_plugin->config('salesforce_field');
-        $params->setParam('fieldsToNull', $fieldsToNull);
-      }
-      else {
-        $params->setParam($field_plugin->config('salesforce_field'), $value);
-      }
+      $params->setParam($field_plugin->config('salesforce_field'), $value);
     }
     // Previously:
     // drupal_alter('salesforce_push_params', $params, $mapping, $entity_wrapper);
