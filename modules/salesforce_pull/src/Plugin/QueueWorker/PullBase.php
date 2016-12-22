@@ -66,7 +66,6 @@ abstract class PullBase extends QueueWorkerBase {
             $mapped_object->pull($sf_object, $entity);
 
             // Update mapping object.
-            $mapped_object->last_sync = REQUEST_TIME;
             $mapped_object->entity_update = REQUEST_TIME;
             \Drupal::logger('Salesforce Pull')->notice(
               'Updated entity %label associated with Salesforce Object ID: %sfid',
