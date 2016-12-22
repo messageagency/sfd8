@@ -272,14 +272,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       $result = $client->objectUpdate(
         $mapping->getSalesforceObjectType(),
         $this->sfid(),
-        $params-getParams()
+        $params->getParams()
       );
     }
     else {
       $action = 'create';
       $result = $client->objectCreate(
         $mapping->getSalesforceObjectType(),
-        $params-getParams()
+        $params->getParams()
       );
     }
     // @TODO make $result a class with reliable properties, methods.
@@ -305,13 +305,12 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   public function pushDelete() {
     $client = \Drupal::service('salesforce.client');
     $mapping = $this->salesforce_mapping->entity;
-    $result = $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
+    $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
     $this
       ->set('last_sync_action', 'push_delete')
       ->set('last_sync_status', TRUE)
       ->save();
-
-    return $result;
+    return $this;
   }
 
   public function pull(array $sf_object = NULL, EntityInterface $drupal_entity = NULL) {

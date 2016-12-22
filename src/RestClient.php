@@ -432,7 +432,7 @@ class RestClient {
       $result = $cache->data;
     }
     else {
-      $response = $this->apiCall('sobjects');
+      $result = $this->apiCall('sobjects');
       \Drupal::cache()->set('salesforce:objects', $result, 0, ['salesforce']);
     }
 
@@ -608,7 +608,7 @@ class RestClient {
    * @addtogroup salesforce_apicalls
    */
   public function objectRead($name, $id) {
-    return $this->apiCall("sobjects/{$name}/{$id}", [], 'GET');
+    return $this->apiCall("sobjects/{$name}/{$id}");
   }
 
   /**

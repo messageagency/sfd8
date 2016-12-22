@@ -215,32 +215,6 @@ function salesforce_mapping_sort($mapping_a, $mapping_b) {
   return ($mapping_a->weight < $mapping_b->weight) ? -1 : 1;
 }
 
-
-/**
- * Implements hook_entity_delete().
- */
-function salesforce_mapping_entity_delete(EntityInterface $entity) {
-  // Avoid recursion. Mapped Objects cannot be mapped themselves.
-  if ($entity instanceof MappedObject) {
-    return;
-  }
-
-  // Delete any Salesforce object mappings with this entity.
-  try {
-    $mapped_objects = salesforce_mapped_object_load_by_entity($entity);
-  }
-  catch (Exception $e) {
-    // No mapped objects, nothing to do.
-    return;
-  }
-
-  // We only deal with mapped objects here. If SF records need to be deleted,
-  // salesforce_push will handle them.
-  foreach ($mapped_objects as $mapped_object) {
-    $mapped_object->delete();
-  }
-}
-
 /**
  * Implements hook_entity_load().
  */
