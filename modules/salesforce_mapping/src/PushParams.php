@@ -20,8 +20,8 @@ class PushParams {
    * Given a Drupal entity, return an array of Salesforce key-value pairs
    * previously salesforce_push_map_params (d7)
    *
-   * @param SalesforceMappingInterface $mapping 
-   * @param EntityInterface $entity 
+   * @param SalesforceMappingInterface $mapping
+   * @param EntityInterface $entity
    * @param array $params (optional)
    */
   public function __construct(SalesforceMappingInterface $mapping, EntityInterface $entity, array $params = []) {
@@ -33,7 +33,7 @@ class PushParams {
       if (!$field_plugin->push()) {
         continue;
       }
-      $this->param[$field_plugin->config('salesforce_field')] =  $field_plugin->value($entity);
+      $this->params[$field_plugin->config('salesforce_field')] =  $field_plugin->value($entity);
     }
   }
 

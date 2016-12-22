@@ -195,7 +195,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setSetting('max_length', SALESFORCE_MAPPING_TRIGGER_MAX_LENGTH)
       ->setRevisionable(TRUE);
 
-    // @see ContentEntityBase::baseFieldDefinitions 
+    // @see ContentEntityBase::baseFieldDefinitions
     // and RevisionLogEntityTrait::revisionLogBaseFieldDefinitions
     $fields += parent::baseFieldDefinitions($entity_type);
 
@@ -245,7 +245,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // SalesforcePushEvent constructor - both $mapping and $drupal_entity are
     // being sent already, so why create the $params twice? - AJR
     // previously hook_salesforce_push_params_alter
-    $params = new PushParams($drupal_entity, $mapping);
+    $params = new PushParams($mapping, $drupal_entity);
     \Drupal::service('event_dispatcher')->dispatch(
       SalesforceEvents::PUSH_PARAMS,
       new SalesforcePushEvent($this, $params)
