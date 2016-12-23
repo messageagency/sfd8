@@ -87,7 +87,7 @@ class RestClient {
     }
     catch (RequestException $e) {
       // RequestException gets thrown for any response status but 2XX
-      $this->response = new RestResponse($e->getResponse());
+      $this->response = $e->getResponse();
     }
     if (!is_object($this->response)) {
       throw new Exception('Unknown error occurred during API call');
@@ -100,10 +100,10 @@ class RestClient {
         // throws anything but a RequestException, let it bubble up.
         $this->refreshToken();
         try {
-          $this->response = $this->apiHttpRequest($path, $params, $method);
+          $this->response = new RestResponse($this->apiHttpRequest($path, $params, $method));
         }
         catch (RequestException $e) {
-          $this->response = new RestResponse($e->getResponse());
+          $this->response = $e->getResponse();
           throw $e;
         }
         break;
@@ -601,7 +601,7 @@ class RestClient {
    * @addtogroup salesforce_apicalls
    */
   public function objectRead($name, $id) {
-    return new SObject($this->apiCall("sobjects/{$name}/{$id}", [], 'GET'));
+    return new SObject($this->apiCall("sobjects/{$name}/{$id}"));
   }
 
   /**

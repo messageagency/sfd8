@@ -7,11 +7,13 @@
 
 namespace Drupal\salesforce_pull\Plugin\QueueWorker;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 
 /**
  * Provides base functionality for the Salesforce Pull Queue Workers.
@@ -43,12 +45,25 @@ abstract class PullBase extends QueueWorkerBase {
       $mapping_conditions['salesforce_record_type'] = $sf_object['RecordTypeId'];
     }
 
-    $sf_mappings = salesforce_mapping_load_multiple($mapping_conditions);
+    try {
+      $sf_mappings = salesforce_mapping_load_multiple($mapping_conditions);
+    }
+    catch (Exception $e) {
+      return;
+    }
 
     foreach ($sf_mappings as $sf_mapping) {
       // Mapping object exists?
-      $mapped_object = salesforce_mapped_object_load_by_sfid($sf_object['Id']);
-      if ($mapped_object && in_array(SALESFORCE_MAPPING_SYNC_SF_UPDATE, $sf_mapping->sync_triggers)) {
+      // @TODO: alex to make this work more better =]
+      try {
+        $mapped_object = salesforce_mapped_object_load_by_sfid($sf_object['Id']);
+        $this->doUpdate($sf_mapping, $mapped_object);
+      }
+      catch (Exception $e) {
+        $this->doCreate();
+      }
+
+      if (!empty($mapped_object) && $sf_mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
         try {
           $entity = \Drupal::entityTypeManager()
             ->getStorage($mapped_object->entity_type_id->value)
@@ -90,40 +105,43 @@ abstract class PullBase extends QueueWorkerBase {
         }
       }
       else {
-        if (in_array(SALESFORCE_MAPPING_SYNC_SF_CREATE, $sf_mapping->sync_triggers)) {
+        if ($sf_mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_CREATE])) {
           try {
             // Create entity from mapping object and field maps.
-            $entity_info = entity_get_info($sf_mapping->drupal_entity_type);
+            $entity_info = \Drupal::entityTypeManager()->getDefinition($sf_mapping->get('drupal_entity_type'));
 
             // Define values to pass to entity_create().
+            $entity_keys = $entity_info->getKeys();
             $values = [];
-            if (isset($entity_info['entity keys']['bundle']) &&
-              !empty($entity_info['entity keys']['bundle'])) {
-              $values[$entity_info['entity keys']['bundle']] = $sf_mapping->drupal_bundle;
+            if (isset($entity_keys['bundle']) &&
+              !empty($entity_keys['bundle'])) {
+              $values[$entity_keys['bundle']] = $sf_mapping->get('drupal_bundle');
             }
             else {
               // Not all entities will have bundle defined under entity keys,
               // e.g. the User entity.
-              $values[$sf_mapping->drupal_bundle] = $sf_mapping->drupal_bundle;
+              $values[$sf_mapping->get('drupal_bundle')] = $sf_mapping->get('drupal_bundle');
             }
 
             // See note above about flag.
             $values['salesforce_pull'] = TRUE;
 
             // Create entity.
-            $entity = entity_create($sf_mapping->drupal_entity_type, $values);
+            $entity = \Drupal::entityTypeManager()
+              ->getStorage($sf_mapping->get('drupal_entity_type'))
+              ->create($values);
 
             // Flag this entity as having been processed. This does not persist,
             // but is used by salesforce_push to avoid duplicate processing.
             $entity->salesforce_pull = TRUE;
 
-            $wrapper = entity_metadata_wrapper($sf_mapping->drupal_entity_type, $entity);
-            salesforce_pull_map_fields($sf_mapping->field_mappings, $wrapper, $sf_object);
-            $wrapper->save();
+            //$wrapper = entity_metadata_wrapper($sf_mapping->drupal_entity_type, $entity);
+            $this->mapFields($sf_mapping, $entity, $sf_object);
+            $entity->save();
 
             // If no id exists, the insert failed.
-            list($entity_id) = entity_extract_ids($sf_mapping->drupal_entity_type, $entity);
-            if (!$entity_id) {
+            //list($entity_id) = entity_extract_ids($sf_mapping->drupal_entity_type, $entity);
+            if (!$entity->id()) {
               throw new Exception('Entity ID not returned, insert failed.');
             }
 
@@ -158,6 +176,68 @@ abstract class PullBase extends QueueWorkerBase {
       // Save our mapped objects.
       if ($mapped_object) {
         $mapped_object->save();
+      }
+    }
+  }
+
+  /**
+   * Map field values.
+   *
+   * @param object $sf_mapping
+   *   Array of field maps.
+   * @param object $entity
+   *   Entity wrapper object.
+   * @param object $sf_object
+   *   Object of the Salesforce record.
+   * @TODO this should move into SalesforceMapping.php
+   */
+  function mapFields(SalesforceMapping $sf_mapping, EntityInterface &$entity, $sf_object) {
+    $foo = $sf_mapping->getPullFields($entity);
+    $bar = $sf_mapping->get('field_mappings');
+
+    // Field plugin crib sheet
+    //$value = $sf_object[$field->get('salesforce_field')];
+    //$drupal_field = $field->get('drupal_field_value');
+
+    foreach ($sf_mapping->getPullFields($entity) as $field_map) {
+      // $poop = $field_map->get('drupal_field_value');
+      // $drupal_fields_array = explode(':', $field_map->get('drupal_field_value'));
+      // $parent = $entity;
+      $mapping_field_plugin_id = $field_map->get('drupal_field_type');
+      $mapping_field_plugin = $this->pluginManager->create($mapping_field_plugin_id, $field_map);
+
+      // $drupal_field_value = $field_map->get('drupal_field_value');
+        
+      try {
+        $value = $mapping_field_plugin->getPullValue($entity);
+      }
+      catch (Exception $e) {
+        watchdog_exception('sfpull', $e);
+        continue;
+      }
+
+      // @TODO: make this work for reference fields. There must be a better way than a semi-colon delimited string to represent this.
+      // It should look more like this in the future:
+      // $drupal_field->getValue($entity);
+
+      // Traverse through the field_value identifier to the child-most element. Practically this is in order to fine referenced entities. Right now we're ignoring that those exist and assuming that the field will have a value.
+      // foreach ($drupal_fields_array as $drupal_field) {
+      // }
+
+      // $fieldmap_type = salesforce_mapping_get_fieldmap_types($field_map->get('drupal_field_type'));
+      // $value = call_user_func($fieldmap_type['pull_value_callback'], $parent, $sf_object, $field_map);
+
+      // Allow this value to be altered before assigning to the entity.
+      drupal_alter('salesforce_pull_entity_value', $value, $field_map, $sf_object);
+      // if (isset($value)) {
+      //   // @TODO: might wrongly assumes an individual value wouldn't be an
+      //   // array.
+      //   if ($parent instanceof EntityListWrapper && !is_array($value)) {
+      //     $parent->offsetSet(0, $value);
+      //   }
+      //   else {
+      //     $parent->set($value);
+      //   }
       }
     }
   }

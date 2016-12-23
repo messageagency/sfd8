@@ -181,7 +181,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#default_value' => $this->entity->get('pull_trigger_date')
         ? $this->entity->get('pull_trigger_date')
         : 'LastModifiedDate',
-      '#options' => $this->get_pull_trigger_options(),
+      '#options' => $this->get_pull_trigger_options($salesforce_object_type),
     ];
 
     // @TODO either change sync_triggers to human readable values, or make them work as hex flags again.
@@ -219,6 +219,10 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    // fudge the Date Modified form values to get validation to pass on submit
+    if (!empty($form_state->isSubmitted())) {
+      $form['salesforce_object']['pull_trigger_date']['#options'] = $this->get_pull_trigger_options($form_state->getValue('salesforce_object_type'));
+    }
     parent::validateForm($form, $form_state);
 
     $entity_type = $form_state->getValue('drupal_entity_type');
@@ -239,7 +243,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       }
     }
   }
- 
+
   /**
    * {@inheritdoc}
    */
@@ -263,6 +267,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   public function salesforce_record_type_callback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
+    // Set the trigger options based on the selected object
+    $form['salesforce_object']['pull_trigger_date']['#options'] = $this->get_pull_trigger_options($form_state->getValue('salesforce_object_type'));
     // Requires updating itself and the field map.
     $response->addCommand(new ReplaceCommand('#edit-salesforce-object', render($form['salesforce_object'])))->addCommand(new ReplaceCommand('#edit-salesforce-field-mappings-wrapper', render($form['salesforce_field_mappings_wrapper'])));
     return $response;
@@ -293,7 +299,10 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     // arbitrary restriction, but otherwise there would be dozens of entities,
     // making this options list unwieldy.
     foreach ($entity_info as $info) {
-      if (!class_implements($info, 'FieldableEntityInterface')) {
+      if (
+        !in_array('Drupal\Core\Entity\ContentEntityTypeInterface', class_implements($info)) ||
+        $info->id() == 'salesforce_mapped_object'
+      ) {
         continue;
       }
       $options[$info->id()] = $info->getLabel();
@@ -358,7 +367,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * Return form options for available sync triggers.
    *
    * @return array
-   *   Array of sync trigger options keyed by their machine name with their 
+   *   Array of sync trigger options keyed by their machine name with their
    *   label as the value.
    */
   protected function get_sync_trigger_options() {
@@ -376,9 +385,11 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * Helper function which returns an array of Date fields suitable for use a
    * pull trigger field.
    *
+   * @param string $name
+   *
    * @return array
    */
-  private function get_pull_trigger_options() {
+  private function get_pull_trigger_options($name) {
     $options = [];
     $describe = $this->get_salesforce_object();
     if ($describe) {
@@ -400,6 +411,5 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     }
     return $field_type_options;
   }
-
 
 }

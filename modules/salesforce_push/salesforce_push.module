@@ -5,8 +5,8 @@
  * Push updates to Salesforce when a Drupal entity is updated.
  */
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
@@ -37,7 +37,7 @@ function salesforce_push_entity_delete(EntityInterface $entity) {
 function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity, $op) {
   // Don't allow mapped objects or mappings to be pushed!
   // @TODO can we implement this instead with a validation constraint? This is fugly.
-  if ($entity instanceof MappedObjectInterface 
+  if ($entity instanceof MappedObjectInterface
   || $entity instanceof SalesforceMappingInterface) {
     return FALSE;
   }
@@ -54,10 +54,11 @@ function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity,
  * @TODO
  *   at some point all these hook_entity_* implementations will go away. We'll
  *   create an event subscriber class to respond to entity events and delegate
- *   actions to the appropriate Push procedures. Unfortunately this point seems 
+ *   actions to the appropriate Push procedures. Unfortunately this point seems
  *   to be a very long ways away. https://www.drupal.org/node/2551893
  */
 function salesforce_push_entity_crud(EntityInterface $entity, $op) {
+
   try {
     $mappings = salesforce_mapping_load_by_drupal($entity->getEntityTypeId());
   }
@@ -69,7 +70,7 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
   foreach ($mappings as $mapping) {
     $mapped_objects = [];
     $mapped_object = FALSE;
-    if (!$mapping->doesCrud([$op])) {
+    if (!$mapping->checkTriggers([$op])) {
       continue;
     }
     // @TODO decide whether this hook is worth moving to Events framework, and how. Should subscribers throw an exception to prevent entity sync? Return false, like so? Something else entirely?
