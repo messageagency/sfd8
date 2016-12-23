@@ -242,7 +242,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   public function getFieldMapping(array $field) {
     return $this->fieldManager->createInstance(
       $field['drupal_field_type'],
-      $field
+      $field['config']
     );
   }
 
@@ -250,64 +250,13 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
 
   }
 
-  /**
-   * Helper function returns boolean whether this mapping responds to
-   * Drupal CRUD operation(s).
-   *
-   * @return bool
-   */
-  public function doesPush(array $ops = []) {
-    $ops = [
-      SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
-      SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
-      SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE,
-    ];
-    return $this->doesCrud($ops);
-  }
-
-  /**
-   * Helper function returns boolean whether this mapping responds to
-   * Salesforce CRUD operation(s).
-   *
-   * @return bool
-   */
-  public function doesPull() {
-    $ops = [
-      SALESFORCE_MAPPING_SYNC_SF_CREATE,
-      SALESFORCE_MAPPING_SYNC_SF_UPDATE,
-      SALESFORCE_MAPPING_SYNC_SF_DELETE,
-    ];
-    return $this->doesCrud($ops);
-  }
-
-  /**
-   * Helper function returns boolean whether this mapping responds to given
-   * Salesforce or Drupal CRUD operation(s).
-   *
-   * @param array $ops (optional)
-   *  Array containing one or more of:
-   *   * SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
-   *   * SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
-   *   * SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
-   *   * SALESFORCE_MAPPING_SYNC_SF_CREATE
-   *   * SALESFORCE_MAPPING_SYNC_SF_UPDATE
-   *   * SALESFORCE_MAPPING_SYNC_SF_DELETE
-   *
-   *   If empty, treat as if all values were provided.
-   * @return bool
-   */
-  public function doesCrud(array $ops = []) {
-    if (empty($ops)) {
-      $ops = [
-        SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
-        SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
-        SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE,
-        SALESFORCE_MAPPING_SYNC_SF_CREATE,
-        SALESFORCE_MAPPING_SYNC_SF_UPDATE,
-        SALESFORCE_MAPPING_SYNC_SF_DELETE
-      ];
+  public function checkTriggers(array $triggers) {
+    foreach ($triggers as $trigger) {
+      if ($this->sync_triggers[$trigger] == 1) {
+        return TRUE;
+      }
     }
-    return !empty(array_intersect($ops, array_keys(array_filter($this->sync_triggers))));
+    return FALSE;
   }
 
 }

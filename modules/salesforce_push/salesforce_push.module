@@ -70,7 +70,7 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
   foreach ($mappings as $mapping) {
     $mapped_objects = [];
     $mapped_object = FALSE;
-    if (!$mapping->doesCrud([$op])) {
+    if (!$mapping->checkTriggers([$op])) {
       continue;
     }
     // @TODO decide whether this hook is worth moving to Events framework, and how. Should subscribers throw an exception to prevent entity sync? Return false, like so? Something else entirely?

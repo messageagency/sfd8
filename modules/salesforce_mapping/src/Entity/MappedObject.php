@@ -82,6 +82,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
+    $i = 0;
     // We can't use an entity reference, which requires a single entity type. We need to accommodate a reference to any entity type, as specified by entity_type_id
     $fields['entity_id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Entity ID'))
@@ -165,7 +166,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setLabel(t('Changed'))
       ->setDescription(t('The time that the object mapping was last edited.'))
       ->setRevisionable(TRUE)
-      ->setTranslatable(TRUE)
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'string',

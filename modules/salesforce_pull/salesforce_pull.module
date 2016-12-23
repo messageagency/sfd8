@@ -20,22 +20,6 @@ function salesforce_pull_cron() {
 }
 
 /**
- * Implements hook_queue_info().
- */
- /*
-function salesforce_pull_queue_info() {
-  $queues['salesforce_pull'] = array(
-    'title' => t('Salesforce Pull Queue'),
-    'worker callback' => 'salesforce_pull_process_records',
-    // Set to a high max timeout in case pulling in lots of data from SF.
-    'cron' => array(
-      'time' => 180,
-    ),
-  );
-  return $queues;
-}
-*/
-/**
  * Pull updated records from Salesforce and place them in the queue.
  *
  * Executes a SOQL query based on defined mappings, loops through the results,
@@ -43,7 +27,7 @@ function salesforce_pull_queue_info() {
  */
 function salesforce_pull_get_updated_records(RestClient $sfapi) {
   // @TODO: Refactor all this.
-  return;
+  //return;
   $queue = \Drupal::queue('cron_salesforce_pull');
 
   // Avoid overloading the processing queue and pass this time around if it's
@@ -59,7 +43,7 @@ function salesforce_pull_get_updated_records(RestClient $sfapi) {
 
     // Iterate over each field mapping to determine our query parameters.
     foreach (salesforce_mapping_load_multiple(['salesforce_object_type' => $type]) as $mapping) {
-      foreach ($mapping->field_mappings as $field_map) {
+      foreach ($mapping->get('field_mappings') as $field_map) {
         // Exclude field mappings that are only drupal to SF.
         if (in_array($field_map['direction'], [SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL])) {
           // Some field map types (Relation) store a collection of SF objects.
@@ -152,23 +136,18 @@ function salesforce_pull_get_updated_records(RestClient $sfapi) {
 }
 
 /**
- * Process records in the queue.
- */
-function salesforce_pull_process_records($sf_object) {
-  // Moved to QueueWorker plugin class PullBase
-}
-
-/**
  * Process deleted records from salesforce.
  */
 function salesforce_pull_process_deleted_records(RestClient $sfapi) {
+  // @TODO Add back in SOAP, and use autoloading techniques
+  /*
   if (!\Drupal::moduleHandler()->moduleExists('salesforce_soap')) {
     salesforce_set_message('Enable Salesforce SOAP to process deleted records');
     return;
   }
   module_load_include('inc', 'salesforce_soap');
   $soap = new SalesforceSoapPartner($sfapi);
-
+  */
   foreach (array_reverse(salesforce_mapping_get_mapped_objects()) as $type) {
 
     $last_delete_sync = \Drupal::state()->get('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
@@ -178,7 +157,16 @@ function salesforce_pull_process_deleted_records(RestClient $sfapi) {
     $now = $now > $last_delete_sync + 60 ? $now : $now + 60;
     $last_delete_sync_sf = gmdate('Y-m-d\TH:i:s\Z', $last_delete_sync);
     $now_sf = gmdate('Y-m-d\TH:i:s\Z', $now);
-    $deleted = $soap->getDeleted($type, $last_delete_sync_sf, $now_sf);
+    //$deleted = $soap->getDeleted($type, $last_delete_sync_sf, $now_sf);
+    $deleted = $sfapi->apiCall(
+      "sobjects/$type/deleted/?start=$last_delete_sync_sf&end=$now_sf",
+      [],
+      'GET'
+    );
+    // Cast $deleted as object since REST is returning an array instead of
+    // the object the SOAP client apparantly does
+    $deleted = (object) $deleted;
+
     if (!empty($deleted->deletedRecords)) {
       $sf_mappings = salesforce_mapping_load_multiple(
         ['salesforce_object_type' => $type]
@@ -231,6 +219,8 @@ function salesforce_pull_process_deleted_records(RestClient $sfapi) {
  *   sObject of the Salesforce record.
  * @TODO this should move into SalesforceMapping.php
  */
+ /*
+  * Moved to queueworker
 function salesforce_pull_map_fields($field_maps, &$entity_wrapper, $sf_object) {
   foreach ($field_maps as $field_map) {
     if ($field_map['direction'] == 'sync' || $field_map['direction'] == 'sf_drupal') {
@@ -264,6 +254,7 @@ function salesforce_pull_map_fields($field_maps, &$entity_wrapper, $sf_object) {
     }
   }
 }
+ */
 
 /**
  * Implements hook_salesforce_push_entity_allowed()
