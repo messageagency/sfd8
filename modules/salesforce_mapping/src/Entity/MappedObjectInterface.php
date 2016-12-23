@@ -7,7 +7,10 @@
 
 namespace Drupal\salesforce_mapping\Entity;
 
-interface MappedObjectInterface {
+use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\Core\Entity\RevisionLogInterface;
+
+interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInterface {
   // Placeholder interface.
   // @TODO figure out what to abstract out of MappedObject
 

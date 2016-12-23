@@ -45,14 +45,24 @@ class Token extends SalesforceMappingFieldPluginBase {
   }
 
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $pluginForm = parent::buildConfigurationForm($form, $form_state);
+
     // @TODO expose token options on mapping form: clear, callback, sanitize
     // @TODO expose token tree / selector
     // @TODO add token validation
-    return [
+    $pluginForm['drupal_field_value'] += [
       '#type' => 'textfield',
       '#default_value' => $this->config('drupal_field_value'),
       '#description' => $this->t('Enter a token to map a Salesforce field..'),
     ];
+
+    // @TODO: "Constant" as it's implemented now should only be allowed to be set to "Push". In the future: create "Pull" logic for constant, which pulls a constant value to a Drupal field. Probably a separate mapping field plugin.
+    $pluginForm['direction']['#options'] = [
+      SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => $pluginForm['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF]
+    ];
+    $pluginForm['direction']['#default_value'] = SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF;
+
+    return $pluginForm;
   }
 
   public function value(EntityInterface $entity) {

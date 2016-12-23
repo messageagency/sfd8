@@ -29,21 +29,27 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
    * This is basically the inverse of Properties::buildConfigurationForm()
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $pluginForm = parent::buildConfigurationForm($form, $form_state);
+
     // @TODO inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
     $options = $this->getConfigurationOptions($form['#entity']);
 
     if (empty($options)) {
-      return [
+      $pluginForm['drupal_field_value'] += [
         '#markup' => t('No available entity reference fields.')
       ];
     }
-    return [
-      '#type' => 'select',
-      '#options' => $options,
-      '#empty_option' => $this->t('- Select -'),
-      '#default_value' => $this->config('drupal_field_value'),
-      '#description' => $this->t('If an existing connection is found with the selected entity reference, the linked identifier will be used.<br />For example, Salesforce ID for Drupal to SF, or Node ID for SF to Drupal.<br />If more than one entity is referenced, the entity at delta zero will be used.'),
-    ];
+    else {
+      $pluginForm['drupal_field_value'] += [
+        '#type' => 'select',
+        '#options' => $options,
+        '#empty_option' => $this->t('- Select -'),
+        '#default_value' => $this->config('drupal_field_value'),
+        '#description' => $this->t('If an existing connection is found with the selected entity reference, the linked identifier will be used.<br />For example, Salesforce ID for Drupal to SF, or Node ID for SF to Drupal.<br />If more than one entity is referenced, the entity at delta zero will be used.'),
+      ];
+    }
+    return $pluginForm;
+
   }
 
   /**

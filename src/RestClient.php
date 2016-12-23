@@ -48,6 +48,7 @@ class RestClient {
     $this->config = $this->configFactory->get('salesforce.settings');
     $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
+    return $this;
   }
 
   /**
@@ -70,9 +71,8 @@ class RestClient {
    *   Method to initiate the call, such as GET or POST.  Defaults to GET.
    *
    * @return mixed
-   *   The requested response.
    *
-   * @throws Exception
+   * @throws GuzzleHttp\Exception\RequestException
    */
   public function apiCall($path, array $params = [], $method = 'GET') {
     if (!$this->getAccessToken()) {
@@ -80,13 +80,12 @@ class RestClient {
     }
 
     try {
-      $this->response = $this->apiHttpRequest($path, $params, $method);
+      $this->response = new RestResponse($this->apiHttpRequest($path, $params, $method));
     }
     catch (RequestException $e) {
-      // A RequestException gets thrown if the response has any error status.
+      // RequestException gets thrown for any response status but 2XX
       $this->response = $e->getResponse();
     }
-
     if (!is_object($this->response)) {
       throw new Exception('Unknown error occurred during API call');
     }
@@ -98,11 +97,11 @@ class RestClient {
         // throws anything but a RequestException, let it bubble up.
         $this->refreshToken();
         try {
-          $this->response = $this->apiHttpRequest($path, $params, $method);
+          $this->response = new RestResponse($this->apiHttpRequest($path, $params, $method));
         }
         catch (RequestException $e) {
           $this->response = $e->getResponse();
-          throw new Exception($this->response->getReasonPhrase(), $this->response->getStatusCode());
+          throw $e;
         }
         break;
       case 200:
@@ -117,15 +116,7 @@ class RestClient {
           throw new Exception('Unknown error occurred during API call');
         }
     }
-
-    // Parse a json response, if body is not empty. Sometimes an empty body is valid, e.g. for upsert.
-    $data = '';
-    $response_body = $this->response->getBody()->getContents();
-    if (!empty($response_body)) {
-      $this->response->getBody()->rewind();
-      $data = $this->handleJsonResponse($this->response);
-    }
-    return $data;
+    return $this->response->data();
   }
 
   /**
@@ -138,8 +129,7 @@ class RestClient {
    * @param string $method
    *   Method to initiate the call, such as GET or POST.  Defaults to GET.
    *
-   * @return object
-   *   The requested data.
+   * @return GuzzleHttp\Psr7\Response
    */
   protected function apiHttpRequest($path, array $params, $method) {
     if (!$this->getAccessToken()) {
@@ -173,13 +163,12 @@ class RestClient {
    *
    * @throws RequestException
    *
-   * @return object
-   *   Salesforce response object.
+   * @return GuzzleHttp\Psr7\Response
    */
   protected function httpRequest($url, $data = NULL, array $headers = [], $method = 'GET') {
     // Build the request, including path and headers. Internal use.
-    $request = $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
-    return $request;
+    $response = $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
+    return $response;
   }
 
   /**
@@ -246,6 +235,7 @@ class RestClient {
    */
   protected function setInstanceUrl($url) {
     $this->state->set('salesforce.instance_url', $url);
+    return $this;
   }
 
   /**
@@ -264,6 +254,7 @@ class RestClient {
    */
   public function setAccessToken($token) {
     $this->state->set('salesforce.access_token', $token);
+    return $this;
   }
 
   /**
@@ -281,6 +272,7 @@ class RestClient {
    */
   protected function setRefreshToken($token) {
     $this->state->set('salesforce.refresh_token', $token);
+    return $this;
   }
 
   /**
@@ -309,6 +301,7 @@ class RestClient {
     $response = $this->httpRequest($url, $data, $headers, 'POST');
 
     $this->handleAuthResponse($response);
+    return $this;
   }
 
   /**
@@ -325,45 +318,18 @@ class RestClient {
      throw new Exception($response->getReasonPhrase(), $response->getStatusCode());
     }
 
-    $data = $this->handleJsonResponse($response);
+    $data = (new RestResponse($response))->data();
 
-    $this->setAccessToken($data['access_token']);
-    $this->setRefreshToken($data['refresh_token']);
-    $this->initializeIdentity($data['id']);
-    $this->setInstanceUrl($data['instance_url']);
-  }
+    $this
+      ->setAccessToken($data['access_token'])
+      ->initializeIdentity($data['id'])
+      ->setInstanceUrl($data['instance_url']);
 
-  /**
-   * Helper function to eliminate repetitive json parsing.
-   *
-   * @param Response $response 
-   * @return array
-   * @throws Drupal\salesforce\Exception
-   */
-  private function handleJsonResponse($response) {
-    // Allow any exceptions here to bubble up:
-    $data = Json::decode($response->getBody()->getContents());
-    if (empty($data)) {
-      throw new Exception('Invalid response ' . print_r($response->getBody()->getContents(), 1));
+    // Do not overwrite an existing refresh token with an empty value.
+    if (!empty($data['refresh_token'])) {
+      $this->setRefreshToken($data['refresh_token']);
     }
-
-    if (isset($data['error'])) {
-      throw new Exception($data['error_description'], $data['error']);
-    }
-
-    if (!empty($data[0]) && count($data) == 1) {
-      $data = $data[0];
-    }
-
-    if (isset($data['error'])) {
-      throw new Exception($data['error_description'], $data['error']);
-    }
-
-    if (!empty($data['errorCode'])) {
-      throw new Exception($data['message'], $this->response->getStatusCode());
-    }
-
-    return $data;
+    return $this;
   }
 
   /**
@@ -384,13 +350,15 @@ class RestClient {
     if ($response->getStatusCode() != 200) {
       throw new Exception(t('Unable to access identity service.'), $response->getStatusCode());
     }
+    $data = (new RestResponse($response))->data();
 
-    $data = $this->handleJsonResponse($response);
     $this->setIdentity($data);
+    return $this;
   }
 
   protected function setIdentity(array $data) {
     $this->state->set('salesforce.identity', $data);
+    return $this;
   }
 
   /**
@@ -618,6 +586,7 @@ class RestClient {
    *   Values of the fields to set for the object.
    *
    * @return null
+   *   Update() doesn't return any data. Examine HTTP response or Exception.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -639,7 +608,7 @@ class RestClient {
    * @addtogroup salesforce_apicalls
    */
   public function objectRead($name, $id) {
-    return $this->apiCall("sobjects/{$name}/{$id}", [], 'GET');
+    return $this->apiCall("sobjects/{$name}/{$id}");
   }
 
   /**
@@ -670,6 +639,9 @@ class RestClient {
    *   Salesforce id of the object.
    *
    * @addtogroup salesforce_apicalls
+   *
+   * @return null
+   *   Delete() doesn't return any data. Examine HTTP response or Exception.
    */
   public function objectDelete($name, $id) {
     $this->apiCall("sobjects/{$name}/{$id}", [], 'DELETE');

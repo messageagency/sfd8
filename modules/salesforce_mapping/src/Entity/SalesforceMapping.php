@@ -12,6 +12,8 @@ use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce_mapping\PushParams;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -174,30 +176,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Given a Drupal entity, return an array of Salesforce key-value pairs
-   *
-   * @param object $entity
-   *   Entity wrapper object.
-   *
-   * @return array
-   *   Associative array of key value pairs.
-   * @see salesforce_push_map_params (from d7)
-   */
-  public function getPushParams(EntityInterface $entity) {
-    // @TODO This should probably be delegated to a field plugin bag?
-    foreach ($this->getFieldMappings() as $field_plugin) {
-      // Skip fields that aren't being pushed to Salesforce.
-      if (!$field_plugin->push()) {
-        continue;
-      }
-      $params[$field_plugin->config('salesforce_field')] = $field_plugin->value($entity);
-    }
-    // @TODO make this an event
-    // drupal_alter('salesforce_push_params', $params, $mapping, $entity_wrapper);
-    return $params;
-  }
-
-  /**
    * Given a Salesforce object, return an array of Drupal entity key-value pairs
    *
    * @param object $entity
@@ -261,10 +239,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     return $mappings;
   }
 
-  public function getFieldMapping($field) {
+  public function getFieldMapping(array $field) {
     return $this->fieldManager->createInstance(
       $field['drupal_field_type'],
-      $field
+      $field['config']
     );
   }
 
@@ -275,10 +253,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   public function checkTriggers(array $triggers) {
     foreach ($triggers as $trigger) {
       if ($this->sync_triggers[$trigger] == 1) {
-        return true;
+        return TRUE;
       }
     }
-    return false;
+    return FALSE;
   }
 
 }

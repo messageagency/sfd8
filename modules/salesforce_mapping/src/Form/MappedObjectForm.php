@@ -17,6 +17,7 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\salesforce\Exception;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
@@ -106,7 +107,13 @@ class MappedObjectForm extends ContentEntityForm {
     }
 
     // Push to SF.
-    $result = $mapped_object->push();
+    try {
+      $result = $mapped_object->push();
+    }
+    catch (Exception $e) {
+      drupal_set_message(t('Push failed with an exception: %exception', array('%exception' => $e->getMessage())), 'error');
+      return;
+    }
     $mapped_object
       ->set('salesforce_id', $result['id'])
       ->save();
@@ -148,7 +155,6 @@ class MappedObjectForm extends ContentEntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $this->getEntity()->save();
-    // $this->entity->save();
     drupal_set_message($this->t('The mapping has been successfully saved.'));
   }
 
