@@ -123,7 +123,7 @@ class RestClient {
       return $this->response;
     }
     else {
-      return $this->response->data();
+      return $this->response->data;
     }
   }
 
@@ -326,7 +326,7 @@ class RestClient {
      throw new Exception($response->getReasonPhrase(), $response->getStatusCode());
     }
 
-    $data = (new RestResponse($response))->data();
+    $data = (new RestResponse($response))->data;
 
     $this
       ->setAccessToken($data['access_token'])
@@ -358,7 +358,7 @@ class RestClient {
     if ($response->getStatusCode() != 200) {
       throw new Exception(t('Unable to access identity service.'), $response->getStatusCode());
     }
-    $data = (new RestResponse($response))->data();
+    $data = (new RestResponse($response))->data;
 
     $this->setIdentity($data);
     return $this;
@@ -481,31 +481,24 @@ class RestClient {
    * @param bool $reset
    *   Whether to reset the cache and retrieve a fresh version from Salesforce.
    *
-   * @return array
-   *   All the metadata for an object, including information about each field,
-   *   URLs, and child relationships.
+   * @return RestResponse_Describe
    *
    * @addtogroup salesforce_apicalls
    */
   public function objectDescribe($name, $reset = FALSE) {
     if (empty($name)) {
-      return [];
+      throw new Exception('No name provided to describe');
     }
+
     $cache = \Drupal::cache()->get('salesforce:object:' . $name);
     // Force the recreation of the cache when it is older than 5 minutes.
     if ($cache && REQUEST_TIME < ($cache->created + 300) && !$reset) {
       return $cache->data;
     }
     else {
-      $object = $this->apiCall("sobjects/{$name}/describe");
-      // Index fields by machine name, so we don't have to search every time.
-      $new_fields = [];
-      foreach ($object['fields'] as $field) {
-        $new_fields[$field['name']] = $field;
-      }
-      $object['fields'] = $new_fields;
-      \Drupal::cache()->set('salesforce:object:' . $name, $object, 0, ['salesforce']);
-      return $object;
+      $response = new RestResponse_Describe($this->apiCall("sobjects/{$name}/describe", [], 'GET', 'object'));
+      \Drupal::cache()->set('salesforce:object:' . $name, $response, 0, ['salesforce']);
+      return $response;
     }
   }
 
@@ -523,7 +516,7 @@ class RestClient {
    */
   public function objectCreate($name, array $params) {
     $response = $this->apiCall("sobjects/{$name}", $params, 'POST', 'object');
-    $data = $response->data();
+    $data = $response->data;
     return new SFID($data['id']);
   }
 
@@ -564,7 +557,7 @@ class RestClient {
       $sf_object = $this->objectReadbyExternalId($name, $key, $value);
       return $sf_object->id();
     }
-    $data = $response->data();
+    $data = $response->data;
     return new SFID($data['id']);
   }
 
@@ -717,7 +710,6 @@ class RestClient {
     $query = new SalesforceSelectQuery('RecordType');
     $query->fields = array('Id', 'Name', 'DeveloperName', 'SobjectType');
     $result = $this->query($query);
-    // dpm($result);
     $record_types = array();
     foreach ($result['records'] as $rt) {
       $record_types[$rt['SobjectType']][$rt['DeveloperName']] = $rt;

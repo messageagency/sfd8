@@ -108,15 +108,13 @@ class MappedObjectForm extends ContentEntityForm {
 
     // Push to SF.
     try {
-      $result = $mapped_object->push();
+      // push() does a save(), so no followup needed here.
+      $mapped_object->push();
     }
     catch (Exception $e) {
       drupal_set_message(t('Push failed with an exception: %exception', array('%exception' => $e->getMessage())), 'error');
       return;
     }
-    $mapped_object
-      ->set('salesforce_id', $result['id'])
-      ->save();
 
     // @TODO: more verbose feedback for successful push.
     drupal_set_message('Push successful.');

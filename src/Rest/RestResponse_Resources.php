@@ -4,6 +4,11 @@ namespace Drupal\salesforce\Rest;
 
 class RestResponse_Resources extends RestResponse {
 
+  /**
+   * List of API endpoint paths. Accessible via RestResponse:__get()
+   *
+   * @var array
+   */
   protected $resources;
 
   /**
@@ -13,28 +18,8 @@ class RestResponse_Resources extends RestResponse {
    */
   function __construct(RestResponse $response) {
     parent::__construct($response->response);
-    foreach ($response->data() as $key => $path) {
+    foreach ($response->data as $key => $path) {
       $this->resources[$key] = $path;
     }
   }
-
-  /**
-   * Return a list of available resources for the configured API version.
-   *
-   * @return array
-   *   Associative array keyed by name with a URI value.
-   */
-  function getResources() {
-    return $this->resources;
-  }
-
-  /**
-   * Given a resource name, return its endpoint path
-   *
-   * @param string $key 
-   */
-  function getResource($key) {
-    return $this->resources[$key];
-  }
-
 }

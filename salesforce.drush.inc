@@ -45,7 +45,7 @@ function drush_salesforce_sf_list_resources() {
   $resources = $salesforce->listResources();
   if ($resources) {
     $items[] = ['Resource', 'URL'];
-    foreach ($resources->getResources() as $resource => $url) {
+    foreach ($resources->resources as $resource => $url) {
       $items[] = [$resource, $url];
     }
     drush_print("The following resources are available:\n");

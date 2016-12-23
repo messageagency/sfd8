@@ -114,7 +114,7 @@ class AuthorizeForm extends ConfigFormBase {
       unset($_SESSION['messages']['salesforce_oauth_error error']);
       try {
         $resources = $this->sf_client->listResources();
-        foreach ($resources->getResources() as $key => $path) {
+        foreach ($resources->resources as $key => $path) {
           $items[] = $key . ': ' . $path;
         }
         $form['resources'] = [

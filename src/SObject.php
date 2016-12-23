@@ -15,7 +15,7 @@ class SObject {
     if (isset($data['id'])) {
       $data['Id'] = $data['id'];
     }
-    $this->id = new SFID($this->fields['Id']);
+    $this->id = new SFID($data['Id']);
     unset($data['id'], $data['Id']);
 
     if (empty($data['attributes']) || !isset($data['attributes']['type'])) {

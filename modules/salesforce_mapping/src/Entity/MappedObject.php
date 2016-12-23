@@ -136,13 +136,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         'weight' => $i++,
       ]);
 
+    // @TODO make this work with Drupal\salesforce\SFID (?)
     $fields['salesforce_id'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Salesforce ID'))
       ->setDescription(t('Reference to the mapped Salesforce object (SObject)'))
       ->setRevisionable(TRUE)
       ->setTranslatable(FALSE)
       ->setSetting('is_ascii', TRUE)
-      ->setSetting('max_length', SFID::SFID_MAX_LENGTH)
+      ->setSetting('max_length', SFID::MAX_LENGTH)
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
         'weight' => 0,

@@ -7,7 +7,20 @@ use Drupal\Component\Serialization\Json;
 
 class RestResponse extends Response {
 
+  /**
+   * The original Response used to build this object
+   *
+   * @var GuzzleHttp\Psr7\Response;
+   * @see __get()
+   */
   protected $response;
+
+  /**
+   * The json-decoded response body
+   *
+   * @var mixed
+   * @see __get()
+   */
   protected $data;
 
   /**
@@ -21,21 +34,17 @@ class RestResponse extends Response {
   }
 
   /**
-   * Get the orignal response
+   * Magic getter method to return the given property.
    *
-   * @return GuzzleHttp\Psr7\Response;
+   * @param string $key
+   * @return mixed
+   * @throws Exception if $key is not a property
    */
-  public function response() {
-    return $this->response;
-  }
-
-  /**
-   * Get the json-decoded data object from the response body
-   *
-   * @return stdObject
-   */
-  public function data() {
-    return $this->data;
+  function __get($key) {
+    if (!property_exists($this, $key)) {
+      throw new Exception("Undefined property $key");
+    }
+    return $this->$key;
   }
 
   /**
