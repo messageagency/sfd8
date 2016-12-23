@@ -103,7 +103,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
     return [
       'direction' => SALESFORCE_MAPPING_DIRECTION_SYNC,
       'salesforce_field' => [],
-      'drupal_field_type' => $this->id,
+      'drupal_field_type' => $this->getPluginId(),
       'drupal_field_value' => '',
       'locked' => FALSE,
       'mapping_name' => '',

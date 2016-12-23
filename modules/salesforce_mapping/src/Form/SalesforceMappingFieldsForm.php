@@ -115,7 +115,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       ],
     ];
 
-    $row = [
+    $row_template = [
       '#type' => 'container',
       '#attributes' => ['class' => ['field_mapping_field', 'row']]
     ];
@@ -123,6 +123,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     // Add a row for each saved mapping
     $zebra = 0;
     foreach ($this->entity->getFieldMappings() as $field_plugin) {
+      $row = $row_template;
       $row['#attributes']['class']['zebra'] = ($zebra % 2) ? 'odd' : 'even';
       $rows[] = $row + $this->get_row($field_plugin, $form, $form_state);
       $zebra++;
@@ -132,8 +133,10 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $input = $form_state->getUserInput();
     if (!empty($input['field_mappings'])) {
       for ($i = count($this->entity->getFieldMappings()); $i < count($input['field_mappings']); $i++) {
+        $row = $row_template;
         $row['#attributes']['class']['zebra'] = ($zebra % 2) ? 'odd' : 'even';
-        $rows[] = $row + $this->get_row($this->entity->getFieldMapping($input['field_mappings'][$i]), $form, $form_state);
+        $field_plugin = $this->entity->getFieldMapping($input['field_mappings'][$i]);
+        $rows[] = $row + $this->get_row($field_plugin, $form, $form_state);
         $zebra++;
       }
     }
@@ -148,7 +151,10 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     if (!empty($form_state->getValues())
     && $form_state->getValue('add') == $form_state->getValue('op')
     && !empty($input['field_type'])) {
-      $rows[] = $this->get_row(NULL, $form, $form_state);
+      $row = $row_template;
+      $row['#attributes']['class']['zebra'] = ($zebra % 2) ? 'odd' : 'even';
+      $rows[] = $row + $this->get_row(NULL, $form, $form_state);
+      $zebra++;
     }
 
     // Retrieve and add the form actions array.
@@ -178,9 +184,8 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    */
   private function get_row(FieldPluginInterface $field_plugin = NULL, $form, FormStateInterface $form_state) {
     $input = $form_state->getUserInput();
-
     if ($field_plugin != NULL) {
-      $field_type = $field_plugin->config('drupal_field_type');
+      $field_type = $field_plugin->getPluginId();
       $field_plugin_definition = $this->get_field_plugin($field_type);
     }
     else {
@@ -193,13 +198,11 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     }
 
     if (empty($field_type)) {
-      // @TODO throw an exception here ?
-      return;
+      throw new Exception('Invalid field type configuration');
     }
 
     if (empty($field_plugin_definition)) {
-      // @TODO throw an exception here ?
-      return;
+      throw new Exception('No field plugin definition found for ' . $field_type);
     }
 
     $row['config'] = $field_plugin->buildConfigurationForm($form, $form_state);
@@ -236,8 +239,14 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     // indexing while removing delete field mappings.
 
     $values = $form_state->getValues();
+    if (empty($values['field_mappings'])) {
+      // No mappings have been added, no validation to be done.
+      return;
+    }
+
     $key = $values['key'];
     $key_mapped = FALSE;
+
 
     foreach ($values['field_mappings'] as $i => $value) {
       // If a field was deleted, delete it!
@@ -301,8 +310,6 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   }
 
   protected function get_field_plugin($field_type) {
-    // @TODO not sure if it's best practice to static cache definitions, or just
-    // get them from SalesforceMappingFieldManager each time.
     $field_plugins = $this->SalesforceMappingFieldManager->getDefinitions();
     return $field_plugins[$field_type];
   }
