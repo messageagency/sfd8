@@ -190,7 +190,7 @@ function salesforce_pull_process_deleted_records(RestClient $sfapi) {
         ['salesforce_object_type' => $type]
       );
       foreach ($deleted->deletedRecords as $record) {
-        $mapped_object = salesforce_mapped_object_load_by_sfid($record->id);
+        $mapped_object = salesforce_mapped_object_load_by_sfid($record['id']);
         if ($mapped_object) {
           $entity = \Drupal::entityTypeManager()
             ->getStorage($mapped_object->entity_type)
