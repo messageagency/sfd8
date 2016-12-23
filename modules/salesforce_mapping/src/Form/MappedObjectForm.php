@@ -67,6 +67,15 @@ class MappedObjectForm extends ContentEntityForm {
     // Include the parent entity on the form.
     $form = parent::buildForm($form, $form_state);
     $url_params = \Drupal::routeMatch()->getParameters();
+    $drupal_entity = $this->getDrupalEntityFromUrl();
+    // Allow exception to bubble up here, because we shouldn't have got here if
+    // there isn't a mapping.
+
+    $mappings = salesforce_mapping_load_by_drupal($drupal_entity->getEntityTypeId());
+    $options = array_keys($mappings) + ['_none'];
+    // Filter options based on drupal entity type.
+    $form['salesforce_mapping']['widget']['#options'] = array_intersect_key($form['salesforce_mapping']['widget']['#options'], array_flip($options));
+    
     $form['salesforce_mapping']['widget']['#reqiured'] = TRUE;
     $form['actions']['push'] = [
       '#type' => 'submit',
@@ -114,9 +123,12 @@ class MappedObjectForm extends ContentEntityForm {
       drupal_set_message(t('Push failed with an exception: %exception', array('%exception' => $e->getMessage())), 'error');
       return;
     }
-    $mapped_object
-      ->set('salesforce_id', $result['id'])
-      ->save();
+    dpm($result);
+    $mapped_object->setNewRevision(TRUE);
+    if (!empty($result['id'])) {
+      $mapped_object->set('salesforce_id', $result['id']);
+    }
+    $mapped_object->save();
 
     // @TODO: more verbose feedback for successful push.
     drupal_set_message('Push successful.');
@@ -142,9 +154,9 @@ class MappedObjectForm extends ContentEntityForm {
     }
 
     // Pull from SF.
-    $mapped_object
-      ->pull()
-      ->save();
+    $mapped_object->pull();
+    $mapped_object->setNewRevision(TRUE);
+    $mapped_object->save();
 
     // @TODO: more verbose feedback for successful pull.
     drupal_set_message('Pull successful.');

@@ -161,6 +161,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     $this->fieldManager = \Drupal::service('plugin.manager.salesforce_mapping_field');
   }
 
+  public function __get($key) {
+    return $this->$key;
+  }
+
   /**
    * Save the entity.
    *

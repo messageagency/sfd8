@@ -67,6 +67,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   public function save() {
+    $this->changed = REQUEST_TIME;
     if ($this->isNew()) {
       $this->created = REQUEST_TIME;
     }
@@ -289,8 +290,11 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // @TODO restore last_sync_action, last_sync_status, last_sync_message
     // @TODO: catch EntityStorageException ? Others ?
+    $this->setNewRevision(TRUE);
+    if ($result['id']) {
+      $this->set('salesforce_id', $result['id']);
+    }
     $this
-      ->set('salesforce_id', $result['id'])
       ->set('last_sync_action', 'push_' . $action)
       ->set('last_sync_status', TRUE)
       // ->set('last_sync_message', '')
@@ -303,6 +307,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $client = \Drupal::service('salesforce.client');
     $mapping = $this->salesforce_mapping->entity;
     $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
+    $this->setNewRevision(TRUE);
     $this
       ->set('last_sync_action', 'push_delete')
       ->set('last_sync_status', TRUE)
