@@ -7,6 +7,7 @@
 
 use \Drupal\salesforce\SelectQuery;
 use \Drupal\salesforce\RestClient;
+use \Drupal\salesforce_mapping\Entity\SalesforceMapping;
 
 /**
  * Implements hook_cron().
@@ -36,60 +37,11 @@ function salesforce_pull_get_updated_records(RestClient $sfapi) {
     return;
   }
 
-  // Grab all mapping and sort them by $mapping->salesforce_object_type.
-  $mappings = salesforce_mapping_load_multiple();
-  usort(
-    $mappings,
-    function($a, $b) {
-      return strcmp($a->get('salesforce_object_type'), $b->get('salesforce_object_type'));
-    });
+  list($mappings, $pull_fields) = _salesforce_pull_organize_mappings();
 
   // Iterate over each field mapping to determine our query parameters.
-  $last_sf_type = '';
-  foreach ($mappings as $mapping) {
-    if ($mapping->get('salesforce_object_type') != $last_sf_type) {
-      // There are no field mappings configured to pull data from Salesforce so
-      // move on to the next mapped object. Prevents querying unmapped data.
-      if ($last_sf_type != '' && !empty($mapped_fields)) {
-        $results = _salesforce_pull_do_sfo_query($mapped_fields, $mapped_record_types, $last_sf_type, $sfapi);
-
-        if (!isset($results['errorCode'])) {
-          // Write items to the queue.
-          foreach ($results['records'] as $result) {
-            $queue->createItem($result);
-          }
-
-          _salesforce_pull_handle_large_requests($results, $sfapi);
-
-          \Drupal::state()->set('salesforce_pull_last_sync_' . $type, REQUEST_TIME);
-        }
-        else {
-          \Drupal::logger('Salesforce Pull')->error('%code:%msg', [
-            '%code' => $results['errorCode'],
-            '%msg' => $results['message'],
-          ]);
-        }
-      }
-      $mapped_fields = [];
-      $mapped_record_types = [];
-    }
-    foreach ($mapping->getFieldMappings() as $field_map) {
-      // Exclude field mappings that are only drupal to SF.
-      if (in_array($field_map->get('direction'), [SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL])) {
-        $sf_field = $field_map->get('salesforce_field');
-        // Some field map types (Relation) store a collection of SF objects.
-        // @TODO: revisit this
-        if (is_array($sf_field) && !isset($sf_field['name'])) {
-          foreach ($sf_field as $sf_subfield) {
-            $mapped_fields[$sf_subfield['name']] = $sf_subfield['name'];
-          }
-        }
-        // The rest of are just a name/value pair.
-        else {
-          $mapped_fields[$sf_field] = $sf_field;
-        }
-      }
-    }
+  foreach ($mappings as $sf_object_type => $mapping) {
+    $mapped_fields = array_merge(...$pull_fields[$sf_object_type]);
     $sf_record_type = $mapping->get('salesforce_record_type');
     if (
       !empty($mapped_fields)
@@ -101,8 +53,69 @@ function salesforce_pull_get_updated_records(RestClient $sfapi) {
       // queued SF objects.
       $mapped_fields['RecordTypeId'] = 'RecordTypeId';
     }
-    $last_sf_type = $mapping->get('salesforce_object_type');
+    $results = _salesforce_pull_do_sfo_query($mapped_fields, $mapped_record_types, $last_sf_type, $sfapi);
+
+    if (!isset($results['errorCode'])) {
+      // Write items to the queue.
+      foreach ($results['records'] as $result) {
+        $queue->createItem($result);
+      }
+
+      _salesforce_pull_handle_large_requests($results, $sfapi);
+
+      \Drupal::state()->set('salesforce_pull_last_sync_' . $type, REQUEST_TIME);
+    }
+    else {
+      \Drupal::logger('Salesforce Pull')->error('%code:%msg', [
+        '%code' => $results['errorCode'],
+        '%msg' => $results['message'],
+      ]);
+    }
   }
+}
+
+/**
+ * Fetches all mappings, sortes them by the SF object type, and adds an
+ * array of pull fields to each mappings
+ */
+function _salesforce_pull_organize_mappings() {
+  // Grab all mapping and sort them by $mapping->salesforce_object_type.
+  //$mappings = salesforce_mapping_load_multiple();
+  /* Need to sort?
+  usort(
+    $mappings,
+    function($a, $b) {
+      return strcmp($a->get('salesforce_object_type'), $b->get('salesforce_object_type'));
+    });
+  */
+  $org_mappings = [];
+  $pull_fields_array = [];
+  foreach(salesforce_mapping_load_multiple() as $mapping) {
+    $pull_fields_array[$mapping->getSalesforceObjectType()][] = _salesforce_pull_field_array($mapping);
+    if (!array_key_exists($mapping->getSalesforceObjectType(), $org_mappings)) {
+       $org_mappings[$mapping->getSalesforceObjectType()] = $mapping;
+    }
+  }
+  return [$org_mappings, $pull_fields_array];
+}
+
+function _salesforce_pull_field_array(SalesforceMapping $mapping) {
+  $mapped_fields = [];
+  foreach ($mapping->getPullFields() as $field_map) {
+    $sf_field = $field_map->get('salesforce_field');
+    // Some field map types (Relation) store a collection of SF objects.
+    // @TODO: revisit this
+    if (is_array($sf_field) && !isset($sf_field['name'])) {
+      foreach ($sf_field as $sf_subfield) {
+        $mapped_fields[$sf_subfield['name']] = $sf_subfield['name'];
+      }
+    }
+    // The rest of are just a name/value pair.
+    else {
+      $mapped_fields[$sf_field] = $sf_field;
+    }
+  }
+  return $mapped_fields;
 }
 
 function _salesforce_pull_do_sfo_query(array $mapped_fields, array $mapped_record_type, $type, RestClient $sfapi) {

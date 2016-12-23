@@ -185,7 +185,8 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    *   Associative array of key value pairs.
    * @see salesforce_pull_map_field (from d7)
    */
-  public function getPullFields(EntityInterface $entity) {
+  //public function getPullFields(EntityInterface $entity) {
+  public function getPullFields() {
     // @TODO This should probably be delegated to a field plugin bag?
     $fields = [];
     foreach ($this->getFieldMappings() as $field_plugin) {
