@@ -37,6 +37,8 @@ class RestClient {
   private $configEditable;
   private $state;
 
+  const CACHE_LIFETIME = 300;
+
   /**
    * Constructor which initializes the consumer.
    * @param \Drupal\Core\Http\Client $http_client
@@ -436,7 +438,7 @@ class RestClient {
     $cache = \Drupal::cache()->get('salesforce:objects');
 
     // Force the recreation of the cache when it is older than 5 minutes.
-    if ($cache && REQUEST_TIME < ($cache->created + 300) && !$reset) {
+    if ($cache && REQUEST_TIME < ($cache->created + self::CACHE_LIFETIME) && !$reset) {
       $result = $cache->data;
     }
     else {
@@ -492,7 +494,7 @@ class RestClient {
 
     $cache = \Drupal::cache()->get('salesforce:object:' . $name);
     // Force the recreation of the cache when it is older than 5 minutes.
-    if ($cache && REQUEST_TIME < ($cache->created + 300) && !$reset) {
+    if ($cache && REQUEST_TIME < ($cache->created + self::CACHE_LIFETIME) && !$reset) {
       return $cache->data;
     }
     else {
@@ -695,29 +697,33 @@ class RestClient {
    * @param string $devname 
    *   RecordType DeveloperName, e.g. Donation, Membership, etc.
    *
-   * @return string SFID
+   * @return SFID
    *   The Salesforce ID of the given Record Type, or null.
+   *
+   * @throws Exception if record type not found
    */
   public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE) {
-    // @TODO: restore caching
-    // $cache = cache_get('salesforce_record_types');
+    $cache = \Drupal::cache()->get('salesforce:record_types');
+
     // Force the recreation of the cache when it is older than 5 minutes.
-    // if ($cache && REQUEST_TIME < ($cache->created + 300) && !$reset) {
-    //   return !empty($cache->data[$name][$devname])
-    //     ? $cache->data[$name][$devname]['Id']
-    //     : NULL;
-    // }
-    $query = new SalesforceSelectQuery('RecordType');
-    $query->fields = array('Id', 'Name', 'DeveloperName', 'SobjectType');
-    $result = $this->query($query);
-    $record_types = array();
-    foreach ($result['records'] as $rt) {
-      $record_types[$rt['SobjectType']][$rt['DeveloperName']] = $rt;
+    if ($cache && REQUEST_TIME < ($cache->created + self::CACHE_LIFETIME) && !$reset) {
+      $record_types = $cache->data;
     }
-    // cache_set('salesforce_record_types', $record_types, 'cache', CACHE_TEMPORARY);
-    return !empty($record_types[$name][$devname])
-      ? $record_types[$name][$devname]['Id']
-      : NULL;
+    else {
+      $query = new SalesforceSelectQuery('RecordType');
+      $query->fields = array('Id', 'Name', 'DeveloperName', 'SobjectType');
+      $result = $this->query($query);
+      $record_types = array();
+      foreach ($result['records'] as $rt) {
+        $record_types[$rt['SobjectType']][$rt['DeveloperName']] = $rt;
+      }
+      \Drupal::cache()->set('salesforce:record_types', $record_types, 0, ['salesforce']);
+    }
+
+    if (empty($record_types[$name][$devname]['Id'])) {
+      throw new Exception("No record type $devname for $name");
+    }
+    return new SFID($record_types[$name][$devname]['Id']);
   }
 
   /**
