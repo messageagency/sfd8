@@ -5,9 +5,12 @@
  * Push updates to Salesforce when a Drupal entity is updated.
  */
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\salesforce_mapping\Entity;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\salesforce_mapping\Entity\MappedObject;
+use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
+use Drupal\salesforce_mapping\Entity\SalesforceMapping;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use GuzzleHttp\Exception\RequestException;
 
 /**
@@ -34,7 +37,7 @@ function salesforce_push_entity_delete(EntityInterface $entity) {
 function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity, $op) {
   // Don't allow mapped objects or mappings to be pushed!
   // @TODO can we implement this instead with a validation constraint? This is fugly.
-  if ($entity instanceof MappedObjectInterface 
+  if ($entity instanceof MappedObjectInterface
   || $entity instanceof SalesforceMappingInterface) {
     return FALSE;
   }
@@ -51,10 +54,11 @@ function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity,
  * @TODO
  *   at some point all these hook_entity_* implementations will go away. We'll
  *   create an event subscriber class to respond to entity events and delegate
- *   actions to the appropriate Push procedures. Unfortunately this point seems 
+ *   actions to the appropriate Push procedures. Unfortunately this point seems
  *   to be a very long ways away. https://www.drupal.org/node/2551893
  */
 function salesforce_push_entity_crud(EntityInterface $entity, $op) {
+
   try {
     $mappings = salesforce_mapping_load_by_drupal($entity->getEntityTypeId());
   }
@@ -119,9 +123,9 @@ function salesforce_push_sync_rest(EntityInterface $entity, SalesforceMappingInt
       throw $e;
     }
     $mapped_object = new MappedObject([
-      'entity_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->id()],
-      'entity_type_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->getEntityTypeId()],
-      'salesforce_mapping' => [LanguageInterface::LANGCODE_DEFAULT => $mapping->id()],
+      'entity_id' => $entity->id(),
+      'entity_type_id' => $entity->getEntityTypeId(),
+      'salesforce_mapping' => $mapping->id(),
     ]);
   }
 

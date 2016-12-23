@@ -13,7 +13,10 @@ use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
+use Drupal\salesforce_mapping\PushParams;
+use Drupal\salesforce_mapping\SalesforcePushEvent;
 use Drupal\user\UserInterface;
 
 /**
@@ -191,7 +194,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setSetting('max_length', SALESFORCE_MAPPING_TRIGGER_MAX_LENGTH)
       ->setRevisionable(TRUE);
 
-    // @see ContentEntityBase::baseFieldDefinitions 
+    // @see ContentEntityBase::baseFieldDefinitions
     // and RevisionLogEntityTrait::revisionLogBaseFieldDefinitions
     $fields += parent::baseFieldDefinitions($entity_type);
 
@@ -237,7 +240,12 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->getStorage($this->entity_type_id->value)
       ->load($this->entity_id->value);
 
-    $params = $mapping->getPushParams($drupal_entity);
+    // previously hook_salesforce_push_params_alter
+    $params = new PushParams($mapping, $drupal_entity);
+    \Drupal::service('event_dispatcher')->dispatch(
+      SalesforceEvents::PUSH_PARAMS,
+      new SalesforcePushEvent($this, $params)
+    );
 
     // @TODO is this the right place for this logic to live?
     // Cases:
@@ -252,7 +260,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         $mapping->getSalesforceObjectType(),
         $mapping->getKeyField(),
         $mapping->getKeyValue($drupal_entity),
-        $params
+        $params->getParams()
       );
     }
     elseif ($this->sfid()) {
@@ -260,14 +268,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       $result = $client->objectUpdate(
         $mapping->getSalesforceObjectType(),
         $this->sfid(),
-        $params
+        $params->getParams()
       );
     }
     else {
       $action = 'create';
       $result = $client->objectCreate(
         $mapping->getSalesforceObjectType(),
-        $params
+        $params->getParams()
       );
     }
     // @TODO make $result a class with reliable properties, methods.
@@ -293,13 +301,12 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   public function pushDelete() {
     $client = \Drupal::service('salesforce.client');
     $mapping = $this->salesforce_mapping->entity;
-    $result = $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
+    $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
     $this
       ->set('last_sync_action', 'push_delete')
       ->set('last_sync_status', TRUE)
       ->save();
-
-    return $result;
+    return $this;
   }
 
   public function pull(array $sf_object = NULL, EntityInterface $drupal_entity = NULL) {
