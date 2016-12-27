@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\salesforce_mapping\SalesforceMappingDisableForm.
- */
-
 namespace Drupal\salesforce_mapping\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
@@ -51,7 +46,7 @@ class SalesforceMappingDisableForm extends EntityConfirmFormBase {
     parent::submit($form, $form_state);
 
     $this->entity->disable()->save();
-     $form_state['redirect_route'] = [
+    $form_state['redirect_route'] = [
       'route_name' => 'entity.salesforce_mapping.list',
     ];
   }

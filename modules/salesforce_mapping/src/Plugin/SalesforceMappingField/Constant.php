@@ -1,19 +1,9 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Constant.
- */
-
 namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
-use Drupal\Component\Annotation\Plugin;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Utility\Token;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 
 /**
@@ -26,6 +16,9 @@ use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
  */
 class Constant extends SalesforceMappingFieldPluginBase {
 
+  /**
+   *
+   */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $pluginForm = parent::buildConfigurationForm($form, $form_state);
 
@@ -37,7 +30,7 @@ class Constant extends SalesforceMappingFieldPluginBase {
 
     // @TODO: "Constant" as it's implemented now should only be allowed to be set to "Push". In the future: create "Pull" logic for constant, which pulls a constant value to a Drupal field. Probably a separate mapping field plugin.
     $pluginForm['direction']['#options'] = [
-      SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => $pluginForm['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF]
+      SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => $pluginForm['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF],
     ];
     $pluginForm['direction']['#default_value'] = SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF;
 
@@ -45,10 +38,16 @@ class Constant extends SalesforceMappingFieldPluginBase {
 
   }
 
+  /**
+   *
+   */
   public function value(EntityInterface $entity) {
     return $this->config('drupal_field_value');
   }
 
+  /**
+   *
+   */
   public function pull() {
     return FALSE;
   }

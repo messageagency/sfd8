@@ -1,12 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce\Form\AuthorizeForm.
- */
-
 namespace Drupal\salesforce\Form;
 
+use GuzzleHttp\Exception\ClientException;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -120,10 +116,10 @@ class AuthorizeForm extends ConfigFormBase {
         $form['resources'] = [
           '#title' => $this->t('Your Salesforce instance is authorized and has access to the following resources:'),
           '#items' => $items,
-          '#theme' => 'item_list'
+          '#theme' => 'item_list',
         ];
       }
-      catch(\GuzzleHttp\Exception\ClientException $e) {
+      catch (ClientException $e) {
         salesforce_set_message($e->getMessage(), 'warning');
       }
     }
@@ -157,8 +153,8 @@ class AuthorizeForm extends ConfigFormBase {
       );
       $response->send();
     }
-    catch (\GuzzleHttp\Exception\ClientException $e) {
-      // Set form error
+    catch (ClientException $e) {
+      // Set form error.
     }
 
     parent::submitForm($form, $form_state);

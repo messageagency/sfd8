@@ -357,7 +357,6 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
   // If mappings, check for mapped objects.
   try {
     $mapped_objects = salesforce_mapped_object_load_by_drupal($entity->getEntityTypeId(), $entity->id());
-    dpm($mapped_objects);
   }
   catch (Exception $e) {
     return;

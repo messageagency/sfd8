@@ -1,11 +1,10 @@
 <?php
-/**
- * @file
- * Class representing a Salesforce SELECT SOQL query.
- */
 
 namespace Drupal\salesforce;
 
+/**
+ *
+ */
 class SelectQuery {
 
   public $fields = [];

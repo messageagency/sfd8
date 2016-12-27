@@ -1,16 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce\Rest\RestClient.
- */
-
 namespace Drupal\salesforce\Rest;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
-use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\State\StateInterface;
@@ -23,6 +17,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
@@ -41,10 +36,11 @@ class RestClient {
 
   /**
    * Constructor which initializes the consumer.
+   *
    * @param \Drupal\Core\Http\Client $http_client
-   *   The config factory
+   *   The config factory.
    * @param \Guzzle\Http\ClientInterface $http_client
-   *   The config factory
+   *   The config factory.
    */
   public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, UrlGeneratorInterface $url_generator, StateInterface $state) {
     $this->configFactory = $config_factory;
@@ -92,7 +88,7 @@ class RestClient {
       $this->response = new RestResponse($this->apiHttpRequest($path, $params, $method));
     }
     catch (RequestException $e) {
-      // RequestException gets thrown for any response status but 2XX
+      // RequestException gets thrown for any response status but 2XX.
       $this->response = $e->getResponse();
     }
     if (!is_object($this->response)) {
@@ -113,6 +109,7 @@ class RestClient {
           throw $e;
         }
         break;
+
       case 200:
       case 201:
       case 204:
@@ -158,7 +155,7 @@ class RestClient {
     $data = NULL;
     if (!empty($params)) {
       // @TODO: convert this into Dependency Injection
-      $data =  Json::encode($params);
+      $data = Json::encode($params);
     }
     return $this->httpRequest($url, $data, $headers, $method);
   }
@@ -209,27 +206,45 @@ class RestClient {
     return $url;
   }
 
+  /**
+   *
+   */
   public function getConsumerKey() {
     return $this->state->get('salesforce.consumer_key');
   }
 
+  /**
+   *
+   */
   public function setConsumerKey($value) {
     return $this->state->set('salesforce.consumer_key', $value);
   }
 
+  /**
+   *
+   */
   public function getConsumerSecret() {
     return $this->state->get('salesforce.consumer_secret');
   }
 
+  /**
+   *
+   */
   public function setConsumerSecret($value) {
     return $this->state->set('salesforce.consumer_secret', $value);
   }
 
+  /**
+   *
+   */
   public function getLoginUrl() {
     $login_url = $this->state->get('salesforce.login_url');
     return empty($login_url) ? 'https://login.salesforce.com' : $login_url;
   }
 
+  /**
+   *
+   */
   public function setLoginUrl($value) {
     return $this->state->set('salesforce.login_url', $value);
   }
@@ -322,14 +337,14 @@ class RestClient {
    * Helper callback for OAuth handshake, and refreshToken()
    *
    * @param GuzzleHttp\Psr7\Response $response
-   *   Response object from refreshToken or authToken endpoints
+   *   Response object from refreshToken or authToken endpoints.
    *
    * @see SalesforceController::oauthCallback()
    * @see self::refreshToken()
    */
   public function handleAuthResponse(Response $response) {
     if ($response->getStatusCode() != 200) {
-     throw new Exception($response->getReasonPhrase(), $response->getStatusCode());
+      throw new Exception($response->getReasonPhrase(), $response->getStatusCode());
     }
 
     $data = (new RestResponse($response))->data;
@@ -370,6 +385,9 @@ class RestClient {
     return $this;
   }
 
+  /**
+   *
+   */
   protected function setIdentity(array $data) {
     $this->state->set('salesforce.identity', $data);
     return $this;
@@ -474,7 +492,7 @@ class RestClient {
    * @addtogroup salesforce_apicalls
    */
   public function query(SelectQuery $query) {
-    //$this->moduleHander->alter('salesforce_query', $query);
+    // $this->moduleHander->alter('salesforce_query', $query);
     // Casting $query as a string calls SalesforceSelectQuery::__toString().
     return new SelectQueryResult($this->apiCall('query?q=' . (string) $query));
   }

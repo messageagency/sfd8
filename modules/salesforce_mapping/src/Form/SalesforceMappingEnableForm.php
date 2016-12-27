@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\salesforce_mapping\SalesforceMappingEnableForm.
- */
-
 namespace Drupal\salesforce_mapping\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;

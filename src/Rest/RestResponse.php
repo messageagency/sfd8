@@ -5,6 +5,9 @@ namespace Drupal\salesforce\Rest;
 use GuzzleHttp\Psr7\Response;
 use Drupal\Component\Serialization\Json;
 
+/**
+ *
+ */
 class RestResponse extends Response {
 
   /**
@@ -25,9 +28,10 @@ class RestResponse extends Response {
 
   /**
    * {@inheritdoc}
+   *
    * @throws RestException if body cannot be json-decoded
    */
-  function __construct(Response $response) {
+  public function __construct(Response $response) {
     $this->response = $response;
     parent::__construct($response->getStatusCode(), $response->getHeaders(), $response->getBody(), $response->getProtocolVersion(), $response->getReasonPhrase());
     $this->handleJsonResponse();
@@ -45,12 +49,12 @@ class RestResponse extends Response {
       throw new Exception("Undefined property $key");
     }
     return $this->$key;
-  }
 
   /**
    * Helper function to eliminate repetitive json parsing.
    *
    * @return $this
+   *
    * @throws Drupal\salesforce\RestException
    */
   private function handleJsonResponse() {

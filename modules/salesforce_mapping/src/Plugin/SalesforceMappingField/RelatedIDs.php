@@ -1,17 +1,9 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingField\RelatedIDs.
- */
-
 namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
-use Drupal\Component\Annotation\Plugin;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\Field;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 
 /**
@@ -36,7 +28,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
 
     if (empty($options)) {
       $pluginForm['drupal_field_value'] += [
-        '#markup' => t('No available entity reference fields.')
+        '#markup' => t('No available entity reference fields.'),
       ];
     }
     else {
@@ -68,7 +60,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
 
     $field = $entity->get($field_name);
     if (empty($field->value)) {
-      // This reference field is blank
+      // This reference field is blank.
       return;
     }
 
@@ -81,6 +73,9 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     }
   }
 
+  /**
+   *
+   */
   private function getConfigurationOptions($mapping) {
     $instances = $this->entityFieldManager->getFieldDefinitions(
       $mapping->get('drupal_entity_type'),

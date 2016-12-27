@@ -1,14 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce\Plugin\DataType\SalesforceReference
- */
-
 namespace Drupal\salesforce\Plugin\DataType;
 
-use Drupal\Core\TypedData\Annotation\DataType;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\TypedData\DataReferenceBase;
 
 /**
@@ -32,14 +25,14 @@ use Drupal\Core\TypedData\DataReferenceBase;
 class SalesforceReference extends DataReferenceBase {
 
   /**
-   * The Salesforce ID
+   * The Salesforce ID.
    *
    * @var string
    */
   protected $sfid;
 
   // @TODO add useful things like object type and/or record type, and an actual reference to the data instead of just the ID
-  
+
   /**
    * {@inheritdoc}
    */
@@ -51,6 +44,7 @@ class SalesforceReference extends DataReferenceBase {
 
   /**
    * {@inheritdoc}
+   *
    * @TODO retrieve the Salesforce Object record from cache instead of just the id.
    */
   public function getTarget() {

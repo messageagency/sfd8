@@ -1,16 +1,9 @@
 <?php
 
-
-/**
- * @file
- * Contains Drupal\salesforce_mapping\Form\MappedObjectDeleteForm
- */
-
 namespace Drupal\salesforce_mapping\Form;
 
 use Drupal\Core\Entity\ContentEntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 
 /**
  * Provides a form for deleting a salesforce_mapped_oject entity.
@@ -55,7 +48,7 @@ class MappedObjectDeleteForm extends ContentEntityConfirmFormBase {
     $this
       ->logger('salesforce_mapped_oject')
       ->notice('MappedObject @sfid deleted.', [
-        '@sfid' => $mapped_object->salesforce_id->value
+        '@sfid' => $mapped_object->salesforce_id->value,
       ]);
     $mapped_object->delete();
   }

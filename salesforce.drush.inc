@@ -79,7 +79,7 @@ function drush_salesforce_sf_describe_object($object_name = NULL) {
   if (!is_array($object)) {
     return drush_log(dt('Could not load data for object !object', ['!object' => $object]), 'error');
   }
-  // Display only information about fields for an option,
+  // Display only information about fields for an option.
   if (drush_get_option('fields')) {
     $rows = [['Name', 'Type', 'Label']];
     foreach ($object['fields'] as $field) {
