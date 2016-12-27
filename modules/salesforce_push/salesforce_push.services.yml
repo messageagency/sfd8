@@ -1,4 +1,4 @@
 services:
-  plugin.manager.salesforce_push:
-    class: Drupal\salesforce_push\SalesforcePushPluginManager
-    arguments: ['@container.namespaces', '@cache.default', '@module_handler']
+  queue.salesforce:
+    class: Drupal\salesforce_push\PushQueue
+    arguments: ['@database']

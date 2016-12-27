@@ -43,6 +43,8 @@ use Drupal\salesforce\Exception;
  *    "status",
  *    "type",
  *    "key",
+ *    "async",
+ *    "async_limit",
  *    "pull_trigger_date",
  *    "sync_triggers",
  *    "salesforce_object_type",
@@ -102,6 +104,33 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   protected $status = TRUE;
 
+  /**
+   * @TODO what does "locked" mean?
+   *
+   * @var bool
+   */
+  protected $locked = FALSE;
+
+  /**
+   * Whether to push asychronously (during dron) or immediately on entity CRUD.
+   *
+   * @var bool
+   */
+  protected $async = FALSE;
+
+  /**
+   * Max number of items for async push for this mapping
+   *
+   * @var int
+   */
+  protected $async_limit = 200;
+
+  /**
+   * The Salesforce field to use for determining whether or not to pull.
+   *
+   * @var string
+   */
+  protected $pull_trigger_date = 'LastModifiedDate';
 
   /**
    * The drupal entity type to which this mapping points.
@@ -160,6 +189,15 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   public function __get($key) {
     return $this->$key;
+  }
+
+  /**
+   * Return the queue name for this mapping.
+   *
+   * @return string
+   */
+  public function getQueue() {
+    return 'salesforce_push_' . $this->id();
   }
 
   /**
@@ -263,6 +301,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     );
   }
 
+  public function doesPush() {
+    return $this->checkTriggers([SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE, SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE, SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE]);
+  }
+    
   /**
    * @return bool
    *   TRUE if this mapping uses any of the given $triggers, otherwise FALSE.

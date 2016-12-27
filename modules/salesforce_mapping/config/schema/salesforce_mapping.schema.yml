@@ -25,6 +25,12 @@ salesforce_mapping.salesforce_mapping.*:
     key:
       type: string
       label: 'Upsert Key'
+    async:
+      type: boolean
+      label: 'Push async'
+    async_limit:
+      type: integer
+      label: 'Async limit'
     pull_trigger_date:
       type: string
       label: 'Pull Trigger Date Field'

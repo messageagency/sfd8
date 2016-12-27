@@ -63,8 +63,8 @@ class MappedObjectController extends ControllerBase {
     }
     // If an existing mapping was not found, return a new stub instead.
     return new MappedObject([
-      'entity_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->id()],
-      'entity_type_id' => [LanguageInterface::LANGCODE_DEFAULT => $entity->getEntityTypeId()],
+      'entity_id' => $entity->id(),
+      'entity_type_id' => $entity->getEntityTypeId(),
     ]);
   }
 
