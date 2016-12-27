@@ -74,12 +74,16 @@ class RestClient {
    *   Parameters to provide.
    * @param string $method
    *   Method to initiate the call, such as GET or POST.  Defaults to GET.
+   * @param bool $returnObject
+   *   If true, return a Drupal\salesforce\Rest\RestResponse; 
+   *   Otherwise, return json-decoded response body only.
+   *   Defaults to FALSE for backwards compatibility.
    *
    * @return mixed
    *
    * @throws GuzzleHttp\Exception\RequestException
    */
-  public function apiCall($path, array $params = [], $method = 'GET', $return = 'data') {
+  public function apiCall($path, array $params = [], $method = 'GET', $returnObject = FALSE) {
     if (!$this->getAccessToken()) {
       $this->refreshToken();
     }
@@ -121,7 +125,7 @@ class RestClient {
           throw new Exception('Unknown error occurred during API call');
         }
     }
-    if ($return == 'object') {
+    if ($returnObject) {
       return $this->response;
     }
     else {
@@ -498,7 +502,7 @@ class RestClient {
       return $cache->data;
     }
     else {
-      $response = new RestResponse_Describe($this->apiCall("sobjects/{$name}/describe", [], 'GET', 'object'));
+      $response = new RestResponse_Describe($this->apiCall("sobjects/{$name}/describe", [], 'GET', TRUE));
       \Drupal::cache()->set('salesforce:object:' . $name, $response, 0, ['salesforce']);
       return $response;
     }
@@ -517,7 +521,7 @@ class RestClient {
    * @addtogroup salesforce_apicalls
    */
   public function objectCreate($name, array $params) {
-    $response = $this->apiCall("sobjects/{$name}", $params, 'POST', 'object');
+    $response = $this->apiCall("sobjects/{$name}", $params, 'POST', TRUE);
     $data = $response->data;
     return new SFID($data['id']);
   }
@@ -548,7 +552,7 @@ class RestClient {
       unset($params[$key]);
     }
 
-    $response = $this->apiCall("sobjects/{$name}/{$key}/{$value}", $params, 'PATCH', 'object');
+    $response = $this->apiCall("sobjects/{$name}/{$key}/{$value}", $params, 'PATCH', TRUE);
 
     // On update, upsert method returns an empty body. Retreive object id, so that we can return a consistent response.
     if ($this->response->getStatusCode() == 204) {
@@ -643,7 +647,7 @@ class RestClient {
    * @addtogroup salesforce_apicalls
    */
   public function listResources() {
-    return new RestResponse_Resources($this->apiCall('', [], 'GET', 'object'));
+    return new RestResponse_Resources($this->apiCall('', [], 'GET', TRUE));
   }
 
   /**
