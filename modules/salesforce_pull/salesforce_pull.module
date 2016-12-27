@@ -42,6 +42,7 @@ function salesforce_pull_get_updated_records(RestClient $sfapi) {
   // Iterate over each field mapping to determine our query parameters.
   foreach ($mappings as $sf_object_type => $mapping) {
     $mapped_fields = array_merge(...$pull_fields[$sf_object_type]);
+    $mapped_record_types = [];
     $sf_record_type = $mapping->get('salesforce_record_type');
     if (
       !empty($mapped_fields)
@@ -53,17 +54,20 @@ function salesforce_pull_get_updated_records(RestClient $sfapi) {
       // queued SF objects.
       $mapped_fields['RecordTypeId'] = 'RecordTypeId';
     }
-    $results = _salesforce_pull_do_sfo_query($mapped_fields, $mapped_record_types, $last_sf_type, $sfapi);
+    $results = _salesforce_pull_do_sfo_query(
+      $mapped_fields,
+      $mapped_record_types,
+      $sf_object_type,
+      $sfapi
+    );
 
     if (!isset($results['errorCode'])) {
       // Write items to the queue.
       foreach ($results['records'] as $result) {
         $queue->createItem($result);
       }
-
       _salesforce_pull_handle_large_requests($results, $sfapi);
-
-      \Drupal::state()->set('salesforce_pull_last_sync_' . $type, REQUEST_TIME);
+      \Drupal::state()->set('salesforce_pull_last_sync_' . $sf_object_type, REQUEST_TIME);
     }
     else {
       \Drupal::logger('Salesforce Pull')->error('%code:%msg', [
@@ -203,14 +207,16 @@ function salesforce_pull_process_deleted_records(RestClient $sfapi) {
         ['salesforce_object_type' => $type]
       );
       foreach ($deleted->deletedRecords as $record) {
-        $mapped_object = salesforce_mapped_object_load_by_sfid($record['id']);
-        if ($mapped_object) {
+        try {
+          $mapped_object = salesforce_mapped_object_load_by_sfid($record['id']);
           $entity = \Drupal::entityTypeManager()
             ->getStorage($mapped_object->entity_type)
             ->load($mapped_object->entity_id);
           foreach ($sf_mappings as $sf_mapping) {
-            if ($sf_mapping->sync_triggers & SALESFORCE_MAPPING_SYNC_SF_DELETE) {
+            if ($sf_mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
               // Delete mapping object.
+              /*
+               * Not sure what this code does
               $transaction = db_transaction();
               $map_entity = \Drupal::entityTypeManager()
                 ->getStorage('salesforce_mapped_object')
@@ -220,18 +226,32 @@ function salesforce_pull_process_deleted_records(RestClient $sfapi) {
                 ->getStorage($sf_mapping->drupal_entity_type)
                 ->load($mapped_object->entity_id);
               $map_entity->delete();
-
-              \Drupal::logger('Salesforce Pull')->notice(
-                'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid',
-                [
-                  '%label' => $entity->label(),
-                  '%id' => $mapped_object->entity_id,
-                  '%sfid' => $record->id,
-                ]
-              );
+              */
+              try {
+                $entity->delete();
+                \Drupal::logger('Salesforce Pull')->notice(
+                  'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid',
+                  [
+                    '%label' => $entity->label(),
+                    '%id' => $mapped_object->entity_id,
+                    '%sfid' => $record->id,
+                  ]
+                );
+              }
+              catch (Exception $e) {
+                \Drupal::logger('Salesforce Pull')->error($e);
+              }
             }
           }
           $mapped_object->delete();
+        }
+        catch (Exception $e) {
+          \Drupal::logger('Salesforce Pull')->notice(
+            'No mapped object exists for Salesforce Object ID: %sfid',
+            [
+              '%sfid' => $record->id,
+            ]
+          );
         }
       }
     }

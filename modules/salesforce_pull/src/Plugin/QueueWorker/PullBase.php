@@ -88,12 +88,6 @@ abstract class PullBase extends QueueWorkerBase {
         if ($sf_object_updated > $entity_updated) {
           // Set fields values on the Drupal entity.
           $mapped_object->pull($sf_object, $entity);
-
-          // Update mapping object.
-          $mapped_object->set('last_sync', REQUEST_TIME);
-          $mapped_object->set('entity_updated', REQUEST_TIME);
-          $mapped_object->save();
-
           \Drupal::logger('Salesforce Pull')->notice(
             'Updated entity %label associated with Salesforce Object ID: %sfid',
             [
@@ -206,7 +200,7 @@ abstract class PullBase extends QueueWorkerBase {
    * @TODO this should move into SalesforceMapping.php
    */
   function mapFields(SalesforceMapping $sf_mapping, EntityInterface &$entity, $sf_object) {
-    foreach ($sf_mapping->getPullFields($entity) as $field) {
+    foreach ($sf_mapping->getPullFields() as $field) {
       try {
         $entity->set(
           $field->get('drupal_field_value'),

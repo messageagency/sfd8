@@ -11,6 +11,7 @@ use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\salesforce\SalesforceEvents;
@@ -348,7 +349,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     }
 
     // @TODO better way to handle push/pull:
-    $fields = $mapping->getPullFields($drupal_entity);
+    $fields = $mapping->getPullFields();
 
     foreach ($fields as $field) {
       // @TODO: The field plugin should be in charge of setting its value on an entity, we should not assume the field plugin's logic as we're doing here.
@@ -373,6 +374,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       }
     }
     $drupal_entity->save();
+    // Update mapping object.
+    $this
+      ->set('entity_updated', REQUEST_TIME)
+      ->set('last_sync_action', 'pull')
+      ->set('last_sync_status', TRUE)
+      // ->set('last_sync_message', '')
+      ->save();
+
     return $this;
   }
 
