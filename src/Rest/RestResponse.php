@@ -49,6 +49,7 @@ class RestResponse extends Response {
       throw new Exception("Undefined property $key");
     }
     return $this->$key;
+  }
 
   /**
    * Helper function to eliminate repetitive json parsing.
