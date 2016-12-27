@@ -1,12 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\Entity\MappedObject.
- */
-
 namespace Drupal\salesforce_mapping\Entity;
 
+use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityChangedTrait;
@@ -14,11 +12,10 @@ use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\salesforce\SFID;
 use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePushEvent;
-use Drupal\user\UserInterface;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
@@ -67,7 +64,11 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     parent::__construct($values, 'salesforce_mapped_object');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function save() {
+    $this->changed = REQUEST_TIME;
     if ($this->isNew()) {
       $this->created = REQUEST_TIME;
     }
@@ -84,7 +85,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $i = 0;
-    // We can't use an entity reference, which requires a single entity type. We need to accommodate a reference to any entity type, as specified by entity_type_id
+    // We can't use an entity reference, which requires a single entity type. We need to accommodate a reference to any entity type, as specified by entity_type_id.
     $fields['entity_id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Entity ID'))
       ->setDescription(t('Reference to the mapped Drupal entity.'))
@@ -136,13 +137,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         'weight' => $i++,
       ]);
 
+    // @TODO make this work with Drupal\salesforce\SFID (?)
     $fields['salesforce_id'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Salesforce ID'))
       ->setDescription(t('Reference to the mapped Salesforce object (SObject)'))
       ->setRevisionable(TRUE)
       ->setTranslatable(FALSE)
       ->setSetting('is_ascii', TRUE)
-      ->setSetting('max_length', MappedObjectInterface::SFID_MAX_LENGTH)
+      ->setSetting('max_length', SFID::MAX_LENGTH)
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
         'weight' => 0,
@@ -203,18 +205,29 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $fields;
   }
 
+  /**
+   * @return EntityInterface
+   */
   public function getMappedEntity() {
     $entity_id = $this->entity_id->value;
     $entity_type_id = $this->entity_type_id->value;
     return $this->entityManager()->getStorage($entity_type_id)->load($entity_id);
   }
 
+  /**
+   * @return Link
+   */
   public function getSalesforceLink($options = []) {
+    // @TODO this doesn't work
+    return;
     $defaults = ['attributes' => ['target' => '_blank']];
     $options = array_merge($defaults, $options);
     return l($this->sfid(), $this->getSalesforceUrl(), $options);
   }
 
+  /**
+   * @return string
+   */
   public function getSalesforceUrl() {
     // @TODO dependency injection here:
     $sfapi = salesforce_get_api();
@@ -224,11 +237,18 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $sfapi->getInstanceUrl() . '/' . $this->salesforce_id->value;
   }
 
+  /**
+   * @return string
+   *   SFID
+   */
   public function sfid() {
-    // this should be working, but doesn't
-    return $this->get('salesforce_id')->value;
+    return $this->salesforce_id->value;
   }
 
+  /**
+   * @return mixed
+   *  SFID or NULL depending on result from SF.
+   */
   public function push() {
     // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context, or short of that clear documentation on how callers should handle errors and exceptions. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
     // @TODO better way to handle push/pull:
@@ -242,7 +262,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->getStorage($this->entity_type_id->value)
       ->load($this->entity_id->value);
 
-    // previously hook_salesforce_push_params_alter
+    // Previously hook_salesforce_push_params_alter.
     $params = new PushParams($mapping, $drupal_entity);
     \Drupal::service('event_dispatcher')->dispatch(
       SalesforceEvents::PUSH_PARAMS,
@@ -267,7 +287,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     }
     elseif ($this->sfid()) {
       $action = 'update';
-      $result = $client->objectUpdate(
+      $client->objectUpdate(
         $mapping->getSalesforceObjectType(),
         $this->sfid(),
         $params->getParams()
@@ -280,30 +300,34 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         $params->getParams()
       );
     }
-    // @TODO make $result a class with reliable properties, methods.
 
     if ($drupal_entity instanceof EntityChangedInterface) {
-      // @TODO: where to get entity updated timestamp?
       $this->set('entity_updated', $drupal_entity->getChangedTime());
     }
-    // dpm($result);
 
-    // @TODO restore last_sync_action, last_sync_status, last_sync_message
     // @TODO: catch EntityStorageException ? Others ?
+    if ($result instanceof SFID) {
+      $this->set('salesforce_id', (string)$result);
+    }
+
+    // @TODO setNewRevision not chainable, per https://www.drupal.org/node/2839075
+    $this->setNewRevision(TRUE);
     $this
-      ->set('salesforce_id', $result['id'])
       ->set('last_sync_action', 'push_' . $action)
       ->set('last_sync_status', TRUE)
-      // ->set('last_sync_message', '')
       ->save();
 
     return $result;
   }
 
+  /**
+   * @return $this
+   */
   public function pushDelete() {
     $client = \Drupal::service('salesforce.client');
     $mapping = $this->salesforce_mapping->entity;
     $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
+    $this->setNewRevision(TRUE);
     $this
       ->set('last_sync_action', 'push_delete')
       ->set('last_sync_status', TRUE)
@@ -311,6 +335,9 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
+  /**
+   * @return $this
+   */
   public function pull(array $sf_object = NULL, EntityInterface $drupal_entity = NULL) {
     $mapping = $this->salesforce_mapping->entity;
 
@@ -320,7 +347,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         ->load($this->entity_id->value);
     }
 
-    // If the pull isn't coming from a cron job
+    // If the pull isn't coming from a cron job.
     if ($sf_object == NULL) {
       $sf_object = [];
       $client = \Drupal::service('salesforce.client');
@@ -336,9 +363,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
           $mapping->getKeyField(),
           $mapping->getKeyValue($drupal_entity)
         );
-        if (!empty($sf_object['Id'])) {
-          $this->set('salesforce_id', $sf_object['Id']);
-        }
+        $this->set('salesforce_id', $sf_object->id());
       }
     }
 
@@ -362,13 +387,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         catch (\Exception $e) {
           $message = t('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
             '@sfobj' => $mapping->getSalesforceObjectType(),
-            '@sffield' =>  $sf_field,
+            '@sffield' => $sf_field,
             '@sfid' => $this->sfid(),
             '@dobj' => $this->entity_type_id->value,
             '@dprop' => $drupal_field,
             '@did' => $this->entity_id->value,
             '@v' => $value,
-            '@e' => $e->getMessage()]);
+            '@e' => $e->getMessage(),
+          ]);
           throw new \Exception($message, $e->getCode(), $e);
         }
       }

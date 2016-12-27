@@ -1,22 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\salesforce_mapping\SalesforceMappingFormBase.
- */
-
 namespace Drupal\salesforce_mapping\Form;
 
-// use Drupal\Core\Ajax\CommandInterface;
-// use Drupal\Core\Ajax\AjaxResponse;
-// use Drupal\Core\Ajax\ReplaceCommand;
-// use Drupal\Core\Ajax\InsertCommand;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 
 /**
  * Salesforce Mapping Form base.
@@ -46,7 +35,6 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    */
   public function __construct(PluginManagerInterface $SalesforceMappingFieldManager) {
     $this->SalesforceMappingFieldManager = $SalesforceMappingFieldManager;
-    // $this->pushPluginManager = $pushPluginManager;
   }
 
   /**
@@ -58,7 +46,6 @@ abstract class SalesforceMappingFormBase extends EntityForm {
       // $container->get('plugin.manager.salesforce_push')
     );
   }
-
 
   /**
    * {@inheritdoc}
@@ -75,12 +62,13 @@ abstract class SalesforceMappingFormBase extends EntityForm {
 
   /**
    * Retreive Salesforce's information about an object type.
+   *
    * @TODO this should move to the Salesforce service
    *
    * @param string $salesforce_object_type
    *   The object type of whose records you want to retreive.
    *
-   * @return array
+   * @return RestResponse_Describe
    *   Information about the Salesforce object as provided by Salesforce.
    */
   protected function get_salesforce_object($salesforce_object_type = '') {

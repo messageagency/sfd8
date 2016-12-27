@@ -1,14 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingField\RelatedProperties.
- */
-
 namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
-use Drupal\Component\Annotation\Plugin;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Field;
@@ -36,7 +29,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
 
     if (empty($options)) {
       $pluginForm['drupal_field_value'] += [
-        '#markup' => t('No available entity reference fields.')
+        '#markup' => t('No available entity reference fields.'),
       ];
     }
     else {
@@ -50,9 +43,11 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     }
     return $pluginForm;
 
-
   }
 
+  /**
+   *
+   */
   public function value(EntityInterface $entity) {
     list($field_name, $referenced_field_name) = explode(':', $this->config('drupal_field_value'), 2);
     // Since we're not setting hard restrictions around bundles/fields, we may
@@ -71,7 +66,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
 
     $field = $entity->get($field_name);
     if (empty($field->value)) {
-      // This reference field is blank
+      // This reference field is blank.
       return;
     }
 
@@ -98,6 +93,9 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     return $referenced_entity->get($referenced_field_name)->value;
   }
 
+  /**
+   *
+   */
   private function getConfigurationOptions($mapping) {
     $instances = $this->entityFieldManager->getFieldDefinitions(
       $mapping->get('drupal_entity_type'),
@@ -120,7 +118,6 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
 
       $settings = $instance->getSettings();
       // We must have an entity type.
-
       if (empty($settings['target_type'])) {
         continue;
       }
@@ -128,7 +125,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
       $entity_type = $settings['target_type'];
       $properties = [];
 
-      // If handler is default and allowed bundles are set, include all fields 
+      // If handler is default and allowed bundles are set, include all fields
       // from all allowed bundles.
       try {
         if (!empty($settings['handler_settings']['target_bundles'])) {
@@ -146,7 +143,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
       }
 
       foreach ($properties as $key => $property) {
-        $options[$instance->getLabel()][$instance->getName().':'.$key] = $property->getLabel();
+        $options[$instance->getLabel()][$instance->getName() . ':' . $key] = $property->getLabel();
       }
     }
 
@@ -154,7 +151,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
       return;
     }
 
-    // Alphabetize options for UI
+    // Alphabetize options for UI.
     foreach ($options as $group => &$option_set) {
       asort($option_set);
     }

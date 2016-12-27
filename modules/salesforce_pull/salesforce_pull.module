@@ -6,7 +6,7 @@
  */
 
 use \Drupal\salesforce\SelectQuery;
-use \Drupal\salesforce\RestClient;
+use \Drupal\salesforce\Rest\RestClient;
 use \Drupal\salesforce_mapping\Entity\SalesforceMapping;
 
 /**

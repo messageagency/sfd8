@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\Plugin\Derivative\SalesforceMappingLocalTask.
- */
-
 namespace Drupal\salesforce_mapping\Plugin\Derivative;
 
 use Drupal\Component\Plugin\Derivative\DeriverBase;
@@ -22,7 +17,7 @@ class SalesforceMappingLocalTask extends DeriverBase implements ContainerDeriver
   use StringTranslationTrait;
 
   /**
-   * The entity manager
+   * The entity manager.
    *
    * @var \Drupal\Core\Entity\EntityManagerInterface
    */

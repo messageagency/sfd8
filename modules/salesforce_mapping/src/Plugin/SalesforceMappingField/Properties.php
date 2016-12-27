@@ -1,17 +1,9 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\Plugin\salesforce\SalesforceMappingField\Properties.
- */
-
 namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
-use Drupal\Component\Annotation\Plugin;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\Field;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 
 /**
@@ -25,7 +17,7 @@ use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 class Properties extends SalesforceMappingFieldPluginBase {
 
   /**
-   * Implementation of PluginFormInterface::buildConfigurationForm
+   * Implementation of PluginFormInterface::buildConfigurationForm.
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $pluginForm = parent::buildConfigurationForm($form, $form_state);
@@ -35,7 +27,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
     // Display the plugin config form here:
     if (empty($options)) {
       $pluginForm['drupal_field_value'] = [
-        '#markup' => t('No available properties.')
+        '#markup' => t('No available properties.'),
       ];
     }
     else {
@@ -51,6 +43,9 @@ class Properties extends SalesforceMappingFieldPluginBase {
     return $pluginForm;
   }
 
+  /**
+   *
+   */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
     $vals = $form_state->getValues();
@@ -63,12 +58,18 @@ class Properties extends SalesforceMappingFieldPluginBase {
     }
   }
 
+  /**
+   *
+   */
   public function value(EntityInterface $entity) {
     // No error checking here. If a property is not defined, it's a
     // configuration bug that needs to be solved elsewhere.
     return $entity->get($this->config('drupal_field_value'))->value;
   }
 
+  /**
+   *
+   */
   private function getConfigurationOptions($mapping) {
     $properties = $this->entityFieldManager->getFieldDefinitions(
       $mapping->get('drupal_entity_type'),
@@ -77,7 +78,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
 
     $options = [];
     foreach ($properties as $key => $property) {
-      // Entity reference fields are handled elsewhere. 
+      // Entity reference fields are handled elsewhere.
       // @TODO: is this type still a thing even?
       if ($property->getType() == 'field_item:entity_reference') {
         continue;

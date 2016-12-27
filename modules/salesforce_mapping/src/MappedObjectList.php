@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\MappedObjectList.
- */
-
 namespace Drupal\salesforce_mapping;
 
 use Drupal\Core\Entity\EntityInterface;
@@ -13,7 +8,6 @@ use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce_mapping\MappedObject;
 
 /**
  * Provides a list controller for salesforce_mapping entity.
@@ -28,7 +22,6 @@ class MappedObjectList extends EntityListBuilder {
    * @var \Drupal\Core\Routing\UrlGeneratorInterface
    */
   protected $urlGenerator;
-
 
   /**
    * {@inheritdoc}
@@ -55,7 +48,6 @@ class MappedObjectList extends EntityListBuilder {
     parent::__construct($entity_type, $storage);
     $this->urlGenerator = $url_generator;
   }
-
 
   /**
    * {@inheritdoc}

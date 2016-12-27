@@ -1,26 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\salesforce_mapping\Form\MappedObjectForm
- */
-
 namespace Drupal\salesforce_mapping\Form;
 
-// use Drupal\Core\Ajax\CommandInterface;
-// use Drupal\Core\Ajax\AjaxResponse;
-// use Drupal\Core\Ajax\ReplaceCommand;
-// use Drupal\Core\Ajax\InsertCommand;
-
-use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Exception;
-use Drupal\salesforce_mapping\Entity\MappedObject;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -59,7 +44,6 @@ class MappedObjectForm extends ContentEntityForm {
     );
   }
 
-
   /**
    * {@inheritdoc}
    */
@@ -67,6 +51,14 @@ class MappedObjectForm extends ContentEntityForm {
     // Include the parent entity on the form.
     $form = parent::buildForm($form, $form_state);
     $url_params = \Drupal::routeMatch()->getParameters();
+    $drupal_entity = $this->getDrupalEntityFromUrl();
+    // Allow exception to bubble up here, because we shouldn't have got here if
+    // there isn't a mapping.
+    $mappings = salesforce_mapping_load_by_drupal($drupal_entity->getEntityTypeId());
+    $options = array_keys($mappings) + ['_none'];
+    // Filter options based on drupal entity type.
+    $form['salesforce_mapping']['widget']['#options'] = array_intersect_key($form['salesforce_mapping']['widget']['#options'], array_flip($options));
+
     $form['salesforce_mapping']['widget']['#reqiured'] = TRUE;
     $form['actions']['push'] = [
       '#type' => 'submit',
@@ -83,6 +75,9 @@ class MappedObjectForm extends ContentEntityForm {
     return $form;
   }
 
+  /**
+   * Submit handler for "push" button.
+   */
   public function submitPush(array &$form, FormStateInterface $form_state) {
     $drupal_entity = $this->getDrupalEntityFromUrl();
 
@@ -95,7 +90,6 @@ class MappedObjectForm extends ContentEntityForm {
 
     // Validate mapped object. Upon failure, rebuild form.
     // Do not pass go, do not collect $200.
-
     $errors = $mapped_object->validate();
 
     if ($errors->count() > 0) {
@@ -108,20 +102,21 @@ class MappedObjectForm extends ContentEntityForm {
 
     // Push to SF.
     try {
-      $result = $mapped_object->push();
+      // push() does a save(), so no followup needed here.
+      $mapped_object->push();
     }
     catch (Exception $e) {
       drupal_set_message(t('Push failed with an exception: %exception', array('%exception' => $e->getMessage())), 'error');
       return;
     }
-    $mapped_object
-      ->set('salesforce_id', $result['id'])
-      ->save();
 
     // @TODO: more verbose feedback for successful push.
     drupal_set_message('Push successful.');
   }
 
+  /**
+   * Submit handler for "pull" button.
+   */
   public function submitPull(array &$form, FormStateInterface $form_state) {
     $drupal_entity = $this->getDrupalEntityFromUrl();
     $mapped_object = $this->entity;
@@ -142,9 +137,9 @@ class MappedObjectForm extends ContentEntityForm {
     }
 
     // Pull from SF.
-    $mapped_object
-      ->pull()
-      ->save();
+    $mapped_object->pull();
+    $mapped_object->setNewRevision(TRUE);
+    $mapped_object->save();
 
     // @TODO: more verbose feedback for successful pull.
     drupal_set_message('Pull successful.');
@@ -160,11 +155,11 @@ class MappedObjectForm extends ContentEntityForm {
 
   /**
    * Retreive Salesforce's information about an object type.
+   *
    * @TODO this should move to the Salesforce service
    *
    * @param string $salesforce_object_type
    *   The object type of whose records you want to retreive.
-   *
    *
    * @return array
    *   Information about the Salesforce object as provided by Salesforce.
@@ -202,6 +197,5 @@ class MappedObjectForm extends ContentEntityForm {
     }
     return $drupal_entity;
   }
-
 
 }

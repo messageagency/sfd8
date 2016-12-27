@@ -1,18 +1,14 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce\Form\AuthorizeForm.
- */
-
 namespace Drupal\salesforce\Form;
 
+use GuzzleHttp\Exception\ClientException;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\salesforce\Exception;
-use Drupal\salesforce\RestClient;
+use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SalesforceClient;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -114,16 +110,16 @@ class AuthorizeForm extends ConfigFormBase {
       unset($_SESSION['messages']['salesforce_oauth_error error']);
       try {
         $resources = $this->sf_client->listResources();
-        foreach ($resources as $key => $path) {
+        foreach ($resources->resources as $key => $path) {
           $items[] = $key . ': ' . $path;
         }
         $form['resources'] = [
           '#title' => $this->t('Your Salesforce instance is authorized and has access to the following resources:'),
           '#items' => $items,
-          '#theme' => 'item_list'
+          '#theme' => 'item_list',
         ];
       }
-      catch(\GuzzleHttp\Exception\ClientException $e) {
+      catch (ClientException $e) {
         salesforce_set_message($e->getMessage(), 'warning');
       }
     }
@@ -157,8 +153,8 @@ class AuthorizeForm extends ConfigFormBase {
       );
       $response->send();
     }
-    catch (\GuzzleHttp\Exception\ClientException $e) {
-      // Set form error
+    catch (ClientException $e) {
+      // Set form error.
     }
 
     parent::submitForm($form, $form_state);

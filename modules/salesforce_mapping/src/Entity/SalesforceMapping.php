@@ -1,19 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\Entity\SalesforceMapping.
- */
-
 namespace Drupal\salesforce_mapping\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Exception;
-use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\PushParams;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -69,11 +60,14 @@ use Drupal\salesforce_mapping\PushParams;
  */
 class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInterface {
 
-  // Only one bundle type for now.
+  /**
+   * Only one bundle type for now.
+   */
   protected $type = 'salesforce_mapping';
 
   /**
-   * ID (machine name) of the Mapping
+   * ID (machine name) of the Mapping.
+   *
    * @note numeric id was removed
    *
    * @var string
@@ -81,7 +75,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   protected $id;
 
   /**
-   * Label of the Mapping
+   * Label of the Mapping.
    *
    * @var string
    */
@@ -97,48 +91,48 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   /**
    * A default weight for the mapping.
    *
-   * @var int (optional)
+   * @var int
    */
   protected $weight = 0;
 
   /**
    * Status flag for the mapping.
    *
-   * @var boolean
+   * @var bool
    */
   protected $status = TRUE;
 
 
   /**
-   * The drupal entity type to which this mapping points
+   * The drupal entity type to which this mapping points.
    *
    * @var string
    */
   protected $drupal_entity_type;
 
   /**
-   * The drupal entity bundle to which this mapping points
+   * The drupal entity bundle to which this mapping points.
    *
    * @var string
    */
   protected $drupal_bundle;
 
   /**
-   * The salesforce object type to which this mapping points
+   * The salesforce object type to which this mapping points.
    *
    * @var string
    */
   protected $salesforce_object_type;
 
   /**
-   * The salesforce record type to which this mapping points, if applicable
+   * The salesforce record type to which this mapping points, if applicable.
    *
-   * @var string (optional)
+   * @var stringoptional
    */
   protected $salesforce_record_type = '';
 
   /**
-   * Salesforce field name for upsert key, if set. Otherwise FALSE
+   * Salesforce field name for upsert key, if set. Otherwise FALSE.
    *
    * @var string
    */
@@ -155,10 +149,17 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   public function __construct(array $values = [], $entity_type) {
     parent::__construct($values, $entity_type);
-    // entities don't support Dependency Injection, so we have to build a hard
+    // Entities don't support Dependency Injection, so we have to build a hard
     // dependency on the container here.
     // @TODO figure out a better way to do this.
     $this->fieldManager = \Drupal::service('plugin.manager.salesforce_mapping_field');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __get($key) {
+    return $this->$key;
   }
 
   /**
@@ -176,13 +177,14 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Given a Salesforce object, return an array of Drupal entity key-value pairs
+   * Given a Salesforce object, return an array of Drupal entity key-value pairs.
    *
    * @param object $entity
    *   Entity wrapper object.
    *
    * @return array
    *   Associative array of key value pairs.
+   *
    * @see salesforce_pull_map_field (from d7)
    */
   //public function getPullFields(EntityInterface $entity) {
@@ -206,10 +208,16 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     return $this->key ? $this->key : FALSE;
   }
 
+  /**
+   * @return bool
+   */
   public function hasKey() {
     return $this->key ? TRUE : FALSE;
   }
 
+  /**
+   * @return mixed
+   */
   public function getKeyValue(EntityInterface $entity) {
     if (!$this->hasKey()) {
       throw new Exception('No key defined for this mapping.');
@@ -224,15 +232,21 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     throw new Exception(t('Key %key not found for this mapping.', ['%key' => $this->getKeyField()]));
   }
 
+  /**
+   * @return string
+   */
   public function getSalesforceObjectType() {
     return $this->salesforce_object_type;
   }
 
+  /**
+   * @return array
+   */
   public function getFieldMappings() {
     // @TODO #fieldMappingField
     $mappings = [];
     foreach ($this->field_mappings as $field) {
-       $mappings[] = $this->fieldManager->createInstance(
+      $mappings[] = $this->fieldManager->createInstance(
          $field['drupal_field_type'],
          $field
        );
@@ -240,6 +254,9 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     return $mappings;
   }
 
+  /**
+   * @return SalesforceMappingFieldPluginInterface
+   */
   public function getFieldMapping(array $field) {
     return $this->fieldManager->createInstance(
       $field['drupal_field_type'],
@@ -247,10 +264,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     );
   }
 
-  public function pull() {
-
-  }
-
+  /**
+   * @return bool
+   *   TRUE if this mapping uses any of the given $triggers, otherwise FALSE.
+   */
   public function checkTriggers(array $triggers) {
     foreach ($triggers as $trigger) {
       if ($this->sync_triggers[$trigger] == 1) {

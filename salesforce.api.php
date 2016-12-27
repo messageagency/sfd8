@@ -24,7 +24,7 @@ function hook_salesforce_mapping_fieldmap_type() {
  * Alter existing fieldmap types.
  *
  * @param array $fieldmap_type
- *   Array of fieldmap Salesforce types
+ *   Array of fieldmap Salesforce types.
  */
 function hook_salesforce_mapping_fieldmap_type_alter($fieldmap_type) {
 
@@ -77,9 +77,9 @@ function hook_salesforce_push_entity_allowed($entity_type, $entity, $sf_sync_tri
  *      ),
  *      'salesforce_field' => array()
  *   )
- *   </code>
+ *   </code>.
  * @param object $sf_object
- *   Fully loaded Salesforce object
+ *   Fully loaded Salesforce object.
  */
 function hook_salesforce_pull_entity_value_alter(&$value, $field_map, $sf_object) {
 

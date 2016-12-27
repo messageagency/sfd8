@@ -241,21 +241,15 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    *   the value, formatted to be appropriate as a value for #options.
    */
   protected function get_salesforce_field_options($sfobject_name) {
-    static $options;
-    if (!empty($options[$sfobject_name])) {
-      return $options[$sfobject_name];
+    // Static cache since this function is called frequently across many
+    // different object instances.
+    $options = &drupal_static(__CLASS__.__FUNCTION__, []);
+    if (empty($options[$sfobject_name])) {
+      $sfapi = salesforce_get_api();
+      $describe = $sfapi->objectDescribe($sfobject_name);
+      $options[$sfobject_name] = $describe->getFieldOptions();
     }
-    $sfapi = salesforce_get_api();
-    $sfobject = $sfapi->objectDescribe($sfobject_name);
-    $sf_fields = [];
-    if (isset($sfobject['fields'])) {
-      foreach ($sfobject['fields'] as $sf_field) {
-        $sf_fields[$sf_field['name']] = $sf_field['label'];
-      }
-    }
-    asort($sf_fields);
-    $options[$sfobject_name] = $sf_fields;
-    return $sf_fields;
+    return $options[$sfobject_name];
   }
 
 }
