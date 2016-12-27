@@ -5,6 +5,9 @@ namespace Drupal\salesforce;
 use GuzzleHttp\Psr7\Response;
 use Drupal\Component\Serialization\Json;
 
+/**
+ *
+ */
 class RestResponse extends Response {
 
   protected $response;
@@ -12,25 +15,26 @@ class RestResponse extends Response {
 
   /**
    * {@inheritdoc}
+   *
    * @throws RestException if body cannot be json-decoded
    */
-  function __construct(Response $response) {
+  public function __construct(Response $response) {
     $this->response = $response;
     parent::__construct($response->getStatusCode(), $response->getHeaders(), $response->getBody(), $response->getProtocolVersion(), $response->getReasonPhrase());
     $this->handleJsonResponse();
   }
 
   /**
-   * Get the orignal response
+   * Get the orignal response.
    *
-   * @return GuzzleHttp\Psr7\Response;
+   * @return GuzzleHttp\Psr7\Response
    */
   public function response() {
     return $this->response;
   }
 
   /**
-   * Get the json-decoded data object from the response body
+   * Get the json-decoded data object from the response body.
    *
    * @return stdObject
    */
@@ -42,6 +46,7 @@ class RestResponse extends Response {
    * Helper function to eliminate repetitive json parsing.
    *
    * @return $this
+   *
    * @throws Drupal\salesforce\RestException
    */
   private function handleJsonResponse() {

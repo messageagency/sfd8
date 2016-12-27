@@ -1,14 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Token.
- */
-
 namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
-use Drupal\Component\Annotation\Plugin;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
@@ -26,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class Token extends SalesforceMappingFieldPluginBase {
- 
+
   protected $token;
 
   /**
@@ -44,6 +37,9 @@ class Token extends SalesforceMappingFieldPluginBase {
     return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity_type.bundle.info'), $container->get('entity_field.manager'), $container->get('token'));
   }
 
+  /**
+   *
+   */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $pluginForm = parent::buildConfigurationForm($form, $form_state);
 
@@ -58,13 +54,16 @@ class Token extends SalesforceMappingFieldPluginBase {
 
     // @TODO: "Constant" as it's implemented now should only be allowed to be set to "Push". In the future: create "Pull" logic for constant, which pulls a constant value to a Drupal field. Probably a separate mapping field plugin.
     $pluginForm['direction']['#options'] = [
-      SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => $pluginForm['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF]
+      SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => $pluginForm['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF],
     ];
     $pluginForm['direction']['#default_value'] = SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF;
 
     return $pluginForm;
   }
 
+  /**
+   *
+   */
   public function value(EntityInterface $entity) {
     // Even though everything is an entity, some token functions expect to
     // receive the entity keyed by entity type.
@@ -73,6 +72,9 @@ class Token extends SalesforceMappingFieldPluginBase {
     return $this->token->replace($text, $data);
   }
 
+  /**
+   *
+   */
   public function pull() {
     return FALSE;
   }

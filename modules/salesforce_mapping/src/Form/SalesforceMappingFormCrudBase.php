@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\salesforce_mapping\SalesforceMappingFormCrudBase.
- */
-
 namespace Drupal\salesforce_mapping\Form;
 
 use Drupal\Core\Ajax\AjaxResponse;
@@ -29,6 +24,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
 
   /**
    * {@inheritdoc}
+   *
    * @TODO this function is almost 200 lines. Look into leveraging core Entity
    *   interfaces like FieldsDefinition (or something). Look at breaking this up
    *   into smaller chunks.
@@ -158,8 +154,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
           '#default_value' => $salesforce_record_type,
           '#options' => $salesforce_record_type_options,
           '#empty_option' => $this->t('- Select -'),
-          // Do not make it required to preserve graceful degradation:
-          // '#required' => TRUE,
+          // Do not make it required to preserve graceful degradation
         ];
       }
       else {
@@ -179,8 +174,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#description' => t('Select a date field to base pull triggers on. (Default of "Last Modified Date" is usually appropriate).'),
       '#required' => $this->entity->get('salesforce_object_type'),
       '#default_value' => $this->entity->get('pull_trigger_date')
-        ? $this->entity->get('pull_trigger_date')
-        : 'LastModifiedDate',
+      ? $this->entity->get('pull_trigger_date')
+      : 'LastModifiedDate',
       '#options' => $this->get_pull_trigger_options($salesforce_object_type),
     ];
 
@@ -193,7 +188,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#description' => t('Select which actions on Drupal entities and Salesforce
         objects should trigger a synchronization. These settings are used by the
         salesforce_push and salesforce_pull modules.'
-        ),
+      ),
     ];
 
     foreach ($trigger_options as $option => $label) {
@@ -204,7 +199,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       ];
     }
 
-    // Hide all the hidden stuff in here;
+    // Hide all the hidden stuff in here.
     foreach (['weight', 'status', 'locked', 'type'] as $el) {
       $form[$el] = [
         '#type' => 'value',
@@ -215,11 +210,11 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     return $form;
   }
 
- /**
+  /**
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // fudge the Date Modified form values to get validation to pass on submit
+    // Fudge the Date Modified form values to get validation to pass on submit.
     if (!empty($form_state->isSubmitted())) {
       $form['salesforce_object']['pull_trigger_date']['#options'] = $this->get_pull_trigger_options($form_state->getValue('salesforce_object_type'));
     }
@@ -255,6 +250,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     parent::save($form, $form_state);
   }
 
+  /**
+   *
+   */
   public function drupal_entity_type_bundle_callback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
     // Requires updating itself and the field map.
@@ -267,7 +265,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   public function salesforce_record_type_callback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
-    // Set the trigger options based on the selected object
+    // Set the trigger options based on the selected object.
     $form['salesforce_object']['pull_trigger_date']['#options'] = $this->get_pull_trigger_options($form_state->getValue('salesforce_object_type'));
     // Requires updating itself and the field map.
     $response->addCommand(new ReplaceCommand('#edit-salesforce-object', render($form['salesforce_object'])))->addCommand(new ReplaceCommand('#edit-salesforce-field-mappings-wrapper', render($form['salesforce_field_mappings_wrapper'])));
@@ -275,14 +273,13 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   }
 
   /**
-   * Ajax callback for salesforce_mapping_form() field CRUD
+   * Ajax callback for salesforce_mapping_form() field CRUD.
    */
   public function field_callback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#edit-salesforce-field-mappings-wrapper', render($form['salesforce_field_mappings_wrapper'])));
     return $response;
   }
-
 
   /**
    * Return a list of Drupal entity types for mapping.
@@ -402,6 +399,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     return $options;
   }
 
+  /**
+   *
+   */
   protected function get_push_plugin_options() {
     return [];
     // $field_plugins = $this->pushPluginManager->getDefinitions();

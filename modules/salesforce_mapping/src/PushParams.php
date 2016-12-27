@@ -2,13 +2,12 @@
 
 namespace Drupal\salesforce_mapping;
 
-use Symfony\Component\EventDispatcher\Event;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Wrapper for the array of values which will be pushed to Salesforce.
- * Usable by salesforce.client for push actions: create, upsert, update
+ * Usable by salesforce.client for push actions: create, upsert, update.
  */
 class PushParams {
 
@@ -22,7 +21,8 @@ class PushParams {
    *
    * @param SalesforceMappingInterface $mapping
    * @param EntityInterface $entity
-   * @param array $params (optional)
+   * @param array $params
+   *   (optional)
    */
   public function __construct(SalesforceMappingInterface $mapping, EntityInterface $entity, array $params = []) {
     $this->mapping = $mapping;
@@ -33,23 +33,33 @@ class PushParams {
       if (!$field_plugin->push()) {
         continue;
       }
-      $this->params[$field_plugin->config('salesforce_field')] =  $field_plugin->value($entity);
+      $this->params[$field_plugin->config('salesforce_field')] = $field_plugin->value($entity);
     }
   }
 
+  /**
+   * @return SalesforceMapping for this PushParams
+   */
   public function getMapping() {
     return $this->mapping;
   }
 
+  /**
+   * @return EntityInterface for this PushParams
+   */
   public function getDrupalEntity() {
     return $this->drupal_entity;
   }
 
+  /**
+   * @return array of params
+   */
   public function getParams() {
     return $this->params;
   }
 
   /**
+   * @return mixed the given param value for $key
    * @throws Exception
    */
   public function getParam($key) {
@@ -59,11 +69,23 @@ class PushParams {
     return $this->params[$key];
   }
 
+  /**
+   * @param $params
+   *   array of params to set for thie PushParams
+   * @return $this
+   */
   public function setParams(array $params) {
     $this->params = $params;
     return $this;
   }
 
+  /**
+   * @param string $key
+   *   Key to set for this param
+   * @param mixed $value
+   *   Value to set for this param.
+   * @return $this
+   */
   public function setParam($key, $value) {
     $this->params[$key] = $value;
     return $this;

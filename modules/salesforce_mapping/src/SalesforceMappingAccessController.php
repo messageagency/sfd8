@@ -1,17 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\SalesforceMappingAccessController
- */
-
 namespace Drupal\salesforce_mapping;
 
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Access\AccessResult;
-use Drupal\salesforce\SalesforceClient;
 
 /**
  * Access controller for the salesforce_mapping entity.
@@ -29,10 +23,12 @@ class SalesforceMappingAccessController extends EntityAccessControlHandler {
         return $account->hasPermission('view salesforce mapping')
           ? AccessResult::allowed()
           : AccessResult::forbidden();
+
       default:
         return $account->hasPermission('administer salesforce mapping')
           ? AccessResult::allowed()
           : AccessResult::forbidden();
     }
   }
+
 }

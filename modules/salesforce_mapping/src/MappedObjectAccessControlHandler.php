@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\MappedObjectAccessControlHandler.
- */
-
 namespace Drupal\salesforce_mapping;
 
 use Drupal\Core\Access\AccessResult;

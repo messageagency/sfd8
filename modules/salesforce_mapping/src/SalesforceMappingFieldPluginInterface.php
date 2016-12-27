@@ -1,11 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface.
- */
-
 namespace Drupal\salesforce_mapping;
+
 use Drupal\Core\Entity\EntityInterface;
 
 /**

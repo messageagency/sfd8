@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce\Controller\SalesforceController.
- */
-
 namespace Drupal\salesforce\Controller;
 
 use Drupal\Component\Utility\UrlHelper;

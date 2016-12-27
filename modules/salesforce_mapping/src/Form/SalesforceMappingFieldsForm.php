@@ -1,35 +1,25 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\Form\SalesforceMappingFieldsForm.
- */
-
 namespace Drupal\salesforce_mapping\Form;
 
-use Symfony\Component\Debug\Debug;
-
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\CommandInterface;
-use Drupal\Core\Ajax\InsertCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface as FieldPluginInterface;
 
 /**
- * Salesforce Mapping Fields Form
+ * Salesforce Mapping Fields Form.
  */
 class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
 
   /**
-   * Previously "Field Mapping" table on the map edit form.
-   * {@inheritdoc}
-   * @TODO add a header with Fieldmap Property information
+   * {@inheritdoc}.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    // Previously "Field Mapping" table on the map edit form.
+    // @TODO add a header with Fieldmap Property information.
+
     $form['#entity'] = $this->entity;
     $form['#attached']['library'][] = 'salesforce/admin';
     // For each field on the map, add a row to our table.
@@ -71,7 +61,6 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $field_mappings_wrapper = &$form['field_mappings_wrapper'];
     // Check to see if we have enough information to allow mapping fields.  If
     // not, tell the user what is needed in order to have the field map show up.
-
     $field_mappings_wrapper['field_mappings'] = [
       '#tree' => TRUE,
       '#type' => 'container',
@@ -117,10 +106,10 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
 
     $row_template = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['field_mapping_field', 'row']]
+      '#attributes' => ['class' => ['field_mapping_field', 'row']],
     ];
 
-    // Add a row for each saved mapping
+    // Add a row for each saved mapping.
     $zebra = 0;
     foreach ($this->entity->getFieldMappings() as $field_plugin) {
       $row = $row_template;
@@ -143,7 +132,6 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
 
     // @TODO input does not contain the clicked button, have to go to values for
     // that. This may change?
-
     // Add button was clicked. See if we have a field_type value -- it's
     // required. If not, take no action. #states is already used to prevent
     // users from adding without selecting field_type. If they've worked
@@ -166,6 +154,11 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     return $form;
   }
 
+  /** 
+   * @return array
+   *   Return an array of field names => labels for any field which is marked
+   *   "externalId"
+   */
   private function getUpsertKeyOptions() {
     $options = [];
     $describe = $this->get_salesforce_object();
@@ -210,13 +203,9 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     // @TODO implement "lock/unlock" logic here:
     // @TODO convert these to AJAX operations
     $operations = [
-      // 'locked' => $this->t('Lock'),
-      'delete' => $this->t('Delete')
+      'delete' => $this->t('Delete'),
     ];
     $defaults = [];
-    // if ($field_plugin->config('locked')) {
-    //   $defaults = ['lock'];
-    // }
     $row['ops'] = [
       '#title' => t('Operations'),
       '#type' => 'checkboxes',
@@ -225,19 +214,18 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     ];
     $row['drupal_field_type'] = [
       '#type' => 'hidden',
-      '#value' => $field_plugin->getPluginId()
+      '#value' => $field_plugin->getPluginId(),
     ];
     return $row;
   }
 
- /**
+  /**
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     // Transform data from the operations column into the expected schema.
     // Copy the submitted values so we don't run into problems with array
     // indexing while removing delete field mappings.
-
     $values = $form_state->getValues();
     if (empty($values['field_mappings'])) {
       // No mappings have been added, no validation to be done.
@@ -246,7 +234,6 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
 
     $key = $values['key'];
     $key_mapped = FALSE;
-
 
     foreach ($values['field_mappings'] as $i => $value) {
       // If a field was deleted, delete it!
@@ -276,6 +263,9 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
 
   }
 
+  /**
+   * Submit handler
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Need to transform the schema slightly to remove the "config" dereference. Also trigger submit handlers on plugins.
     $form_state->unsetValue(['field_type', 'ops']);
@@ -293,6 +283,9 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     parent::submitForm($form, $form_state);
   }
 
+  /**
+   * Ajax callback for adding a new field.
+   */
   public function field_add_callback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
     // Requires updating itself and the field map.
@@ -300,15 +293,17 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     return $response;
   }
 
+  /**
+   * @return array
+   */
   protected function get_drupal_type_options() {
     $field_plugins = $this->SalesforceMappingFieldManager->getDefinitions();
-    $field_type_options = [];
-    foreach ($field_plugins as $field_plugin) {
-      $field_type_options[$field_plugin['id']] = $field_plugin['label'];
-    }
-    return $field_type_options;
+    return array_column($field_plugins, 'label', 'id');
   }
 
+  /**
+   * @return SalesforceMappingFieldPluginInterface
+   */
   protected function get_field_plugin($field_type) {
     $field_plugins = $this->SalesforceMappingFieldManager->getDefinitions();
     return $field_plugins[$field_type];
@@ -328,9 +323,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $sf_fields = [];
     $sfobject = $this->get_salesforce_object();
     if ($sfobject && isset($sfobject['fields'])) {
-      foreach ($sfobject['fields'] as $sf_field) {
-        $sf_fields[$sf_field['name']] = $sf_field['label'];
-      }
+      $sf_fields = array_column($sf_object['fields'], 'label', 'name');
       asort($sf_fields);
     }
     return $sf_fields;

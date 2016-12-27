@@ -1,17 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager.
- */
-
 namespace Drupal\salesforce_mapping;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
-// use Symfony\Component\DependencyInjection\ContainerInterface;
-
 
 /**
  * Plugin type manager for all views plugins.
@@ -23,7 +16,7 @@ class SalesforceMappingFieldPluginManager extends DefaultPluginManager {
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
-   *   keyed by the corresponding namespace to look for plugin implementations,
+   *   keyed by the corresponding namespace to look for plugin implementations.
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
    *   Cache backend instance to use.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
