@@ -68,6 +68,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   public function save() {
+    $this->changed = REQUEST_TIME;
     if ($this->isNew()) {
       $this->created = REQUEST_TIME;
     }
@@ -290,6 +291,9 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     if ($result instanceof SFID) {
       $this->set('salesforce_id', (string)$result);
     }
+
+    // @TODO setNewRevision not chainable, per https://www.drupal.org/node/2839075
+    $this->setNewRevision(TRUE);
     $this
       ->set('last_sync_action', 'push_' . $action)
       ->set('last_sync_status', TRUE)
@@ -302,6 +306,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $client = \Drupal::service('salesforce.client');
     $mapping = $this->salesforce_mapping->entity;
     $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
+    $this->setNewRevision(TRUE);
     $this
       ->set('last_sync_action', 'push_delete')
       ->set('last_sync_status', TRUE)

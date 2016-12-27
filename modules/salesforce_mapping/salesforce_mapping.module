@@ -316,8 +316,9 @@ function salesforce_mapping_entity_view(array &$build, EntityInterface $entity, 
 /**
  * Implements hook_field_extra_fields().
  */
-function salesforce_mapping_field_extra_fields() {
+function salesforce_mapping_entity_extra_field_info() {
   // Include Salesforce data for mapped entities.
+  // @TODO: these don't actually show up on the entity view. Have to implement hook_entity_view as well?
   $extra = [];
   $mappings = salesforce_mapping_load_multiple();
   foreach ($mappings as $mapping) {
@@ -345,57 +346,28 @@ function salesforce_mapping_field_extra_fields() {
  * Ensures drupal entity has an update timestamp.
  */
 function salesforce_mapping_entity_update(EntityInterface $entity) {
-  // @TODO: update this. it is broked.
-  return;
-  // Check if mapping exists.
-
-  if (!salesforce_mapping_load_by_drupal($entity->getEntityTypeId())) {
+  // Check for mappings (much faster than looking for mapped objects.)
+  try {
+    salesforce_mapping_load_by_drupal($entity->getEntityTypeId());
+  }
+  catch (Exception $e) {
     return;
   }
-  $sf_mapped_object = salesforce_mapped_object_load_by_entity($entity);
-  if ($sf_mapped_object) {
-    // Triggering the sf mapping's save callback updates its timestamp.
-    $sf_mapped_object->entity_updated = $entity->changed;
-    $sf_mapped_object->save();
+
+  // If mappings, check for mapped objects.
+  try {
+    $mapped_objects = salesforce_mapped_object_load_by_drupal($entity->getEntityTypeId(), $entity->id());
+    dpm($mapped_objects);
+  }
+  catch (Exception $e) {
+    return;
+  }
+  foreach ($mapped_objects as $mapped_object) {
+    // Resaving the object should update the timestamp.
+    // NB: we are purposefully not creating a new revision here.
+    $mapped_object
+      ->set('entity_updated', REQUEST_TIME)
+      ->save();
   }
 }
 
-/**
- * Get the Salesforce fieldmap types array.
- *
- * @see hook_salesforce_mapping_fieldmap_type()
- * @see hook_salesforce_mapping_fieldmap_type_alter()
- *
- * @param string $fieldmap_type
- *   The fieldmap type, e.g. property, for which the info shall be returned, or
- *   NULL to return an array with info about all types.
- */
-function salesforce_mapping_get_fieldmap_types($fieldmap_type = NULL) {
-  // Use the advanced drupal_static() pattern, since this is called very often.
-  static $drupal_static_fast;
-  if (!isset($drupal_static_fast)) {
-    $drupal_static_fast['salesforce_fieldmap_type'] = & drupal_static(__FUNCTION__);
-  }
-  $salesforce_fieldmap_type = & $drupal_static_fast['salesforce_fieldmap_type'];
-
-  if (empty($salesforce_fieldmap_type)) {
-    if ($cache = cache()->get('salesforce:fieldmap_type')) {
-      $salesforce_fieldmap_type = $cache->data;
-    }
-    else {
-      $salesforce_fieldmap_type = module_invoke_all('salesforce_mapping_fieldmap_type');
-
-      // Let other modules alter the fieldmap type.
-      drupal_alter('salesforce_fieldmap_type', $salesforce_fieldmap_type);
-      cache()->set('salesforce:fieldmap_type', $salesforce_fieldmap_type, CacheBackendInterface::CACHE_PERMANENT, ['salesforce' => TRUE]);
-
-    }
-  }
-
-  if (empty($fieldmap_type)) {
-    return $salesforce_fieldmap_type;
-  }
-  elseif (isset($salesforce_fieldmap_type[$fieldmap_type])) {
-    return $salesforce_fieldmap_type[$fieldmap_type];
-  }
-}
