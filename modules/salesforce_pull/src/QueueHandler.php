@@ -15,10 +15,13 @@ use Drupal\salesforce\Exception;
 class QueueHandler {
   protected $sfapi;
   protected $queue;
+  protected $mappings;
+  protected $pull_fields;
 
   public function __construct(RestClient $sfapi) {
     $this->sfapi = $sfapi;
     $this->queue = \Drupal::queue('cron_salesforce_pull');
+    $this->organizeMappings();
   }
 
   /**
@@ -31,27 +34,13 @@ class QueueHandler {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
     if ($this->queue->numberOfItems() > \Drupal::state()->get('salesforce_pull_max_queue_size', 100000)) {
+      // @TODO add admin / logging alert here. This is a critical condition. When our queue is maxed out, pulls will be completely blocked.
       return;
     }
 
-    list($mappings, $pull_fields) = $this->organizeMappings();
-
     // Iterate over each field mapping to determine our query parameters.
-    foreach ($mappings as $sf_object_type => $mapping) {
-      $mapped_fields = array_merge(...$pull_fields[$sf_object_type]);
-      $mapped_record_types = [];
-      $sf_record_type = $mapping->get('salesforce_record_type');
-      if (
-        !empty($mapped_fields)
-        && !empty($sf_record_type)
-        && $sf_record_type != SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE
-      ) {
-        $mapped_record_types[$sf_record_type] = $sf_record_type;
-        // Add the RecordTypeId field so we can use it when processing the
-        // queued SF objects.
-        $mapped_fields['RecordTypeId'] = 'RecordTypeId';
-      }
-      $results = $this->doSfoQuery($mapped_fields, $mapped_record_types, $sf_object_type);
+    foreach ($this->mappings as $mapping) {
+      $results = $this->doSfoQuery($mapping);
 
       if (!isset($results['errorCode'])) {
         // Write items to the queue.
@@ -79,77 +68,32 @@ class QueueHandler {
    *   of field mappings
    */
   protected function organizeMappings() {
-    // Grab all mapping and sort them by $mapping->salesforce_object_type.
-    //$mappings = salesforce_mapping_load_multiple();
-    /* Need to sort?
-    usort(
-      $mappings,
-      function($a, $b) {
-        return strcmp($a->get('salesforce_object_type'), $b->get('salesforce_object_type'));
-      });
-    */
-    $org_mappings = [];
-    $pull_fields_array = [];
+    $this->mappings = [];
+    $this->pull_fields = [];
     foreach(salesforce_mapping_load_multiple() as $mapping) {
-      $pull_fields_array[$mapping->getSalesforceObjectType()][] = $this->getFieldArray($mapping);
-      if (!array_key_exists($mapping->getSalesforceObjectType(), $org_mappings)) {
-         $org_mappings[$mapping->getSalesforceObjectType()] = $mapping;
-      }
+      $this->pull_fields[$mapping->getSalesforceObjectType()] += $this->getFieldArray($mapping);
+      $this->mappings[] = $mapping;
     }
-    return [$org_mappings, $pull_fields_array];
-  }
-
-  /**
-   * Build array of pulled fields for given mapping
-   *
-   * @param object
-   *   SalesForceMapping object
-   *
-   * @return array
-   *   Array of field smappings
-   */
-  protected function getFieldArray(SalesforceMapping $mapping) {
-    $mapped_fields = [];
-    foreach ($mapping->getPullFields() as $field_map) {
-      $sf_field = $field_map->get('salesforce_field');
-      // Some field map types (Relation) store a collection of SF objects.
-      // @TODO: revisit this
-      if (is_array($sf_field) && !isset($sf_field['name'])) {
-        foreach ($sf_field as $sf_subfield) {
-          $mapped_fields[$sf_subfield['name']] = $sf_subfield['name'];
-        }
-      }
-      // The rest of are just a name/value pair.
-      else {
-        $mapped_fields[$sf_field] = $sf_field;
-      }
-    }
-    return $mapped_fields;
   }
 
   /**
    * Perform the SFO Query on each SF Object type with concolidated array of fields
    *
-   * @param array
-   *   Array of fields to pull
-   * @param array
-   *   RecotrdTypes to restirct query by, if provided
-   * @param string
-   *   SF object type
+   * @param SalesforceMappingInterface
+   *   Mapping for which to execute pull
    *
    * @return array
    *   Array of field smappings
    */
-  protected function doSfoQuery(array $mapped_fields, array $mapped_record_type, $type) {
+  protected function doSfoQuery(SalesforceMappingInterface $mapping) {
     // @TODO figure out the new way to build the query.
     $soql = new SelectQuery($type);
+
     // Convert field mappings to SOQL.
-    $soql->fields = ['Id', 'LastModifiedDate'];
+    $soql->fields = ['Id', $mapping->get('pull_trigger_date')];
+    $mapped_fields = 
+      $this->pull_fields[$mapping->get('salesforce_record_type')]);
     foreach ($mapped_fields as $field) {
-      // Don't add the Id field to the SOQL query.
-      if ($field == 'Id') {
-        continue;
-      }
       $soql->fields[] = $field;
     }
 
@@ -157,13 +101,19 @@ class QueueHandler {
     $sf_last_sync = \Drupal::state()->get('salesforce_pull_last_sync_' . $type, NULL);
     if ($sf_last_sync) {
       $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
-      $soql->addCondition('LastModifiedDate', $last_sync, '>');
+      $soql->addCondition($mapping->get('pull_trigger_date'), $last_sync, '>');
     }
 
-    // If Record Type is specified, restrict query.
-    if (count($mapped_record_types) > 0) {
-      $soql->addCondition('RecordTypeId', $mapped_record_types, 'IN');
+    // Add RecordTypeId to mapped fields if it's non-default.
+    $sf_record_type = $mapping->get('salesforce_record_type');
+    if (!empty($mapped_fields)
+    && !empty($sf_record_type)
+    && $sf_record_type != SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE) {
+      $soql->fields[] = 'RecordTypeId';
+      $soql->addCondition('RecordTypeId', $sf_record_type, 'IN');
     }
+
+    $soql->fields = array_unique($soql->fields);
 
     // Execute query.
     try {
