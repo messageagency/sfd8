@@ -344,8 +344,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $this->drupal_entity = $entity;
   }
 
-  public function setSalesforceRecord(array $sf_record) {
-    $this->sf_object = new SObject($sf_record);
+  public function setSalesforceRecord(SObject $sf_object) {
+    $this->sf_object = $sf_record;
   }
 
   /**
