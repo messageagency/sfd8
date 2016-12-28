@@ -17,7 +17,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce_pull\PullQueueItem;
+//use Drupal\salesforce_pull\PullQueueItem;
 
 /**
  * Provides base functionality for the Salesforce Pull Queue Workers.
@@ -32,7 +32,7 @@ abstract class PullBase extends QueueWorkerBase {
   /**
    * {@inheritdoc}
    */
-  public function processItem(PullQueueItem $item) {
+  public function processItem($item) {
     $sf_object = $item->sobject;
     try {
       $mapping = salesforce_mapping_load($item->mapping_id);
@@ -143,7 +143,7 @@ abstract class PullBase extends QueueWorkerBase {
       // Define values to pass to entity_create().
       $entity_keys = $entity_info->getKeys();
       $values = [];
-      if (isset($entity_keys['bundle']) 
+      if (isset($entity_keys['bundle'])
       && !empty($entity_keys['bundle'])) {
         $values[$entity_keys['bundle']] = $sf_mapping->get('drupal_bundle');
       }

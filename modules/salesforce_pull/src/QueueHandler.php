@@ -3,6 +3,7 @@
 namespace Drupal\salesforce_pull;
 
 use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
@@ -133,13 +134,13 @@ class QueueHandler {
    * @param array
    *   Original list of results, which includes batched records fetch URL
    */
-  protected function handleLargeRequests(SalesforceMappingInterface $mapping, array $results) {
-   $version_path = parse_url($sfapi->getApiEndPoint(), PHP_URL_PATH);
-   if ($results->nextRecordsUrl != null) {
+  protected function handleLargeRequests(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
+   if ($results->nextRecordsUrl() != null) {
+     $version_path = parse_url($this->sfapi->getApiEndPoint(), PHP_URL_PATH);
      try {
        $new_result = $this->sfapi->apiCall(
-         str_replace($version_path, '', $results->nextRecordsUrl));
-       $this->insertIntoQueue($mapping, $new_result->records);
+         str_replace($version_path, '', $results->nextRecordsUrl()));
+       $this->insertIntoQueue($mapping, $new_result->records());
        $this->handleLargeRequests($mapping, $new_result);
      }
      catch (Exception $e) {
