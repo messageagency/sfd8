@@ -109,7 +109,7 @@ function hook_salesforce_query_alter(SalesforceSelectQuery &$query) {
  * match an existing entity instead, implement this hook and replace $entity,
  * and set mapped_object->entity_id accordingly.
  * 
- * @param array $sf_record
+ * @param SObject $sf_record
  *   The data from SF about to be mapped to an entity and saved.
  * @param MappedObjectInterface $mapped_object
  *   The mapped object being created or updated. @see ::isNew()
@@ -117,7 +117,7 @@ function hook_salesforce_query_alter(SalesforceSelectQuery &$query) {
  *   The entity being created or updated.
  *
  */
-function hook_salesforce_pull_pre_pull_alter(array $sf_record, MappedObjectInterface $mapped_object, EntityInterface $entity) {
+function hook_salesforce_pull_pre_pull_alter(SObject $sf_record, MappedObjectInterface $mapped_object, EntityInterface $entity) {
 
 }
 
