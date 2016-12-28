@@ -19,11 +19,22 @@ class QueueHandler {
   protected $mappings;
   protected $pull_fields;
 
-  public function __construct(RestClient $sfapi) {
+  private function __construct(RestClient $sfapi) {
     $this->sfapi = $sfapi;
     $this->queue = \Drupal::queue('cron_salesforce_pull');
     $this->organizeMappings();
   }
+
+  /**
+   * Chainable instantiation method for class
+   *
+   * @param object
+   *  RestClient object
+   */
+  public static function create(RestClient $sfapi) {
+    return new Queuehandler($sfapi);
+  }
+
 
   /**
    * Pull updated records from Salesforce and place them in the queue.
@@ -41,23 +52,11 @@ class QueueHandler {
 
     // Iterate over each field mapping to determine our query parameters.
     foreach ($this->mappings as $mapping) {
+      // @TODO: This may need a try-catch? all of the following methods will eception catch themselves
       $results = $this->doSfoQuery($mapping);
-
-      if (!isset($results['errorCode'])) {
-        // Write items to the queue.
-        foreach ($results['records'] as $result) {
-          $result['__salesforce_mapping_id'] = $mapping->id();
-          $this->queue->createItem($result);
-        }
-        $this->handleLargeRequests($mapping, $results);
-        \Drupal::state()->set('salesforce_pull_last_sync_' . $sf_object_type, REQUEST_TIME);
-      }
-      else {
-        \Drupal::logger('Salesforce Pull')->error('%code:%msg', [
-          '%code' => $results['errorCode'],
-          '%msg' => $results['message'],
-        ]);
-      }
+      $this->insertIntoQueue($mapping, $results->records);
+      $this->handleLargeRequests($mapping, $results);
+      \Drupal::state()->set('salesforce_pull_last_sync_' . $sf_object_type, REQUEST_TIME);
     }
   }
 
@@ -133,22 +132,35 @@ class QueueHandler {
    *   Original list of results, which includes batched records fetch URL
    */
   protected function handleLargeRequests(SalesforceMappingInterface $mapping, array $results) {
-    $version_path = parse_url($sfapi->getApiEndPoint(), PHP_URL_PATH);
-    $next_records_url = isset($results['nextRecordsUrl']) ?
-      str_replace($version_path, '', $results['nextRecordsUrl']) :
-      FALSE;
-    while ($next_records_url) {
-      $new_result = $this->sfapi->apiCall($next_records_url);
-      if (!isset($new_result['errorCode'])) {
-        // Write items to the queue.
-        foreach ($new_result['records'] as $result) {
-          $result['__salesforce_mapping_id'] = $mapping->id();
-          $this->queue->createItem($result);
-        }
-      }
-      $next_records_url = isset($new_result['nextRecordsUrl']) ?
-        str_replace($version_path, '', $new_result['nextRecordsUrl']) : FALSE;
-    }
+   $version_path = parse_url($sfapi->getApiEndPoint(), PHP_URL_PATH);
+   if ($results->nextRecordsUrl != null) {
+     try {
+       $new_result = $this->sfapi->apiCall(
+         str_replace($version_path, '', $results->nextRecordsUrl));
+       $this->insertIntoQueue($mapping, $new_result->records);
+       $this->handleLargeRequests($mapping, $new_result);
+     }
+     catch (Exception $e) {
+       \Drupal::logger('Salesforce Pull')->error($e->getMessage());
+     }
+   }
   }
 
+  /**
+   * Inserts results into queue
+   *
+   * @param object
+   *   Result set
+   */
+  protected function insertIntoQueue(SalesforceMappingInterface $mapping, array $records) {
+    try {
+      foreach ($records as $record) {
+        $result['__salesforce_mapping_id'] = $mapping->id();
+        $this->queue->createItem($record);
+      }
+    }
+    catch (Exception $e) {
+      \Drupal::logger('Salesforce Pull')->error($e->getMessage());
+    }
+  }
 }
