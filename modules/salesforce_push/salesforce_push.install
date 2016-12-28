@@ -1,14 +1,12 @@
 <?php
-/**
- * @file
- * Install/uninstall tasks for the Salesforce Push module.
- */
+
+use Drupal\salesforce_push\PushQueue;
 
 /**
  * Implements hook_install().
  */
 function salesforce_push_install() {
-  \Drupal::state()->set('salesforce.push_limit', 50);
+  \Drupal::state()->set('salesforce.push_limit', PushQueue::DEFAULT_CRON_PUSH_LIMIT);
 }
 
 /**

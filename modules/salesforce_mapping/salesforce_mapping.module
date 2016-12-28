@@ -100,9 +100,9 @@ function salesforce_mapping_load($name) {
   $mapping = \Drupal::entityTypeManager()
     ->getStorage('salesforce_mapping')
     ->load($name);
-  //if (empty($mapping)) {
-  //  throw new Exception("No mapping found for $name.");
-  //}
+  if (empty($mapping)) {
+   throw new Exception("No mapping found for $name.");
+  }
   return $mapping;
 }
 

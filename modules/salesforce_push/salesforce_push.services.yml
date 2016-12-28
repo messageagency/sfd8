@@ -1,4 +1,4 @@
 services:
   queue.salesforce:
     class: Drupal\salesforce_push\PushQueue
-    arguments: ['@database']
+    arguments: ['@database', '@state']

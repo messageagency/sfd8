@@ -197,5 +197,5 @@ function salesforce_push_enqueue_async(EntityInterface $entity, SalesforceMappin
  * Implements hook_cron().
  */
 function salesforce_push_cron() {
-  \Drupal::service('queue.salesforce')->processQueue();
+  \Drupal::service('queue.salesforce')->processQueues();
 }
