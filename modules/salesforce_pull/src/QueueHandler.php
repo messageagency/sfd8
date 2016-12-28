@@ -5,6 +5,7 @@ namespace Drupal\salesforce_pull;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Exception;
 /**
  * Handles pull cron queue set up.
