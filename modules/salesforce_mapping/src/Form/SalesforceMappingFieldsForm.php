@@ -161,10 +161,13 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    */
   private function getUpsertKeyOptions() {
     $options = [];
-    $describe = $this->get_salesforce_object();
-    if (!$describe) {
+    try {
+      $describe = $this->get_salesforce_object();
+    }
+    catch (Exception $e) {
       return [];
     }
+
     foreach ($describe->fields as $field) {
       if ($field['externalId']) {
         $options[$field['name']] = $field['label'];
