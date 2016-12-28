@@ -155,11 +155,7 @@ class QueueHandler {
   protected function insertIntoQueue(SalesforceMappingInterface $mapping, array $records) {
     try {
       foreach ($records as $record) {
-        $item = [
-          'sobject' => $record,
-          'mapping_id' => $mapping->id(),
-        ];
-        $this->queue->createItem($item);
+        $this->queue->createItem(new PullQueueItem($record, $mapping));
       }
     }
     catch (Exception $e) {

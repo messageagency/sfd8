@@ -17,6 +17,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\SObject;
+use Drupal\salesforce_pull\PullQueueItem;
 
 /**
  * Provides base functionality for the Salesforce Pull Queue Workers.
@@ -31,10 +32,7 @@ abstract class PullBase extends QueueWorkerBase {
   /**
    * {@inheritdoc}
    */
-  public function processItem($item) {
-    if (empty($item->sobject) || empty($item->mapping_id)) {
-      throw new Exception('Invalid queue item for Salesforce Pull Queue.');
-    }
+  public function processItem(PullQueueItem $item) {
     $sf_object = $item->sobject;
     try {
       $mapping = salesforce_mapping_load($item->mapping_id);
