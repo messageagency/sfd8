@@ -10,6 +10,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
 use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePushEvent;
@@ -47,6 +48,9 @@ use Drupal\salesforce_mapping\SalesforcePushEvent;
 class MappedObject extends RevisionableContentEntityBase implements MappedObjectInterface {
 
   use EntityChangedTrait;
+
+  protected $sf_object = NULL;
+  protected $drupal_entity = NULL;
 
   /**
    * Overrides ContentEntityBase::__construct().
@@ -332,40 +336,51 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
+
+  public function setDrupalEntity(EntityInterface $entity = NULL) {
+    if ($entity->id() != $this->entity_id->value) {
+      throw new Exception('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
+    }
+    $this->drupal_entity = $entity;
+  }
+
+  public function setSalesforceRecord(array $sf_record) {
+    $this->sf_object = new SObject($sf_record);
+  }
+
   /**
    * @return $this
    */
-  public function pull(array $sf_object = NULL, EntityInterface $drupal_entity = NULL) {
+  public function pull() {
     $mapping = $this->salesforce_mapping->entity;
 
-    if ($drupal_entity == NULL) {
-      $drupal_entity = \Drupal::entityTypeManager()
+    if ($this->drupal_entity == NULL) {
+      $this->drupal_entity = \Drupal::entityTypeManager()
         ->getStorage($this->entity_type_id->value)
         ->load($this->entity_id->value);
     }
 
     // If the pull isn't coming from a cron job.
-    if ($sf_object == NULL) {
-      $sf_object = [];
-      $client = \Drupal::service('salesforce.client');
+    if ($this->sf_object == NULL) {
+      $client = salesforce_get_api();
       if ($this->sfid()) {
-        $sf_object = $client->objectRead(
+        $this->sf_object = $client->objectRead(
           $mapping->getSalesforceObjectType(),
           $this->sfid()
         );
       }
       elseif ($mapping->hasKey()) {
-        $sf_object = $client->objectReadbyExternalId(
+        $this->sf_object = $client->objectReadbyExternalId(
           $mapping->getSalesforceObjectType(),
           $mapping->getKeyField(),
           $mapping->getKeyValue($drupal_entity)
         );
-        $this->set('salesforce_id', $sf_object->id());
+        $this->set('salesforce_id', (string)$sf_object->id());
       }
     }
 
     // No object found means there's nothing to pull.
-    if (empty($sf_object)) {
+    if (!($this->sf_object instanceof SObject)) {
       drupal_set_message('Nothing to pull. Please specify a Salesforce ID, or choose a mapping with an Upsert Key defined.', 'warning');
       return;
     }
@@ -375,30 +390,39 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     foreach ($fields as $field) {
       // @TODO: The field plugin should be in charge of setting its value on an entity, we should not assume the field plugin's logic as we're doing here.
-      $value = $sf_object[$field->get('salesforce_field')];
+      try {
+        $value = $this->sf_object->field[$field->get('salesforce_field')];
+      }
+      catch (Exception $e) {
+        continue;
+      }
+
       $drupal_field = $field->get('drupal_field_value');
-      if (isset($value)) {
-        try {
-          $drupal_entity->set($drupal_field, $value);
-        }
-        catch (\Exception $e) {
-          $message = t('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
-            '@sfobj' => $mapping->getSalesforceObjectType(),
-            '@sffield' => $sf_field,
-            '@sfid' => $this->sfid(),
-            '@dobj' => $this->entity_type_id->value,
-            '@dprop' => $drupal_field,
-            '@did' => $this->entity_id->value,
-            '@v' => $value,
-            '@e' => $e->getMessage(),
-          ]);
-          throw new \Exception($message, $e->getCode(), $e);
-        }
+      try {
+        $drupal_entity->set($drupal_field, $value);
+      }
+      catch (\Exception $e) {
+        $message = t();
+        // throw new \Exception($message, $e->getCode(), $e);
+        \Drupal::logger('Salesforce Pull')->notice('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
+          '@sfobj' => $mapping->getSalesforceObjectType(),
+          '@sffield' => $sf_field,
+          '@sfid' => $this->sfid(),
+          '@dobj' => $this->entity_type_id->value,
+          '@dprop' => $drupal_field,
+          '@did' => $this->entity_id->value,
+          '@v' => $value,
+          '@e' => $e->getMessage(),
+        ]);
+        continue;
       }
     }
-    $drupal_entity->save();
+
+    $this->drupal_entity->save();
+
     // Update mapping object.
     $this
+      ->set('entity_id', $this->drupal_entity->id())
       ->set('entity_updated', REQUEST_TIME)
       ->set('last_sync_action', 'pull')
       ->set('last_sync_status', TRUE)

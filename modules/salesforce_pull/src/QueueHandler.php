@@ -46,9 +46,10 @@ class QueueHandler {
       if (!isset($results['errorCode'])) {
         // Write items to the queue.
         foreach ($results['records'] as $result) {
+          $result['__salesforce_mapping_id'] = $mapping->id();
           $this->queue->createItem($result);
         }
-        $this->handleLargeRequests($results);
+        $this->handleLargeRequests($mapping, $results);
         \Drupal::state()->set('salesforce_pull_last_sync_' . $sf_object_type, REQUEST_TIME);
       }
       else {
@@ -72,7 +73,7 @@ class QueueHandler {
     $this->mappings = [];
     $this->pull_fields = [];
     foreach(salesforce_mapping_load_multiple() as $mapping) {
-      $this->pull_fields[$mapping->getSalesforceObjectType()] += $this->getFieldArray($mapping);
+      $this->pull_fields[$mapping->getSalesforceObjectType()] += $mapping->getPullFieldsArray();
       $this->mappings[] = $mapping;
     }
   }
@@ -93,7 +94,7 @@ class QueueHandler {
     // Convert field mappings to SOQL.
     $soql->fields = ['Id', $mapping->get('pull_trigger_date')];
     $mapped_fields = 
-      $this->pull_fields[$mapping->get('salesforce_record_type')]);
+      $this->pull_fields[$mapping->get('salesforce_record_type')];
     foreach ($mapped_fields as $field) {
       $soql->fields[] = $field;
     }
@@ -131,7 +132,7 @@ class QueueHandler {
    * @param array
    *   Original list of results, which includes batched records fetch URL
    */
-  protected function handleLargeRequests(array $results) {
+  protected function handleLargeRequests(SalesforceMappingInterface $mapping, array $results) {
     $version_path = parse_url($sfapi->getApiEndPoint(), PHP_URL_PATH);
     $next_records_url = isset($results['nextRecordsUrl']) ?
       str_replace($version_path, '', $results['nextRecordsUrl']) :
@@ -141,6 +142,7 @@ class QueueHandler {
       if (!isset($new_result['errorCode'])) {
         // Write items to the queue.
         foreach ($new_result['records'] as $result) {
+          $result['__salesforce_mapping_id'] = $mapping->id();
           $this->queue->createItem($result);
         }
       }
