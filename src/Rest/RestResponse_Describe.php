@@ -39,6 +39,17 @@ class RestResponse_Describe extends RestResponse {
     foreach ($response->data['fields'] as $field) {
       $this->fields[$field['name']] = $field;
     }
+    unset($response->data['fields']);
+    foreach ($response->data as $key => $value) {
+      $this->$key = $value;
+    }
+  }
+
+  /**
+   * getter
+   */
+  public function getFields() {
+    return $this->fields;
   }
 
   /**
@@ -67,6 +78,5 @@ class RestResponse_Describe extends RestResponse {
     }
     return $this->field_options;
   }
-
 
 }

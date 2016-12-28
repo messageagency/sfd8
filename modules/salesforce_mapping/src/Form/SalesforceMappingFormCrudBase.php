@@ -404,10 +404,13 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   protected function get_salesforce_record_type_options($salesforce_object_type) {
     $sf_types = [];
     $sfobject = $this->get_salesforce_object($salesforce_object_type);
-    if ($sfobject && isset($sfobject['recordTypeInfos'])) {
-      foreach ($sfobject['recordTypeInfos'] as $type) {
+    try {
+      foreach ($sfobject->recordTypeInfos as $type) {
         $sf_types[$type['recordTypeId']] = $type['name'];
       }
+    }
+    catch (\Exception $e) {
+      // noop
     }
     return $sf_types;
   }
@@ -440,12 +443,16 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   private function get_pull_trigger_options($name) {
     $options = [];
-    $describe = $this->get_salesforce_object();
-    if ($describe) {
-      foreach ($describe['fields'] as $field) {
-        if ($field['type'] == 'datetime') {
-          $options[$field['name']] = $field['label'];
-        }
+    try {
+      $describe = $this->get_salesforce_object();
+    }
+    catch (Exception $e) {
+      return [];
+    }
+
+    foreach ($describe->getFields() as $field) {
+      if ($field['type'] == 'datetime') {
+        $options[$field['name']] = $field['label'];
       }
     }
     return $options;

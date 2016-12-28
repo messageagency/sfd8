@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Form;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\salesforce\Rest\RestClient;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -33,8 +34,9 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *
    * @throws RuntimeException
    */
-  public function __construct(PluginManagerInterface $SalesforceMappingFieldManager) {
+  public function __construct(PluginManagerInterface $SalesforceMappingFieldManager, RestClient $client) {
     $this->SalesforceMappingFieldManager = $SalesforceMappingFieldManager;
+    $this->client = $client;
   }
 
   /**
@@ -42,8 +44,8 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('plugin.manager.salesforce_mapping_field')
-      // $container->get('plugin.manager.salesforce_push')
+      $container->get('plugin.manager.salesforce_mapping_field'),
+      $container->get('salesforce.client')
     );
   }
 
@@ -70,18 +72,19 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *
    * @return RestResponse_Describe
    *   Information about the Salesforce object as provided by Salesforce.
+   *
+   * @throws Exception if $salesforce_object_type is not provided and
+   *   $this->entity->salesforce_object_type is not set.
    */
   protected function get_salesforce_object($salesforce_object_type = '') {
     if (empty($salesforce_object_type)) {
       $salesforce_object_type = $this->entity->get('salesforce_object_type');
     }
     if (empty($salesforce_object_type)) {
-      return FALSE;
+      throw new Exception('Salesforce object type not set.');
     }
     // No need to cache here: Salesforce::objectDescribe implements caching.
-    $sfapi = salesforce_get_api();
-    $sfobject = $sfapi->objectDescribe($salesforce_object_type);
-    return $sfobject;
+    return $this->client->objectDescribe($salesforce_object_type);
   }
 
 }
