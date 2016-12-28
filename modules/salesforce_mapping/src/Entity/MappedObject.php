@@ -22,6 +22,7 @@ use Drupal\salesforce_mapping\SalesforcePushEvent;
  *   label = @Translation("Salesforce Mapped Object"),
  *   module = "salesforce_mapping",
  *   handlers = {
+ *     "storage_schema" = "Drupal\salesforce_mapping\MappedObjectStorageSchema",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\salesforce_mapping\MappedObjectList",
  *     "form" = {
