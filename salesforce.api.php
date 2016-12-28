@@ -9,28 +9,6 @@
  */
 
 /**
- * @defgroup salesforce_hooks Hooks provided by Salesforce API
- * @{
- */
-
-/**
- * Trigger action when first building the list of fieldmap types.
- */
-function hook_salesforce_mapping_fieldmap_type() {
-
-}
-
-/**
- * Alter existing fieldmap types.
- *
- * @param array $fieldmap_type
- *   Array of fieldmap Salesforce types.
- */
-function hook_salesforce_mapping_fieldmap_type_alter($fieldmap_type) {
-
-}
-
-/**
  * Alter parameters mapped to a Salesforce object before syncing to Salesforce.
  *
  * @param array $params
