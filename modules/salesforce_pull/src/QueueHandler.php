@@ -42,7 +42,7 @@ class QueueHandler {
    * Executes a SOQL query based on defined mappings, loops through the results,
    * and places each updated SF object into the queue for later processing.
    */
-  public static function getUpdatedRecords() {
+  public function getUpdatedRecords() {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
     if ($this->queue->numberOfItems() > \Drupal::state()->get('salesforce_pull_max_queue_size', 100000)) {
