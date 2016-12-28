@@ -54,7 +54,7 @@ class QueueHandler {
     foreach ($this->mappings as $mapping) {
       // @TODO: This may need a try-catch? all of the following methods will exception catch themselves
       $results = $this->doSfoQuery($mapping);
-      $this->insertIntoQueue($mapping, $results->records);
+      $this->insertIntoQueue($mapping, $results->records());
       $this->handleLargeRequests($mapping, $results);
       \Drupal::state()->set('salesforce_pull_last_sync_' . $sf_object_type, REQUEST_TIME);
     }
@@ -69,11 +69,13 @@ class QueueHandler {
    *   of field mappings
    */
   protected function organizeMappings() {
-    $this->mappings = [];
+    $this->mappings = salesforce_mapping_load_multiple();
     $this->pull_fields = [];
-    foreach(salesforce_mapping_load_multiple() as $mapping) {
-      $this->pull_fields[$mapping->getSalesforceObjectType()] += $mapping->getPullFieldsArray();
-      $this->mappings[] = $mapping;
+    foreach($this->mappings as $mapping) {
+      $this->pull_fields[$mapping->getSalesforceObjectType()] =
+        (!empty($this->pull_fields[$mapping->getSalesforceObjectType()])) ?
+          $this->pull_fields[$mapping->getSalesforceObjectType()] + $mapping->getPullFieldsArray() :
+          $mapping->getPullFieldsArray();
     }
   }
 
@@ -88,7 +90,7 @@ class QueueHandler {
    */
   protected function doSfoQuery(SalesforceMappingInterface $mapping) {
     // @TODO figure out the new way to build the query.
-    $soql = new SelectQuery($type);
+    $soql = new SelectQuery($mapping->getSalesforceObjectType());
 
     // Convert field mappings to SOQL.
     $soql->fields = ['Id', $mapping->get('pull_trigger_date')];
@@ -106,7 +108,7 @@ class QueueHandler {
     }
 
     // Add RecordTypeId to mapped fields if it's non-default.
-    $sf_record_type = $mapping->get('salesforce_record_type');
+    $sf_record_type = $mapping->getSalesforceObjectType();
     if (!empty($mapped_fields)
     && !empty($sf_record_type)
     && $sf_record_type != SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE) {
@@ -155,7 +157,7 @@ class QueueHandler {
   protected function insertIntoQueue(SalesforceMappingInterface $mapping, array $records) {
     try {
       foreach ($records as $record) {
-        $result['__salesforce_mapping_id'] = $mapping->id();
+        $record['__salesforce_mapping_id'] = $mapping->id();
         $this->queue->createItem($record);
       }
     }
