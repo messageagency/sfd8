@@ -101,9 +101,9 @@ function salesforce_mapping_load($name) {
   $mapping = \Drupal::entityTypeManager()
     ->getStorage('salesforce_mapping')
     ->load($name);
-  //if (empty($mapping)) {
-  //  throw new Exception("No mapping found for $name.");
-  //}
+  if (empty($mapping)) {
+   throw new Exception("No mapping found for $name.");
+  }
   return $mapping;
 }
 
@@ -196,7 +196,7 @@ function salesforce_mapped_object_load_by_sfid($salesforce_id) {
  * @see salesforce_mapping_load_multiple()
  * @throws Exception if no mappings have been created yet.
  */
-function salesforce_mapping_get_mapped_objects() {
+function salesforce_mapping_get_mapped_sobject_types() {
   $object_types = [];
   $mappings = salesforce_mapping_load_multiple();
   usort($mappings, 'salesforce_mapping_sort');

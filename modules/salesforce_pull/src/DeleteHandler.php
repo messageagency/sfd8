@@ -20,86 +20,116 @@ class DeleteHandler {
    */
   public static function processDeletedRecords(RestClient $sfapi) {
     // @TODO Add back in SOAP, and use autoloading techniques
-    /*
-    if (!\Drupal::moduleHandler()->moduleExists('salesforce_soap')) {
-      salesforce_set_message('Enable Salesforce SOAP to process deleted records');
-      return;
-    }
-    module_load_include('inc', 'salesforce_soap');
-    $soap = new SalesforceSoapPartner($sfapi);
-    */
-    foreach (array_reverse(salesforce_mapping_get_mapped_objects()) as $type) {
+    foreach (array_reverse(salesforce_mapping_get_mapped_sobject_types()) as $type) {
       $last_delete_sync = \Drupal::state()->get('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
       $now = time();
-      // SOAP getDeleted() restraint: startDate must be at least one minute
+      // getDeleted() restraint: startDate must be at least one minute
       // greater than endDate.
       $now = $now > $last_delete_sync + 60 ? $now : $now + 60;
       $last_delete_sync_sf = gmdate('Y-m-d\TH:i:s\Z', $last_delete_sync);
       $now_sf = gmdate('Y-m-d\TH:i:s\Z', $now);
-      //$deleted = $soap->getDeleted($type, $last_delete_sync_sf, $now_sf);
-      $deleted = $sfapi->apiCall(
-        "sobjects/$type/deleted/?start=$last_delete_sync_sf&end=$now_sf",
-        [],
-        'GET'
-      );
-      // Cast $deleted as object since REST is returning an array instead of
-      // the object the SOAP client apparantly does
-      $deleted = (object) $deleted;
+      $deleted = $sfapi->getDeleted($type, $last_delete_sync_sf, $now_sf);
+      $this->handleDeletedRecords($deleted);
+      \Drupal::state()->set('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
+    }
+  }
 
-      if (!empty($deleted->deletedRecords)) {
-        $sf_mappings = salesforce_mapping_load_multiple(
-          ['salesforce_object_type' => $type]
-        );
-        foreach ($deleted->deletedRecords as $record) {
-          try {
-            $mapped_object = salesforce_mapped_object_load_by_sfid($record['id']);
-            $entity = \Drupal::entityTypeManager()
-              ->getStorage($mapped_object->entity_type)
-              ->load($mapped_object->entity_id);
-            foreach ($sf_mappings as $sf_mapping) {
-              if ($sf_mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
-                // Delete mapping object.
-                /*
-                 * Not sure what this code does
-                $transaction = db_transaction();
-                $map_entity = \Drupal::entityTypeManager()
-                  ->getStorage('salesforce_mapped_object')
-                  ->load($mapped_object->salesforce_mapped_object_id);
-                $map_entity->delete();
-                $map_entity = \Drupal::entityTypeManager()
-                  ->getStorage($sf_mapping->drupal_entity_type)
-                  ->load($mapped_object->entity_id);
-                $map_entity->delete();
-                */
-                try {
-                  $entity->delete();
-                  \Drupal::logger('Salesforce Pull')->notice(
-                    'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid',
-                    [
-                      '%label' => $entity->label(),
-                      '%id' => $mapped_object->entity_id,
-                      '%sfid' => $record->id,
-                    ]
-                  );
-                }
-                catch (Exception $e) {
-                  \Drupal::logger('Salesforce Pull')->error($e);
-                }
-              }
-            }
-            $mapped_object->delete();
-          }
-          catch (Exception $e) {
-            \Drupal::logger('Salesforce Pull')->notice(
-              'No mapped object exists for Salesforce Object ID: %sfid',
-              [
-                '%sfid' => $record->id,
-              ]
-            );
-          }
+  protected function handleDeletedRecords(array $deleted, $type) {
+    if (empty($deleted['deletedRecords'])) {
+      return;
+    }
+    $deleted = (object) $deleted;
+
+    try {
+      $sf_mappings = salesforce_mapping_load_multiple(
+        ['salesforce_object_type' => $type]
+      );
+    }
+    catch (Exception $e) {
+      // No mappings found. Quit now.
+      return;
+    }
+
+    foreach ($deleted->deletedRecords as $record) {
+      $this->handleDeletedRecord($record, $type);
+    }
+  }
+  
+  protected function handleDeletedRecord($record, $type) {
+    try {
+      $mapped_objects = salesforce_mapped_object_load_by_sfid($record->id);
+    }
+    catch (Exception $e) {
+      // @TODO do we need a log entry for every object which gets deleted and isn't mapped to Drupal?
+      \Drupal::logger('Salesforce Pull')->notice(
+        'No mapped object exists for Salesforce Object ID: %sfid',
+        [
+          '%sfid' => $record->id,
+        ]
+      );
+      return;
+    }
+
+    foreach ($mapped_objects as $mapped_object) {
+      try {
+        $entity = \Drupal::entityTypeManager()
+          ->getStorage($mapped_object->entity_type)
+          ->load($mapped_object->entity_id);
+        if (!$entity) {
+          throw new Exception();
         }
       }
-      \Drupal::state()->set('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
+      catch (Exception $e) {
+        // No mapped entity found for the mapped object. Just delete the mapped object and continue.
+        \Drupal::logger('Salesforce Pull')->notice(
+          'No entity found for ID %id associated with Salesforce Object ID: %sfid ',
+          [
+            '%id' => $mapped_object->entity_id,
+            '%sfid' => $record->id,
+          ]
+        );
+        $mapped_object->delete();
+        continue;
+      }
+
+      try {
+        $sf_mapping = salesforce_mapping_load($mapped_object->get('salesforce_mapping'));
+      }
+      catch (Exception $e) {
+        \Drupal::logger('Salesforce Pull')->notice(
+          'No mapping exists for mapped object %id with Salesforce Object ID: %sfid',
+          [
+            '%id' => $mapped_object->id(),
+            '%sfid' => $record->id,
+          ]
+        );
+        // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
+        // $mapped_object->delete();
+        continue;
+      }
+
+      if (!$sf_mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
+        continue;
+      }
+
+      try {
+        $entity->delete();
+        \Drupal::logger('Salesforce Pull')->notice(
+          'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid',
+          [
+            '%label' => $entity->label(),
+            '%id' => $mapped_object->entity_id,
+            '%sfid' => $record->id,
+          ]
+        );
+      }
+      catch (Exception $e) {
+        \Drupal::logger('Salesforce Pull')->error($e);
+        // If mapped entity couldn't be deleted, do not delete the mapped object either.
+        continue;
+      }
+
+      $mapped_object->delete();
     }
   }
 }
