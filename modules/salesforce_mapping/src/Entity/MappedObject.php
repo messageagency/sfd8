@@ -2,12 +2,13 @@
 
 namespace Drupal\salesforce_mapping\Entity;
 
+use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Entity\EntityChangedTrait;
-use Drupal\Core\Entity\EntityChangedInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\salesforce\SFID;
 use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePushEvent;
@@ -132,13 +133,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         'weight' => $i++,
       ]);
 
+    // @TODO make this work with Drupal\salesforce\SFID (?)
     $fields['salesforce_id'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Salesforce ID'))
       ->setDescription(t('Reference to the mapped Salesforce object (SObject)'))
       ->setRevisionable(TRUE)
       ->setTranslatable(FALSE)
       ->setSetting('is_ascii', TRUE)
-      ->setSetting('max_length', MappedObjectInterface::SFID_MAX_LENGTH)
+      ->setSetting('max_length', SFID::MAX_LENGTH)
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
         'weight' => 0,
@@ -281,7 +283,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     }
     elseif ($this->sfid()) {
       $action = 'update';
-      $result = $client->objectUpdate(
+      $client->objectUpdate(
         $mapping->getSalesforceObjectType(),
         $this->sfid(),
         $params->getParams()
@@ -294,23 +296,21 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         $params->getParams()
       );
     }
-    // @TODO make $result a class with reliable properties, methods.
 
     if ($drupal_entity instanceof EntityChangedInterface) {
-      // @TODO: where to get entity updated timestamp?
       $this->set('entity_updated', $drupal_entity->getChangedTime());
     }
-    // dpm($result);
-    // @TODO restore last_sync_action, last_sync_status, last_sync_message
+
     // @TODO: catch EntityStorageException ? Others ?
-    $this->setNewRevision(TRUE);
-    if ($result['id']) {
-      $this->set('salesforce_id', $result['id']);
+    if ($result instanceof SFID) {
+      $this->set('salesforce_id', (string)$result);
     }
+
+    // @TODO setNewRevision not chainable, per https://www.drupal.org/node/2839075
+    $this->setNewRevision(TRUE);
     $this
       ->set('last_sync_action', 'push_' . $action)
       ->set('last_sync_status', TRUE)
-      // ->set('last_sync_message', '')
       ->save();
 
     return $result;
@@ -359,9 +359,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
           $mapping->getKeyField(),
           $mapping->getKeyValue($drupal_entity)
         );
-        if (!empty($sf_object['Id'])) {
-          $this->set('salesforce_id', $sf_object['Id']);
-        }
+        $this->set('salesforce_id', $sf_object->id());
       }
     }
 

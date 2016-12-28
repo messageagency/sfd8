@@ -165,7 +165,7 @@ function salesforce_push_sync_rest(EntityInterface $entity, SalesforceMappingInt
     $mapped_object
       ->set('last_sync_action', $op)
       ->set('last_sync_status', FALSE)
-      ->set('last_sync_message', $e->getMessage())
+      ->set('revision_log_message', $e->getMessage())
       ->save();
     throw $e;
 

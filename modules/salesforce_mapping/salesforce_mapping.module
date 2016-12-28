@@ -157,12 +157,9 @@ function salesforce_mapped_object_load_multiple($properties = []) {
   $mappings = \Drupal::entityTypeManager()
     ->getStorage('salesforce_mapped_object')
     ->loadByProperties($properties);
-  // Do we really want to throw an exception here?
-  // What if we're trying to load an object in a process
-  // that needs to create a new object?
-  //if (empty($mappings)) {
-  //  throw new Exception('No mapped objects found');
-  //}
+  if (empty($mappings)) {
+    throw new Exception('No mapped objects found');
+  }
   return $mappings;
 }
 
@@ -369,4 +366,3 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
       ->save();
   }
 }
-
