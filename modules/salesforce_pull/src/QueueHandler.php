@@ -26,6 +26,17 @@ class QueueHandler {
   }
 
   /**
+   * Chainable instantiation method for class
+   *
+   * @param object
+   *  RestClient object
+   */
+  public static function create(RestClient $sfapi) {
+    return new Queuehandler($sfapi);
+  }
+
+
+  /**
    * Pull updated records from Salesforce and place them in the queue.
    *
    * Executes a SOQL query based on defined mappings, loops through the results,
@@ -41,22 +52,11 @@ class QueueHandler {
 
     // Iterate over each field mapping to determine our query parameters.
     foreach ($this->mappings as $mapping) {
+      // @TODO: This may need a try-catch? all of the following methods will eception catch themselves
       $results = $this->doSfoQuery($mapping);
-
-      if (!isset($results['errorCode'])) {
-        // Write items to the queue.
-        foreach ($results['records'] as $result) {
-          $this->queue->createItem($result);
-        }
-        $this->handleLargeRequests($results);
-        \Drupal::state()->set('salesforce_pull_last_sync_' . $sf_object_type, REQUEST_TIME);
-      }
-      else {
-        \Drupal::logger('Salesforce Pull')->error('%code:%msg', [
-          '%code' => $results['errorCode'],
-          '%msg' => $results['message'],
-        ]);
-      }
+      $this->insertIntoQueue($results->records);
+      $this->handleLargeRequests($results);
+      \Drupal::state()->set('salesforce_pull_last_sync_' . $sf_object_type, REQUEST_TIME);
     }
   }
 
@@ -72,7 +72,7 @@ class QueueHandler {
     $this->mappings = [];
     $this->pull_fields = [];
     foreach(salesforce_mapping_load_multiple() as $mapping) {
-      $this->pull_fields[$mapping->getSalesforceObjectType()] += $this->getFieldArray($mapping);
+      $this->pull_fields[$mapping->getSalesforceObjectType()] += $mapping->getPullFieldsArray();
       $this->mappings[] = $mapping;
     }
   }
@@ -92,7 +92,7 @@ class QueueHandler {
 
     // Convert field mappings to SOQL.
     $soql->fields = ['Id', $mapping->get('pull_trigger_date')];
-    $mapped_fields = 
+    $mapped_fields =
       $this->pull_fields[$mapping->get('salesforce_record_type')]);
     foreach ($mapped_fields as $field) {
       $soql->fields[] = $field;
@@ -132,21 +132,34 @@ class QueueHandler {
    *   Original list of results, which includes batched records fetch URL
    */
   protected function handleLargeRequests(array $results) {
-    $version_path = parse_url($sfapi->getApiEndPoint(), PHP_URL_PATH);
-    $next_records_url = isset($results['nextRecordsUrl']) ?
-      str_replace($version_path, '', $results['nextRecordsUrl']) :
-      FALSE;
-    while ($next_records_url) {
-      $new_result = $this->sfapi->apiCall($next_records_url);
-      if (!isset($new_result['errorCode'])) {
-        // Write items to the queue.
-        foreach ($new_result['records'] as $result) {
-          $this->queue->createItem($result);
-        }
-      }
-      $next_records_url = isset($new_result['nextRecordsUrl']) ?
-        str_replace($version_path, '', $new_result['nextRecordsUrl']) : FALSE;
-    }
+   $version_path = parse_url($sfapi->getApiEndPoint(), PHP_URL_PATH);
+   if ($results->nextRecordsUrl != null) {
+     try {
+       $new_result = $this->sfapi->apiCall(
+         str_replace($version_path, '', $results->nextRecordsUrl));
+       $this->insertIntoQueue($new_result->records);
+       $this->handleLargeRequests($new_result);
+     }
+     catch (Exception $e) {
+       \Drupal::logger('Salesforce Pull')->error($e->getMessage());
+     }
+   }
   }
 
+  /**
+   * Inserts results into queue
+   *
+   * @param object
+   *   Result set
+   */
+  protected function insertIntoQueue($records) {
+    try {
+      foreach ($records as $record) {
+        $this->queue->createItem($record);
+      }
+    }
+    catch (Exception $e) {
+      \Drupal::logger('Salesforce Pull')->error($e->getMessage());
+    }
+  }
 }
