@@ -15,8 +15,7 @@ use Drupal\salesforce_pull\DeleteHandler;
 function salesforce_pull_cron() {
   $sfapi = salesforce_get_api();
   if ($sfapi->isAuthorized()) {
-    QueueHandler::create($sfapi)
-      ->getUpdatedRecords();
-    DeleteHandler::processDeletedRecords($sfapi);
+    QueueHandler::create($sfapi)->getUpdatedRecords();
+    DeleteHandler::create($sfapi)->processDeletedRecords();
   }
 }

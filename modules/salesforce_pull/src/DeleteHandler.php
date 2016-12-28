@@ -13,12 +13,26 @@ use Drupal\salesforce\Exception;
  */
 
 class DeleteHandler {
-  public function __construct() {}
+  protected $sfapi;
+
+  private function __construct(RestClient $sfapi) {
+    $this->sfapi = $sfapi;
+  }
+
+  /**
+   * Chainable instantiation method for class
+   *
+   * @param object
+   *  RestClient object
+   */
+  public static function create(RestClient $sfapi) {
+    return new DeleteHandler($sfapi);
+  }
 
   /**
    * Process deleted records from salesforce.
    */
-  public static function processDeletedRecords(RestClient $sfapi) {
+  public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
     foreach (array_reverse(salesforce_mapping_get_mapped_sobject_types()) as $type) {
       $last_delete_sync = \Drupal::state()->get('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
@@ -28,8 +42,8 @@ class DeleteHandler {
       $now = $now > $last_delete_sync + 60 ? $now : $now + 60;
       $last_delete_sync_sf = gmdate('Y-m-d\TH:i:s\Z', $last_delete_sync);
       $now_sf = gmdate('Y-m-d\TH:i:s\Z', $now);
-      $deleted = $sfapi->getDeleted($type, $last_delete_sync_sf, $now_sf);
-      $this->handleDeletedRecords($deleted);
+      $deleted = $this->sfapi->getDeleted($type, $last_delete_sync_sf, $now_sf);
+      $this->handleDeletedRecords($deleted, $type);
       \Drupal::state()->set('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
     }
   }
@@ -38,7 +52,6 @@ class DeleteHandler {
     if (empty($deleted['deletedRecords'])) {
       return;
     }
-    $deleted = (object) $deleted;
 
     try {
       $sf_mappings = salesforce_mapping_load_multiple(
@@ -50,21 +63,21 @@ class DeleteHandler {
       return;
     }
 
-    foreach ($deleted->deletedRecords as $record) {
+    foreach ($deleted['deletedRecords'] as $record) {
       $this->handleDeletedRecord($record, $type);
     }
   }
-  
+
   protected function handleDeletedRecord($record, $type) {
     try {
-      $mapped_objects = salesforce_mapped_object_load_by_sfid($record->id);
+      $mapped_objects = salesforce_mapped_object_load_by_sfid($record['id']);
     }
     catch (Exception $e) {
       // @TODO do we need a log entry for every object which gets deleted and isn't mapped to Drupal?
       \Drupal::logger('Salesforce Pull')->notice(
         'No mapped object exists for Salesforce Object ID: %sfid',
         [
-          '%sfid' => $record->id,
+          '%sfid' => $record['id'],
         ]
       );
       return;
@@ -73,8 +86,8 @@ class DeleteHandler {
     foreach ($mapped_objects as $mapped_object) {
       try {
         $entity = \Drupal::entityTypeManager()
-          ->getStorage($mapped_object->entity_type)
-          ->load($mapped_object->entity_id);
+          ->getStorage($mapped_object->entity_type_id->value)
+          ->load($mapped_object->entity_id->value);
         if (!$entity) {
           throw new Exception();
         }
@@ -84,8 +97,8 @@ class DeleteHandler {
         \Drupal::logger('Salesforce Pull')->notice(
           'No entity found for ID %id associated with Salesforce Object ID: %sfid ',
           [
-            '%id' => $mapped_object->entity_id,
-            '%sfid' => $record->id,
+            '%id' => $mapped_object->entity_id->value,
+            '%sfid' => $record['id'],
           ]
         );
         $mapped_object->delete();
@@ -93,14 +106,15 @@ class DeleteHandler {
       }
 
       try {
-        $sf_mapping = salesforce_mapping_load($mapped_object->get('salesforce_mapping'));
+        // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
+        $sf_mapping = salesforce_mapping_load($mapped_object->salesforce_mapping->entity->id());
       }
       catch (Exception $e) {
         \Drupal::logger('Salesforce Pull')->notice(
           'No mapping exists for mapped object %id with Salesforce Object ID: %sfid',
           [
             '%id' => $mapped_object->id(),
-            '%sfid' => $record->id,
+            '%sfid' => $record['id'],
           ]
         );
         // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.

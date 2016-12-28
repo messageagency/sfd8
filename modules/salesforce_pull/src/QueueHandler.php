@@ -32,7 +32,7 @@ class QueueHandler {
    *  RestClient object
    */
   public static function create(RestClient $sfapi) {
-    return new Queuehandler($sfapi);
+    return new QueueHandler($sfapi);
   }
 
 
@@ -52,7 +52,7 @@ class QueueHandler {
 
     // Iterate over each field mapping to determine our query parameters.
     foreach ($this->mappings as $mapping) {
-      // @TODO: This may need a try-catch? all of the following methods will eception catch themselves
+      // @TODO: This may need a try-catch? all of the following methods will exception catch themselves
       $results = $this->doSfoQuery($mapping);
       $this->insertIntoQueue($mapping, $results->records);
       $this->handleLargeRequests($mapping, $results);
@@ -92,7 +92,7 @@ class QueueHandler {
 
     // Convert field mappings to SOQL.
     $soql->fields = ['Id', $mapping->get('pull_trigger_date')];
-    $mapped_fields = 
+    $mapped_fields =
       $this->pull_fields[$mapping->get('salesforce_record_type')];
     foreach ($mapped_fields as $field) {
       $soql->fields[] = $field;
