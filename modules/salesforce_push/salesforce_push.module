@@ -58,6 +58,10 @@ function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity,
  *   to be a very long ways away. https://www.drupal.org/node/2551893
  */
 function salesforce_push_entity_crud(EntityInterface $entity, $op) {
+  if (!empty($entity->salesforce_pull)) {
+    // Don't push when the pull flag is set.
+    return;
+  }
 
   try {
     $mappings = salesforce_mapping_load_by_drupal($entity->getEntityTypeId());
