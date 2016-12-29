@@ -184,15 +184,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Return the queue name for this mapping.
-   *
-   * @return string
-   */
-  public function getQueue() {
-    return 'salesforce_push_' . $this->id();
-  }
-
-  /**
    * Save the entity.
    *
    * @return object
