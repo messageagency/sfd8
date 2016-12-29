@@ -10,6 +10,7 @@ use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\EntityInterface;
 use \Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\salesforce\Exception;
 // Not sure if we'll actually need these, since entity API seems to provide everything:
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\MappedObject;
@@ -198,7 +199,7 @@ function salesforce_mapped_object_load_by_sfid($salesforce_id) {
  * @see salesforce_mapping_load_multiple()
  * @throws EntityNotFoundException if no mappings have been created yet.
  */
-function salesforce_mapping_get_mapped_objects() {
+function salesforce_mapping_get_mapped_sobject_types() {
   $object_types = [];
   $mappings = salesforce_mapping_load_multiple();
   usort($mappings, 'salesforce_mapping_sort');

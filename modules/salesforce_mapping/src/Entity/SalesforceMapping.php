@@ -200,15 +200,12 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   /**
    * Given a Salesforce object, return an array of Drupal entity key-value pairs.
    *
-   * @param object $entity
-   *   Entity wrapper object.
-   *
    * @return array
-   *   Associative array of key value pairs.
+   *   Array of SalesforceMappingFieldPluginInterface objects
    *
    * @see salesforce_pull_map_field (from d7)
    */
-  public function getPullFields(EntityInterface $entity) {
+  public function getPullFields() {
     // @TODO This should probably be delegated to a field plugin bag?
     $fields = [];
     foreach ($this->getFieldMappings() as $field_plugin) {
@@ -219,6 +216,16 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
       $fields[] = $field_plugin;
     }
     return $fields;
+  }
+
+  /**
+   * Build array of pulled fields for given mapping
+   *
+   * @return array
+   *   Array of Salesforce field names for building SOQL query
+   */
+  public function getPullFieldsArray() {
+    return array_column($this->field_mappings, 'salesforce_field', 'salesforce_field');
   }
 
   /**
