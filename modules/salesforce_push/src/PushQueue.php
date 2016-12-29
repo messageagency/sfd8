@@ -241,7 +241,7 @@ class PushQueue extends DatabaseQueue {
     $mappings = salesforce_push_load_push_mappings();
     $i = 0;
 
-    // [ id => ['id' => $id, 'label' => $label, 'class' => $class, 'provider' => $module_name]
+    // @TODO push queue processor could be set globally, or per-mapping. Exposing some UI setting would probably be better than this:
     $plugin_name = \Drupal::state()->get('salesforce.push_queue_processor', static::DEFAULT_QUEUE_PROCESSOR);
 
     $queue_processor = $this->queueManager->createInstance($plugin_name);

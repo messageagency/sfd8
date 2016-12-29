@@ -2,12 +2,12 @@
 
 namespace Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor;
 
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_push\PushQueue;
+use Drupal\salesforce_push\PushQueueProcessorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -18,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   label = @Translation("REST Push Queue Processor")
  * )
  */
-class Rest extends PluginBase implements ContainerFactoryPluginInterface {
+class Rest extends PluginBase implements PushQueueProcessorInterface {
   protected $queue;
   protected $client;
   public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClient $client) {
