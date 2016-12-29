@@ -342,10 +342,12 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       throw new Exception('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
     }
     $this->drupal_entity = $entity;
+    return $this;
   }
 
   public function setSalesforceRecord(SObject $sf_object) {
     $this->sf_object = $sf_record;
+    return $this;
   }
 
   /**
@@ -399,7 +401,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
       $drupal_field = $field->get('drupal_field_value');
       try {
-        $drupal_entity->set($drupal_field, $value);
+        $this->drupal_entity->set($drupal_field, $value);
+        $foo = $this->drupal_entity->get($drupal_field)->value;
       }
       catch (\Exception $e) {
         $message = t();

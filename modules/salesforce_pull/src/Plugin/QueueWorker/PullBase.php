@@ -50,10 +50,10 @@ abstract class PullBase extends QueueWorkerBase {
         'salesforce_mapping' => $mapping->id()
       ]);
       $mapped_object = current($mapped_object);
-      $this->updateEntity($sf_mapping, $mapped_object, $sf_object);
+      $this->updateEntity($mapping, $mapped_object, $sf_object);
     }
     catch (Exception $e) {
-      $this->createEntity($sf_mapping, $sf_object);
+      $this->createEntity($mapping, $sf_object);
     }
 
   }
@@ -74,6 +74,7 @@ abstract class PullBase extends QueueWorkerBase {
     }
 
     try {
+      $foo = $mapped_object->entity_type_id->value;
       $entity = \Drupal::entityTypeManager()
         ->getStorage($mapped_object->get('entity_type_id')->value)
         ->load($mapped_object->get('entity_id')->value);
@@ -169,7 +170,7 @@ abstract class PullBase extends QueueWorkerBase {
           'salesforce_id' => (string)$sf_object->id(),
         ]);
 
-        \Drupal::moduleHandler()->alter('salesforce_pull_pre_pull', $sf_object, $mapped_object, $entity);
+      \Drupal::moduleHandler()->alter('salesforce_pull_pre_pull', $sf_object, $mapped_object, $entity);
 
       $mapped_object
         ->setDrupalEntity($entity)
