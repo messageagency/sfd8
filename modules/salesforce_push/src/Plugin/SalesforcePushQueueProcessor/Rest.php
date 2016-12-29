@@ -46,7 +46,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
         $this->queue->deleteItem($item);
       }
       catch (\Exception $e) {
-        $this->queue->failItem($item, $e);
+        $this->queue->failItem($e, $item);
       }
     }
   }
