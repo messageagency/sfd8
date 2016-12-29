@@ -56,6 +56,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * Overrides ContentEntityBase::__construct().
    */
   public function __construct(array $values) {
+    // @TODO: Revisit this language stuff
     // Drupal adds a layer of abstraction for translation purposes, even though we're talking about numeric identifiers that aren't language-dependent in any way, so we have to build our own constructor in order to allow callers to ignore this layer.
     foreach ($values as &$value) {
       if (!is_array($value)) {
@@ -73,11 +74,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     if ($this->isNew()) {
       $this->created = REQUEST_TIME;
     }
-
-    // Set the entity type and id fields appropriately.
-    // @TODO do we still need this if we're not using entity ref field?
-    $this->set('entity_id', $this->values['entity_id'][LanguageInterface::LANGCODE_DEFAULT]);
-    $this->set('entity_type_id', $this->values['entity_type_id'][LanguageInterface::LANGCODE_DEFAULT]);
     return parent::save();
   }
 
@@ -258,7 +254,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $mapping = $this->salesforce_mapping->entity;
 
     // @TODO This is deprecated, but docs contain no pointer to the non-deprecated way to do it.
-
+    // @TODO Convert to $this->drupal_entity
     $drupal_entity = \Drupal::entityTypeManager()
       ->getStorage($this->entity_type_id->value)
       ->load($this->entity_id->value);
@@ -346,7 +342,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   public function setSalesforceRecord(SObject $sf_object) {
-    $this->sf_object = $sf_record;
+    $this->sf_object = $sf_object;
     return $this;
   }
 
@@ -430,8 +426,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->set('last_sync_status', TRUE)
       // ->set('last_sync_message', '')
       ->save();
-
-    // Push upsert ID to SF object
 
     return $this;
   }

@@ -17,7 +17,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\SObject;
-//use Drupal\salesforce_pull\PullQueueItem;
+use Drupal\salesforce_mapping\PushParams;
 
 /**
  * Provides base functionality for the Salesforce Pull Queue Workers.
@@ -61,23 +61,23 @@ abstract class PullBase extends QueueWorkerBase {
   /**
    * Update an existing Drupal entity
    *
-   * @param object $sf_mapping
+   * @param object $mapping
    *   Object of field maps.
    * @param object $mapped_object
    *   SF Mmapped object.
    * @param SObject $sf_object
    *   Current Salesforce record array.
    */
-  private function updateEntity(SalesforceMapping $sf_mapping, MappedObject $mapped_object, SObject $sf_object) {
-    if (!$sf_mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
+  private function updateEntity(SalesforceMapping $mapping, MappedObject $mapped_object, SObject $sf_object) {
+    if (!$mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
       return;
     }
 
     try {
       $foo = $mapped_object->entity_type_id->value;
       $entity = \Drupal::entityTypeManager()
-        ->getStorage($mapped_object->get('entity_type_id')->value)
-        ->load($mapped_object->get('entity_id')->value);
+        ->getStorage($mapped_object->entity_type_id->value)
+        ->load($mapped_object->entity_id->value);
 
       // Flag this entity as having been processed. This does not persist,
       // but is used by salesforce_push to avoid duplicate processing.
@@ -88,7 +88,7 @@ abstract class PullBase extends QueueWorkerBase {
         : $mapped_object->get('entity_updated');
 
       $pull_trigger_date =
-        $sf_object->field($sf_mapping->get('pull_trigger_date'));
+        $sf_object->field($mapping->get('pull_trigger_date'));
       $sf_record_updated = strtotime($pull_trigger_date);
 
       \Drupal::moduleHandler()->alter('salesforce_pull_pre_pull', $sf_object, $mapped_object, $entity);
@@ -126,19 +126,19 @@ abstract class PullBase extends QueueWorkerBase {
   /**
    * Create a Drupal entity and mapped object
    *
-   * @param object $sf_mapping
+   * @param object $mapping
    *   Object of field maps.
    * @param SObject $sf_object
    *   Current Salesforce record array.
    */
-  private function createEntity(SalesforceMapping $sf_mapping, SObject $sf_object) {
-    if (!$sf_mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_CREATE])) {
+  private function createEntity(SalesforceMapping $mapping, SObject $sf_object) {
+    if (!$mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_CREATE])) {
       return;
     }
 
     try {
       // Create entity from mapping object and field maps.
-      $entity_type = $sf_mapping->get('drupal_entity_type');
+      $entity_type = $mapping->get('drupal_entity_type');
       $entity_info = \Drupal::entityTypeManager()->getDefinition($entity_type);
 
       // Define values to pass to entity_create().
@@ -146,7 +146,7 @@ abstract class PullBase extends QueueWorkerBase {
       $values = [];
       if (isset($entity_keys['bundle'])
       && !empty($entity_keys['bundle'])) {
-        $values[$entity_keys['bundle']] = $sf_mapping->get('drupal_bundle');
+        $values[$entity_keys['bundle']] = $mapping->get('drupal_bundle');
       }
 
       // See note above about flag.
@@ -166,7 +166,7 @@ abstract class PullBase extends QueueWorkerBase {
         ->getStorage('salesforce_mapped_object')
         ->create([
           'entity_type_id' => $entity_type,
-          'salesforce_mapping' => $sf_mapping->id(),
+          'salesforce_mapping' => $mapping->id(),
           'salesforce_id' => (string)$sf_object->id(),
         ]);
 
@@ -176,6 +176,15 @@ abstract class PullBase extends QueueWorkerBase {
         ->setDrupalEntity($entity)
         ->setSalesforceRecord($sf_object)
         ->pull();
+
+        // Push upsert ID to SF object
+        $client = \Drupal::service('salesforce.client');
+        $params = new PushParams($mapping, $entity);
+        $client->objectUpdate(
+          $mapping->getSalesforceObjectType(),
+          $mapped_object->sfid(),
+          $params->getParams()
+        );
 
       \Drupal::logger('Salesforce Pull')->notice(
         'Created entity %id %label associated with Salesforce Object ID: %sfid',

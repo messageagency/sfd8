@@ -57,7 +57,7 @@ class QueueHandler {
       $results = $this->doSfoQuery($mapping);
       $this->insertIntoQueue($mapping, $results->records());
       $this->handleLargeRequests($mapping, $results);
-      \Drupal::state()->set('salesforce_pull_last_sync_' . $sf_object_type, REQUEST_TIME);
+      \Drupal::state()->set('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), REQUEST_TIME);
     }
   }
 
@@ -95,26 +95,16 @@ class QueueHandler {
 
     // Convert field mappings to SOQL.
     $soql->fields = ['Id', $mapping->get('pull_trigger_date')];
-    $mapped_fields =
-      $this->pull_fields[$mapping->get('salesforce_record_type')];
+    $mapped_fields = $this->pull_fields[$mapping->getSalesforceObjectType()];
     foreach ($mapped_fields as $field) {
       $soql->fields[] = $field;
     }
 
     // If no lastupdate, get all records, else get records since last pull.
-    $sf_last_sync = \Drupal::state()->get('salesforce_pull_last_sync_' . $type, NULL);
+    $sf_last_sync = \Drupal::state()->get('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), NULL);
     if ($sf_last_sync) {
       $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
       $soql->addCondition($mapping->get('pull_trigger_date'), $last_sync, '>');
-    }
-
-    // Add RecordTypeId to mapped fields if it's non-default.
-    $sf_record_type = $mapping->getSalesforceObjectType();
-    if (!empty($mapped_fields)
-    && !empty($sf_record_type)
-    && $sf_record_type != SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE) {
-      $soql->fields[] = 'RecordTypeId';
-      $soql->addCondition('RecordTypeId', $sf_record_type, 'IN');
     }
 
     $soql->fields = array_unique($soql->fields);
