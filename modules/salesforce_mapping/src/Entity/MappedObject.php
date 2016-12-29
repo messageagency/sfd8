@@ -375,7 +375,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         $this->sf_object = $client->objectReadbyExternalId(
           $mapping->getSalesforceObjectType(),
           $mapping->getKeyField(),
-          $mapping->getKeyValue($drupal_entity)
+          $mapping->getKeyValue($this->drupal_entity)
         );
         $this->set('salesforce_id', (string)$sf_object->id());
       }
@@ -393,7 +393,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     foreach ($fields as $field) {
       // @TODO: The field plugin should be in charge of setting its value on an entity, we should not assume the field plugin's logic as we're doing here.
       try {
-        $value = $this->sf_object->field[$field->get('salesforce_field')];
+        $value = $this->sf_object->field($field->get('salesforce_field'));
       }
       catch (Exception $e) {
         continue;
@@ -402,7 +402,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       $drupal_field = $field->get('drupal_field_value');
       try {
         $this->drupal_entity->set($drupal_field, $value);
-        $foo = $this->drupal_entity->get($drupal_field)->value;
       }
       catch (\Exception $e) {
         $message = t();
@@ -431,6 +430,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->set('last_sync_status', TRUE)
       // ->set('last_sync_message', '')
       ->save();
+
+    // Push upsert ID to SF object
 
     return $this;
   }
