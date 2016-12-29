@@ -7,8 +7,10 @@ use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
 use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePushEvent;
@@ -48,10 +50,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
   use EntityChangedTrait;
 
+  protected $sf_object = NULL;
+  protected $drupal_entity = NULL;
+
   /**
    * Overrides ContentEntityBase::__construct().
    */
   public function __construct(array $values) {
+    // @TODO: Revisit this language stuff
     // Drupal adds a layer of abstraction for translation purposes, even though we're talking about numeric identifiers that aren't language-dependent in any way, so we have to build our own constructor in order to allow callers to ignore this layer.
     foreach ($values as &$value) {
       if (!is_array($value)) {
@@ -69,11 +75,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     if ($this->isNew()) {
       $this->created = REQUEST_TIME;
     }
-
-    // Set the entity type and id fields appropriately.
-    // @TODO do we still need this if we're not using entity ref field?
-    $this->set('entity_id', $this->values['entity_id'][LanguageInterface::LANGCODE_DEFAULT]);
-    $this->set('entity_type_id', $this->values['entity_type_id'][LanguageInterface::LANGCODE_DEFAULT]);
     return parent::save();
   }
 
@@ -254,7 +255,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $mapping = $this->salesforce_mapping->entity;
 
     // @TODO This is deprecated, but docs contain no pointer to the non-deprecated way to do it.
-
+    // @TODO Convert to $this->drupal_entity
     $drupal_entity = \Drupal::entityTypeManager()
       ->getStorage($this->entity_type_id->value)
       ->load($this->entity_id->value);
@@ -332,71 +333,101 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
+
+  public function setDrupalEntity(EntityInterface $entity = NULL) {
+    if ($entity->id() != $this->entity_id->value) {
+      throw new Exception('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
+    }
+    $this->drupal_entity = $entity;
+    return $this;
+  }
+
+  public function setSalesforceRecord(SObject $sf_object) {
+    $this->sf_object = $sf_object;
+    return $this;
+  }
+
   /**
    * @return $this
    */
-  public function pull(array $sf_object = NULL, EntityInterface $drupal_entity = NULL) {
+  public function pull() {
     $mapping = $this->salesforce_mapping->entity;
 
-    if ($drupal_entity == NULL) {
-      $drupal_entity = \Drupal::entityTypeManager()
+    if ($this->drupal_entity == NULL) {
+      $this->drupal_entity = \Drupal::entityTypeManager()
         ->getStorage($this->entity_type_id->value)
         ->load($this->entity_id->value);
     }
 
     // If the pull isn't coming from a cron job.
-    if ($sf_object == NULL) {
-      $sf_object = [];
-      $client = \Drupal::service('salesforce.client');
+    if ($this->sf_object == NULL) {
+      $client = salesforce_get_api();
       if ($this->sfid()) {
-        $sf_object = $client->objectRead(
+        $this->sf_object = $client->objectRead(
           $mapping->getSalesforceObjectType(),
           $this->sfid()
         );
       }
       elseif ($mapping->hasKey()) {
-        $sf_object = $client->objectReadbyExternalId(
+        $this->sf_object = $client->objectReadbyExternalId(
           $mapping->getSalesforceObjectType(),
           $mapping->getKeyField(),
-          $mapping->getKeyValue($drupal_entity)
+          $mapping->getKeyValue($this->drupal_entity)
         );
-        $this->set('salesforce_id', $sf_object->id());
+        $this->set('salesforce_id', (string)$sf_object->id());
       }
     }
 
     // No object found means there's nothing to pull.
-    if (empty($sf_object)) {
+    if (!($this->sf_object instanceof SObject)) {
       drupal_set_message('Nothing to pull. Please specify a Salesforce ID, or choose a mapping with an Upsert Key defined.', 'warning');
       return;
     }
 
     // @TODO better way to handle push/pull:
-    $fields = $mapping->getPullFields($drupal_entity);
+    $fields = $mapping->getPullFields();
 
     foreach ($fields as $field) {
       // @TODO: The field plugin should be in charge of setting its value on an entity, we should not assume the field plugin's logic as we're doing here.
-      $value = $sf_object[$field->get('salesforce_field')];
+      try {
+        $value = $this->sf_object->field($field->get('salesforce_field'));
+      }
+      catch (Exception $e) {
+        continue;
+      }
+
       $drupal_field = $field->get('drupal_field_value');
-      if (isset($value)) {
-        try {
-          $drupal_entity->set($drupal_field, $value);
-        }
-        catch (\Exception $e) {
-          $message = t('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
-            '@sfobj' => $mapping->getSalesforceObjectType(),
-            '@sffield' => $sf_field,
-            '@sfid' => $this->sfid(),
-            '@dobj' => $this->entity_type_id->value,
-            '@dprop' => $drupal_field,
-            '@did' => $this->entity_id->value,
-            '@v' => $value,
-            '@e' => $e->getMessage(),
-          ]);
-          throw new \Exception($message, $e->getCode(), $e);
-        }
+      try {
+        $this->drupal_entity->set($drupal_field, $value);
+      }
+      catch (\Exception $e) {
+        $message = t();
+        // throw new \Exception($message, $e->getCode(), $e);
+        \Drupal::logger('Salesforce Pull')->notice('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
+          '@sfobj' => $mapping->getSalesforceObjectType(),
+          '@sffield' => $sf_field,
+          '@sfid' => $this->sfid(),
+          '@dobj' => $this->entity_type_id->value,
+          '@dprop' => $drupal_field,
+          '@did' => $this->entity_id->value,
+          '@v' => $value,
+          '@e' => $e->getMessage(),
+        ]);
+        continue;
       }
     }
-    $drupal_entity->save();
+
+    $this->drupal_entity->save();
+
+    // Update mapping object.
+    $this
+      ->set('entity_id', $this->drupal_entity->id())
+      ->set('entity_updated', REQUEST_TIME)
+      ->set('last_sync_action', 'pull')
+      ->set('last_sync_status', TRUE)
+      // ->set('last_sync_message', '')
+      ->save();
+
     return $this;
   }
 

@@ -1,4 +1,0 @@
-services:
-  plugin.manager.salesforce_pull:
-    class: Drupal\salesforce_pull\SalesforcePullPluginManager
-    arguments: ['@container.namespaces', '@cache.default', '@module_handler']
