@@ -186,7 +186,7 @@ function salesforce_push_enqueue_async(EntityInterface $entity, SalesforceMappin
   // for batching. Each queue item is a unique array of entity ids to be
   // pushed. The async queue worker loads the queue item and works through as
   // many entities as possible, up to the async limit for this mapping.
-  \Drupal::service('queue.salesforce')->createItem([
+  \Drupal::service('queue.salesforce_push')->createItem([
     'name' => $mapping->id(),
     'entity_id' => $entity->id(),
     'op' => $op,
@@ -197,5 +197,12 @@ function salesforce_push_enqueue_async(EntityInterface $entity, SalesforceMappin
  * Implements hook_cron().
  */
 function salesforce_push_cron() {
-  \Drupal::service('queue.salesforce')->processQueues();
+  $queue = \Drupal::service('queue.salesforce_push');
+  try {
+    $queue->processQueues();
+  }
+  catch (Exception $e) {
+    watchdog_exception('Salesforce Push', $e);
+  }
+  $queue->garbageCollection();
 }

@@ -8,6 +8,8 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Database\Query\Merge;
 use Drupal\Core\Queue\DatabaseQueue;
 use Drupal\Core\State\State;
+use Drupal\Core\Queue\SuspendQueueException;
+use Drupal\Core\Queue\RequeueException;
 
 /**
  * Salesforce push queue.
@@ -22,9 +24,16 @@ class PushQueue extends DatabaseQueue {
   const TABLE_NAME = 'salesforce_push_queue';
 
   const DEFAULT_CRON_PUSH_LIMIT = 200;
+
+  const DEFAULT_QUEUE_PROCESSOR = 'rest';
+
+  const DEFAULT_MAX_FAILS = 10;
+
   protected $limit;
   protected $connection;
   protected $state;
+  protected $queueManager;
+  protected $max_fails;
 
   /**
    * Constructs a \Drupal\Core\Queue\DatabaseQueue object.
@@ -32,10 +41,14 @@ class PushQueue extends DatabaseQueue {
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
    */
-  public function __construct(Connection $connection, State $state) {
+  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager) {
     $this->connection = $connection;
     $this->state = $state;
-    $this->limit = $state->get('salesforce.push_limit', self::DEFAULT_CRON_PUSH_LIMIT);    
+    $this->queueManager = $queue_manager;
+
+    $this->limit = $state->get('salesforce.push_limit', static::DEFAULT_CRON_PUSH_LIMIT);
+
+    $this->max_fails = \Drupal::state()->get('salesforce.push_queue_max_fails', static::DEFAULT_MAX_FAILS);
   }
 
   /**
@@ -99,19 +112,24 @@ class PushQueue extends DatabaseQueue {
   }
 
   /**
-   * Claim $n items from the current queue.
+   * Claim up to $n items from the current queue. 
+   * If queue is empty, return an empty array.
    * @see DatabaseQueue::claimItem
+   * @return array $items
+   *   Zero to $n Items indexed by item_id
    */
-  public function claimItems($n, $lease_time = 30) {
+  public function claimItems($n, $lease_time = 300) {
     while (TRUE) {
       try {
-        $items = $this->connection->queryRange('SELECT * FROM {' . static::TABLE_NAME . '} q WHERE expire = 0 AND name = :name ORDER BY created, item_id ASC', 0, $n, array(':name' => $this->name))->fetchAllAssoc('entity_id');
+        // @TODO: convert items to content entities.
+        // @see \Drupal::entityQuery()          
+        $items = $this->connection->queryRange('SELECT * FROM {' . static::TABLE_NAME . '} q WHERE expire = 0 AND name = :name AND failures < :fail_limit ORDER BY created, item_id ASC', 0, $n, array(':name' => $this->name, ':fail_limit' => $this->max_fails))->fetchAllAssoc('item_id');
       }
       catch (\Exception $e) {
         $this->catchException($e);
         // If the table does not exist there are no items currently available to
         // claim.
-        return FALSE;
+        return [];
       }
       if ($items) {
         // Try to update the item. Only one thread can succeed in UPDATEing the
@@ -133,54 +151,18 @@ class PushQueue extends DatabaseQueue {
       }
       else {
         // No items currently available to claim.
-        return FALSE;
+        return [];
       }
     }
   }
 
   /**
-   * {@inheritdoc}
+   * DO NOT USE THIS FUNCTION.
+   * Use claimItems() instead.
    */
-  public function claimItem($lease_time = 30) {
-    // Claim an item by updating its expire fields. If claim is not successful
-    // another thread may have claimed the item in the meantime. Therefore loop
-    // until an item is successfully claimed or we are reasonably sure there
-    // are no unclaimed items left.
-    while (TRUE) {
-      try {
-        $item = $this->connection->queryRange('SELECT * FROM {' . static::TABLE_NAME . '} q WHERE expire = 0 AND name = :name ORDER BY created, item_id ASC', 0, 1, array(':name' => $this->name))->fetchObject();
-      }
-      catch (\Exception $e) {
-        $this->catchException($e);
-        // If the table does not exist there are no items currently available to
-        // claim.
-        return FALSE;
-      }
-      if ($item) {
-        // Try to update the item. Only one thread can succeed in UPDATEing the
-        // same row. We cannot rely on REQUEST_TIME because items might be
-        // claimed by a single consumer which runs longer than 1 second. If we
-        // continue to use REQUEST_TIME instead of the current time(), we steal
-        // time from the lease, and will tend to reset items before the lease
-        // should really expire.
-        $update = $this->connection->update(static::TABLE_NAME)
-          ->fields(array(
-            'expire' => time() + $lease_time,
-          ))
-          ->condition('item_id', $item->item_id)
-          ->condition('expire', 0);
-        // If there are affected rows, this update succeeded.
-        if ($update->execute()) {
-          return $item;
-        }
-      }
-      else {
-        // No items currently available to claim.
-        return FALSE;
-      }
-    }
+  public function claimItem($lease_time = NULL) {
+    throw new Exception('This queue is designed to process multiple items at once. Please use "claimItems" instead.');
   }
-
 
   /**
    * Defines the schema for the queue table.
@@ -258,82 +240,133 @@ class PushQueue extends DatabaseQueue {
   public function processQueues() {
     $mappings = salesforce_push_load_push_mappings();
     $i = 0;
+
+    // [ id => ['id' => $id, 'label' => $label, 'class' => $class, 'provider' => $module_name]
+    $plugin_name = \Drupal::state()->get('salesforce.push_queue_processor', static::DEFAULT_QUEUE_PROCESSOR);
+
+    $queue_processor = $this->queueManager->createInstance($plugin_name);
+
     foreach ($mappings as $mapping) {
+      // Set the queue name, which is the mapping id.
       $this->setName($mapping->id());
 
-      // @TODO: eventually this should work as follows:
-      // - New plugin type "PushQueueProcessor"
-      // -- Differs from QueueWorker plugin, because it can choose how to process an entire queue.
-      // -- Allows SoapQueueProcessor to optimize queries by processing multiple queue items at once.
-      // -- RestQueueProcessor will still do one-at-a-time.
-      // - Hand the mapping id (queue name) to the queue processor and let it do its thing
+      // Iterate through items in this queue until we run out or hit the limit.
       while (TRUE) {
-        if ($this->limit && $i++ > $this->limit) {
-          // Global limit is a hard stop. We're done processing now.
-          // @TODO some logging about how many items were processed, etc.
-          return;
+        // Claim as many items as we can from this queue and advance our counter. If this queue is empty, move to the next mapping.
+        $items = $this->claimItems($this->limit);
+        if (empty($items)) {
+          continue 2;
         }
 
-        $item = $this->claimItem();
-        if (!$item) {
-          // Ran out of items in this queue. Move on to the next one.
-          break;
-        }
-
+        // Hand them to the queue processor.
         try {
-          $entity = \Drupal::entityTypeManager()
-            ->getStorage($mapping->get('drupal_entity_type'))
-            ->load($item->entity_id);
-          if (!$entity) {
-            throw new Exception();
+          $queue_processor->process($items);
+        }
+        catch (RequeueException $e) {
+          // Getting a Requeue here is weird for a group of items, but we'll
+          // deal with it.
+          $this->releaseItems($items);
+          watchdog_exception('Salesforce Push', $e);
+        }
+        catch (SuspendQueueException $e) {
+          // Getting a SuspendQueue is more likely, e.g. because of a network
+          // or authorization error. Move on to the next mapping in this case.
+          $this->releaseItems($items);
+          watchdog_exception('Salesforce Push', $e);
+
+          continue 2;
+        }
+        catch (\Exception $e) {
+          // In case of any other kind of exception, log it and leave the item
+          // in the queue to be processed again later.
+          // @TODO: this is how Cron.php queue works, but I don't really understand why it doesn't get re-queued.
+          watchdog_exception('Salesforce Push', $e);
+        }
+        finally {
+          // If we've reached our limit, we're done. Otherwise, continue to next items.
+          $i += count($items);
+          if ($i >= $this->limit) {
+            return $this;
           }
         }
-        catch (Exception $e) {
-          // If there was an exception loading the entity, we assume that this queue item is no longer relevant.
-          \Drupal::logger('Salesforce Push')->notice($e->getMessage() . 
-            ' Exception while loading entity %type %id for salesforce mapping %mapping. Queue item deleted.',
-            [
-              '%type' => $mapping->get('drupal_entity_type'),
-              '%id' => $item->entity_id,
-              '%mapping' => $mapping->id(),
-            ]
-          );
-          $item->delete();
-        }
-
-        try {
-          salesforce_push_sync_rest($entity, $mapping, $item->op);
-          $this->deleteItem($item);
-          \Drupal::logger('Salesforce Push')->notice('Entity %type %id for salesforce mapping %mapping pushed successfully.',
-            [
-              '%type' => $mapping->get('drupal_entity_type'),
-              '%id' => $item->entity_id,
-              '%mapping' => $mapping->id(),
-            ]
-          );
-        }
-        catch (Exception $e) {
-          $item->failure++;
-          \Drupal::logger('Salesforce Push')->notice($e->getMessage() . 
-            ' Exception while pushing entity %type %id for salesforce mapping %mapping. Queue item %item failed %fail times.',
-            [
-              '%type' => $mapping->get('drupal_entity_type'),
-              '%id' => $item->entity_id,
-              '%mapping' => $mapping->id(),
-              '%item' => $item->item_id,
-              '%fail' => $item->failure,
-            ]
-          );
-          // doCreateItem() doubles as "save" function.
-          $item->doCreateItem(get_object_vars($item));
-          $this->releaseItem($item);
-          // @TODO: push queue processor plugins will have to implement some error tolerance:
-          // - If mapped object does not exist, and this is a delete operation, we can delete this queue item.
-          // - Otherwise, return item to queue and increment failure count. 
-          // - After N failures, move to perma fail table.
-        }
       }
-    }    
+    }
+    return $this;
+  }
+
+  /**
+   * Exception handler so that Queue Processors don't have to worry about what
+   * happens when a queue item fails.
+   *
+   * @param Exception $e
+   * @param stdClass $item
+   */
+  public function failItem(\Exception $e, \stdClass $item) {
+    // For now we only have special handling for EntityNotFoundException.
+    // May want to distinguish in the future between network exceptions, etc.
+    $mapping = salesforce_mapping_load($item->name);
+
+    if ($e instanceof EntityNotFoundException) {
+      // If there was an exception loading the entity, we assume that this queue item is no longer relevant.
+      \Drupal::logger('Salesforce Push')->error($e->getMessage() . 
+        ' Exception while loading entity %type %id for salesforce mapping %mapping. Queue item deleted.',
+        [
+          '%type' => $mapping->get('drupal_entity_type'),
+          '%id' => $item->entity_id,
+          '%mapping' => $mapping->id(),
+        ]
+      );
+      $this->deleteItem($item);
+      return;
+    }
+
+    $item->failures++;
+
+    $message = $e->getMessage();
+    if ($item->failures >= $this->max_fails) {
+      $message = 'Permanently failed queue item %item failed %fail times. Exception while pushing entity %type %id for salesforce mapping %mapping. ' . $message;
+    }
+    else {
+      $message = 'Queue item %item failed %fail times. Exception while pushing entity %type %id for salesforce mapping %mapping. ' . $message;
+    }
+
+    \Drupal::logger('Salesforce Push')->error($message,
+      [
+        '%type' => $mapping->get('drupal_entity_type'),
+        '%id' => $item->entity_id,
+        '%mapping' => $mapping->id(),
+        '%item' => $item->item_id,
+        '%fail' => $item->failures,
+      ]
+    );
+
+    // doCreateItem() doubles as "save" function.
+    // failed items will remain in queue in case fail params change or they need to be manually retried.
+    $this->doCreateItem(get_object_vars($item));
+    $this->releaseItem($item);
+  }
+
+  /**
+   * same as releaseItem, but for multiple items
+   * @param array $items
+   *   Indexes must be item ids. Values are ignored. Return from claimItems()
+   *   is acceptable.
+   */
+  public function releaseItems(array $items) {
+    try {
+      $update = $this->connection->update(static::TABLE_NAME)
+        ->fields(array(
+          'expire' => 0,
+        ))
+        ->condition('item_id', array_keys($items), 'IN');
+      return $update->execute();
+    }
+    catch (\Exception $e) {
+      watchdog_exception('Salesforce Push', $e);
+      $this->catchException($e);
+      // If the table doesn't exist we should consider the item released.
+      return TRUE;
+    }
   }
 
 }

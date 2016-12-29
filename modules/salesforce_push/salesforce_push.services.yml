@@ -1,4 +1,8 @@
 services:
-  queue.salesforce:
+  plugin.manager.salesforce_push_queue_processor:
+    class: Drupal\salesforce_push\PushQueueProcessorPluginManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler']
+
+  queue.salesforce_push:
     class: Drupal\salesforce_push\PushQueue
-    arguments: ['@database', '@state']
+    arguments: ['@database', '@state', '@plugin.manager.salesforce_push_queue_processor']
