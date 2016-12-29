@@ -144,11 +144,7 @@ function salesforce_push_sync_rest(EntityInterface $entity, SalesforceMappingInt
       // Unless it's a delete. Then we're done.
       throw $e;
     }
-    $mapped_object = new MappedObject([
-      'entity_id' => $entity->id(),
-      'entity_type_id' => $entity->getEntityTypeId(),
-      'salesforce_mapping' => $mapping->id(),
-    ]);
+    $mapped_object = new MappedObject($props);
   }
 
   try {
