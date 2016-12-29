@@ -16,6 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\PushParams;
 
@@ -74,10 +75,12 @@ abstract class PullBase extends QueueWorkerBase {
     }
 
     try {
-      $foo = $mapped_object->entity_type_id->value;
       $entity = \Drupal::entityTypeManager()
         ->getStorage($mapped_object->entity_type_id->value)
         ->load($mapped_object->entity_id->value);
+      if (!$entity) {
+        throw new EntityNotFoundException();
+      }
 
       // Flag this entity as having been processed. This does not persist,
       // but is used by salesforce_push to avoid duplicate processing.
