@@ -16,6 +16,8 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce\Rest\RestClient;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -29,9 +31,9 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
 
   protected $label;
   protected $id;
-  protected $mapping;
   protected $entityTypeBundleInfo;
   protected $entityFieldManager;
+  protected $salesforceClient;
 
   // @see SalesforceMappingFieldPluginInterface::value()
   // public function value();
@@ -53,17 +55,29 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $mapping
    *   The entity manager to get the SF listing, mapped entity, etc.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClient $rest_client) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->entityFieldManager = $entity_field_manager;
+    $this->salesforceClient = $rest_client;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity_type.bundle.info'), $container->get('entity_field.manager'));
+    return new static($configuration, $plugin_id, $plugin_definition, 
+      $container->get('entity_type.bundle.info'),   
+      $container->get('entity_field.manager'),
+      $container->get('salesforce.client')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function isAllowed(SalesforceMappingInterface $mapping) {
+    return TRUE;
   }
 
   /**
@@ -106,7 +120,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
       'drupal_field_type' => $this->getPluginId(),
       'drupal_field_value' => '',
       'locked' => FALSE,
-      'mapping_name' => '',
+      'mapping_id' => '',
     ];
   }
 
@@ -245,8 +259,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
     // different object instances.
     $options = &drupal_static(__CLASS__.__FUNCTION__, []);
     if (empty($options[$sfobject_name])) {
-      $sfapi = salesforce_get_api();
-      $describe = $sfapi->objectDescribe($sfobject_name);
+      $describe = $this->salesforceClient->objectDescribe($sfobject_name);
       $options[$sfobject_name] = $describe->getFieldOptions();
     }
     return $options[$sfobject_name];

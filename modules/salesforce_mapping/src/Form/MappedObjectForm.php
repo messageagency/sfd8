@@ -21,7 +21,7 @@ class MappedObjectForm extends ContentEntityForm {
    */
   protected $storageController;
 
-  protected $SalesforceMappingFieldManager;
+  protected $FieldManager;
 
   protected $pushPluginManager;
 

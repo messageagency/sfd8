@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
 /**
  * Adapter for entity properties and fields.
@@ -61,7 +62,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
   /**
    *
    */
-  public function value(EntityInterface $entity) {
+  public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     // No error checking here. If a property is not defined, it's a
     // configuration bug that needs to be solved elsewhere.
     return $entity->get($this->config('drupal_field_value'))->value;

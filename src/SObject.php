@@ -49,7 +49,7 @@ class SObject {
    * @throws Exception if $key is not found
    */
   public function field($key) {
-    if (!array_key_exists($key, $this->fields[$key])) {
+    if (!array_key_exists($key, $this->fields)) {
       throw new Exception('Index not found');
     }
     return $this->fields[$key];

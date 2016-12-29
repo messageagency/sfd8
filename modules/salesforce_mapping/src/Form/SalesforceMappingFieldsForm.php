@@ -83,7 +83,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $form['buttons']['field_type'] = [
       '#title' => t('Field Type'),
       '#type' => 'select',
-      '#options' => $this->get_drupal_type_options(),
+      '#options' => $this->get_drupal_type_options($this->entity),
       '#attributes' => ['id' => 'edit-mapping-add-field-type'],
       '#empty_option' => $this->t('- Select -'),
     ];
@@ -189,7 +189,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       $field_plugin_definition = $field_type = NULL;
       $field_type = $input['field_type'];
       $field_plugin_definition = $this->get_field_plugin($field_type);
-      $field_plugin = $this->SalesforceMappingFieldManager->createInstance(
+      $field_plugin = $this->FieldManager->createInstance(
         $field_plugin_definition['id']
       );
     }
@@ -300,16 +300,22 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   /**
    * @return array
    */
-  protected function get_drupal_type_options() {
-    $field_plugins = $this->SalesforceMappingFieldManager->getDefinitions();
-    return array_column($field_plugins, 'label', 'id');
+  protected function get_drupal_type_options($mapping) {
+    $field_plugins = $this->FieldManager->getDefinitions();
+    $options = [];
+    foreach ($field_plugins as $definition) {
+      if (call_user_func([$definition['class'], 'isAllowed'], $mapping)) {
+        $options[$definition['id']] = $definition['label'];
+      }
+    }
+    return $options;
   }
 
   /**
    * @return SalesforceMappingFieldPluginInterface
    */
   protected function get_field_plugin($field_type) {
-    $field_plugins = $this->SalesforceMappingFieldManager->getDefinitions();
+    $field_plugins = $this->FieldManager->getDefinitions();
     return $field_plugins[$field_type];
   }
 

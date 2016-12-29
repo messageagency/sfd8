@@ -20,7 +20,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    */
   protected $storageController;
 
-  protected $SalesforceMappingFieldManager;
+  protected $FieldManager;
 
   protected $pushPluginManager;
 
@@ -34,8 +34,8 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *
    * @throws RuntimeException
    */
-  public function __construct(PluginManagerInterface $SalesforceMappingFieldManager, RestClient $client) {
-    $this->SalesforceMappingFieldManager = $SalesforceMappingFieldManager;
+  public function __construct(PluginManagerInterface $FieldManager, RestClient $client) {
+    $this->FieldManager = $FieldManager;
     $this->client = $client;
   }
 

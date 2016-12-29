@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Field;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
 /**
  * Adapter for entity Reference and fields.
@@ -48,7 +49,8 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
   /**
    *
    */
-  public function value(EntityInterface $entity) {
+  public function value(EntityInterface $entity, SalesforceMappingInterface
+$mapping) {
     list($field_name, $referenced_field_name) = explode(':', $this->config('drupal_field_value'), 2);
     // Since we're not setting hard restrictions around bundles/fields, we may
     // have a field that doesn't exist for the given bundle/entity. In that

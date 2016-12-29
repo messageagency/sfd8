@@ -18,7 +18,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected $storageController;
 
-  protected $SalesforceMappingFieldManager;
+  protected $FieldManager;
 
   protected $pushPluginManager;
 

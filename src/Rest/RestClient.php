@@ -484,7 +484,7 @@ class RestClient {
   /**
    * Use SOQL to get objects based on query string.
    *
-   * @param SalesforceSelectQuery $query
+   * @param SelectQuery $query
    *   The constructed SOQL query.
    *
    * @return SelectQueryResult
@@ -493,7 +493,7 @@ class RestClient {
    */
   public function query(SelectQuery $query) {
     // $this->moduleHander->alter('salesforce_query', $query);
-    // Casting $query as a string calls SalesforceSelectQuery::__toString().
+    // Casting $query as a string calls SelectQuery::__toString().
     return new SelectQueryResult($this->apiCall('query?q=' . (string) $query));
   }
 
@@ -709,6 +709,44 @@ class RestClient {
   }
 
   /**
+   * Retrieve all record types for this org. If $name is provided, retrieve
+   * record types for the given object type only.
+   *
+   * @param string $name
+   *   Object type name, e.g. Contact, Account, etc.
+   *
+   * @return array
+   *   If $name is given, an array of record types indexed by developer name.
+   *   Otherwise, an array of record type arrays, indexed by object type name.
+   */
+  public function getRecordTypes($name = NULL) {
+    $cache = \Drupal::cache()->get('salesforce:record_types');
+
+    // Force the recreation of the cache when it is older than CACHE_LIFETIME
+    if ($cache && REQUEST_TIME < ($cache->created + self::CACHE_LIFETIME) && !$reset) {
+      $record_types = $cache->data;
+    }
+    else {
+      $query = new SelectQuery('RecordType');
+      $query->fields = array('Id', 'Name', 'DeveloperName', 'SobjectType');
+      $result = $this->query($query);
+      $record_types = array();
+      foreach ($result->records() as $rt) {
+        $record_types[$rt->field('SobjectType')][$rt->field('DeveloperName')] = $rt;
+      }
+      \Drupal::cache()->set('salesforce:record_types', $record_types, 0, ['salesforce']);
+    }
+
+    if ($name != NULL) {
+      if (!isset($record_types[$name])) {
+        throw new \Exception("No record types for $name");
+      }
+      return $record_types[$name];
+    }
+    return $record_types;
+  }
+
+  /**
    * Given a DeveloperName and SObject Name, return the SFID of the
    * corresponding RecordType. DeveloperName doesn't change between Salesforce
    * environments, so it's safer to rely on compared to SFID.
@@ -725,27 +763,11 @@ class RestClient {
    * @throws Exception if record type not found
    */
   public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE) {
-    $cache = \Drupal::cache()->get('salesforce:record_types');
-
-    // Force the recreation of the cache when it is older than 5 minutes.
-    if ($cache && REQUEST_TIME < ($cache->created + self::CACHE_LIFETIME) && !$reset) {
-      $record_types = $cache->data;
-    }
-    else {
-      $query = new SalesforceSelectQuery('RecordType');
-      $query->fields = array('Id', 'Name', 'DeveloperName', 'SobjectType');
-      $result = $this->query($query);
-      $record_types = array();
-      foreach ($result['records'] as $rt) {
-        $record_types[$rt['SobjectType']][$rt['DeveloperName']] = $rt;
-      }
-      \Drupal::cache()->set('salesforce:record_types', $record_types, 0, ['salesforce']);
-    }
-
-    if (empty($record_types[$name][$devname]['Id'])) {
+    $record_types = $this->getRecordTypes();
+    if (empty($record_types[$name][$devname])) {
       throw new Exception("No record type $devname for $name");
     }
-    return new SFID($record_types[$name][$devname]['Id']);
+    return $record_types[$name][$devname]->id();
   }
 
   /**

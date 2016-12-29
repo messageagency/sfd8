@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
 /**
  * Adapter for entity Constant and fields.
@@ -41,7 +42,7 @@ class Constant extends SalesforceMappingFieldPluginBase {
   /**
    *
    */
-  public function value(EntityInterface $entity) {
+  public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     return $this->config('drupal_field_value');
   }
 
