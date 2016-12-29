@@ -212,19 +212,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#default_value' => $mapping->async,
     ];
 
-    $form['queue']['async_limit'] = [
-      '#title' => t('Push limit'),
-      '#type' => 'number',
-      '#min' => 1,
-      '#description' => t('Enter the maximum number of items to process for this mapping during cron.'),
-      '#default_value' => $mapping->async_limit,
-      '#states' => [
-        'visible' => [
-          ':input#edit-async' => ['checked' => TRUE],
-        ],
-      ],
-    ];
-
     $form['queue']['weight'] = [
       '#title' => t('Weight'),
       '#type' => 'select',

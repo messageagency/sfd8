@@ -44,7 +44,6 @@ use Drupal\salesforce\Exception;
  *    "type",
  *    "key",
  *    "async",
- *    "async_limit",
  *    "pull_trigger_date",
  *    "sync_triggers",
  *    "salesforce_object_type",
@@ -117,13 +116,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * @var bool
    */
   protected $async = FALSE;
-
-  /**
-   * Max number of items for async push for this mapping
-   *
-   * @var int
-   */
-  protected $async_limit = 200;
 
   /**
    * The Salesforce field to use for determining whether or not to pull.
