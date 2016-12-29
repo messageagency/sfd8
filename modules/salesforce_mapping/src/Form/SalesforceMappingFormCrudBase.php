@@ -128,45 +128,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#description' => $this->t('Select a Salesforce object to map.'),
       '#default_value' => $salesforce_object_type,
       '#options' => $this->get_salesforce_object_type_options(),
-      '#ajax' => [
-        'callback' => [$this, 'salesforce_record_type_callback'],
-        'wrapper' => 'edit-salesforce-object',
-      ],
       '#required' => TRUE,
       '#empty_option' => $this->t('- Select -'),
     ];
-
-    $form['salesforce_object']['salesforce_record_type'] = [
-      '#id' => 'edit-salesforce-record-type',
-    ];
-
-    if ($salesforce_object_type) {
-      // Check for custom record types.
-      $salesforce_record_type = $mapping->get('salesforce_record_type');
-      $salesforce_record_type_options = $this->get_salesforce_record_type_options($salesforce_object_type, $form_state);
-      if (count($salesforce_record_type_options) > 1) {
-        // There are multiple record types for this object type, so the user
-        // must choose one of them.  Provide a select field.
-        $form['salesforce_object']['salesforce_record_type'] = [
-          '#title' => $this->t('Salesforce Record Type'),
-          '#type' => 'select',
-          '#description' => $this->t('Select a Salesforce record type to map.'),
-          '#default_value' => $salesforce_record_type,
-          '#options' => $salesforce_record_type_options,
-          '#empty_option' => $this->t('- Select -'),
-          // Do not make it required to preserve graceful degradation
-        ];
-      }
-      else {
-        // There is only one record type for this object type.  Don't bother the
-        // user and just set the single record type by default.
-        $form['salesforce_object']['salesforce_record_type'] = [
-          '#title' => $this->t('Salesforce Record Type'),
-          '#type' => 'hidden',
-          '#value' => '',
-        ];
-      }
-    }
 
     $form['salesforce_object']['pull_trigger_date'] = [
       '#type' => 'select',
@@ -227,16 +191,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       \Drupal::formBuilder()->setError($element, $this->t('!name field is required.', ['!name' => $element['#title']]));
     }
 
-    // In case the form was submitted without javascript, we must validate the
-    // salesforce record type.
-    if (empty($form_state->getValue('salesforce_record_type'))) {
-      $record_types = $this->get_salesforce_record_type_options($form_state->getValue('salesforce_object_type'), $form_state);
-      if (count($record_types) > 1) {
-        $element = &$form['salesforce_object']['salesforce_record_type'];
-        drupal_set_message($this->t('!name field is required for this Salesforce Object type.', ['!name' => $element['#title']]));
-        $form_state->setValue('rebuild', TRUE);
-      }
-    }
   }
 
   /**
@@ -255,18 +209,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   public function drupal_entity_type_bundle_callback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
-    // Requires updating itself and the field map.
-    $response->addCommand(new ReplaceCommand('#edit-salesforce-object', render($form['salesforce_object'])))->addCommand(new ReplaceCommand('#edit-salesforce-field-mappings-wrapper', render($form['salesforce_field_mappings_wrapper'])));
-    return $response;
-  }
-
-  /**
-   * Ajax callback for salesforce_mapping_form() salesforce record type.
-   */
-  public function salesforce_record_type_callback($form, FormStateInterface $form_state) {
-    $response = new AjaxResponse();
-    // Set the trigger options based on the selected object.
-    $form['salesforce_object']['pull_trigger_date']['#options'] = $this->get_pull_trigger_options($form_state->getValue('salesforce_object_type'));
     // Requires updating itself and the field map.
     $response->addCommand(new ReplaceCommand('#edit-salesforce-object', render($form['salesforce_object'])))->addCommand(new ReplaceCommand('#edit-salesforce-field-mappings-wrapper', render($form['salesforce_field_mappings_wrapper'])));
     return $response;
@@ -334,33 +276,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $sfobject_options[$object['name']] = $object['label'];
     }
     return $sfobject_options;
-  }
-
-  /**
-   * Helper to retreive a list of record type options for a given object type.
-   *
-   * @param string $salesforce_object_type
-   *   The object type of whose records you want to retreive.
-   * @param array $form_state
-   *   Current state of the form to store and retreive results from to minimize
-   *   the need for recalculation.
-   *
-   * @return array
-   *   An array of values keyed by machine name of the record with the label as
-   *   the value, formatted to be appropriate as a value for #options.
-   */
-  protected function get_salesforce_record_type_options($salesforce_object_type) {
-    $sf_types = [];
-    $sfobject = $this->get_salesforce_object($salesforce_object_type);
-    try {
-      foreach ($sfobject->recordTypeInfos as $type) {
-        $sf_types[$type['recordTypeId']] = $type['name'];
-      }
-    }
-    catch (\Exception $e) {
-      // noop
-    }
-    return $sf_types;
   }
 
   /**

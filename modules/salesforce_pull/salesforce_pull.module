@@ -39,7 +39,6 @@ function salesforce_pull_get_updated_records(RestClient $sfapi) {
 
   foreach (salesforce_mapping_get_mapped_objects() as $type) {
     $mapped_fields = [];
-    $mapped_record_types = [];
 
     // Iterate over each field mapping to determine our query parameters.
     foreach (salesforce_mapping_load_multiple(['salesforce_object_type' => $type]) as $mapping) {
@@ -57,14 +56,6 @@ function salesforce_pull_get_updated_records(RestClient $sfapi) {
             $mapped_fields[$field_map['salesforce_field']] = $field_map['salesforce_field'];
           }
         }
-      }
-
-      if (!empty($mapped_fields) && isset($mapping->salesforce_record_type)  && $mapping->salesforce_record_type != SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE) {
-        // @TODO: Get this next statement working as indented. See lines 110-112.ß
-        //$mapped_record_types[$mapping->salesforce_record_type] = $mapping->salesforce_record_type;
-        // Add the RecordTypeId field so we can use it when processing the
-        // queued SF objects.
-        //$mapped_fields['RecordTypeId'] = 'RecordTypeId';
       }
     }
 
@@ -91,11 +82,6 @@ function salesforce_pull_get_updated_records(RestClient $sfapi) {
     if ($sf_last_sync) {
       $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
       $soql->addCondition('LastModifiedDate', $last_sync, '>');
-    }
-
-    // If Record Type is specified, restrict query.
-    if (count($mapped_record_types) > 0) {
-      $soql->addCondition('RecordTypeId', $mapped_record_types, 'IN');
     }
 
     // Execute query.

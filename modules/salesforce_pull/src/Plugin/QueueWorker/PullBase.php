@@ -41,9 +41,6 @@ abstract class PullBase extends QueueWorkerBase {
     $mapping_conditions = [
       'salesforce_object_type' => $sf_object['attributes']['type'],
     ];
-    if (isset($sf_object['RecordTypeId']) && $sf_object['RecordTypeId'] != SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE) {
-      $mapping_conditions['salesforce_record_type'] = $sf_object['RecordTypeId'];
-    }
 
     try {
       $sf_mappings = salesforce_mapping_load_multiple($mapping_conditions);

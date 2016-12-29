@@ -46,7 +46,6 @@ use Drupal\salesforce\Exception;
  *    "pull_trigger_date",
  *    "sync_triggers",
  *    "salesforce_object_type",
- *    "salesforce_record_type",
  *    "drupal_entity_type",
  *    "drupal_bundle",
  *    "field_mappings"
@@ -123,13 +122,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * @var string
    */
   protected $salesforce_object_type;
-
-  /**
-   * The salesforce record type to which this mapping points, if applicable.
-   *
-   * @var stringoptional
-   */
-  protected $salesforce_record_type = '';
 
   /**
    * Salesforce field name for upsert key, if set. Otherwise FALSE.

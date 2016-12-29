@@ -53,9 +53,6 @@ salesforce_mapping.salesforce_mapping.*:
     salesforce_object_type:
       type: string
       label: 'Salesforce Object Type'
-    salesforce_record_type:
-      type: string
-      label: 'Salesforce Record Type'
     drupal_entity_type:
       type: string
       label: 'Drupal Entity Type'
