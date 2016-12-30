@@ -392,7 +392,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       try {
         $value = $this->sf_object->field($field->get('salesforce_field'));
       }
-      catch (Exception $e) {
+      catch (\Exception $e) {
         // Field missing from SObject? Skip it.
         continue;
       }

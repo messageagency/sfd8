@@ -77,7 +77,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
         ->getStorage($field_settings['target_type'])
         ->load($field->value);
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // @TODO something about this exception
       watchdog_exception(__CLASS__, $e);
       return;

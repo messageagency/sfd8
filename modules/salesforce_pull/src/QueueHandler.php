@@ -113,7 +113,7 @@ class QueueHandler {
     try {
       return $this->sfapi->query($soql);
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       watchdog_exception(__CLASS__, $e);
     }
   }
@@ -133,7 +133,7 @@ class QueueHandler {
        $this->insertIntoQueue($mapping, $new_result->records());
        $this->handleLargeRequests($mapping, $new_result);
      }
-     catch (Exception $e) {
+     catch (\Exception $e) {
        watchdog_exception(__CLASS__, $e);
      }
    }
@@ -151,7 +151,7 @@ class QueueHandler {
         $this->queue->createItem(new PullQueueItem($record, $mapping));
       }
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       watchdog_exception(__CLASS__, $e);
     }
   }

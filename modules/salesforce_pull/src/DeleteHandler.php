@@ -58,7 +58,7 @@ class DeleteHandler {
         ['salesforce_object_type' => $type]
       );
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // No mappings found. Quit now.
       return;
     }
@@ -72,7 +72,7 @@ class DeleteHandler {
     try {
       $mapped_objects = salesforce_mapped_object_load_by_sfid($record['id']);
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // We do not need to know about every object which gets deleted in SF and
       // isn't mapped to Drupal.
       return;
@@ -87,7 +87,7 @@ class DeleteHandler {
           throw new Exception();
         }
       }
-      catch (Exception $e) {
+      catch (\Exception $e) {
         // No mapped entity found for the mapped object. Just delete the mapped object and continue.
         \Drupal::logger('Salesforce Pull')->notice(
           'No entity found for ID %id associated with Salesforce Object ID: %sfid ',
@@ -104,7 +104,7 @@ class DeleteHandler {
         // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
         $sf_mapping = salesforce_mapping_load($mapped_object->salesforce_mapping->entity->id());
       }
-      catch (Exception $e) {
+      catch (\Exception $e) {
         \Drupal::logger('Salesforce Pull')->notice(
           'No mapping exists for mapped object %id with Salesforce Object ID: %sfid',
           [
@@ -132,7 +132,7 @@ class DeleteHandler {
           ]
         );
       }
-      catch (Exception $e) {
+      catch (\Exception $e) {
         watchdog_exception(__CLASS__, $e);
         // If mapped entity couldn't be deleted, do not delete the mapped object either.
         continue;
