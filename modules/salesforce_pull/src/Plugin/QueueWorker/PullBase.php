@@ -79,7 +79,7 @@ abstract class PullBase extends QueueWorkerBase {
         ->getStorage($mapped_object->entity_type_id->value)
         ->load($mapped_object->entity_id->value);
       if (!$entity) {
-        throw new EntityNotFoundException();
+        throw new EntityNotFoundException($mapped_object->entity_id->value, $mapped_object->entity_type_id->value);
       }
 
       // Flag this entity as having been processed. This does not persist,
