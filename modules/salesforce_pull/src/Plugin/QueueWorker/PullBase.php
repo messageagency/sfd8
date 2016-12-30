@@ -123,6 +123,7 @@ abstract class PullBase extends QueueWorkerBase {
         ]
       );
       \Drupal::logger('Salesforce Pull')->error($message);
+      watchdog_exception(__CLASS__, $e);
     }
   }
 
@@ -205,6 +206,7 @@ abstract class PullBase extends QueueWorkerBase {
         ]
       );
       \Drupal::logger('Salesforce Pull')->error($message);
+      watchdog_exception(__CLASS__, $e);
     }
   }
 

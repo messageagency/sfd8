@@ -2,7 +2,7 @@
 
 namespace Drupal\salesforce\Form;
 
-use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\RequestException;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -119,7 +119,8 @@ class AuthorizeForm extends ConfigFormBase {
           '#theme' => 'item_list',
         ];
       }
-      catch (ClientException $e) {
+      catch (RequestException $e) {
+        watchdog_exception(__CLASS__, $e);
         salesforce_set_message($e->getMessage(), 'warning');
       }
     }
@@ -153,8 +154,9 @@ class AuthorizeForm extends ConfigFormBase {
       );
       $response->send();
     }
-    catch (ClientException $e) {
-      // Set form error.
+    catch (RequestException $e) {
+      drupal_set_message(t("Error during authorization: %message", $e->getMessage()), 'error');
+      watchdog_exception(__CLASS__, $e);
     }
 
     parent::submitForm($form, $form_state);

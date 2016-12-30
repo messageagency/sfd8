@@ -397,7 +397,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       }
     }
     catch (\Exception $e) {
-      // noop
+      // No record type info means nothing for us to do.
     }
     return $sf_types;
   }
@@ -434,6 +434,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $describe = $this->get_salesforce_object();
     }
     catch (Exception $e) {
+      // No describe results means no datetime fields. We're done.
       return [];
     }
 

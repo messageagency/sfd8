@@ -393,6 +393,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         $value = $this->sf_object->field($field->get('salesforce_field'));
       }
       catch (Exception $e) {
+        // Field missing from SObject? Skip it.
         continue;
       }
 
@@ -402,7 +403,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       }
       catch (\Exception $e) {
         $message = t();
-        // throw new \Exception($message, $e->getCode(), $e);
         \Drupal::logger('Salesforce Pull')->notice('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
           '@sfobj' => $mapping->getSalesforceObjectType(),
           '@sffield' => $sf_field,
@@ -413,6 +413,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
           '@v' => $value,
           '@e' => $e->getMessage(),
         ]);
+        watchdog_exception(__CLASS__, $e);
         continue;
       }
     }

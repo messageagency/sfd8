@@ -90,7 +90,6 @@ class RestClient {
     catch (RequestException $e) {
       // RequestException gets thrown for any response status but 2XX.
       $this->response = $e->getResponse();
-
       switch ($this->response->getStatusCode()) {
         case 401:
           // The session ID or OAuth token used has expired or is invalid: refresh
