@@ -433,7 +433,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     try {
       $describe = $this->get_salesforce_object();
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // No describe results means no datetime fields. We're done.
       return [];
     }
