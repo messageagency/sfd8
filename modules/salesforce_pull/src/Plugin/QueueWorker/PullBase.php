@@ -38,7 +38,7 @@ abstract class PullBase extends QueueWorkerBase {
     try {
       $mapping = salesforce_mapping_load($item->mapping_id);
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       // If the mapping was deleted since this pull queue item was added, no
       // further processing can be done and we allow this item to be deleted.
       return;
@@ -53,7 +53,7 @@ abstract class PullBase extends QueueWorkerBase {
       $mapped_object = current($mapped_object);
       $this->updateEntity($mapping, $mapped_object, $sf_object);
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       $this->createEntity($mapping, $sf_object);
     }
 
@@ -114,7 +114,7 @@ abstract class PullBase extends QueueWorkerBase {
 
       }
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       $message = t('Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
         [
           '%label' => $entity->label(),
@@ -199,7 +199,7 @@ abstract class PullBase extends QueueWorkerBase {
         ]
       );
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       $message = $e->getMessage() . ' ' . t('Pull-create failed for Salesforce Object ID: %sfobjectid',
         [
           '%sfobjectid' => (string)$sf_object->id(),

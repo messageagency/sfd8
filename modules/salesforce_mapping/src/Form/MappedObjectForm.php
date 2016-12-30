@@ -105,7 +105,7 @@ class MappedObjectForm extends ContentEntityForm {
       // push() does a save(), so no followup needed here.
       $mapped_object->push();
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       watchdog_exception(__CLASS__, $e);
       drupal_set_message(t('Push failed with an exception: %exception', array('%exception' => $e->getMessage())), 'error');
       return;
