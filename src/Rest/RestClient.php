@@ -90,29 +90,27 @@ class RestClient {
     catch (RequestException $e) {
       // RequestException gets thrown for any response status but 2XX.
       $this->response = $e->getResponse();
-      switch ($this->response->getStatusCode()) {
-        case 401:
-          // The session ID or OAuth token used has expired or is invalid: refresh
-          // token. If refreshToken() throws an exception, or if apiHttpRequest()
-          // throws anything but a RequestException, let it bubble up.
-          $this->refreshToken();
-          try {
-            $this->response = new RestResponse($this->apiHttpRequest($path, $params, $method));
-          }
-          catch (RequestException $e) {
-            $this->response = $e->getResponse();
-            throw $e;
-          }
-          break;
 
-        default:
-          // Any exceptions besides 401 we bubble up to the caller.
-          throw $e;
+      // Any exceptions besides 401 get bubbled up.
+      if ($this->response->getStatusCode() != 401) {
+        throw $e;
+      }
+
+      // The session ID or OAuth token used has expired or is invalid: refresh
+      // token. If refreshToken() throws an exception, or if apiHttpRequest()
+      // throws anything but a RequestException, let it bubble up.
+      $this->refreshToken();
+      try {
+        $this->response = new RestResponse($this->apiHttpRequest($path, $params, $method));
+      }
+      catch (RequestException $e) {
+        $this->response = $e->getResponse();
+        throw $e;
       }
     }
 
     if (empty($this->response)
-    || !in_array($this->response->getStatusCode(), [200, 201, 204])) {
+    || ((int)floor($this->response->getStatusCode() / 100)) != 2) {
       throw new Exception('Unknown error occurred during API call');
     }
 
