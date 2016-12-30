@@ -103,7 +103,7 @@ function salesforce_mapping_load($name) {
     ->getStorage('salesforce_mapping')
     ->load($name);
   if (empty($mapping)) {
-   throw new EntityNotFoundException("No mapping found for $name.");
+   throw new EntityNotFoundException($name, 'salesforce_mapping');
   }
   return $mapping;
 }
@@ -127,7 +127,11 @@ function salesforce_mapping_load_multiple($properties = []) {
     ->getStorage('salesforce_mapping')
     ->loadByProperties($properties);
   if (empty($mappings)) {
-   throw new EntityNotFoundException('No mappings found.');
+    $bt = debug_backtrace(FALSE);
+    foreach ($bt as &$e) {
+      unset($e['args']);
+    }
+    throw new EntityNotFoundException($properties, 'salesforce_mapping');
   }
   return $mappings;
 }
@@ -162,7 +166,7 @@ function salesforce_mapped_object_load_multiple($properties = []) {
     ->getStorage('salesforce_mapped_object')
     ->loadByProperties($properties);
   if (empty($mappings)) {
-    throw new EntityNotFoundException('No mapped objects found');
+    throw new EntityNotFoundException($properties, 'salesforce_mapped_object');
   }
   return $mappings;
 }
@@ -351,7 +355,7 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
   try {
     salesforce_mapping_load_by_drupal($entity->getEntityTypeId());
   }
-  catch (Exception $e) {
+  catch (\Exception $e) {
     return;
   }
 
@@ -359,9 +363,10 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
   try {
     $mapped_objects = salesforce_mapped_object_load_by_drupal($entity->getEntityTypeId(), $entity->id());
   }
-  catch (Exception $e) {
+  catch (\Exception $e) {
     return;
   }
+
   foreach ($mapped_objects as $mapped_object) {
     // Resaving the object should update the timestamp.
     // NB: we are purposefully not creating a new revision here.

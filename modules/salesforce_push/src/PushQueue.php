@@ -10,6 +10,7 @@ use Drupal\Core\Queue\DatabaseQueue;
 use Drupal\Core\State\State;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\Queue\RequeueException;
+use Drupal\salesforce\EntityNotFoundException;
 
 /**
  * Salesforce push queue.
@@ -88,15 +89,23 @@ class PushQueue extends DatabaseQueue {
     }
     $this->name = $data['name'];
     $time = time();
+    $fields = [
+      'name' => $this->name,
+      'entity_id' => $data['entity_id'],
+      'op' => $data['op'],
+      'updated' => $time,
+      'failures' => empty($data['failures'])
+        ? 0
+        : $data['failures'],
+      'mapped_object_id' => empty($data['mapped_object_id'])
+        ? 0
+        : $data['mapped_object_id'],
+    ];
+
     $query = $this->connection->merge(static::TABLE_NAME)
       ->key(array('name' => $this->name, 'entity_id' => $data['entity_id']))
-      ->fields(array(
-        'name' => $this->name,
-        'entity_id' => $data['entity_id'],
-        'op' => $data['op'],
-        'updated' => $time,
-      ));
-   
+      ->fields($fields);
+
     // Return Merge::STATUS_INSERT or Merge::STATUS_UPDATE
     $ret = $query->execute();
 
@@ -190,6 +199,12 @@ class PushQueue extends DatabaseQueue {
           'default' => 0,
           'description' => 'The entity id',
         ],
+        'mapped_object_id' => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'Foreign key for salesforce_mapped_object table.'
+        ],
         'op' => [
           'type' => 'varchar_ascii',
           'length' => 16,
@@ -238,7 +253,12 @@ class PushQueue extends DatabaseQueue {
    * Process Salesforce queues
    */
   public function processQueues() {
-    $mappings = salesforce_push_load_push_mappings();
+    try {
+      $mappings = salesforce_push_load_push_mappings();
+    }
+    catch (EntityNotFoundException $e) {
+      return $this;
+    }
     $i = 0;
 
     // @TODO push queue processor could be set globally, or per-mapping. Exposing some UI setting would probably be better than this:
@@ -270,7 +290,8 @@ class PushQueue extends DatabaseQueue {
         }
         catch (SuspendQueueException $e) {
           // Getting a SuspendQueue is more likely, e.g. because of a network
-          // or authorization error. Move on to the next mapping in this case.
+          // or authorization error. Release items and move on to the next
+          // mapping in this case.
           $this->releaseItems($items);
           watchdog_exception('Salesforce Push', $e);
 
@@ -307,7 +328,7 @@ class PushQueue extends DatabaseQueue {
     $mapping = salesforce_mapping_load($item->name);
 
     if ($e instanceof EntityNotFoundException) {
-      // If there was an exception loading the entity, we assume that this queue item is no longer relevant.
+      // If there was an exception loading any entities, we assume that this queue item is no longer relevant.
       \Drupal::logger('Salesforce Push')->error($e->getMessage() . 
         ' Exception while loading entity %type %id for salesforce mapping %mapping. Queue item deleted.',
         [
@@ -340,10 +361,10 @@ class PushQueue extends DatabaseQueue {
       ]
     );
 
+    // Failed items will remain in queue, but not be released. They'll be
+    // retried only when the current lease expires.
     // doCreateItem() doubles as "save" function.
-    // failed items will remain in queue in case fail params change or they need to be manually retried.
     $this->doCreateItem(get_object_vars($item));
-    $this->releaseItem($item);
   }
 
   /**
@@ -367,6 +388,18 @@ class PushQueue extends DatabaseQueue {
       // If the table doesn't exist we should consider the item released.
       return TRUE;
     }
+  }
+
+  public function deleteItemByEntity(EntityInterface $entity) {
+    try {
+      $this->connection->delete(static::TABLE_NAME)
+        ->condition('entity_id', $entity->id())
+        ->condition('name', $this->name)
+        ->execute();
+    }
+    catch (\Exception $e) {
+      $this->catchException($e);
+    }    
   }
 
 }

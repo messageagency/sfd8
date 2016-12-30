@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce\Exception;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -273,10 +274,17 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     // @TODO #fieldMappingField
     $mappings = [];
     foreach ($this->field_mappings as $field) {
-      $mappings[] = $this->fieldManager->createInstance(
-         $field['drupal_field_type'],
-         $field
-       );
+      try {
+        $mappings[] = $this->fieldManager->createInstance(
+           $field['drupal_field_type'],
+           $field
+         );
+       }
+       catch (PluginNotFoundException $e) {
+         // Don't let a missing plugin kill our mapping.
+         watchdog_exception(__CLASS__, $e);
+         salesforce_set_message(t('Field plugin not found: %message The field will be removed from this mapping.', ['%message' => $e->getMessage()]), 'error');
+       }
     }
     return $mappings;
   }

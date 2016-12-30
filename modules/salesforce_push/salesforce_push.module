@@ -7,6 +7,7 @@
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
@@ -58,7 +59,13 @@ function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity,
  *   to be a very long ways away. https://www.drupal.org/node/2551893
  */
 function salesforce_push_entity_crud(EntityInterface $entity, $op) {
-  $mappings = salesforce_push_load_push_mappings($entity->getEntityTypeId());
+  try {
+    $mappings = salesforce_push_load_push_mappings($entity->getEntityTypeId());
+  }
+  catch (EntityNotFoundException $e) {
+    return;
+  }
+
   foreach ($mappings as $mapping) {
     $mapped_objects = [];
     $mapped_object = FALSE;
@@ -69,17 +76,58 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
       }
     }
 
+    // Look for existing mapped object.
+    $props = [
+      'entity_id' => $entity->id(),
+      'entity_type_id' => $entity->getEntityTypeId(),
+      'salesforce_mapping' => $mapping->id(),
+    ];
+    $mapped_object = FALSE;
+    try {
+      $mapped_objects = salesforce_mapped_object_load_multiple($props);
+      // There should really only be one, but the return value is always an array
+      $mapped_object = current($mapped_objects);
+    }
+    catch (EntityNotFoundException $e) {
+      // No mappings found.
+      if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+        // If no existing mapping, and this is a delete, purge any entries from push queue and we're done.
+        \Drupal::service('queue.salesforce_push')
+          ->setName($mapping->id())
+          ->deleteItemByEntity($entity);
+        return;
+      }
+      $mapped_object = new MappedObject($props);
+    }
+
     if ($mapping->async) {
-      // Enqueue
-      salesforce_push_enqueue_async($entity, $mapping, $op);
+      // Enqueue async push if the mapping is configured to do so, and quit.
+      try {
+        salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
+      }
+      catch (\Exception $e) {
+        // @TODO log: failed to enqueue changes.
+      }
       return;
     }
 
     try {
-      $mapped_object = salesforce_push_sync_rest($entity, $mapping, $op);
+      // If this is a delete, destroy the SF object and we're done.
+      if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+        $mapped_object->pushDelete();
+      }
+      else {
+        // Push to SF. This also saves the mapped object.
+        $mapped_object->push();
+      }
     }
-    catch (Exception $e) {
-      // what do do here?
+    catch (RequestException $e) {
+      $mapped_object
+        ->set('last_sync_action', $op)
+        ->set('last_sync_status', FALSE)
+        ->set('revision_log_message', $e->getMessage())
+        ->save();
+      throw $e;
     }
   }
 }
@@ -92,82 +140,25 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
  *   (optional) filter by mapping drupal entity type.
  *
  * @return array
+ *
+ * @throws EntityNotFoundException if no push mappings found.
  */
 function salesforce_push_load_push_mappings($entity_type_id = NULL) {
   $push_mappings = [];
-  try {
-    $properties = empty($entity_type_id)
-      ? []
-      : ["drupal_entity_type" => $entity_type_id];
-    $mappings = salesforce_mapping_load_multiple($properties);
-    foreach ($mappings as $key => $mapping) {
-      if (!$mapping->doesPush()) {
-        continue;
-      }
-      $push_mappings[$key] = $mapping;
+  $properties = empty($entity_type_id)
+    ? []
+    : ["drupal_entity_type" => $entity_type_id];
+  $mappings = salesforce_mapping_load_multiple($properties);
+  foreach ($mappings as $key => $mapping) {
+    if (!$mapping->doesPush()) {
+      continue;
     }
+    $push_mappings[$key] = $mapping;
   }
-  catch (Exception $e) {
-    // No mappings found.
+  if (empty($push_mappings)) {
+    throw new EntityNotFoundException($properties, 'salesforce_mapping');
   }
   return $push_mappings;
-}
-
-/**
- * Worker function to do actual push to Salesforce.
- *
- * @param EntityInterface $entity
- * @param SalesforceMappingInterface $mapping
- * @param string $op
- *   one of push_create, push_update, push_delete
- * @return SF result
- *
- * @throws Exception if mapping object cannot be loaded or created
- * @throws RequestException if push operations fail
- */
-function salesforce_push_sync_rest(EntityInterface $entity, SalesforceMappingInterface $mapping, $op) {
-
-  // First, look for existing mapped object.
-  $props = [
-    'entity_id' => $entity->id(),
-    'entity_type_id' => $entity->getEntityTypeId(),
-    'salesforce_mapping' => $mapping->id(),
-  ];
-  try {
-    $mapped_objects = salesforce_mapped_object_load_multiple($props);
-    // There should really only be one, but the return value is always an array
-    $mapped_object = current($mapped_objects);
-  }
-  catch (Exception $e) {
-    // No mappings found, need to create a new one and push...
-    if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
-      // Unless it's a delete. Then we're done.
-      throw $e;
-    }
-    $mapped_object = new MappedObject($props);
-  }
-
-  try {
-    // If this is a delete, destroy the SF object and we're done.
-    if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
-      return $mapped_object->pushDelete();
-    }
-    else {
-      // Push to SF. This also saves the mapped object.
-      return $mapped_object->push();
-    }
-  }
-  catch (RequestException $e) {
-    $mapped_object
-      ->set('last_sync_action', $op)
-      ->set('last_sync_status', FALSE)
-      ->set('revision_log_message', $e->getMessage())
-      ->save();
-    throw $e;
-
-    // @TODO Can we pawn this off to an entity_save hook? implementations can look at last_sync_status to determine success vs failure.
-    // \Drupal::moduleHandler()->invokeAll('salesforce_push_failure', array($e->getMessage(), $vars));
-  }
 }
 
 /**
@@ -177,16 +168,21 @@ function salesforce_push_sync_rest(EntityInterface $entity, SalesforceMappingInt
  * @param SalesforceMappingInterface $mapping
  * @param string $op
  */
-function salesforce_push_enqueue_async(EntityInterface $entity, SalesforceMappingInterface $mapping, $op) {
+function salesforce_push_enqueue_async(EntityInterface $entity, SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object = NULL, $op) {
   // Each mapping has its own queue, so that like entries can be easily grouped
   // for batching. Each queue item is a unique array of entity ids to be
   // pushed. The async queue worker loads the queue item and works through as
   // many entities as possible, up to the async limit for this mapping.
-  \Drupal::service('queue.salesforce_push')->createItem([
+  $props = [
     'name' => $mapping->id(),
     'entity_id' => $entity->id(),
     'op' => $op,
-  ]);
+  ];
+  if ($mapped_object) {
+    $props['mapped_object_id'] = $mapped_object->id();
+  }
+
+  \Drupal::service('queue.salesforce_push')->createItem($props);
 }
 
 /**
@@ -194,11 +190,11 @@ function salesforce_push_enqueue_async(EntityInterface $entity, SalesforceMappin
  */
 function salesforce_push_cron() {
   $queue = \Drupal::service('queue.salesforce_push');
+  $queue->garbageCollection();
   try {
     $queue->processQueues();
   }
-  catch (Exception $e) {
+  catch (\Exception $e) {
     watchdog_exception('Salesforce Push', $e);
   }
-  $queue->garbageCollection();
 }

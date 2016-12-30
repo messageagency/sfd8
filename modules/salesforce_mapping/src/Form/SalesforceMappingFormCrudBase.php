@@ -263,7 +263,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     if (!empty($entity_type) && empty($form_state->getValue('drupal_bundle')[$entity_type])) {
       $element = &$form['drupal_entity']['drupal_bundle'][$entity_type];
       // @TODO replace with Dependency Injection
-      \Drupal::formBuilder()->setError($element, $this->t('!name field is required.', ['!name' => $element['#title']]));
+      $form_state->setError($element, $this->t('%name field is required.', ['%name' => $element['#title']]));
     }
 
     // In case the form was submitted without javascript, we must validate the
@@ -272,7 +272,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $record_types = $this->get_salesforce_record_type_options($form_state->getValue('salesforce_object_type'), $form_state);
       if (count($record_types) > 1) {
         $element = &$form['salesforce_object']['salesforce_record_type'];
-        drupal_set_message($this->t('!name field is required for this Salesforce Object type.', ['!name' => $element['#title']]));
+        $form_state->setError($element, $this->t('%name field is required for this Salesforce Object type.', ['%name' => $element['#title']]));
         $form_state->setValue('rebuild', TRUE);
       }
     }
