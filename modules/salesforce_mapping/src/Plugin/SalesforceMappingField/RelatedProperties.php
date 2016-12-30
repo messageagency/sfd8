@@ -79,6 +79,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     }
     catch (Exception $e) {
       // @TODO something about this exception
+      watchdog_exception(__CLASS__, $e);
       return;
     }
 

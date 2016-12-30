@@ -349,6 +349,7 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
     salesforce_mapping_load_by_drupal($entity->getEntityTypeId());
   }
   catch (Exception $e) {
+    // No mappings for this entity type. We're done.
     return;
   }
 
@@ -357,6 +358,7 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
     $mapped_objects = salesforce_mapped_object_load_by_drupal($entity->getEntityTypeId(), $entity->id());
   }
   catch (Exception $e) {
+    // No mapped objects for this entity. We're done.
     return;
   }
   foreach ($mapped_objects as $mapped_object) {

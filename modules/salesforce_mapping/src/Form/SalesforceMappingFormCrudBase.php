@@ -358,7 +358,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       }
     }
     catch (\Exception $e) {
-      // noop
+      // No record type info means nothing for us to do.
     }
     return $sf_types;
   }

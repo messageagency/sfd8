@@ -73,13 +73,8 @@ class DeleteHandler {
       $mapped_objects = salesforce_mapped_object_load_by_sfid($record['id']);
     }
     catch (Exception $e) {
-      // @TODO do we need a log entry for every object which gets deleted and isn't mapped to Drupal?
-      \Drupal::logger('Salesforce Pull')->notice(
-        'No mapped object exists for Salesforce Object ID: %sfid',
-        [
-          '%sfid' => $record['id'],
-        ]
-      );
+      // We do not need to know about every object which gets deleted in SF and
+      // isn't mapped to Drupal.
       return;
     }
 
@@ -138,7 +133,7 @@ class DeleteHandler {
         );
       }
       catch (Exception $e) {
-        \Drupal::logger('Salesforce Pull')->error($e);
+        watchdog_exception(__CLASS__, $e);
         // If mapped entity couldn't be deleted, do not delete the mapped object either.
         continue;
       }

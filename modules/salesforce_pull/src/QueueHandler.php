@@ -114,7 +114,7 @@ class QueueHandler {
       return $this->sfapi->query($soql);
     }
     catch (Exception $e) {
-      \Drupal::logger('Salesforce Pull')->error($e->getMessage());
+      watchdog_exception(__CLASS__, $e);
     }
   }
 
@@ -134,7 +134,7 @@ class QueueHandler {
        $this->handleLargeRequests($mapping, $new_result);
      }
      catch (Exception $e) {
-       \Drupal::logger('Salesforce Pull')->error($e->getMessage());
+       watchdog_exception(__CLASS__, $e);
      }
    }
   }
@@ -152,7 +152,7 @@ class QueueHandler {
       }
     }
     catch (Exception $e) {
-      \Drupal::logger('Salesforce Pull')->error($e->getMessage());
+      watchdog_exception(__CLASS__, $e);
     }
   }
 }

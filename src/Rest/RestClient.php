@@ -90,6 +90,7 @@ class RestClient {
     catch (RequestException $e) {
       // RequestException gets thrown for any response status but 2XX.
       $this->response = $e->getResponse();
+      watchdog_exception(__CLASS__, $e);
     }
     if (!is_object($this->response)) {
       throw new Exception('Unknown error occurred during API call');
@@ -105,6 +106,7 @@ class RestClient {
           $this->response = new RestResponse($this->apiHttpRequest($path, $params, $method));
         }
         catch (RequestException $e) {
+          watchdog_exception(__CLASS__, $e);
           $this->response = $e->getResponse();
           throw $e;
         }
