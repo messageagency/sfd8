@@ -25,18 +25,22 @@ function hook_salesforce_push_params_alter(&$params, $mapping, $entity_wrapper) 
 /**
  * Prevent push to SF for an entity.
  *
- * @param string $entity_type
+ * @param EntityInterface $entity 
  *   The type of entity the push is for.
- * @param object $entity
- *   The entity object the push is for.
- * @param ing $sf_sync_trigger
- *   Constant for the Drupal operation that triggered the sync.
+ * @param SalesforceMappingInterface $mapping 
+ *   The mapping being used for this push.
+ * @param string $operation
+ *   Constant for the Drupal operation that triggered the sync. 
+ *   One of:
+ *     SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
+ *     SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
+ *     SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
  *
  * @return bool
  *   FALSE if the entity should not be synced to Salesforce for the
  *   $sf_sync_trigger operation.
  */
-function hook_salesforce_push_entity_allowed($entity_type, $entity, $sf_sync_trigger) {
+function hook_salesforce_push_entity_allowed(EntityInterface $entity, SalesforceMappingInterface $mapping, $operation) {
 
 }
 

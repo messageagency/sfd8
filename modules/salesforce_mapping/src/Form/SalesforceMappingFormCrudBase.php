@@ -70,7 +70,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#type' => 'select',
       '#description' => $this->t('Select a Drupal entity type to map to a Salesforce object.'),
       '#options' => $entity_types,
-      '#default_value' => $mapping->get('drupal_entity_type'),
+      '#default_value' => $mapping->drupal_entity_type,
       '#required' => TRUE,
       '#empty_option' => $this->t('- Select -'),
     ];
@@ -100,7 +100,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       ];
       foreach ($bundle_info as $key => $info) {
         $form['drupal_entity']['drupal_bundle'][$entity_type]['#options'][$key] = $info['label'];
-        if ($key == $mapping->get('drupal_bundle')) {
+        if ($key == $mapping->drupal_bundle) {
           $form['drupal_entity']['drupal_bundle'][$entity_type]['#default_value'] = $key;
         }
       }
@@ -118,8 +118,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     if (!empty($form_state->getValues()) && !empty($form_state->getValue('salesforce_object_type'))) {
       $salesforce_object_type = $form_state->getValue('salesforce_object_type');
     }
-    elseif ($mapping->get('salesforce_object_type')) {
-      $salesforce_object_type = $mapping->get('salesforce_object_type');
+    elseif ($mapping->salesforce_object_type) {
+      $salesforce_object_type = $mapping->salesforce_object_type;
     }
     $form['salesforce_object']['salesforce_object_type'] = [
       '#title' => $this->t('Salesforce Object'),
@@ -142,7 +142,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
 
     if ($salesforce_object_type) {
       // Check for custom record types.
-      $salesforce_record_type = $mapping->get('salesforce_record_type');
+      $salesforce_record_type = $mapping->salesforce_record_type;
       $salesforce_record_type_options = $this->get_salesforce_record_type_options($salesforce_object_type, $form_state);
       if (count($salesforce_record_type_options) > 1) {
         // There are multiple record types for this object type, so the user
@@ -172,10 +172,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#type' => 'select',
       '#title' => t('Date field to trigger pull'),
       '#description' => t('Select a date field to base pull triggers on. (Default of "Last Modified Date" is usually appropriate).'),
-      '#required' => $this->entity->get('salesforce_object_type'),
-      '#default_value' => $this->entity->get('pull_trigger_date')
-      ? $this->entity->get('pull_trigger_date')
-      : 'LastModifiedDate',
+      '#required' => $mapping->salesforce_object_type,
+      '#default_value' => $mapping->pull_trigger_date,
       '#options' => $this->get_pull_trigger_options($salesforce_object_type),
     ];
 
@@ -183,7 +181,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $trigger_options = $this->get_sync_trigger_options();
     $form['sync_triggers'] = [
       '#title' => t('Action triggers'),
-      '#type' => 'container',
+      '#type' => 'details',
+      '#open' => TRUE,
       '#tree' => TRUE,
       '#description' => t('Select which actions on Drupal entities and Salesforce
         objects should trigger a synchronization. These settings are used by the
@@ -195,17 +194,57 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $form['sync_triggers'][$option] = [
         '#title' => $label,
         '#type' => 'checkbox',
-        '#default_value' => @$mapping->get('sync_triggers')[$option],
+        '#default_value' => !empty($mapping->sync_triggers[$option]),
       ];
     }
 
-    // Hide all the hidden stuff in here.
-    foreach (['weight', 'status', 'locked', 'type'] as $el) {
-      $form[$el] = [
-        '#type' => 'value',
-        '#value' => $mapping->get($el),
-      ];
-    }
+    $form['queue'] = [
+      '#title' => 'Queue Settings',
+      '#type' => 'details',
+      '#open' => TRUE,
+      '#tree' => FALSE,
+    ];
+
+    $form['queue']['async'] = [
+      '#title' => t('Enable queue'),
+      '#type' => 'checkbox',
+      '#description' => t('When enabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD.'),
+      '#default_value' => $mapping->async,
+    ];
+
+    $form['queue']['weight'] = [
+      '#title' => t('Weight'),
+      '#type' => 'select',
+      '#options' => array_combine(range(-50,50), range(-50,50)),
+      '#description' => t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
+      '#default_value' => $mapping->weight,
+      '#states' => [
+        'visible' => [
+          ':input#edit-async' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    $form['meta'] = [
+      '#type' => 'details',
+      '#open' => TRUE,
+      '#tree' => FALSE,
+      '#title' => t('Additional properties'),
+    ];
+
+    $form['meta']['status'] = [
+      '#title' => t('Status'),
+      '#type' => 'checkbox',
+      '#description' => t('Not yet in use.'),
+      '#default_value' => $mapping->status,
+    ];
+
+    $form['meta']['locked'] = [
+      '#title' => t('Locked'),
+      '#type' => 'checkbox',
+      '#description' => t('Not yet in use.'),
+      '#default_value' => $mapping->locked,
+    ];
 
     return $form;
   }
@@ -224,7 +263,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     if (!empty($entity_type) && empty($form_state->getValue('drupal_bundle')[$entity_type])) {
       $element = &$form['drupal_entity']['drupal_bundle'][$entity_type];
       // @TODO replace with Dependency Injection
-      \Drupal::formBuilder()->setError($element, $this->t('!name field is required.', ['!name' => $element['#title']]));
+      $form_state->setError($element, $this->t('%name field is required.', ['%name' => $element['#title']]));
     }
 
     // In case the form was submitted without javascript, we must validate the
@@ -233,7 +272,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $record_types = $this->get_salesforce_record_type_options($form_state->getValue('salesforce_object_type'), $form_state);
       if (count($record_types) > 1) {
         $element = &$form['salesforce_object']['salesforce_record_type'];
-        drupal_set_message($this->t('!name field is required for this Salesforce Object type.', ['!name' => $element['#title']]));
+        $form_state->setError($element, $this->t('%name field is required for this Salesforce Object type.', ['%name' => $element['#title']]));
         $form_state->setValue('rebuild', TRUE);
       }
     }
@@ -395,6 +434,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $describe = $this->get_salesforce_object();
     }
     catch (Exception $e) {
+      // No describe results means no datetime fields. We're done.
       return [];
     }
 

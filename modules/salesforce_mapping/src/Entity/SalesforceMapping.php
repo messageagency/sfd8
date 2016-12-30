@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce\Exception;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -43,6 +44,7 @@ use Drupal\salesforce\Exception;
  *    "status",
  *    "type",
  *    "key",
+ *    "async",
  *    "pull_trigger_date",
  *    "sync_triggers",
  *    "salesforce_object_type",
@@ -102,6 +104,26 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   protected $status = TRUE;
 
+  /**
+   * @TODO what does "locked" mean?
+   *
+   * @var bool
+   */
+  protected $locked = FALSE;
+
+  /**
+   * Whether to push asychronously (during dron) or immediately on entity CRUD.
+   *
+   * @var bool
+   */
+  protected $async = FALSE;
+
+  /**
+   * The Salesforce field to use for determining whether or not to pull.
+   *
+   * @var string
+   */
+  protected $pull_trigger_date = 'LastModifiedDate';
 
   /**
    * The drupal entity type to which this mapping points.
@@ -252,10 +274,17 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     // @TODO #fieldMappingField
     $mappings = [];
     foreach ($this->field_mappings as $field) {
-      $mappings[] = $this->fieldManager->createInstance(
-         $field['drupal_field_type'],
-         $field
-       );
+      try {
+        $mappings[] = $this->fieldManager->createInstance(
+           $field['drupal_field_type'],
+           $field
+         );
+       }
+       catch (PluginNotFoundException $e) {
+         // Don't let a missing plugin kill our mapping.
+         watchdog_exception(__CLASS__, $e);
+         salesforce_set_message(t('Field plugin not found: %message The field will be removed from this mapping.', ['%message' => $e->getMessage()]), 'error');
+       }
     }
     return $mappings;
   }
@@ -270,6 +299,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     );
   }
 
+  public function doesPush() {
+    return $this->checkTriggers([SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE, SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE, SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE]);
+  }
+    
   /**
    * @return bool
    *   TRUE if this mapping uses any of the given $triggers, otherwise FALSE.
