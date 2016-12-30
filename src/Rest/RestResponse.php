@@ -46,7 +46,7 @@ class RestResponse extends Response {
    */
   function __get($key) {
     if (!property_exists($this, $key)) {
-      throw new Exception("Undefined property $key");
+      throw new \Exception("Undefined property $key");
     }
     return $this->$key;
   }

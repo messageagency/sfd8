@@ -10,9 +10,11 @@ use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\EntityInterface;
 use \Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\salesforce\Exception;
 // Not sure if we'll actually need these, since entity API seems to provide everything:
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\MappedObject;
+use Drupal\salesforce\EntityNotFoundException;
 
 /**
  * Define when a data sync should take place for a given mapping.
@@ -89,15 +91,15 @@ function salesforce_mapping_entity_operation(EntityInterface $entity) {
  *   The requested mapping or an array of all mappings, indexed by id, if $name
  *   was not specified
  *
- * @throws Exception if no mapping is found
+ * @throws EntityNotFoundException if no mapping exists with the given name
  */
 function salesforce_mapping_load($name) {
   $mapping = \Drupal::entityTypeManager()
     ->getStorage('salesforce_mapping')
     ->load($name);
-  //if (empty($mapping)) {
-  //  throw new Exception("No mapping found for $name.");
-  //}
+  if (empty($mapping)) {
+   throw new EntityNotFoundException($name, 'salesforce_mapping');
+  }
   return $mapping;
 }
 
@@ -112,16 +114,20 @@ function salesforce_mapping_load($name) {
  * @return array
  *   An array of \Drupal\salesforce_mapping\Entity\SalesforceMapping objects, indexed by id
  *
- * @throws Exception if not mappings are found
+ * @throws Exception if not mappings exist with the given properties
  */
 function salesforce_mapping_load_multiple($properties = []) {
   $mappings = [];
   $mappings = \Drupal::entityTypeManager()
     ->getStorage('salesforce_mapping')
     ->loadByProperties($properties);
-  //if (empty($mappings)) {
-  //  throw new Exception('No mappings found.');
-  //}
+  if (empty($mappings)) {
+    $bt = debug_backtrace(FALSE);
+    foreach ($bt as &$e) {
+      unset($e['args']);
+    }
+    throw new EntityNotFoundException($properties, 'salesforce_mapping');
+  }
   return $mappings;
 }
 
@@ -144,16 +150,18 @@ function salesforce_mapping_load_by_drupal($entity_type) {
  * is necessary, it should be done explicitly by the caller.
  *
  * @return array
- *   An array of \Drupal\salesforce_mapping\Entity\MappedObject objects, indexed by id
+ *   An array of \Drupal\salesforce_mapping\Entity\MappedObject objects,
+ *   indexed by id
  *
- * @throws Exception if not mapped objects are found
+ * @throws EntityNotFoundException if no mapped objects exist with the given
+ *   properties
  */
 function salesforce_mapped_object_load_multiple($properties = []) {
   $mappings = \Drupal::entityTypeManager()
     ->getStorage('salesforce_mapped_object')
     ->loadByProperties($properties);
   if (empty($mappings)) {
-    throw new Exception('No mapped objects found');
+    throw new EntityNotFoundException($properties, 'salesforce_mapped_object');
   }
   return $mappings;
 }
@@ -188,9 +196,9 @@ function salesforce_mapped_object_load_by_sfid($salesforce_id) {
 /**
  * Return a unique list of mapped Salesforce object types.
  * @see salesforce_mapping_load_multiple()
- * @throws Exception if no mappings have been created yet.
+ * @throws EntityNotFoundException if no mappings have been created yet.
  */
-function salesforce_mapping_get_mapped_objects() {
+function salesforce_mapping_get_mapped_sobject_types() {
   $object_types = [];
   $mappings = salesforce_mapping_load_multiple();
   usort($mappings, 'salesforce_mapping_sort');
@@ -342,7 +350,7 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
   try {
     salesforce_mapping_load_by_drupal($entity->getEntityTypeId());
   }
-  catch (Exception $e) {
+  catch (\Exception $e) {
     return;
   }
 
@@ -350,9 +358,10 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
   try {
     $mapped_objects = salesforce_mapped_object_load_by_drupal($entity->getEntityTypeId(), $entity->id());
   }
-  catch (Exception $e) {
+  catch (\Exception $e) {
     return;
   }
+
   foreach ($mapped_objects as $mapped_object) {
     // Resaving the object should update the timestamp.
     // NB: we are purposefully not creating a new revision here.

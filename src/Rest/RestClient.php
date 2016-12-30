@@ -90,38 +90,30 @@ class RestClient {
     catch (RequestException $e) {
       // RequestException gets thrown for any response status but 2XX.
       $this->response = $e->getResponse();
+
+      // Any exceptions besides 401 get bubbled up.
+      if ($this->response->getStatusCode() != 401) {
+        throw $e;
+      }
+
+      // The session ID or OAuth token used has expired or is invalid: refresh
+      // token. If refreshToken() throws an exception, or if apiHttpRequest()
+      // throws anything but a RequestException, let it bubble up.
+      $this->refreshToken();
+      try {
+        $this->response = new RestResponse($this->apiHttpRequest($path, $params, $method));
+      }
+      catch (RequestException $e) {
+        $this->response = $e->getResponse();
+        throw $e;
+      }
     }
-    if (!is_object($this->response)) {
+
+    if (empty($this->response)
+    || ((int)floor($this->response->getStatusCode() / 100)) != 2) {
       throw new Exception('Unknown error occurred during API call');
     }
 
-    switch ($this->response->getStatusCode()) {
-      case 401:
-        // The session ID or OAuth token used has expired or is invalid: refresh
-        // token. If refreshToken() throws an exception, or if apiHttpRequest()
-        // throws anything but a RequestException, let it bubble up.
-        $this->refreshToken();
-        try {
-          $this->response = new RestResponse($this->apiHttpRequest($path, $params, $method));
-        }
-        catch (RequestException $e) {
-          $this->response = $e->getResponse();
-          throw $e;
-        }
-        break;
-
-      case 200:
-      case 201:
-      case 204:
-        // All clear.
-        break;
-
-      default:
-        // We have problem and no specific Salesforce error provided.
-        if (empty($this->response)) {
-          throw new Exception('Unknown error occurred during API call');
-        }
-    }
     if ($returnObject) {
       return $this->response;
     }
@@ -181,6 +173,27 @@ class RestClient {
     $response = $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
     return $response;
   }
+
+  /**
+   * Extract normalized error information from a RequestException
+   *
+   * @param RequestException $e 
+   * @return array
+   *   Error array with keys:
+   *   * message
+   *   * errorCode
+   *   * fields
+   */
+  protected function getErrorData(RequestException $e) {
+    $response = $e->getResponse();
+    $response_body = $response->getBody()->getContents();
+    $data = Json::decode($response_body);
+    if (!empty($data[0])) {
+      $data = $data[0];
+    }
+    return $data;
+  }
+
 
   /**
    * Get the API end point for a given type of the API.
@@ -641,20 +654,47 @@ class RestClient {
   }
 
   /**
-   * Delete a Salesforce object.
+   * Delete a Salesforce object. Note: if Object with given $id doesn't exist,
+   * objectDelete() will assume success unless $throw_exception is given.
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account.
    * @param string $id
    *   Salesforce id of the object.
+   * @pararm bool $throw_exception
+   *   (optional) If TRUE, 404 response code will cause RequestException to be
+   *   thrown. Otherwise, hide those errors. Default is FALSE.
    *
    * @addtogroup salesforce_apicalls
    *
    * @return null
    *   Delete() doesn't return any data. Examine HTTP response or Exception.
    */
-  public function objectDelete($name, $id) {
-    $this->apiCall("sobjects/{$name}/{$id}", [], 'DELETE');
+  public function objectDelete($name, $id, $throw_exception = FALSE) {
+    try {
+      $this->apiCall("sobjects/{$name}/{$id}", [], 'DELETE');
+    }
+    catch (RequestException $e) {
+      if ($throw_exception || $e->getResponse()->getStatusCode() != 404) {
+        throw $e;
+      }
+    }
+  }
+
+  /**
+   * Retrieves the list of individual objects that have been deleted within the
+   * given timespan for a specified object type.
+   *
+   * @param string $type
+   *   Object type name, E.g., Contact, Account.
+   * @param string $startDate
+   *   Start date to check for deleted objects (in ISO 8601 format).
+   * @param string $endDate
+   *   End date to check for deleted objects (in ISO 8601 format).
+   * @return GetDeletedResult
+   */
+  public function getDeleted($type, $startDate, $endDate) {
+    return $this->apiCall("sobjects/{$type}/deleted/?start={$startDate}&end={$endDate}");
   }
 
   /**

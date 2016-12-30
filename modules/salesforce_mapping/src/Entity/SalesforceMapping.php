@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce\Exception;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -43,6 +44,7 @@ use Drupal\salesforce\Exception;
  *    "status",
  *    "type",
  *    "key",
+ *    "async",
  *    "pull_trigger_date",
  *    "sync_triggers",
  *    "salesforce_object_type",
@@ -101,6 +103,26 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   protected $status = TRUE;
 
+  /**
+   * @TODO what does "locked" mean?
+   *
+   * @var bool
+   */
+  protected $locked = FALSE;
+
+  /**
+   * Whether to push asychronously (during dron) or immediately on entity CRUD.
+   *
+   * @var bool
+   */
+  protected $async = FALSE;
+
+  /**
+   * The Salesforce field to use for determining whether or not to pull.
+   *
+   * @var string
+   */
+  protected $pull_trigger_date = 'LastModifiedDate';
 
   /**
    * The drupal entity type to which this mapping points.
@@ -171,15 +193,12 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   /**
    * Given a Salesforce object, return an array of Drupal entity key-value pairs.
    *
-   * @param object $entity
-   *   Entity wrapper object.
-   *
    * @return array
-   *   Associative array of key value pairs.
+   *   Array of SalesforceMappingFieldPluginInterface objects
    *
    * @see salesforce_pull_map_field (from d7)
    */
-  public function getPullFields(EntityInterface $entity) {
+  public function getPullFields() {
     // @TODO This should probably be delegated to a field plugin bag?
     $fields = [];
     foreach ($this->getFieldMappings() as $field_plugin) {
@@ -190,6 +209,16 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
       $fields[] = $field_plugin;
     }
     return $fields;
+  }
+
+  /**
+   * Build array of pulled fields for given mapping
+   *
+   * @return array
+   *   Array of Salesforce field names for building SOQL query
+   */
+  public function getPullFieldsArray() {
+    return array_column($this->field_mappings, 'salesforce_field', 'salesforce_field');
   }
 
   /**
@@ -237,10 +266,17 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     // @TODO #fieldMappingField
     $fields = [];
     foreach ($this->field_mappings as $field) {
-      $fields[] = $this->fieldManager->createInstance(
-         $field['drupal_field_type'],
-         $field
-       );
+      try {
+        $mappings[] = $this->fieldManager->createInstance(
+           $field['drupal_field_type'],
+           $field
+         );
+       }
+       catch (PluginNotFoundException $e) {
+         // Don't let a missing plugin kill our mapping.
+         watchdog_exception(__CLASS__, $e);
+         salesforce_set_message(t('Field plugin not found: %message The field will be removed from this mapping.', ['%message' => $e->getMessage()]), 'error');
+       }
     }
     return $fields;
   }
@@ -255,6 +291,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     );
   }
 
+  public function doesPush() {
+    return $this->checkTriggers([SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE, SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE, SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE]);
+  }
+    
   /**
    * @return bool
    *   TRUE if this mapping uses any of the given $triggers, otherwise FALSE.
