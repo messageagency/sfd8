@@ -172,7 +172,7 @@ function salesforce_mapped_object_load_multiple($properties = []) {
 function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id) {
   return salesforce_mapped_object_load_multiple([
     'entity_type_id' => $entity_type,
-    'entity_id' => $entity_id
+    'entity_id' => $entity_id,
   ]);
 }
 
@@ -182,7 +182,7 @@ function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id) {
 function salesforce_mapped_object_load_by_entity($entity, $all = FALSE) {
   return salesforce_mapped_object_load_multiple([
     'entity_type_id' => $entity->getEntityTypeId(),
-    'entity_id' => $entity->id()
+    'entity_id' => $entity->id(),
   ]);
 }
 
@@ -190,7 +190,9 @@ function salesforce_mapped_object_load_by_entity($entity, $all = FALSE) {
  * pass-through for salesforce_mapped_object_load_multiple()
  */
 function salesforce_mapped_object_load_by_sfid($salesforce_id) {
-  return salesforce_mapped_object_load_multiple(['salesforce_id' => $salesforce_id]);
+  return salesforce_mapped_object_load_multiple([
+    'salesforce_id' => $salesforce_id,
+  ]);
 }
 
 /**
@@ -201,11 +203,8 @@ function salesforce_mapped_object_load_by_sfid($salesforce_id) {
 function salesforce_mapping_get_mapped_sobject_types() {
   $object_types = [];
   $mappings = salesforce_mapping_load_multiple();
-  usort($mappings, 'salesforce_mapping_sort');
   foreach ($mappings as $mapping) {
     $type = $mapping->getSalesforceObjectType();
-    // @TODO Why is the assignment $mapping->$mapping?
-    //$object_types[$mapping->getSalesforceObjectType()] = $mapping->$mapping->getSalesforceObjectType();
     $object_types[$type] = $type;
   }
   return $object_types;
@@ -219,40 +218,6 @@ function salesforce_mapping_sort($mapping_a, $mapping_b) {
     return 0;
   }
   return ($mapping_a->get('weight') < $mapping_b->get('weight')) ? -1 : 1;
-}
-
-/**
- * Implements hook_entity_load().
- */
-function salesforce_mapping_entity_load($entities, $entity_type) {
-  // just stop doing this for now
-  return;
-
-  if ($entity_type == 'salesforce_mapping') {
-    // Best to avoid infinite recursion...
-    return;
-  }
-  // Use the advanced drupal_static() pattern, since this is called very often.
-  static $drupal_static_fast;
-  if (!isset($drupal_static_fast)) {
-    $drupal_static_fast['maps'] = &drupal_static(__FUNCTION__);
-  }
-  $maps = &$drupal_static_fast['maps'];
-
-  if (empty($maps)) {
-    // Since salesforce_mapping_load_by_drupal() loads all the maps anyway, best
-    // to load them all here, once, into static cache.
-    $maps = salesforce_mapping_load_by_drupal();
-  }
-  if (!isset($maps[$entity_type])) {
-    return;
-  }
-  foreach ($entities as $entity) {
-    $mapping = salesforce_mapped_object_load_by_entity($entity);
-    if ($mapping) {
-      $entity->salesforce_id = $mapping->salesforce_id;
-    }
-  }
 }
 
 /**
