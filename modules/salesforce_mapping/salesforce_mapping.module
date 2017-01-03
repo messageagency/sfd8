@@ -239,46 +239,6 @@ function salesforce_mapping_permission() {
 }
 
 /**
- * Implements hook_entity_view().
- */
-function salesforce_mapping_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
-  // @TODO there must be a better way now.
-  return;
-  // Don't bother with any further processing if there are no map for this
-  // entity type.
-  if (!salesforce_mapping_load_by_drupal($entity->getEntityTypeId())) {
-    return;
-  }
-
-  // Render linked Salesforce data when viewing a mapped entity.
-  $mapped_object = salesforce_mapped_object_load_by_entity($entity);
-
-  if ($mapped_object && Drupal::currentUser()->hasPermission('view salesforce mapping')) {
-    // theme_field() is a overkill to display these two values. Use the
-    // #field_type property, or hook_entity_view_alter() to override the theme
-    // of this.
-    if ($conf = $display->getComponent('salesforce_id')) {
-      $build['salesforce_id'] = [
-        '#type' => 'item',
-        '#title' => t('Salesforce ID'),
-        '#markup' => $mapped_object->getSalesforceLink(),
-        '#weight' => $conf['weight'],
-        '#field_type' => 'salesforce',
-      ];
-    }
-    if ($conf = $display->getComponent('salesforce_last_sync')) {
-      $build['salesforce_last_sync'] = [
-        '#type' => 'item',
-        '#title' => t('Salesforce last sync'),
-        '#markup' => format_date($mapped_object->last_sync->value),
-        '#weight' => $conf['weight'],
-        '#field_type' => 'salesforce',
-      ];
-    }
-  }
-}
-
-/**
  * Implements hook_field_extra_fields().
  */
 function salesforce_mapping_entity_extra_field_info() {
