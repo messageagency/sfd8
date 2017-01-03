@@ -146,7 +146,6 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     // Reset the Salesforce object type.
     $edit['salesforce_object_type'] = 'Contact';
     $this->drupalPostAjax(NULL, $edit, 'salesforce_object_type');
-    $this->assertRaw('<input type="hidden" name="salesforce_record_type" value="default">', 'Salesforce record type his hidden for a salesforce object without records.');
     $this->assertRaw('<table id="edit-salesforce-field-mappings"', 'Field map table has appeared.');
 
     // Set the drupal fieldmap type.
@@ -213,7 +212,6 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     $this->assertOptionSelected('edit-drupal-entity-type', 'user', 'Drupal entity type has correct value.');
     $this->assertOptionSelected('edit-drupal-bundle', 'user', 'Drupal bundle has correct value.');
     $this->assertOptionSelected('edit-salesforce-object-type', 'Contact', 'Salesforce object has correct value.');
-    $this->assertFieldByName('salesforce_record_type', 'default', 'Salesforce record type has correct value.');
     $this->assertOptionSelected('edit-fieldmap-type-0', 'property', 'Row 0 fieldmap type has correct value.');
     $this->assertOptionSelected('edit-fieldmap-type-1', 'property', 'Row 1 fieldmap type has correct value.');
     $this->assertOptionSelected('edit-fieldmap-type-2', 'property', 'Row 2 fieldmap type has correct value.');
@@ -267,7 +265,6 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
     $this->assertOptionSelected('edit-drupal-entity-type', 'user', 'Drupal entity type has correct value.');
     $this->assertOptionSelected('edit-drupal-bundle', 'user', 'Drupal bundle has correct value.');
     $this->assertOptionSelected('edit-salesforce-object-type', 'Contact', 'Salesforce object has correct value.');
-    $this->assertFieldByName('salesforce_record_type', 'default', 'Salesforce record type has correct value.');
     $this->assertOptionSelected('edit-fieldmap-type-0', 'property', 'Row 0 fieldmap type has correct value.');
     $this->assertOptionSelected('edit-fieldmap-type-1', 'property', 'Row 1 fieldmap type has correct value.');
     $this->assertOptionSelected('edit-fieldmap-type-2', 'property', 'Row 2 fieldmap type has correct value.');

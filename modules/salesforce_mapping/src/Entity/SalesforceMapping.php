@@ -48,7 +48,6 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
  *    "pull_trigger_date",
  *    "sync_triggers",
  *    "salesforce_object_type",
- *    "salesforce_record_type",
  *    "drupal_entity_type",
  *    "drupal_bundle",
  *    "field_mappings"
@@ -145,13 +144,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * @var string
    */
   protected $salesforce_object_type;
-
-  /**
-   * The salesforce record type to which this mapping points, if applicable.
-   *
-   * @var stringoptional
-   */
-  protected $salesforce_record_type = '';
 
   /**
    * Salesforce field name for upsert key, if set. Otherwise FALSE.
@@ -254,7 +246,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     // @TODO #fieldMappingField
     foreach ($this->getFieldMappings() as $field_plugin) {
       if ($field_plugin->get('salesforce_field') == $this->getKeyField()) {
-        return $field_plugin->value($entity);
+        return $field_plugin->value($entity, $this);
       }
     }
     throw new Exception(t('Key %key not found for this mapping.', ['%key' => $this->getKeyField()]));
@@ -272,7 +264,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   public function getFieldMappings() {
     // @TODO #fieldMappingField
-    $mappings = [];
+    $fields = [];
     foreach ($this->field_mappings as $field) {
       try {
         $mappings[] = $this->fieldManager->createInstance(
@@ -286,7 +278,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
          salesforce_set_message(t('Field plugin not found: %message The field will be removed from this mapping.', ['%message' => $e->getMessage()]), 'error');
        }
     }
-    return $mappings;
+    return $fields;
   }
 
   /**

@@ -36,11 +36,6 @@ const SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL = 'sf_drupal';
 const SALESFORCE_MAPPING_DIRECTION_SYNC = 'sync';
 
 /**
- * Field mapping Master or no record type (default) constant.
- */
-const SALESFORCE_MAPPING_DEFAULT_RECORD_TYPE = 'default';
-
-/**
  * Delimiter used in Salesforce multipicklists.
  */
 const SALESFORCE_MAPPING_ARRAY_DELIMITER =';';

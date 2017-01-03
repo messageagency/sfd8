@@ -3,6 +3,7 @@
 namespace Drupal\salesforce_mapping;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
 /**
  * Defines an interface for salesforce mapping plugins.
@@ -41,7 +42,21 @@ interface SalesforceMappingFieldPluginInterface {
 
   /**
    * Given a Drupal entity, return the outbound value.
+   * @param $entity
+   *   The entity being mapped.
+   * @param $mapping
+   *   The parent SalesforceMapping to which this plugin config belongs.
    */
-  public function value(EntityInterface $entity);
+  public function value(EntityInterface $entity, SalesforceMappingInterface $mapping);
+
+  /**
+   * Given a SF Mapping, return TRUE or FALSE whether this field plugin can be
+   * added.
+   *
+   * @param SalesforceMappingInterface $mapping
+   *
+   * @return bool
+   */
+  public static function isAllowed(SalesforceMappingInterface $mapping);
 
 }

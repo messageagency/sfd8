@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
 /**
  * Adapter for entity Reference and fields.
@@ -47,7 +48,8 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
   /**
    * @see RelatedProperties::value
    */
-  public function value(EntityInterface $entity) {
+  public function value(EntityInterface $entity, SalesforceMappingInterface
+$mapping) {
     $field_name = $this->config('drupal_field_value');
     $instances = $this->entityFieldManager->getFieldDefinitions(
       get_class($entity),

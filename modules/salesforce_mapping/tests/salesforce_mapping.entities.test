@@ -36,7 +36,6 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
       'type' => 'bazbang',
       'sync_triggers' => 0x0002,
       'salesforce_object_type' => 'bar',
-      'salesforce_record_type' => 'baz',
       'drupal_entity_type' => 'node',
       'drupal_bundle' => 'story',
       'field_mappings' => [
@@ -151,8 +150,6 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
     $this->assertEqual(1, count($result), 'Loading maps stating the drupal_entity_type and drupal_bundle properties returned 1 map.');
     $map = reset($result);
     $this->assertEqual($test_map2->label, $map->label, 'Loading maps stating the drupal_entity_type and drupal_bundle properties returned the expected map.');
-    $result = salesforce_mapping_load_multiple(['salesforce_object_type' => 'bar', 'salesforce_record_type' => 'baz']);
-    $this->assertEqual(2, count($result), 'Loading maps stating the salesforce_object_type and salesforce_record_type returned 2 maps.');
 
     // salesforce_mapping_load_multiple() retreive nothing.
     $result = salesforce_mapping_load_multiple(['drupal_entity_type' => 'nothing']);

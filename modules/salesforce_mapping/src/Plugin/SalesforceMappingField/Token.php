@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Utility\Token as TokenService;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -64,7 +65,7 @@ class Token extends SalesforceMappingFieldPluginBase {
   /**
    *
    */
-  public function value(EntityInterface $entity) {
+  public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     // Even though everything is an entity, some token functions expect to
     // receive the entity keyed by entity type.
     $text = $this->config('drupal_field_value');
