@@ -22,7 +22,7 @@ class QueueHandler {
 
   private function __construct(RestClient $sfapi) {
     $this->sfapi = $sfapi;
-    $this->queue = \Drupal::queue('cron_salesforce_pull');
+    $this->setQueue();
     $this->organizeMappings();
   }
 
@@ -70,7 +70,7 @@ class QueueHandler {
    *   of field mappings
    */
   protected function organizeMappings() {
-    $this->mappings = salesforce_mapping_load_multiple();
+    $this->mappings = $this->loadMultipleMappings();
     $this->pull_fields = [];
     foreach($this->mappings as $mapping) {
       $this->pull_fields[$mapping->getSalesforceObjectType()] =
@@ -155,4 +155,19 @@ class QueueHandler {
       watchdog_exception(__CLASS__, $e);
     }
   }
+
+  /**
+   * Drupal::queue wrapper function for testability
+   */
+  protected function setQueue() {
+    $this->queue = \Drupal::queue('cron_salesforce_pull');
+  }
+
+  /**
+   * salesforce_mapping_load_multiple() function for testability
+   */
+  protected function loadMultipleMappings() {
+    return salesforce_mapping_load_multiple();
+  }
+
 }

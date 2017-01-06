@@ -1,0 +1,58 @@
+<?php
+namespace Drupal\Tests\salesforce;
+
+use Drupal\Tests\UnitTestCase;
+use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\Exception;
+
+/**
+ * Test Object instantitation
+ *
+ * @group salesforce_pull
+ */
+
+class SelectQueryResultTest extends UnitTestCase {
+  static $modules = ['salesforce'];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp() {
+    parent::setUp();
+    $result = [
+      'totalSize' => 2,
+      'done' => true,
+      'records' => [
+        [
+          'Id' => '1234567890abcde',
+          'attributes' => ['type' => 'dummy',],
+          'name' => 'Example',
+        ],
+        [
+          'Id' => '1234567890abcdf',
+          'attributes' => ['type' => 'dummy',],
+          'name' => 'Example2',
+        ],
+      ]
+    ];
+    $this->sqr = new SelectQueryResult($result);
+  }
+
+  /**
+   * Test object instantiation with good resultd
+   */
+  public function testGoodID() {
+    $this->assertTrue($this->sqr instanceof SelectQueryResult);
+  }
+
+  /**
+   * Test object instantiation with no ID
+   * @expectedException Exception
+   */
+  public function testNoID() {
+    $sfid = new SFID('1234567890abcdg');
+    $id = $this->sqr->record($sfid);
+  }
+
+}
