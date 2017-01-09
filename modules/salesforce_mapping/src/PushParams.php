@@ -64,7 +64,7 @@ class PushParams {
    */
   public function getParam($key) {
     if (!array_key_exists($key, $this->params)) {
-      throw new Exception("Param key $key does not exist");
+      throw new \Exception("Param key $key does not exist");
     }
     return $this->params[$key];
   }

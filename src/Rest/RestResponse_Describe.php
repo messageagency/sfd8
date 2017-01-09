@@ -61,7 +61,7 @@ class RestResponse_Describe extends RestResponse {
    */
   public function getField($field_name) {
     if (empty($this->fields[$field_name])) {
-      throw new Exception("No field $field_name");
+      throw new \Exception("No field $field_name");
     }
     return $this->fields[$field_name];
   }
