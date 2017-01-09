@@ -2,12 +2,14 @@
 
 namespace Drupal\salesforce_pull;
 
+use Drupal\Core\Queue\QueueInterface;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Exception;
+
 /**
  * Handles pull cron queue set up.
  *
@@ -20,9 +22,11 @@ class QueueHandler {
   protected $mappings;
   protected $pull_fields;
 
-  private function __construct(RestClient $sfapi) {
+  protected function __construct(RestClient $sfapi, array $mappings, QueueInterface $queue) {
     $this->sfapi = $sfapi;
-    $this->setQueue();
+    $this->queue = $queue;
+    $this->mappings = $mappings;
+    $this->pull_fields = [];
     $this->organizeMappings();
   }
 
@@ -32,10 +36,9 @@ class QueueHandler {
    * @param object
    *  RestClient object
    */
-  public static function create(RestClient $sfapi) {
-    return new QueueHandler($sfapi);
+  public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue) {
+    return new QueueHandler($sfapi, $mappings, $queue);
   }
-
 
   /**
    * Pull updated records from Salesforce and place them in the queue.
@@ -46,7 +49,7 @@ class QueueHandler {
   public function getUpdatedRecords() {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
-    if ($this->queue->numberOfItems() > \Drupal::state()->get('salesforce_pull_max_queue_size', 100000)) {
+    if ($this->queue->numberOfItems() > $this->stateGet('salesforce_pull_max_queue_size', 100000)) {
       // @TODO add admin / logging alert here. This is a critical condition. When our queue is maxed out, pulls will be completely blocked.
       return;
     }
@@ -57,8 +60,12 @@ class QueueHandler {
       $results = $this->doSfoQuery($mapping);
       $this->insertIntoQueue($mapping, $results->records());
       $this->handleLargeRequests($mapping, $results);
-      \Drupal::state()->set('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), REQUEST_TIME);
+      $this->stateSet(
+        'salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(),
+        $this->requestTime()
+      );
     }
+    return true;
   }
 
   /**
@@ -70,8 +77,6 @@ class QueueHandler {
    *   of field mappings
    */
   protected function organizeMappings() {
-    $this->mappings = $this->loadMultipleMappings();
-    $this->pull_fields = [];
     foreach($this->mappings as $mapping) {
       $this->pull_fields[$mapping->getSalesforceObjectType()] =
         (!empty($this->pull_fields[$mapping->getSalesforceObjectType()])) ?
@@ -101,7 +106,7 @@ class QueueHandler {
     }
 
     // If no lastupdate, get all records, else get records since last pull.
-    $sf_last_sync = \Drupal::state()->get('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), NULL);
+    $sf_last_sync = $this->stateGet('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), NULL);
     if ($sf_last_sync) {
       $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
       $soql->addCondition($mapping->get('pull_trigger_date'), $last_sync, '>');
@@ -114,7 +119,7 @@ class QueueHandler {
       return $this->sfapi->query($soql);
     }
     catch (\Exception $e) {
-      watchdog_exception(__CLASS__, $e);
+      $this->watchdogException($e);
     }
   }
 
@@ -126,7 +131,7 @@ class QueueHandler {
    */
   protected function handleLargeRequests(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
    if ($results->nextRecordsUrl() != null) {
-     $version_path = parse_url($this->sfapi->getApiEndPoint(), PHP_URL_PATH);
+     $version_path = $this->parseUrl();
      try {
        $new_result = $this->sfapi->apiCall(
          str_replace($version_path, '', $results->nextRecordsUrl()));
@@ -134,7 +139,7 @@ class QueueHandler {
        $this->handleLargeRequests($mapping, $new_result);
      }
      catch (\Exception $e) {
-       watchdog_exception(__CLASS__, $e);
+       $this->watchdogException($e);
      }
    }
   }
@@ -152,22 +157,42 @@ class QueueHandler {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception(__CLASS__, $e);
+      $this->watchdogException($e);
     }
   }
 
   /**
-   * Drupal::queue wrapper function for testability
+   * Wrapper for Drupal::state()->get()
    */
-  protected function setQueue() {
-    $this->queue = \Drupal::queue('cron_salesforce_pull');
+  protected function stateGet($name, $value) {
+    return \Drupal::state()->get($name, $value);
   }
 
   /**
-   * salesforce_mapping_load_multiple() function for testability
+   * Wrapper for Drupal::state()->set()
    */
-  protected function loadMultipleMappings() {
-    return salesforce_mapping_load_multiple();
+  protected function stateSet($name, $value) {
+    return \Drupal::state()->set($name, $value);
   }
 
+  /**
+   * Wrapper for Drupal::state()->set()
+   */
+  protected function parseUrl() {
+    parse_url($this->sfapi->getApiEndPoint(), PHP_URL_PATH);
+  }
+
+  /**
+   * Wrapper for \Drupal::request()
+   */
+  protected function requestTime() {
+    return \Drupal::request()->server->get('REQUEST_TIME');
+  }
+
+  /**
+   * Wrapper for watchdog_exception()
+   */
+  protected function watchdogException(\Exception $e) {
+    watchdog_exception(__CLASS__, $e);
+  }
 }
