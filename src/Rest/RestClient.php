@@ -325,7 +325,7 @@ class RestClient {
   protected function refreshToken() {
     $refresh_token = $this->getRefreshToken();
     if (empty($refresh_token)) {
-      throw new Exception(t('There is no refresh token.'));
+      throw new \Exception(t('There is no refresh token.'));
     }
 
     $data = UrlHelper::buildQuery([
