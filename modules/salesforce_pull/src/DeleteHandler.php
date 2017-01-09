@@ -84,7 +84,7 @@ class DeleteHandler {
           ->getStorage($mapped_object->entity_type_id->value)
           ->load($mapped_object->entity_id->value);
         if (!$entity) {
-          throw new Exception();
+          throw new \Exception();
         }
       }
       catch (\Exception $e) {

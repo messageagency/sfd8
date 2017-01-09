@@ -43,7 +43,7 @@ class SelectQueryResult {
 
   public function record(SFID $id) {
     if (!isset($this->records[(string)$id])) {
-      throw new Exception('No record found');
+      throw new \Exception('No record found');
     }
     return $this->records[(string)$id];
   }

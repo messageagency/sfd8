@@ -85,7 +85,7 @@ class PushQueue extends DatabaseQueue {
     if (empty($data['name'])
     || empty($data['entity_id'])
     || empty($data['op'])) {
-      throw new Exception('Salesforce push queue data values are required for "name", "entity_id" and "op"');
+      throw new \Exception('Salesforce push queue data values are required for "name", "entity_id" and "op"');
     }
     $this->name = $data['name'];
     $time = time();
@@ -170,7 +170,7 @@ class PushQueue extends DatabaseQueue {
    * Use claimItems() instead.
    */
   public function claimItem($lease_time = NULL) {
-    throw new Exception('This queue is designed to process multiple items at once. Please use "claimItems" instead.');
+    throw new \Exception('This queue is designed to process multiple items at once. Please use "claimItems" instead.');
   }
 
   /**

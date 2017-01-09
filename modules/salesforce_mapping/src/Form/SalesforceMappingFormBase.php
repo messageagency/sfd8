@@ -81,7 +81,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
       $salesforce_object_type = $this->entity->get('salesforce_object_type');
     }
     if (empty($salesforce_object_type)) {
-      throw new Exception('Salesforce object type not set.');
+      throw new \Exception('Salesforce object type not set.');
     }
     // No need to cache here: Salesforce::objectDescribe implements caching.
     return $this->client->objectDescribe($salesforce_object_type);
