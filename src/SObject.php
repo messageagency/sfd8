@@ -9,7 +9,7 @@ class SObject {
 
   public function __construct(array $data = []) {
     if (!isset($data['id']) && !isset($data['Id'])) {
-      throw new Exception('Refused to instantiate SObject without ID');
+      throw new \Exception('Refused to instantiate SObject without ID');
     }
 
     if (isset($data['id'])) {
@@ -19,7 +19,7 @@ class SObject {
     unset($data['id'], $data['Id']);
 
     if (empty($data['attributes']) || !isset($data['attributes']['type'])) {
-      throw new Exception('Refused to instantiate SObject without Type');
+      throw new \Exception('Refused to instantiate SObject without Type');
     }
     $this->type = $data['attributes']['type'];
 
@@ -50,7 +50,7 @@ class SObject {
    */
   public function field($key) {
     if (!array_key_exists($key, $this->fields)) {
-      throw new Exception('Index not found');
+      throw new \Exception('Index not found');
     }
     return $this->fields[$key];
   }

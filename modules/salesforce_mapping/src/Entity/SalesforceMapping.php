@@ -240,7 +240,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   public function getKeyValue(EntityInterface $entity) {
     if (!$this->hasKey()) {
-      throw new Exception('No key defined for this mapping.');
+      throw new \Exception('No key defined for this mapping.');
     }
 
     // @TODO #fieldMappingField
@@ -249,7 +249,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
         return $field_plugin->value($entity, $this);
       }
     }
-    throw new Exception(t('Key %key not found for this mapping.', ['%key' => $this->getKeyField()]));
+    throw new \Exception(t('Key %key not found for this mapping.', ['%key' => $this->getKeyField()]));
   }
 
   /**

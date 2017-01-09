@@ -195,11 +195,11 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     }
 
     if (empty($field_type)) {
-      throw new Exception('Invalid field type configuration');
+      throw new \Exception('Invalid field type configuration');
     }
 
     if (empty($field_plugin_definition)) {
-      throw new Exception('No field plugin definition found for ' . $field_type);
+      throw new \Exception('No field plugin definition found for ' . $field_type);
     }
 
     $row['config'] = $field_plugin->buildConfigurationForm($form, $form_state);

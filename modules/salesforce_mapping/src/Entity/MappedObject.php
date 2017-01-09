@@ -336,7 +336,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
   public function setDrupalEntity(EntityInterface $entity = NULL) {
     if ($entity->id() != $this->entity_id->value) {
-      throw new Exception('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
+      throw new \Exception('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
     }
     $this->drupal_entity = $entity;
     return $this;
