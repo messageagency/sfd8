@@ -10,6 +10,7 @@ use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Exception;
+
 /**
  * Handles pull cron queue set up.
  *
@@ -54,7 +55,7 @@ class TestQueueHandler extends QueueHandler {
   }
 
   /**
-   * Overrides parent:: requestTime()
+   * Overrides parent::requestTime()
    * Wrapper for \Drupal::request()
    */
   protected function requestTime() {
@@ -62,9 +63,15 @@ class TestQueueHandler extends QueueHandler {
   }
 
   /**
-   * Overrides parent:: watchdogException
+   * Overrides parent::watchdogException
    * Wrapper for watchdog_exception()
    */
   protected function watchdogException(\Exception $e) {
+  }
+
+  /**
+   * Ovverides parent::log()
+   */
+  public function log($name, $level, $message, array $placeholders = []) {
   }
 }

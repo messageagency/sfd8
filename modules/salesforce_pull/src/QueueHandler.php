@@ -9,6 +9,8 @@ use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\LoggingTrait;
+use Drupal\salesforce\LoggingLevels;
 
 /**
  * Handles pull cron queue set up.
@@ -17,6 +19,9 @@ use Drupal\salesforce\Exception;
  */
 
 class QueueHandler {
+
+  use LoggingTrait;
+
   protected $sfapi;
   protected $queue;
   protected $mappings;
@@ -34,7 +39,11 @@ class QueueHandler {
    * Chainable instantiation method for class
    *
    * @param object
-   *  RestClient object
+   *   RestClient object
+   * @param array
+   *   Arry of SalesforceMapping objects
+   *
+   * @return QueueHandler
    */
   public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue) {
     return new QueueHandler($sfapi, $mappings, $queue);
@@ -45,18 +54,27 @@ class QueueHandler {
    *
    * Executes a SOQL query based on defined mappings, loops through the results,
    * and places each updated SF object into the queue for later processing.
+   *
+   * @return boolean
    */
   public function getUpdatedRecords() {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
     if ($this->queue->numberOfItems() > $this->stateGet('salesforce_pull_max_queue_size', 100000)) {
-      // @TODO add admin / logging alert here. This is a critical condition. When our queue is maxed out, pulls will be completely blocked.
-      return;
+      $this->log(
+        'Salesforce Pull',
+        LoggingLevels::ALERT,
+        'Pull Queue contains %noi items, exceeding the max size of %max items. Pull processing will be blocked until the number of items in the queue is reduced to below the max size.',
+        [
+          '%noi' => $this->queue->numberOfItems(),
+          '%max' => $this->stateGet('salesforce_pull_max_queue_size', 100000),
+        ]
+      );
+      return false;
     }
 
     // Iterate over each field mapping to determine our query parameters.
     foreach ($this->mappings as $mapping) {
-      // @TODO: This may need a try-catch? all of the following methods will exception catch themselves
       $results = $this->doSfoQuery($mapping);
       $this->insertIntoQueue($mapping, $results->records());
       $this->handleLargeRequests($mapping, $results);
@@ -69,12 +87,8 @@ class QueueHandler {
   }
 
   /**
-   * Fetches all mappings, sortes them by the SF object type, and adds an
-   * array of pull fields to each mappings
-   *
-   * @return array
-   *   Array of array of distinct mappings indexed by SF object type and array
-   *   of field mappings
+   * Iterates over the mappings and mergeds the pull fields array with object's
+   * array of pull fields to form a set of unique fields to pull.
    */
   protected function organizeMappings() {
     foreach($this->mappings as $mapping) {
@@ -91,8 +105,8 @@ class QueueHandler {
    * @param SalesforceMappingInterface
    *   Mapping for which to execute pull
    *
-   * @return array
-   *   Array of field smappings
+   * @return SelectQueryResult
+   *   returned result object from Salesforce
    */
   protected function doSfoQuery(SalesforceMappingInterface $mapping) {
     // @TODO figure out the new way to build the query.
@@ -124,10 +138,12 @@ class QueueHandler {
   }
 
   /**
-   * Handle requests larger than the batch limit (usually 2000).
+   * Handle requests larger than the batch limit (usually 2000) recursively.
    *
-   * @param array
-   *   Original list of results, which includes batched records fetch URL
+   * @param SalesforceMappingInterface
+   *   Mapping object currently being processed
+   * @param SelectQueryResult
+   *   Results, which includes batched records fetch URL
    */
   protected function handleLargeRequests(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
    if ($results->nextRecordsUrl() != null) {
@@ -147,8 +163,10 @@ class QueueHandler {
   /**
    * Inserts results into queue
    *
-   * @param object
-   *   Result set
+   * @param SalesforceMappingInterface
+   *   Mapping object currently being processed
+   * @param array
+   *   Result record set
    */
   protected function insertIntoQueue(SalesforceMappingInterface $mapping, array $records) {
     try {
