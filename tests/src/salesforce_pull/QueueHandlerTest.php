@@ -43,28 +43,28 @@ class QueueHandlerTest extends UnitTestCase {
     $prophecy = $this->prophesize(RestClient::CLASS);
     $prophecy->query(Argument::any())
       ->willReturn($this->sqr);
-    $sfapi = $prophecy->reveal();
+    $this->sfapi = $prophecy->reveal();
 
-    $mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)
+    $this->mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)
       ->setMethods(['__construct', '__get', 'get', 'getSalesforceObjectType', 'getPullFieldsArray'])
       ->getMock();
-    $mapping->expects($this->any())
+    $this->mapping->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('id'))
       ->willReturn(1);
-    $mapping->expects($this->any())
+    $this->mapping->expects($this->any())
       ->method('getSalesforceObjectType')
       ->willReturn('default');
-    $mapping->expects($this->any())
+    $this->mapping->expects($this->any())
       ->method('getPullFieldsArray')
       ->willReturn(['Name' => 'Name', 'Account Number' => 'Account Number']);
 
     $prophecy = $this->prophesize(QueueInterface::CLASS);
     $prophecy->createItem()->willReturn(1);
     $prophecy->numberOfItems()->willReturn(2);
-    $queue = $prophecy->reveal();
+    $this->queue = $prophecy->reveal();
 
-    $this->qh = TestQueueHandler::create($sfapi, [$mapping], $queue);
+    $this->qh = TestQueueHandler::create($this->sfapi, [$this->mapping], $this->queue);
   }
 
   /**
@@ -78,29 +78,23 @@ class QueueHandlerTest extends UnitTestCase {
    * Test handler operation, good data
    */
   public function testGetUpdatedRecords() {
-    $mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)
-      ->setMethods(['__construct', '__get', 'getSalesforceObjectType', 'getPullFieldsArray'])
-      ->getMock();
-    $mapping->expects($this->any())
-      ->method('__get')
-      ->with($this->equalTo('id'))
-      ->willReturn(1);
-      $mapping->expects($this->any())
-        ->method('get')
-        ->with($this->equalTo('pull_trigger_date'))
-        ->willReturn(gmdate('Y-m-d\TH:i:s\Z'));
-    $mapping->expects($this->any())
-      ->method('getSalesforceObjectType')
-      ->willReturn('default');
-    $mapping->expects($this->any())
-      ->method('getPullFieldsArray')
-      ->willReturn(['Name' => 'Name', 'Account Number' => 'Account Number']);
-
-    $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'dummy',]]);
-    $records = [$sobject];
-
     $result = $this->qh->getUpdatedRecords();
     $this->assertTrue($result);
+  }
+
+  /**
+   * Test handler operation, too many queue items
+   */
+  public function testTooManyQueueItems() {
+    // initialize with queue size > 100000 (default)
+    $prophecy = $this->prophesize(QueueInterface::CLASS);
+    $prophecy->createItem()->willReturn(1);
+    $prophecy->numberOfItems()->willReturn(100001);
+    $this->queue = $prophecy->reveal();
+
+    $this->qh = TestQueueHandler::create($this->sfapi, [$this->mapping], $this->queue);
+    $result = $this->qh->getUpdatedRecords();
+    $this->assertFalse($result);
   }
 
 }
