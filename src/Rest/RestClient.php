@@ -357,7 +357,7 @@ class RestClient {
    */
   public function handleAuthResponse(Response $response) {
     if ($response->getStatusCode() != 200) {
-      thrownew \Exceptionn($response->getReasonPhrase(), $response->getStatusCode());
+      throw new \Exceptionn($response->getReasonPhrase(), $response->getStatusCode());
     }
 
     $data = (new RestResponse($response))->data;
@@ -390,7 +390,7 @@ class RestClient {
     $response = $this->httpRequest($id, NULL, $headers);
 
     if ($response->getStatusCode() != 200) {
-      thrownew \Exceptionn(t('Unable to access identity service.'), $response->getStatusCode());
+      throw new \Exceptionn(t('Unable to access identity service.'), $response->getStatusCode());
     }
     $data = (new RestResponse($response))->data;
 
@@ -524,7 +524,7 @@ class RestClient {
    */
   public function objectDescribe($name, $reset = FALSE) {
     if (empty($name)) {
-      thrownew \Exceptionn('No name provided to describe');
+      throw new \Exceptionn('No name provided to describe');
     }
 
     $cache = \Drupal::cache()->get('salesforce:object:' . $name);
@@ -805,7 +805,7 @@ class RestClient {
   public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE) {
     $record_types = $this->getRecordTypes();
     if (empty($record_types[$name][$devname])) {
-      thrownew \Exceptionn("No record type $devname for $name");
+      throw new \Exceptionn("No record type $devname for $name");
     }
     return $record_types[$name][$devname]->id();
   }
@@ -825,7 +825,7 @@ class RestClient {
         return $object['name'];
       }
     }
-    thrownew \Exceptionn('No matching object type');
+    throw new \Exceptionn('No matching object type');
   }
 
 }
