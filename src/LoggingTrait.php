@@ -19,7 +19,7 @@ trait LoggingTrait {
    * @param array
    *   placeholders for tokens, if appriate
    */
-   public function log($name, $level, $message, array $placeholders = []) {
+   protected function log($name, $level, $message, array $placeholders = []) {
      if (!empty($placeholders)) {
        \Drupal::logger($name)->$level($message, $placeholders);
      }
@@ -27,4 +27,12 @@ trait LoggingTrait {
        \Drupal::logger($name)->$level($message);
      }
    }
+
+   /**
+    * Wrapper for watchdog_exception()
+    */
+   protected function watchdogException(\Exception $e) {
+     watchdog_exception(__CLASS__, $e);
+   }
+
 }

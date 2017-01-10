@@ -206,11 +206,4 @@ class QueueHandler {
   protected function requestTime() {
     return \Drupal::request()->server->get('REQUEST_TIME');
   }
-
-  /**
-   * Wrapper for watchdog_exception()
-   */
-  protected function watchdogException(\Exception $e) {
-    watchdog_exception(__CLASS__, $e);
-  }
 }

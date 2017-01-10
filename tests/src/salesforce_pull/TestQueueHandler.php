@@ -72,6 +72,6 @@ class TestQueueHandler extends QueueHandler {
   /**
    * Ovverides parent::log()
    */
-  public function log($name, $level, $message, array $placeholders = []) {
+  protected function log($name, $level, $message, array $placeholders = []) {
   }
 }
