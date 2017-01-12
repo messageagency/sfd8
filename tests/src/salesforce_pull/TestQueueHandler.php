@@ -4,12 +4,7 @@ namespace Drupal\Tests\salesforce\salesforce_pull;
 
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\salesforce_pull\QueueHandler;
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use Drupal\salesforce\Exception;
 
 /**
  * Handles pull cron queue set up.

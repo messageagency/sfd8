@@ -18,9 +18,10 @@ use Drupal\salesforce\SObject;
 use Drupal\salesforce\LoggingTrait;
 use Drupal\salesforce\LoggingLevels;
 use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-use Drupal\salesforce_mapping\Entity\MappedObject;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\PushParams;
+use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Provides base functionality for the Salesforce Pull Queue Workers.
@@ -91,7 +92,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       // loadMappingObjects returns an array, but providing salesforce id and mapping guarantees at most one result.
       $mapped_object = $this->loadMappingObjects([
         'salesforce_id' => (string)$sf_object->id(),
-        'salesforce_mapping' => $mapping->id()
+        'salesforce_mapping' => $mapping->id
       ]);
       $mapped_object = current($mapped_object);
       $this->updateEntity($mapping, $mapped_object, $sf_object);
@@ -112,8 +113,8 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    * @param SObject $sf_object
    *   Current Salesforce record array.
    */
-  private function updateEntity(SalesforceMapping $mapping, MappedObject $mapped_object, SObject $sf_object) {
-    if (!$mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
+  protected function updateEntity(SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object, SObject $sf_object) {
+    if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
       return;
     }
 
@@ -158,7 +159,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     }
     catch (\Exception $e) {
       if ($e instanceof EntityNotFoundException) {
-        $message = t('Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist. Error: %msg',
+        $this->log('Salesforce Pull',
+          LoggingLevels::ERROR,
+          'Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist. Error: %msg',
           [
             '%sfobjectid' => (string)$sf_object->id(),
             '%msg' => $e->getMessage(),
@@ -166,7 +169,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         );
       }
       else {
-        $message = t('Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
+        $this->log('Salesforce Pull',
+          LoggingLevels::ERROR,
+          'Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
           [
             '%label' => $entity->label(),
             '%sfobjectid' => (string)$sf_object->id(),
@@ -174,7 +179,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           ]
         );
       }
-      $this->log('Salesforce Pull', LoggingLevels::ERROR, $message);
       $this->watchdogException($e);
     }
   }
@@ -187,22 +191,19 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    * @param SObject $sf_object
    *   Current Salesforce record array.
    */
-  private function createEntity(SalesforceMapping $mapping, SObject $sf_object) {
-    if (!$mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_CREATE])) {
+  protected function createEntity(SalesforceMappingInterface $mapping, SObject $sf_object) {
+    if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE])) {
       return;
     }
 
     try {
-      // Create entity from mapping object and field maps.
-      $entity_type = $mapping->get('drupal_entity_type');
-      $entity_info = $this->etm->getDefinition($entity_type);
-
       // Define values to pass to entity_create().
-      $entity_keys = $entity_info->getKeys();
+      $entity_type = $mapping->getDrupalEntityType();
+      $entity_keys = $this->etm->getDefinition($entity_type)->getKeys();
       $values = [];
       if (isset($entity_keys['bundle'])
       && !empty($entity_keys['bundle'])) {
-        $values[$entity_keys['bundle']] = $mapping->get('drupal_bundle');
+        $values[$entity_keys['bundle']] = $mapping->getDrupalBundle();
       }
 
       // See note above about flag.
@@ -250,12 +251,14 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       );
     }
     catch (\Exception $e) {
-      $message = $e->getMessage() . ' ' . t('Pull-create failed for Salesforce Object ID: %sfobjectid',
+      $this->log('Salesforce Pull',
+        LoggingLevels::ERROR,
+        '%msg Pull-create failed for Salesforce Object ID: %sfobjectid',
         [
+          '%msg' => $e->getMessage(),
           '%sfobjectid' => (string)$sf_object->id(),
         ]
       );
-      $this->log('Salesforce Pull', LoggingLevels::ERROR, $message);
       $this->watchdogException($e);
     }
   }

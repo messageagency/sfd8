@@ -260,6 +260,20 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
+   * @return string
+   */
+  public function getDrupalEntityType() {
+    return $this->drupal_entity_type;
+  }
+
+  /**
+   * @return string
+   */
+  public function getDrupalBundle() {
+    return $this->drupal_bundle;
+  }
+
+  /**
    * @return array
    */
   public function getFieldMappings() {

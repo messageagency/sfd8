@@ -3,13 +3,11 @@ namespace Drupal\Tests\salesforce\salesforce_pull;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\salesforce\salesforce_pull\TestQueueHandler;
-//use Drupal\salesforce_pull\QueueHandler;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQueryResult;
-use Drupal\salesforce\Rest\restClient;
+use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\Core\Queue\QueueInterface;
-//use Drupal\salesforce_pull\PullQueueItem;
 use Prophecy\Argument;
 
 
