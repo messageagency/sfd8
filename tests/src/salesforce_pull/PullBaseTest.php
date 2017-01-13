@@ -6,8 +6,8 @@ use Drupal\Tests\salesforce\salesforce_pull\TestPullBase;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\Core\Entity\EntityStorageBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Component\Plugin\Definition\PluginDefinitionInterface;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SObject;
@@ -32,8 +32,9 @@ class PullBaseTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    // mock hander for getStorage calls
-
+    $this->entityTypeId = $this->entityId = new \stdClass();
+    $this->entityTypeId->value = 'test';
+    $this->entityId->value = '1';
 
     // mock mapping object
     $this->mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)
@@ -53,26 +54,33 @@ class PullBaseTest extends UnitTestCase {
 
     // mock mapped object
     $prophecy = $this->prophesize(MappedObjectInterface::CLASS);
+    // @TODO: make MappedObjects testable and thus mockable better here
+    //$prophecy->get('entity_type_id')->willReturn($this->entityTypeId);
+    //$prophecy->get('entity_id')->willReturn($this->entityId);
     $this->mappedObject = $prophecy->reveal();
 
-    // mock ConfigEntityStorage object
+
+    // mock mapping ConfigEntityStorage object
     $prophecy = $this->prophesize(ConfigEntityStorage::CLASS);
     $prophecy->load(Argument::any())->willReturn($this->mapping);
     $this->configStorage = $prophecy->reveal();
 
-    // mock EntityStorage object
+    // mock mapped object EntityStorage object
     $prophecy = $this->prophesize(EntityStorageBase::CLASS);
     $prophecy->loadByProperties(Argument::any())->willReturn([$this->mappedObject]);
     $this->entityStorage = $prophecy->reveal();
 
-    // mock Definition
-    $prophecy = $this->prophesize(PluginDefinitionInterface::CLASS);
+    // mock new Drupal entity EntityStorage object
+    $prophecy = $this->prophesize(EntityStorageBase::CLASS);
+    $prophecy->create(Argument::any())->willReturn();
+    $this->newEntityStorage = $prophecy->reveal();
+
+    // mock EntityType Definition
+    $prophecy = $this->prophesize(EntityTypeInterface::CLASS);
     $prophecy->getKeys(Argument::any())->willReturn([
       'bundle' => 'test',
-
     ]);
     $this->entityDefinition = $prophecy->reveal();
-
 
     // mock EntityTypeManagerInterface
     $prophecy = $this->prophesize(EntityTypeManagerInterface::CLASS);
@@ -123,25 +131,8 @@ class PullBaseTest extends UnitTestCase {
     $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'dummy',]]);
     $item = new PullQueueItem($sobject, $this->mapping);
 
-    $result = $this->pullWorker->ProcessItem($item);
-    $this->assertTrue($result);
+    $this->pullWorker->ProcessItem($item);
+    // @TODO fix MappedObject so it will be mockable and used as expected in tests here
+    $this->assertEquals($this->pullWorker->getDone(), 'update');
   }
-
-  /**
-   * Test handler operation, too many queue items
-   */
-   /*
-  public function testTooManyQueueItems() {
-    // initialize with queue size > 100000 (default)
-    $prophecy = $this->prophesize(QueueInterface::CLASS);
-    $prophecy->createItem()->willReturn(1);
-    $prophecy->numberOfItems()->willReturn(100001);
-    $this->queue = $prophecy->reveal();
-
-    $this->qh = TestQueueHandler::create($this->sfapi, [$this->mapping], $this->queue);
-    $result = $this->qh->getUpdatedRecords();
-    $this->assertFalse($result);
-  }
-  */
-
 }

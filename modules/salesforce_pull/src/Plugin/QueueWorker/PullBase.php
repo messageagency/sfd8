@@ -52,6 +52,13 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   protected $mh;
 
   /**
+   * Internal flow tracker for testing.
+   *
+   * @var string
+   */
+  protected $done;
+
+  /**
    * Creates a new PullBase object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
@@ -61,6 +68,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     $this->etm = $entity_type_manager;
     $this->client = $client;
     $this->mh = $module_handler;
+    $this->done = '';
   }
 
   /**
@@ -96,9 +104,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       ]);
       $mapped_object = current($mapped_object);
       $this->updateEntity($mapping, $mapped_object, $sf_object);
+      $this->done = 'update';
     }
     catch (\Exception $e) {
       $this->createEntity($mapping, $sf_object);
+      $this->done = 'create';
     }
 
   }
@@ -261,6 +271,13 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       );
       $this->watchdogException($e);
     }
+  }
+
+  /**
+   * Return internal process tracking property
+   */
+  public function getDone() {
+    return $this->done;
   }
 
   /**
