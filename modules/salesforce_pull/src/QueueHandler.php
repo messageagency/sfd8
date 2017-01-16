@@ -2,12 +2,16 @@
 
 namespace Drupal\salesforce_pull;
 
+use Drupal\Core\Queue\QueueInterface;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\LoggingTrait;
+use Drupal\salesforce\LoggingLevels;
+
 /**
  * Handles pull cron queue set up.
  *
@@ -15,14 +19,19 @@ use Drupal\salesforce\Exception;
  */
 
 class QueueHandler {
+
+  use LoggingTrait;
+
   protected $sfapi;
   protected $queue;
   protected $mappings;
   protected $pull_fields;
 
-  private function __construct(RestClient $sfapi) {
+  protected function __construct(RestClient $sfapi, array $mappings, QueueInterface $queue) {
     $this->sfapi = $sfapi;
-    $this->queue = \Drupal::queue('cron_salesforce_pull');
+    $this->queue = $queue;
+    $this->mappings = $mappings;
+    $this->pull_fields = [];
     $this->organizeMappings();
   }
 
@@ -30,48 +39,58 @@ class QueueHandler {
    * Chainable instantiation method for class
    *
    * @param object
-   *  RestClient object
+   *   RestClient object
+   * @param array
+   *   Arry of SalesforceMapping objects
+   *
+   * @return QueueHandler
    */
-  public static function create(RestClient $sfapi) {
-    return new QueueHandler($sfapi);
+  public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue) {
+    return new QueueHandler($sfapi, $mappings, $queue);
   }
-
 
   /**
    * Pull updated records from Salesforce and place them in the queue.
    *
    * Executes a SOQL query based on defined mappings, loops through the results,
    * and places each updated SF object into the queue for later processing.
+   *
+   * @return boolean
    */
   public function getUpdatedRecords() {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
-    if ($this->queue->numberOfItems() > \Drupal::state()->get('salesforce_pull_max_queue_size', 100000)) {
-      // @TODO add admin / logging alert here. This is a critical condition. When our queue is maxed out, pulls will be completely blocked.
-      return;
+    if ($this->queue->numberOfItems() > $this->stateGet('salesforce_pull_max_queue_size', 100000)) {
+      $this->log(
+        'Salesforce Pull',
+        LoggingLevels::ALERT,
+        'Pull Queue contains %noi items, exceeding the max size of %max items. Pull processing will be blocked until the number of items in the queue is reduced to below the max size.',
+        [
+          '%noi' => $this->queue->numberOfItems(),
+          '%max' => $this->stateGet('salesforce_pull_max_queue_size', 100000),
+        ]
+      );
+      return false;
     }
 
     // Iterate over each field mapping to determine our query parameters.
     foreach ($this->mappings as $mapping) {
-      // @TODO: This may need a try-catch? all of the following methods will exception catch themselves
       $results = $this->doSfoQuery($mapping);
       $this->insertIntoQueue($mapping, $results->records());
       $this->handleLargeRequests($mapping, $results);
-      \Drupal::state()->set('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), REQUEST_TIME);
+      $this->stateSet(
+        'salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(),
+        $this->requestTime()
+      );
     }
+    return true;
   }
 
   /**
-   * Fetches all mappings, sortes them by the SF object type, and adds an
-   * array of pull fields to each mappings
-   *
-   * @return array
-   *   Array of array of distinct mappings indexed by SF object type and array
-   *   of field mappings
+   * Iterates over the mappings and mergeds the pull fields array with object's
+   * array of pull fields to form a set of unique fields to pull.
    */
   protected function organizeMappings() {
-    $this->mappings = salesforce_mapping_load_multiple();
-    $this->pull_fields = [];
     foreach($this->mappings as $mapping) {
       $this->pull_fields[$mapping->getSalesforceObjectType()] =
         (!empty($this->pull_fields[$mapping->getSalesforceObjectType()])) ?
@@ -86,8 +105,8 @@ class QueueHandler {
    * @param SalesforceMappingInterface
    *   Mapping for which to execute pull
    *
-   * @return array
-   *   Array of field smappings
+   * @return SelectQueryResult
+   *   returned result object from Salesforce
    */
   protected function doSfoQuery(SalesforceMappingInterface $mapping) {
     // @TODO figure out the new way to build the query.
@@ -101,7 +120,7 @@ class QueueHandler {
     }
 
     // If no lastupdate, get all records, else get records since last pull.
-    $sf_last_sync = \Drupal::state()->get('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), NULL);
+    $sf_last_sync = $this->stateGet('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), NULL);
     if ($sf_last_sync) {
       $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
       $soql->addCondition($mapping->get('pull_trigger_date'), $last_sync, '>');
@@ -114,19 +133,21 @@ class QueueHandler {
       return $this->sfapi->query($soql);
     }
     catch (\Exception $e) {
-      watchdog_exception(__CLASS__, $e);
+      $this->watchdogException($e);
     }
   }
 
   /**
-   * Handle requests larger than the batch limit (usually 2000).
+   * Handle requests larger than the batch limit (usually 2000) recursively.
    *
-   * @param array
-   *   Original list of results, which includes batched records fetch URL
+   * @param SalesforceMappingInterface
+   *   Mapping object currently being processed
+   * @param SelectQueryResult
+   *   Results, which includes batched records fetch URL
    */
   protected function handleLargeRequests(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
    if ($results->nextRecordsUrl() != null) {
-     $version_path = parse_url($this->sfapi->getApiEndPoint(), PHP_URL_PATH);
+     $version_path = $this->parseUrl();
      try {
        $new_result = $this->sfapi->apiCall(
          str_replace($version_path, '', $results->nextRecordsUrl()));
@@ -134,7 +155,7 @@ class QueueHandler {
        $this->handleLargeRequests($mapping, $new_result);
      }
      catch (\Exception $e) {
-       watchdog_exception(__CLASS__, $e);
+       $this->watchdogException($e);
      }
    }
   }
@@ -142,8 +163,10 @@ class QueueHandler {
   /**
    * Inserts results into queue
    *
-   * @param object
-   *   Result set
+   * @param SalesforceMappingInterface
+   *   Mapping object currently being processed
+   * @param array
+   *   Result record set
    */
   protected function insertIntoQueue(SalesforceMappingInterface $mapping, array $records) {
     try {
@@ -152,7 +175,35 @@ class QueueHandler {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception(__CLASS__, $e);
+      $this->watchdogException($e);
     }
+  }
+
+  /**
+   * Wrapper for Drupal::state()->get()
+   */
+  protected function stateGet($name, $value) {
+    return \Drupal::state()->get($name, $value);
+  }
+
+  /**
+   * Wrapper for Drupal::state()->set()
+   */
+  protected function stateSet($name, $value) {
+    return \Drupal::state()->set($name, $value);
+  }
+
+  /**
+   * Wrapper for Drupal::state()->set()
+   */
+  protected function parseUrl() {
+    parse_url($this->sfapi->getApiEndPoint(), PHP_URL_PATH);
+  }
+
+  /**
+   * Wrapper for \Drupal::request()
+   */
+  protected function requestTime() {
+    return \Drupal::request()->server->get('REQUEST_TIME');
   }
 }

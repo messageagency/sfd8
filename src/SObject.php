@@ -25,7 +25,7 @@ class SObject {
 
     // Attributes array also contains "url" index, which we don't need.
     unset($data['attributes']);
-
+    $this->fields = [];
     foreach ($data as $key => $value) {
       $this->fields[$key] = $value;
     }
