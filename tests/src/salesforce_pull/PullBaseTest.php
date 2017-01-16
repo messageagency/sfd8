@@ -133,6 +133,6 @@ class PullBaseTest extends UnitTestCase {
 
     $this->pullWorker->ProcessItem($item);
     // @TODO fix MappedObject so it will be mockable and used as expected in tests here
-    $this->assertEquals($this->pullWorker->getDone(), 'update');
+    $this->assertEquals('update', $this->pullWorker->getDone());
   }
 }
