@@ -260,6 +260,20 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
+   * @return string
+   */
+  public function getDrupalEntityType() {
+    return $this->drupal_entity_type;
+  }
+
+  /**
+   * @return string
+   */
+  public function getDrupalBundle() {
+    return $this->drupal_bundle;
+  }
+
+  /**
    * @return array
    */
   public function getFieldMappings() {
@@ -267,7 +281,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     $fields = [];
     foreach ($this->field_mappings as $field) {
       try {
-        $mappings[] = $this->fieldManager->createInstance(
+        $fields[] = $this->fieldManager->createInstance(
            $field['drupal_field_type'],
            $field
          );
@@ -294,7 +308,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   public function doesPush() {
     return $this->checkTriggers([SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE, SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE, SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE]);
   }
-    
+
   /**
    * @return bool
    *   TRUE if this mapping uses any of the given $triggers, otherwise FALSE.

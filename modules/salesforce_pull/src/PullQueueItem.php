@@ -10,6 +10,6 @@ class PullQueueItem {
   public $mapping_id;
   public function __construct(SObject $sobject, SalesforceMappingInterface $mapping) {
     $this->sobject = $sobject;
-    $this->mapping_id = $mapping->id();
+    $this->mapping_id = $mapping->id;
   }
 }
