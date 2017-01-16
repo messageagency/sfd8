@@ -15,6 +15,7 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
  *   label = @Translation("Salesforce Mapping"),
  *   module = "salesforce_mapping",
  *   handlers = {
+ *     "storage" = "Drupal\salesforce_mapping\SalesforceMappingStorage",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "access" = "Drupal\salesforce_mapping\SalesforceMappingAccessController",
  *     "list_builder" = "Drupal\salesforce_mapping\SalesforceMappingList",

@@ -179,7 +179,7 @@ function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id) {
 /**
  * pass-through for salesforce_mapped_object_load_multiple()
  */
-function salesforce_mapped_object_load_by_entity($entity, $all = FALSE) {
+function salesforce_mapped_object_load_by_entity($entity) {
   return salesforce_mapped_object_load_multiple([
     'entity_type_id' => $entity->getEntityTypeId(),
     'entity_id' => $entity->id(),
