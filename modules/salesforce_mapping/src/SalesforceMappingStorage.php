@@ -10,6 +10,8 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\SFID;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Class MappedObjectStorage.
@@ -55,6 +57,19 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
   public function __construct($entity_type_id, ConfigFactoryInterface $config_factory, UuidInterface $uuid_service, LanguageManagerInterface $language_manager, EntityManagerInterface $entity_manager) {
     $entity_type = $entity_manager->getDefinition($entity_type_id);
     parent::__construct($entity_type, $config_factory, $uuid_service, $language_manager);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+    return new static(
+      $entity_type->id(),
+      $container->get('config.factory'),
+      $container->get('uuid'),
+      $container->get('language_manager'),
+      $container->get('entity.manager')
+    );
   }
 
   /**

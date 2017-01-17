@@ -11,6 +11,8 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\SFID;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Class MappedObjectStorage.
@@ -36,8 +38,21 @@ class MappedObjectStorage extends SqlContentEntityStorage {
     // ultimately calls it's own constructer through here, is calling this 
     // constuctor with the same paramter blueprint, which expects
     // EntityTypeInterface and not a string.
-    $entity_type = $entity_manager->getDefinition('salesforce_mapped_object');
+    $entity_type = $entity_manager->getDefinition($entity_type_id);
     parent::__construct($entity_type, $database, $entity_manager, $cache, $language_manager);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+    return new static(
+      $entity_type->id(),
+      $container->get('database'),
+      $container->get('entity.manager'),
+      $container->get('cache.entity'),
+      $container->get('language_manager')
+    );
   }
 
   /**
