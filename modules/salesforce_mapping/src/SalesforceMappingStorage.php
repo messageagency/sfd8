@@ -49,13 +49,10 @@ class MappedObjectStorage extends SqlContentEntityStorage {
    */
   protected $entityManager;
 
-  private $entity_type_id;
-
   /**
    * {@inheritdoc}
    */
   public function __construct($entity_type_id, ConfigFactoryInterface $config_factory, UuidInterface $uuid_service, LanguageManagerInterface $language_manager, EntityManagerInterface $entity_manager) {
-    $this->entity_type_id = $entity_type_id;
     $entity_type = $entity_manager->getDefinition($entity_type_id);
     parent::__construct($entity_type, $config_factory, $uuid_service, $language_manager);
   }

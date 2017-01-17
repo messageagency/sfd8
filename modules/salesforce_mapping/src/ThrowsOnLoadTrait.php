@@ -4,9 +4,10 @@ namespace Drupal\salesforce_mapping;
 
 use Drupal\salesforce\EntityNotFoundException;
 
+/**
+ * This trait should be attached to an instance of EntityStorageInterface
+ */
 trait ThrowsOnLoadTrait {
-
-  protected $entity_type_id;
 
   /**
    * Returns entities for given ids or throws exception.
@@ -25,7 +26,7 @@ trait ThrowsOnLoadTrait {
   public function loadMultiple(array $ids = NULL) {
     $entities = parent::loadMultiple($values);
     if (empty($mappings)) {
-      throw new EntityNotFoundException($properties, $this->entity_type_id);
+      throw new EntityNotFoundException($properties, $this->getEntityTypeId());
     }
     return $mappings;
   }
@@ -47,7 +48,7 @@ trait ThrowsOnLoadTrait {
   public function loadByProperties(array $properties = []) {
     $entities = parent::loadByProperties($properties);
     if (empty($mappings)) {
-      throw new EntityNotFoundException($properties, $this->entity_type_id);
+      throw new EntityNotFoundException($properties, $this->getEntityTypeId());
     }
     return $entities;    
   }
