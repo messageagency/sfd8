@@ -2,9 +2,9 @@
 
 namespace Drupal\salesforce_mapping;
 
-use Drupal\Component\Uuid\UuidInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\Entity\ConfigEntityStorage;
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Cache\DatabaseBackendFactory;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -23,39 +23,21 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   use ThrowsOnLoadTrait;
 
   /**
-   * Drupal\Core\Config\ConfigFactory definition.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * Drupal\Component\Uuid\Php definition.
-   *
-   * @var \Drupal\Component\Uuid\UuidInterface
-   */
-  protected $uuidService;
-
-  /**
-   * Drupal\Core\Language\LanguageManager definition.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
-   * Drupal\Core\Entity\EntityManager definition.
-   *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
-   */
-  protected $entityManager;
-
-  /**
    * {@inheritdoc}
    */
-  public function __construct($entity_type_id, ConfigFactoryInterface $config_factory, UuidInterface $uuid_service, LanguageManagerInterface $language_manager, EntityManagerInterface $entity_manager) {
-    $entity_type = $entity_manager->getDefinition($entity_type_id);
-    parent::__construct($entity_type, $config_factory, $uuid_service, $language_manager);
+   // During testing, complaints alternate between the type of
+   // cache interface expected between below:
+   // CacheBackendInterface
+   // DatabaseBackendFactory
+  public function __construct($entity_type_id, Connection $database, EntityManagerInterface $entity_manager, CacheBackendInterface $cache, LanguageManagerInterface $language_manager) {
+    // @TODO the $entity_type needs to be in the constructor and not
+    // devrived from from $entity_type_id. This is because of the parent
+    // class SqlContentEntityStorage's createInstance method, which while
+    // ultimately calls it's own constructer through here, is calling this 
+    // constuctor with the same paramter blueprint, which expects
+    // EntityTypeInterface and not a string.
+    $entity_type = $entity_manager->getDefinition('salesforce_mapped_object');
+    parent::__construct($entity_type, $database, $entity_manager, $cache, $language_manager);
   }
 
   /**

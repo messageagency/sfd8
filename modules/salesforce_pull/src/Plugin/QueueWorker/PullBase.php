@@ -73,7 +73,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *
    * @var MappedObjectStorage
    */
-  protected $mapped_object_storage
+  protected $mapped_object_storage;
 
   /**
    * Creates a new PullBase object.

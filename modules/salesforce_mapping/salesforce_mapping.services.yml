@@ -15,5 +15,4 @@ services:
 
   salesforce.mapped_object_storage:
     class: Drupal\salesforce_mapping\MappedObjectStorage
-    arguments: ['mapped_object', "@database", "@entity.manager", "@cache.backend.database", "@language_manager"]
-
+    arguments: ['salesforce_mapped_object', "@database", "@entity.manager", "@cache.backend.database", "@language_manager"]

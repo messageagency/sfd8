@@ -50,7 +50,7 @@ class PushQueue extends DatabaseQueue {
    *
    * @var MappedObjectStorage
    */
-  protected $mapped_object_storage
+  protected $mapped_object_storage;
 
   /**
    * Constructs a \Drupal\Core\Queue\DatabaseQueue object.
@@ -139,7 +139,7 @@ class PushQueue extends DatabaseQueue {
   }
 
   /**
-   * Claim up to $n items from the current queue. 
+   * Claim up to $n items from the current queue.
    * If queue is empty, return an empty array.
    * @see DatabaseQueue::claimItem
    * @return array $items
@@ -149,7 +149,7 @@ class PushQueue extends DatabaseQueue {
     while (TRUE) {
       try {
         // @TODO: convert items to content entities.
-        // @see \Drupal::entityQuery()          
+        // @see \Drupal::entityQuery()
         $items = $this->connection->queryRange('SELECT * FROM {' . static::TABLE_NAME . '} q WHERE expire = 0 AND name = :name AND failures < :fail_limit ORDER BY created, item_id ASC', 0, $n, array(':name' => $this->name, ':fail_limit' => $this->max_fails))->fetchAllAssoc('item_id');
       }
       catch (\Exception $e) {
@@ -347,7 +347,7 @@ class PushQueue extends DatabaseQueue {
 
     if ($e instanceof EntityNotFoundException) {
       // If there was an exception loading any entities, we assume that this queue item is no longer relevant.
-      \Drupal::logger('Salesforce Push')->error($e->getMessage() . 
+      \Drupal::logger('Salesforce Push')->error($e->getMessage() .
         ' Exception while loading entity %type %id for salesforce mapping %mapping. Queue item deleted.',
         [
           '%type' => $mapping->get('drupal_entity_type'),
@@ -417,7 +417,7 @@ class PushQueue extends DatabaseQueue {
     }
     catch (\Exception $e) {
       $this->catchException($e);
-    }    
+    }
   }
 
 }
