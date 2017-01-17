@@ -15,8 +15,9 @@ use Drupal\salesforce\Exception;
 class DeleteHandler {
   protected $sfapi;
 
-  private function __construct(RestClient $sfapi) {
+  private function __construct(RestClient $sfapi, StateInterface $state) {
     $this->sfapi = $sfapi;
+    $this->state = $state;
   }
 
   /**
@@ -24,9 +25,11 @@ class DeleteHandler {
    *
    * @param object
    *  RestClient object
+   * @param \Drupal\Core\State\StateInterface $state
+   *   The state service.
    */
-  public static function create(RestClient $sfapi) {
-    return new DeleteHandler($sfapi);
+  public static function create(RestClient $sfapi, StateInterface $state) {
+    return new DeleteHandler($sfapi, $state);
   }
 
   /**
@@ -35,7 +38,7 @@ class DeleteHandler {
   public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
     foreach (array_reverse(salesforce_mapping_get_mapped_sobject_types()) as $type) {
-      $last_delete_sync = \Drupal::state()->get('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
+      $last_delete_sync = $this->state->get('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
       $now = time();
       // getDeleted() restraint: startDate must be at least one minute
       // greater than endDate.
@@ -44,7 +47,7 @@ class DeleteHandler {
       $now_sf = gmdate('Y-m-d\TH:i:s\Z', $now);
       $deleted = $this->sfapi->getDeleted($type, $last_delete_sync_sf, $now_sf);
       $this->handleDeletedRecords($deleted, $type);
-      \Drupal::state()->set('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
+      $this->state->set('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
     }
   }
 

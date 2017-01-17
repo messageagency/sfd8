@@ -20,6 +20,6 @@ function salesforce_pull_cron() {
       salesforce_mapping_load_multiple(),
       \Drupal::queue('cron_salesforce_pull')
     )->getUpdatedRecords();
-    DeleteHandler::create($sfapi)->processDeletedRecords();
+    DeleteHandler::create($sfapi, \Drupal::state())->processDeletedRecords();
   }
 }
