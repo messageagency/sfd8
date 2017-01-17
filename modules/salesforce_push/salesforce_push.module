@@ -84,7 +84,8 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
     ];
     $mapped_object = FALSE;
     try {
-      $mapped_objects = salesforce_mapped_object_load_multiple($props);
+      $mapped_objects = \Drupal::service('salesforce.mapped_object_storage')
+        ->loadByProperties($props);
       // There should really only be one, but the return value is always an array
       $mapped_object = current($mapped_objects);
     }

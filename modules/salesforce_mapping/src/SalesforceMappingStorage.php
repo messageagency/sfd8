@@ -17,7 +17,7 @@ use Drupal\salesforce\SFID;
  *
  * @package Drupal\salesforce_mapping
  */
-class MappedObjectStorage extends SqlContentEntityStorage {
+class SalesforceMappingStorage extends ConfigEntityStorage {
 
   use ThrowsOnLoadTrait;
 

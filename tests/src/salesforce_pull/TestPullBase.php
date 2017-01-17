@@ -15,26 +15,6 @@ use Drupal\salesforce_pull\Plugin\QueueWorker\PullBase;
 class TestPullBase extends PullBase {
 
   /**
-   * Overrides parent::loadMapping
-   * Wrapper for salesforce_mapping_load();
-   */
-  protected function loadMapping($id) {
-    // return mapping object
-    return $this->etm->getStorage('salesforce_mapping')->load($id);
-  }
-
-  /**
-   * Overrides parent::loadMappingObjects
-   * Wrapper for salesforce_mapped_object_load_multiple();
-   */
-  protected function loadMappingObjects(array $properties) {
-    // return a mapped object
-    return $this->etm
-      ->getStorage('salesforce_mapped_object')
-      ->loadByProperties($properties);
-  }
-
-  /**
    * Overrides parent::watchdogException
    * Wrapper for watchdog_exception()
    */

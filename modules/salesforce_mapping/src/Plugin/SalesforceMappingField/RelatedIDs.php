@@ -69,8 +69,9 @@ $mapping) {
     // Now we can actually fetch the referenced entity.
     $field_settings = $field->getFieldDefinition()->getFieldSettings();
     // @TODO this procedural call will go away when sf mapping object becomes a service or field
-    if ($referenced_mapping =
-      salesforce_mapped_object_load_by_drupal($field_settings['target_type'], $field->value)) {
+    if ($referenced_mapping = $this
+        ->mapped_object_storage
+        ->loadByDrupal($field_settings['target_type'], $field->value)) {
       return $referenced_mapping->sfid();
     }
   }

@@ -5,4 +5,4 @@ services:
 
   queue.salesforce_push:
     class: Drupal\salesforce_push\PushQueue
-    arguments: ['@database', '@state', '@plugin.manager.salesforce_push_queue_processor']
+    arguments: ['@database', '@state', '@plugin.manager.salesforce_push_queue_processor', '@salesforce.salesforce_mapping_storage', '@salesforce.mapped_object_storage']

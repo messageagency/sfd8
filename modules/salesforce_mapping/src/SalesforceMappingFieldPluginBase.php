@@ -19,6 +19,8 @@ use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Rest\RestClient;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\MappedObjectStorage;
 
 /**
  * Defines a base Salesforce Mapping Field Plugin implementation.
@@ -42,6 +44,20 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   // public function buildConfigurationForm(array $form, FormStateInterface $form_state);
 
   /**
+   * Storage handler for SF mappings
+   *
+   * @var SalesforceMappingStorage
+   */
+  protected $mapping_storage;
+
+  /**
+   * Storage handler for Mapped Objects
+   *
+   * @var MappedObjectStorage
+   */
+  protected $mapped_object_storage
+
+  /**
    * Constructs a \Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginBase object.
    *
    * @param array $configuration
@@ -55,11 +71,13 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $mapping
    *   The entity manager to get the SF listing, mapped entity, etc.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClient $rest_client) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClient $rest_client, SalesforceMappingStorage $mapping_storage, MappedObjectStorage $mapped_object_storage) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->entityFieldManager = $entity_field_manager;
     $this->salesforceClient = $rest_client;
+    $this->mapping_storage = $mapping_storage;
+    $this->mapped_object_storage = $mapped_object_storage;
   }
 
   /**
@@ -69,7 +87,9 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
     return new static($configuration, $plugin_id, $plugin_definition, 
       $container->get('entity_type.bundle.info'),   
       $container->get('entity_field.manager'),
-      $container->get('salesforce.client')
+      $container->get('salesforce.client'),
+      $container->get('salesforce.salesforce_mapping_storage'),
+      $container->get('salesforce.mapped_object_storage')
     );
   }
 

@@ -17,9 +17,13 @@ function salesforce_pull_cron() {
   if ($sfapi->isAuthorized()) {
     QueueHandler::create(
       $sfapi,
-      salesforce_mapping_load_multiple(),
+      \Drupal::service('salesforce.salesforce_mapping_storage')->loadMultiple(),
       \Drupal::queue('cron_salesforce_pull')
     )->getUpdatedRecords();
-    DeleteHandler::create($sfapi)->processDeletedRecords();
+    DeleteHandler::create(
+      $sfapi,
+      \Drupal::service('salesforce.salesforce_mapping_storage'),
+      \Drupal::service('salesforce.mapped_object_storage')
+    )->processDeletedRecords();
   }
 }

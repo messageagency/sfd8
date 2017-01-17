@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\SFID;
+use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 
 /**
  * Class MappedObjectStorage.
@@ -17,7 +18,7 @@ use Drupal\salesforce\SFID;
  *
  * @package Drupal\salesforce_mapping
  */
-class MappedObjectStorage extends ConfigEntityStorage {
+class MappedObjectStorage extends SqlContentEntityStorage {
 
   use ThrowsOnLoadTrait;
 
@@ -66,7 +67,7 @@ class MappedObjectStorage extends ConfigEntityStorage {
    *
    * @see loadByProperties()
    */
-  public function loadMappedObjectByDrupal($entity_type_id, $entity_id) {
+  public function loadByDrupal($entity_type_id, $entity_id) {
     return $this->loadByProperties([
       'entity_type_id' => $entity_type_id,
       'entity_id' => $entity_id,
@@ -80,7 +81,7 @@ class MappedObjectStorage extends ConfigEntityStorage {
    *
    * @see loadByProperties()
    */
-  public function loadMappedObjectByEntity(ContentEntityInterface $entity) {
+  public function loadByEntity(ContentEntityInterface $entity) {
     return $this->loadByProperties([
       'entity_type_id' => $entity->getEntityTypeId(),
       'entity_id' => $entity->id(),
@@ -94,7 +95,7 @@ class MappedObjectStorage extends ConfigEntityStorage {
    *
    * @see loadByProperties()
    */
-  public function loadMappedObjectBySfid(SFID $salesforce_id) {
+  public function loadBySfid(SFID $salesforce_id) {
     return $this->loadByProperties([
       'salesforce_id' => (string)$salesforce_id,
     ]);

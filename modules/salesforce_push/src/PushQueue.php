@@ -11,6 +11,8 @@ use Drupal\Core\State\State;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\Queue\RequeueException;
 use Drupal\salesforce\EntityNotFoundException;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\MappedObjectStorage;
 
 /**
  * Salesforce push queue.
@@ -37,15 +39,31 @@ class PushQueue extends DatabaseQueue {
   protected $max_fails;
 
   /**
+   * Storage handler for SF mappings
+   *
+   * @var SalesforceMappingStorage
+   */
+  protected $mapping_storage;
+
+  /**
+   * Storage handler for Mapped Objects
+   *
+   * @var MappedObjectStorage
+   */
+  protected $mapped_object_storage
+
+  /**
    * Constructs a \Drupal\Core\Queue\DatabaseQueue object.
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
    */
-  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager) {
+  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager, SalesforceMappingStorage $mapping_storage, MappedObjectStorage $mapped_object_storage) {
     $this->connection = $connection;
     $this->state = $state;
     $this->queueManager = $queue_manager;
+    $this->mapping_storage = $mapping_storage;
+    $this->mapped_object_storage = $mapped_object_storage;
 
     $this->limit = $state->get('salesforce.push_limit', static::DEFAULT_CRON_PUSH_LIMIT);
 
@@ -325,7 +343,7 @@ class PushQueue extends DatabaseQueue {
   public function failItem(\Exception $e, \stdClass $item) {
     // For now we only have special handling for EntityNotFoundException.
     // May want to distinguish in the future between network exceptions, etc.
-    $mapping = salesforce_mapping_load($item->name);
+    $mapping = $this->mapping_storage->load($item->name);
 
     if ($e instanceof EntityNotFoundException) {
       // If there was an exception loading any entities, we assume that this queue item is no longer relevant.

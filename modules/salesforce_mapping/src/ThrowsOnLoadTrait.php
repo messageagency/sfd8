@@ -24,9 +24,9 @@ trait ThrowsOnLoadTrait {
    *   properties
    */
   public function loadMultiple(array $ids = NULL) {
-    $entities = parent::loadMultiple($values);
+    $mappings = parent::loadMultiple($ids);
     if (empty($mappings)) {
-      throw new EntityNotFoundException($properties, $this->getEntityTypeId());
+      throw new EntityNotFoundException($ids, $this->getEntityTypeId());
     }
     return $mappings;
   }
@@ -46,7 +46,7 @@ trait ThrowsOnLoadTrait {
    *   properties
    */
   public function loadByProperties(array $properties = []) {
-    $entities = parent::loadByProperties($properties);
+    $mappings = parent::loadByProperties($properties);
     if (empty($mappings)) {
       throw new EntityNotFoundException($properties, $this->getEntityTypeId());
     }

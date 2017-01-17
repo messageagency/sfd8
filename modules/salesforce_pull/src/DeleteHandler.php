@@ -4,9 +4,12 @@ namespace Drupal\salesforce_pull;
 
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SFID;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\EntityNotFoundException;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\MappedObjectStorage;
 
 /**
  * Handles pull cron deletion of Drupal entities based onSF mapping settings.
@@ -16,9 +19,13 @@ use Drupal\salesforce\EntityNotFoundException;
 
 class DeleteHandler {
   protected $sfapi;
+  protected $mapping_storage;
+  protected $mapped_object_storage;
 
-  private function __construct(RestClient $sfapi) {
+  private function __construct(RestClient $sfapi, SalesforceMappingStorage $mapping_storage, MappedObjectStorage $mapped_object_storage) {
     $this->sfapi = $sfapi;
+    $this->mapped_object_storage = $mapped_object_storage;
+    $this->mapping_storage = $mapping_storage;
   }
 
   /**
@@ -27,8 +34,8 @@ class DeleteHandler {
    * @param object
    *  RestClient object
    */
-  public static function create(RestClient $sfapi) {
-    return new DeleteHandler($sfapi);
+  public static function create(RestClient $sfapi, SalesforceMappingStorage $mapping_storage, MappedObjectStorage $mapped_object_storage) {
+    return new DeleteHandler($sfapi, $mapping_storage, $mapped_object_storage);
   }
 
   /**
@@ -56,7 +63,7 @@ class DeleteHandler {
     }
 
     try {
-      $sf_mappings = salesforce_mapping_load_multiple(
+      $sf_mappings = $this->mapping_storage->loadByProperties(
         ['salesforce_object_type' => $type]
       );
     }
@@ -72,7 +79,9 @@ class DeleteHandler {
 
   protected function handleDeletedRecord($record, $type) {
     try {
-      $mapped_objects = salesforce_mapped_object_load_by_sfid($record['id']);
+      $mapped_objects = $this
+        ->mapped_object_storage
+        ->loadBySFID(new SFID($record['id']));
     }
     catch (EntityNotFoundException $e) {
       // We do not need to know about every object which gets deleted in SF and
@@ -86,7 +95,7 @@ class DeleteHandler {
           ->getStorage($mapped_object->entity_type_id->value)
           ->load($mapped_object->entity_id->value);
         if (!$entity) {
-          throw new \Exception();
+          throw new EntityNotFoundException(['entity_id' => $mapped_object->entity_id->value], $mapped_object->entity_type_id);
         }
       }
       catch (EntityNotFoundException $e) {
@@ -104,7 +113,9 @@ class DeleteHandler {
 
       try {
         // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
-        $sf_mapping = salesforce_mapping_load($mapped_object->salesforce_mapping->entity->id());
+        $sf_mapping = $this
+          ->mapping_storage
+          ->load($mapped_object->salesforce_mapping->entity->id());
       }
       catch (EntityNotFoundException $e) {
         \Drupal::logger('Salesforce Pull')->notice(

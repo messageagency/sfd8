@@ -9,12 +9,11 @@ services:
     tags:
       - { name: event_subscriber }
 
-  salesforce.mapped_object_storage:
-    class: Drupal\salesforce_mapping\MappedObjectStorage
-    arguments: ['mapped_object', "@config.factory", "@uuid", "@language_manager", "@entity.manager"]
-    
-
   salesforce.salesforce_mapping_storage:
     class: Drupal\salesforce_mapping\SalesforceMappingStorage
-    arguments: ['salesforce_mapping', "@database", "@entity.manager", "@cache.backend.database", "@language_manager"]
-    
+    arguments: ['salesforce_mapping', "@config.factory", "@uuid", "@language_manager", "@entity.manager"]
+
+  salesforce.mapped_object_storage:
+    class: Drupal\salesforce_mapping\MappedObjectStorage
+    arguments: ['mapped_object', "@database", "@entity.manager", "@cache.backend.database", "@language_manager"]
+

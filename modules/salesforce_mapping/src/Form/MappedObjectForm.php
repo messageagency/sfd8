@@ -6,7 +6,7 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Exception;
-
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -25,14 +25,16 @@ class MappedObjectForm extends ContentEntityForm {
 
   protected $pushPluginManager;
 
+  protected $mapping_storage;
   /**
    * Constructs a ContentEntityForm object.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager) {
+  public function __construct(EntityManagerInterface $entity_manager, SalesforceMappingStorage $mapping_storage) {
     $this->entityManager = $entity_manager;
+    $this->mapping_storage = $mapping_storage
   }
 
   /**
@@ -40,7 +42,8 @@ class MappedObjectForm extends ContentEntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity.manager')
+      $container->get('entity.manager'),
+      $container->get('salesforce.salesforce_mapping_storage')
     );
   }
 
@@ -54,7 +57,9 @@ class MappedObjectForm extends ContentEntityForm {
     $drupal_entity = $this->getDrupalEntityFromUrl();
     // Allow exception to bubble up here, because we shouldn't have got here if
     // there isn't a mapping.
-    $mappings = salesforce_mapping_load_by_drupal($drupal_entity->getEntityTypeId());
+    $mappings = $this
+      ->mapping_storage
+      ->loadByDrupal($drupal_entity->getEntityTypeId());
     $options = array_keys($mappings) + ['_none'];
     // Filter options based on drupal entity type.
     $form['salesforce_mapping']['widget']['#options'] = array_intersect_key($form['salesforce_mapping']['widget']['#options'], array_flip($options));
