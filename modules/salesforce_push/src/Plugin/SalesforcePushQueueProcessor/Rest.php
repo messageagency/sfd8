@@ -10,6 +10,7 @@ use Drupal\salesforce_push\PushQueue;
 use Drupal\salesforce_push\PushQueueProcessorInterface;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Rest queue processor plugin.
@@ -61,7 +62,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     $mapping = salesforce_mapping_load($item->name);
 
     if (!$mapped_object) {
-      if ($item->op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+      if ($item->op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
         // If mapped object doesn't exist or fails to load for this delete, this item can be considered successfully processed.
         return;
       }
@@ -75,7 +76,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     // @TODO: the following is nearly identical to the end of salesforce_push_entity_crud(). Can we DRY it? Do we care?
     try {
       // If this is a delete, destroy the SF object and we're done.
-      if ($item->op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+      if ($item->op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
         $mapped_object->pushDelete();
       }
       else {

@@ -115,7 +115,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    */
   public function defaultConfiguration() {
     return [
-      'direction' => SALESFORCE_MAPPING_DIRECTION_SYNC,
+      'direction' => MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC,
       'salesforce_field' => [],
       'drupal_field_type' => $this->getPluginId(),
       'drupal_field_value' => '',
@@ -151,12 +151,12 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
       '#title' => t('Direction'),
       '#type' => 'radios',
       '#options' => [
-        SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => t('Drupal to SF'),
-        SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL => t('SF to Drupal'),
-        SALESFORCE_MAPPING_DIRECTION_SYNC => t('Sync'),
+        MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => t('Drupal to SF'),
+        MappingConstants::SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL => t('SF to Drupal'),
+        MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC => t('Sync'),
       ],
       '#required' => TRUE,
-      '#default_value' => $this->config('direction') ? $this->config('direction') : SALESFORCE_MAPPING_DIRECTION_SYNC,
+      '#default_value' => $this->config('direction') ? $this->config('direction') : MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC,
     ];
 
     return $pluginForm;
@@ -232,7 +232,10 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * @TODO This needs a better name. Could be mistaken for a verb.
    */
   public function push() {
-    return in_array($this->config('direction'), [SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF, SALESFORCE_MAPPING_DIRECTION_SYNC]);
+    return in_array($this->config('direction'), [
+      MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF, 
+      MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC
+    ]);
   }
 
   /**
@@ -241,7 +244,10 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * @TODO This needs a better name. Could be mistaken for a verb.
    */
   public function pull() {
-    return in_array($this->config('direction'), [SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL]);
+    return in_array($this->config('direction'), [
+      MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC, 
+      MappingConstants::SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL
+    ]);
   }
 
   /**
