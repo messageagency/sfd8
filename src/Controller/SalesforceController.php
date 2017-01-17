@@ -6,11 +6,29 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-
+use Drupal\salesforce\Rest\RestClient;
 /**
  *
  */
 class SalesforceController extends ControllerBase {
+
+  protected $client;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(RestClient $rest) {
+    $this->client = $rest;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('salesforce.client')
+    );
+  }
 
   /**
    * OAuth step 2: Callback for the oauth redirect URI.
@@ -23,16 +41,15 @@ class SalesforceController extends ControllerBase {
     if (!isset($_GET['code'])) {
       throw new AccessDeniedHttpException();
     }
-    $salesforce = salesforce_get_api();
 
     $data = urldecode(UrlHelper::buildQuery([
       'code' => $_GET['code'],
       'grant_type' => 'authorization_code',
-      'client_id' => $salesforce->getConsumerKey(),
-      'client_secret' => $salesforce->getConsumerSecret(),
-      'redirect_uri' => $salesforce->getAuthCallbackUrl(),
+      'client_id' => $this->client->getConsumerKey(),
+      'client_secret' => $this->client->getConsumerSecret(),
+      'redirect_uri' => $this->client->getAuthCallbackUrl(),
     ]));
-    $url = $salesforce->getAuthTokenUrl();
+    $url = $this->client->getAuthTokenUrl();
     $headers = [
       // This is an undocumented requirement on SF's end.
       'Content-Type' => 'application/x-www-form-urlencoded',
@@ -41,7 +58,7 @@ class SalesforceController extends ControllerBase {
     $http_client = \Drupal::service('http_client');
     $response = $http_client->post($url, ['headers' => $headers, 'body' => $data]);
 
-    $salesforce->handleAuthResponse($response);
+    $this->client->handleAuthResponse($response);
 
     return new RedirectResponse(\Drupal::url('salesforce.authorize', [], ['absolute' => TRUE]));
   }

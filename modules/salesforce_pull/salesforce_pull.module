@@ -13,7 +13,7 @@ use Drupal\salesforce_pull\DeleteHandler;
  * Implements hook_cron().
  */
 function salesforce_pull_cron() {
-  $sfapi = salesforce_get_api();
+  $sfapi = \Drupal::service('salesforce.client');
   if ($sfapi->isAuthorized()) {
     QueueHandler::create(
       $sfapi,

@@ -229,7 +229,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public function getSalesforceUrl() {
     // @TODO dependency injection here:
-    $sfapi = salesforce_get_api();
+    $sfapi = \Drupal::service('salesforce.client');
     if (!$sfapi) {
       return $this->salesforce_id->value;
     }
@@ -362,7 +362,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // If the pull isn't coming from a cron job.
     if ($this->sf_object == NULL) {
-      $client = salesforce_get_api();
+      $client = \Drupal::service('salesforce.client');
       if ($this->sfid()) {
         $this->sf_object = $client->objectRead(
           $mapping->getSalesforceObjectType(),

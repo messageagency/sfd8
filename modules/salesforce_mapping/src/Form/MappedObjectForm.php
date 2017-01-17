@@ -6,6 +6,7 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -32,9 +33,10 @@ class MappedObjectForm extends ContentEntityForm {
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager, SalesforceMappingStorage $mapping_storage) {
+  public function __construct(EntityManagerInterface $entity_manager, SalesforceMappingStorage $mapping_storage, RestClient $rest) {
     $this->entityManager = $entity_manager;
-    $this->mapping_storage = $mapping_storage
+    $this->mapping_storage = $mapping_storage;
+    $this->rest = $rest;
   }
 
   /**
@@ -43,7 +45,8 @@ class MappedObjectForm extends ContentEntityForm {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity.manager'),
-      $container->get('salesforce.salesforce_mapping_storage')
+      $container->get('salesforce.salesforce_mapping_storage'),
+      $container->get('salesforce.client')
     );
   }
 
@@ -175,8 +178,7 @@ class MappedObjectForm extends ContentEntityForm {
       return [];
     }
     // No need to cache here: Salesforce::objectDescribe implements caching.
-    $sfapi = salesforce_get_api();
-    $sfobject = $sfapi->objectDescribe($salesforce_object_type);
+    $sfobject = $this->rest->objectDescribe($salesforce_object_type);
     return $sfobject;
   }
 
