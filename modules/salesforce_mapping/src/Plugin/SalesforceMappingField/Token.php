@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Utility\Token as TokenService;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce\Rest\RestClient;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -26,8 +27,8 @@ class Token extends SalesforceMappingFieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, TokenService $token) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_bundle_info, $entity_field_manager);
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClient $rest_client, TokenService $token) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_bundle_info, $entity_field_manager, $rest_client);
     $this->token = $token;
   }
 
@@ -35,7 +36,12 @@ class Token extends SalesforceMappingFieldPluginBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity_type.bundle.info'), $container->get('entity_field.manager'), $container->get('token'));
+    return new static($configuration, $plugin_id, $plugin_definition,
+      $container->get('entity_type.bundle.info'),
+      $container->get('entity_field.manager'),
+      $container->get('salesforce.client'),
+      $container->get('token')
+    );
   }
 
   /**
