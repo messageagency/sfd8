@@ -280,17 +280,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     // @TODO #fieldMappingField
     $fields = [];
     foreach ($this->field_mappings as $field) {
-      try {
-        $fields[] = $this->fieldManager->createInstance(
-           $field['drupal_field_type'],
-           $field
-         );
-       }
-       catch (PluginNotFoundException $e) {
-         // Don't let a missing plugin kill our mapping.
-         watchdog_exception(__CLASS__, $e);
-         salesforce_set_message(t('Field plugin not found: %message The field will be removed from this mapping.', ['%message' => $e->getMessage()]), 'error');
-       }
+      $fields[] = $this->fieldManager->createInstance(
+         $field['drupal_field_type'],
+         $field
+       );
     }
     return $fields;
   }

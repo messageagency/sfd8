@@ -5,11 +5,12 @@ namespace Drupal\salesforce_mapping;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\Component\Plugin\FallbackPluginManagerInterface;
 
 /**
  * Plugin type manager for all views plugins.
  */
-class SalesforceMappingFieldPluginManager extends DefaultPluginManager {
+class SalesforceMappingFieldPluginManager extends DefaultPluginManager implements FallbackPluginManagerInterface {
 
   /**
    * Constructs a SalesforceMappingFieldPluginManager object.
@@ -26,6 +27,34 @@ class SalesforceMappingFieldPluginManager extends DefaultPluginManager {
     parent::__construct('Plugin/SalesforceMappingField', $namespaces, $module_handler);
 
     $this->setCacheBackend($cache_backend, 'salesforce_mapping_field', ['salesforce_mapping_plugins']);
+  }
+
+  // /**
+  //  * {@inheritdoc}
+  //  */
+  // public function getDefinitions() {
+  //   $definitions = parent::getDefinitions();
+  //   $fixed_definitions = [];
+  //   foreach ($definitions as $i => $definition) {
+  //     // If dependencies is empty, this field plugin is always available.
+  //     if (empty($definition['dependencies'])) {
+  //       $fixed_definitions[$i] = $definition;
+  //       continue;
+  //     }
+  //     // if any dependency is not met, this plugin is not available.
+  //     foreach ($definition['dependencies'] as $module) {
+  //       dpm($module);
+  //       if (!$this->moduleHandler->moduleExists($module)) {
+  //         continue 2;
+  //       }
+  //     }
+  //     $fixed_definitions[$i] = $definition;
+  //   }
+  //   return $fixed_definitions;
+  // }
+
+  public function getFallbackPluginId($plugin_id, array $configuration = array()) {
+    return 'undefined';
   }
 
 }

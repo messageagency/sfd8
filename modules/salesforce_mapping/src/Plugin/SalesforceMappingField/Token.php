@@ -17,7 +17,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @Plugin(
  *   id = "Token",
- *   label = @Translation("Token")
+ *   label = @Translation("Token"),
+ *   provider = { "token" }
  * )
  */
 class Token extends SalesforceMappingFieldPluginBase {
