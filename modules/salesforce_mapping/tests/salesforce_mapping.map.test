@@ -7,6 +7,8 @@
 
 module_load_include('test', 'salesforce_mapping', 'tests/salesforce_mapping');
 
+use Drupal\salesforce_mapping\MappingConstants;
+
 /**
  * Tests the user interface for mapping Drupal entities to Salesforce objects.
  */
@@ -328,7 +330,7 @@ class SalesforceMappingMapTestCase extends SalesforceMappingTestCase {
 
     // Label cannot exceed SALESFORCE_MAPPING_NAME_LENGTH.
     $this->drupalGet($this->manageMapPrefix . 'foobar');
-    $length = SALESFORCE_MAPPING_NAME_LENGTH + 1;
+    $length = MappingConstants::SALESFORCE_MAPPING_NAME_LENGTH + 1;
     $edit = ['label' => $this->randomName($length)];
     $this->drupalPost(NULL, $edit, 'Save mapping');
     $this->assertText('Label cannot be longer than 128 characters but is currently 129 characters long.', 'Validation rejected label length that was too long.');

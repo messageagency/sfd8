@@ -14,6 +14,7 @@ use Drupal\salesforce\SObject;
 use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePushEvent;
+use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
@@ -193,7 +194,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setLabel(t('Action of most recent sync'))
       ->setDescription(t('Indicates acion which triggered most recent sync for this mapped object'))
       ->setSetting('is_ascii', TRUE)
-      ->setSetting('max_length', SALESFORCE_MAPPING_TRIGGER_MAX_LENGTH)
+      ->setSetting('max_length', MappingConstants::SALESFORCE_MAPPING_TRIGGER_MAX_LENGTH)
       ->setRevisionable(TRUE);
 
     // @see ContentEntityBase::baseFieldDefinitions

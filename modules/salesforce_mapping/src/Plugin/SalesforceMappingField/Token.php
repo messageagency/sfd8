@@ -11,6 +11,7 @@ use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Rest\RestClient;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Adapter for entity Token and fields.
@@ -61,9 +62,9 @@ class Token extends SalesforceMappingFieldPluginBase {
 
     // @TODO: "Constant" as it's implemented now should only be allowed to be set to "Push". In the future: create "Pull" logic for constant, which pulls a constant value to a Drupal field. Probably a separate mapping field plugin.
     $pluginForm['direction']['#options'] = [
-      SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => $pluginForm['direction']['#options'][SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF],
+      MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => $pluginForm['direction']['#options'][MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF],
     ];
-    $pluginForm['direction']['#default_value'] = SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF;
+    $pluginForm['direction']['#default_value'] = MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF;
 
     return $pluginForm;
   }

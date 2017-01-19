@@ -6,6 +6,8 @@ use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce_mapping\MappingConstants;
+
 /**
  * Handles pull cron deletion of Drupal entities based onSF mapping settings.
  *
@@ -117,7 +119,7 @@ class DeleteHandler {
         continue;
       }
 
-      if (!$sf_mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
+      if (!$sf_mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
         continue;
       }
 

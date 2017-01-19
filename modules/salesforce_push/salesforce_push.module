@@ -13,26 +13,27 @@ use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use GuzzleHttp\Exception\RequestException;
+use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Implements hook_entity_insert().
  */
 function salesforce_push_entity_insert(EntityInterface $entity) {
-  salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE);
+  salesforce_push_entity_crud($entity, MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE);
 }
 
 /**
  * Implements hook_entity_update().
  */
 function salesforce_push_entity_update(EntityInterface $entity) {
-  salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE);
+  salesforce_push_entity_crud($entity, MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE);
 }
 
 /**
  * Implements hook_entity_delete().
  */
 function salesforce_push_entity_delete(EntityInterface $entity) {
-  salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE);
+  salesforce_push_entity_crud($entity, MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE);
 }
 
 function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity, SalesforceMappingInterface $mapping, $op) {
@@ -90,7 +91,7 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
     }
     catch (EntityNotFoundException $e) {
       // No mappings found.
-      if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+      if ($op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
         // If no existing mapping, and this is a delete, purge any entries from push queue and we're done.
         \Drupal::service('queue.salesforce_push')
           ->setName($mapping->id())
@@ -113,7 +114,7 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
 
     try {
       // If this is a delete, destroy the SF object and we're done.
-      if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+      if ($op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
         $mapped_object->pushDelete();
       }
       else {
