@@ -16,9 +16,5 @@ function salesforce_pull_install() {
  * Implements hook_uninstall().
  */
 function salesforce_pull_uninstall() {
-  // TODO: revisit
-  // Remove salesforce_pull* variables.
-  db_delete('variable')
-    ->condition('name', 'salesforce_pull%', 'LIKE')
-    ->execute();
+  \Drupal::state()->delete('salesforce.pull_max_queue_size');
 }
