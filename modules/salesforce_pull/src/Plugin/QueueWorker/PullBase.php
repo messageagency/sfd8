@@ -16,7 +16,7 @@ use Drupal\salesforce\Exception;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce\LoggingTrait;
-use Drupal\salesforce\LoggingLevels;
+use Psr\Log\LogLevel;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
@@ -180,7 +180,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           ->setSalesforceRecord($sf_object)
           ->pull();
         $this->log('Salesforce Pull',
-          LoggingLevels::NOTICE,
+          LogLevel::NOTICE,
           'Updated entity %label associated with Salesforce Object ID: %sfid',
           [
             '%label' => $entity->label(),
@@ -192,7 +192,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     catch (\Exception $e) {
       if ($e instanceof EntityNotFoundException) {
         $this->log('Salesforce Pull',
-          LoggingLevels::ERROR,
+          LogLevel::ERROR,
           'Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist. Error: %msg',
           [
             '%sfobjectid' => (string)$sf_object->id(),
@@ -202,7 +202,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       }
       else {
         $this->log('Salesforce Pull',
-          LoggingLevels::ERROR,
+          LogLevel::ERROR,
           'Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
           [
             '%label' => $entity->label(),
@@ -272,7 +272,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
 
       $this->log(
         'Salesforce Pull',
-        LoggingLevels::NOTICE,
+        LogLevel::NOTICE,
         'Created entity %id %label associated with Salesforce Object ID: %sfid',
         [
           '%id' => $entity->id(),
@@ -283,7 +283,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     }
     catch (\Exception $e) {
       $this->log('Salesforce Pull',
-        LoggingLevels::ERROR,
+        LogLevel::ERROR,
         '%msg Pull-create failed for Salesforce Object ID: %sfobjectid',
         [
           '%msg' => $e->getMessage(),

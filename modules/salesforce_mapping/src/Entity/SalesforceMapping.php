@@ -6,6 +6,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce\Exception;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -307,7 +308,11 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   public function doesPush() {
-    return $this->checkTriggers([SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE, SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE, SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE]);
+    return $this->checkTriggers([
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
+    ]);
   }
 
   /**

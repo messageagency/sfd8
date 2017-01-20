@@ -2,10 +2,14 @@
 
 namespace Drupal\salesforce;
 
+use Psr\Log\LoggerTrait;
+
 /**
  * Provides a trait for Drupal logger wrapper method.
  */
 trait LoggingTrait {
+
+  use LoggerTrait;
 
   /**
    * Wrapper method for logging, added for testability
@@ -20,12 +24,10 @@ trait LoggingTrait {
    *   placeholders for tokens, if appriate
    */
    protected function log($name, $level, $message, array $placeholders = []) {
-     if (!empty($placeholders)) {
-       \Drupal::logger($name)->$level($message, $placeholders);
+     if (empty($placeholders)) {
+       $placeholders = [];
      }
-     else {
-       \Drupal::logger($name)->$level($message);
-     }
+     \Drupal::logger($name)->log($level, $message, $placeholders);
    }
 
    /**

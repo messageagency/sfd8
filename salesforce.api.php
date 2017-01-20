@@ -32,9 +32,9 @@ function hook_salesforce_push_params_alter(&$params, $mapping, $entity_wrapper) 
  * @param string $operation
  *   Constant for the Drupal operation that triggered the sync. 
  *   One of:
- *     SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
- *     SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
- *     SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
+ *     MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
+ *     MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
+ *     MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
  *
  * @return bool
  *   FALSE if the entity should not be synced to Salesforce for the
