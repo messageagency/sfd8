@@ -33,9 +33,9 @@ class MappedObjectForm extends ContentEntityForm {
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager, SalesforceMappingStorage $mapping_storage, RestClient $rest) {
+  public function __construct(EntityManagerInterface $entity_manager, RestClient $rest) {
     $this->entityManager = $entity_manager;
-    $this->mapping_storage = $mapping_storage;
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->rest = $rest;
   }
 
@@ -45,7 +45,6 @@ class MappedObjectForm extends ContentEntityForm {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity.manager'),
-      $container->get('salesforce.salesforce_mapping_storage'),
       $container->get('salesforce.client')
     );
   }

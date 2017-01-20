@@ -13,6 +13,7 @@ use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_push\PushQueue;
 use Drupal\salesforce_push\PushQueueProcessorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Entity\EntityManagerInterface;
 
 /**
  * Rest queue processor plugin.
@@ -40,11 +41,12 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    */
   protected $mapped_object_storage
 
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClient $client, SalesforceMappingStorage $mapping_storage, MappedObjectStorage $mapped_object_storage) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClient $client, EntityManagerInterface $entity_manager) {
     $this->queue = $queue;
     $this->client = $client;
-    $this->mapping_storage = $mapping_storage;
-    $this->mapped_object_storage = $mapped_object_storage;
+    $this->entity_manager = $entity_manager;
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
   }
 
   /**
@@ -54,8 +56,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     return new static($configuration, $plugin_id, $plugin_definition,
       $container->get('queue.salesforce_push'),
       $container->get('salesforce.client'),
-      $container->get('salesforce.salesforce_mapping_storage'),
-      $container->get('salesforce.mapped_object_storage')
+      $container->get('entity.manager')
     );
   }
 

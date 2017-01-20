@@ -11,6 +11,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\Core\Entity\EntityManagerInterface;
 
 /**
  * Handles pull cron deletion of Drupal entities based onSF mapping settings.
@@ -22,11 +23,13 @@ class DeleteHandler {
   protected $sfapi;
   protected $mapping_storage;
   protected $mapped_object_storage;
+  protected $entity_manager;
 
-  private function __construct(RestClient $sfapi, SalesforceMappingStorage $mapping_storage, MappedObjectStorage $mapped_object_storage) {
+  private function __construct(RestClient $sfapi, EntityManagerInterface $entity_manager) {
     $this->sfapi = $sfapi;
-    $this->mapped_object_storage = $mapped_object_storage;
-    $this->mapping_storage = $mapping_storage;
+    $this->entity_manager = $entity_manager;
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
   }
 
   /**
@@ -35,8 +38,8 @@ class DeleteHandler {
    * @param object
    *  RestClient object
    */
-  public static function create(RestClient $sfapi, SalesforceMappingStorage $mapping_storage, MappedObjectStorage $mapped_object_storage) {
-    return new DeleteHandler($sfapi, $mapping_storage, $mapped_object_storage);
+  public static function create(RestClient $sfapi, EntityManagerInterface $entity_manager) {
+    return new DeleteHandler($sfapi, $entity_manager);
   }
 
   /**

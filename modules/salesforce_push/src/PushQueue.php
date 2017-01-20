@@ -13,6 +13,7 @@ use Drupal\Core\Queue\RequeueException;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_mapping\MappedObjectStorage;
+use Drupal\Core\Entity\EntityManagerInterface;
 
 /**
  * Salesforce push queue.
@@ -58,12 +59,13 @@ class PushQueue extends DatabaseQueue {
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
    */
-  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager, SalesforceMappingStorage $mapping_storage, MappedObjectStorage $mapped_object_storage) {
+  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager, EntityManagerInterface $entity_manager) {
     $this->connection = $connection;
     $this->state = $state;
     $this->queueManager = $queue_manager;
-    $this->mapping_storage = $mapping_storage;
-    $this->mapped_object_storage = $mapped_object_storage;
+    $this->entity_manager = $entity_manager;
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
 
     $this->limit = $state->get('salesforce.push_limit', static::DEFAULT_CRON_PUSH_LIMIT);
 

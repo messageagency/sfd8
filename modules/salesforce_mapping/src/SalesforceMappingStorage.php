@@ -75,7 +75,7 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
   /**
    * pass-through for loadMultipleMapping()
    */
-  public function loadMappingByDrupal($entity_type_id) {
+  public function loadByDrupal($entity_type_id) {
     return $this->loadByProperties(["drupal_entity_type" => $entity_type_id]);
   }
 

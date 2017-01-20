@@ -24,6 +24,7 @@ use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_mapping\MappedObjectStorage;
+use Drupal\Core\Entity\EntityManagerInterface;
 
 
 /**
@@ -75,18 +76,23 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    */
   protected $mapped_object_storage;
 
+  protected $entityManager;
+
   /**
    * Creates a new PullBase object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, SalesforceMappingStorage $mapping_storage, MappedObjectStorage $mapped_object_storage) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, EntityManagerInterface $entity_manager) {
     $this->etm = $entity_type_manager;
     $this->client = $client;
     $this->mh = $module_handler;
-    $this->mapping_storage = $mapping_storage;
-    $this->mapped_object_storage = $mapped_object_storage;
+
+    $this->entityManager = $entity_manager;
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
+
     $this->done = '';
   }
 
@@ -98,8 +104,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $container->get('entity_type.manager'),
       $container->get('salesforce.client'),
       $container->get('module_handler'),
-      $container->get('salesforce.salesforce_mapping_storage'),
-      $container->get('salesforce.mapped_object_storage')
+      $container->get('entity.manager')
     );
   }
 

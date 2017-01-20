@@ -50,7 +50,7 @@ trait ThrowsOnLoadTrait {
     if (empty($mappings)) {
       throw new EntityNotFoundException($properties, $this->getEntityTypeId());
     }
-    return $entities;    
+    return $mappings;    
   }
 
 }

@@ -114,7 +114,8 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
     $test_map2 = entity_create('salesforce_mapping', $this->example_map2);
     entity_save('salesforce_mapping', $test_map2);
 
-    $storage = \Drupal::service('salesforce.salesforce_mapping_storage');
+    $storage = \Drupal::service('entity.manager')
+      ->getStorage('salesforce_mapping');
 
     // Load all mappings
     $result = $storage->load();
@@ -195,7 +196,7 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
    * Tests for salesforce_mapping_crud records.
    */
   public function testRecordMapCrud() {
-    $storage = \Drupal::service('salesforce.mapped_object_storage');
+    $storage = \Drupal::service('entity.manager')->getStorage('salesforce_mapped_object');
     // Create two records to work with.
     $record = [
       'salesforce_id' => uniqid(),

@@ -98,7 +98,8 @@ function salesforce_mapping_entity_extra_field_info() {
   // @TODO: these don't actually show up on the entity view. Have to implement hook_entity_view as well?
   $extra = [];
   try {
-    $mappings = \Drupal::service('salesforce.salesforce_mapping_storage')
+    $mappings = \Drupal::service('entity.manager')
+      ->getStorage('salesforce_mapping')
       ->loadMultiple();
   }
   catch (EntityNotFoundException $e) {
@@ -131,19 +132,21 @@ function salesforce_mapping_entity_extra_field_info() {
 function salesforce_mapping_entity_update(EntityInterface $entity) {
   // Check for mappings (much faster than looking for mapped objects.)
   try {
-    \Drupal::service('salesforce.salesforce_mapping_storage')
+    \Drupal::service('entity.manager')
+      ->getStorage('salesforce_mapping')
       ->loadByDrupal($entity->getEntityTypeId());
   }
-  catch (\EntityNotFoundException $e) {
+  catch (EntityNotFoundException $e) {
     return;
   }
 
   // If mappings, check for mapped objects.
   try {
-    $mapped_objects = \Drupal::service('salesforce.mapped_object_storage')
+    $mapped_objects = \Drupal::service('entity.manager')
+      ->getStorage('salesforce_mapped_object')
       ->loadByDrupal($entity->getEntityTypeId(), $entity->id());
   }
-  catch (\EntityNotFoundException $e) {
+  catch (EntityNotFoundException $e) {
     return;
   }
 
