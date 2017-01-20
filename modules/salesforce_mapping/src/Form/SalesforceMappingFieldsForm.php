@@ -189,7 +189,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       $field_plugin_definition = $field_type = NULL;
       $field_type = $input['field_type'];
       $field_plugin_definition = $this->get_field_plugin($field_type);
-      $field_plugin = $this->FieldManager->createInstance(
+      $field_plugin = $this->mappingFieldPluginManager->createInstance(
         $field_plugin_definition['id']
       );
     }
@@ -293,7 +293,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    * @return array
    */
   protected function get_drupal_type_options($mapping) {
-    $field_plugins = $this->FieldManager->getDefinitions();
+    $field_plugins = $this->mappingFieldPluginManager->getDefinitions();
     $options = [];
     foreach ($field_plugins as $definition) {
       if (call_user_func([$definition['class'], 'isAllowed'], $mapping)) {
@@ -307,7 +307,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    * @return SalesforceMappingFieldPluginInterface
    */
   protected function get_field_plugin($field_type) {
-    $field_plugins = $this->FieldManager->getDefinitions();
+    $field_plugins = $this->mappingFieldPluginManager->getDefinitions();
     return $field_plugins[$field_type];
   }
 

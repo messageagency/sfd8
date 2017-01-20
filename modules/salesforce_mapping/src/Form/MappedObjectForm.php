@@ -22,7 +22,7 @@ class MappedObjectForm extends ContentEntityForm {
    */
   protected $storageController;
 
-  protected $FieldManager;
+  protected $mappingFieldPluginManager;
 
   protected $pushPluginManager;
 

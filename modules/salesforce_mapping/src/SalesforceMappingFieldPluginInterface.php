@@ -51,11 +51,13 @@ interface SalesforceMappingFieldPluginInterface {
 
   /**
    * Given a SF Mapping, return TRUE or FALSE whether this field plugin can be
-   * added.
+   * added via UI. Not used for validation or any other constraints.
    *
    * @param SalesforceMappingInterface $mapping
    *
    * @return bool
+   *
+   * @see Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Broken
    */
   public static function isAllowed(SalesforceMappingInterface $mapping);
 

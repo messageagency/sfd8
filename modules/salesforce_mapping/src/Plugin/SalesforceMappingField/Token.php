@@ -20,7 +20,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
  * @Plugin(
  *   id = "Token",
  *   label = @Translation("Token"),
- *   provider = { "token" }
+ *   provider = "token"
  * )
  */
 class Token extends SalesforceMappingFieldPluginBase {
