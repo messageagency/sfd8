@@ -2,10 +2,17 @@
 
 namespace Drupal\salesforce_pull;
 
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
+use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce_mapping\Entity\SalesforceMapping;
+use Drupal\salesforce_mapping\MappedObjectStorage;
+use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\Core\Entity\EntityManagerInterface;
+
 /**
  * Handles pull cron deletion of Drupal entities based onSF mapping settings.
  *
@@ -14,9 +21,15 @@ use Drupal\salesforce\Exception;
 
 class DeleteHandler {
   protected $sfapi;
+  protected $mapping_storage;
+  protected $mapped_object_storage;
+  protected $entity_manager;
 
-  private function __construct(RestClient $sfapi) {
+  private function __construct(RestClient $sfapi, EntityManagerInterface $entity_manager) {
     $this->sfapi = $sfapi;
+    $this->entity_manager = $entity_manager;
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
   }
 
   /**
@@ -25,8 +38,8 @@ class DeleteHandler {
    * @param object
    *  RestClient object
    */
-  public static function create(RestClient $sfapi) {
-    return new DeleteHandler($sfapi);
+  public static function create(RestClient $sfapi, EntityManagerInterface $entity_manager) {
+    return new DeleteHandler($sfapi, $entity_manager);
   }
 
   /**
@@ -54,11 +67,11 @@ class DeleteHandler {
     }
 
     try {
-      $sf_mappings = salesforce_mapping_load_multiple(
+      $sf_mappings = $this->mapping_storage->loadByProperties(
         ['salesforce_object_type' => $type]
       );
     }
-    catch (\Exception $e) {
+    catch (EntityNotFoundException $e) {
       // No mappings found. Quit now.
       return;
     }
@@ -70,9 +83,11 @@ class DeleteHandler {
 
   protected function handleDeletedRecord($record, $type) {
     try {
-      $mapped_objects = salesforce_mapped_object_load_by_sfid($record['id']);
+      $mapped_objects = $this
+        ->mapped_object_storage
+        ->loadBySFID(new SFID($record['id']));
     }
-    catch (\Exception $e) {
+    catch (EntityNotFoundException $e) {
       // We do not need to know about every object which gets deleted in SF and
       // isn't mapped to Drupal.
       return;
@@ -84,10 +99,10 @@ class DeleteHandler {
           ->getStorage($mapped_object->entity_type_id->value)
           ->load($mapped_object->entity_id->value);
         if (!$entity) {
-          throw new \Exception();
+          throw new EntityNotFoundException(['entity_id' => $mapped_object->entity_id->value], $mapped_object->entity_type_id);
         }
       }
-      catch (\Exception $e) {
+      catch (EntityNotFoundException $e) {
         // No mapped entity found for the mapped object. Just delete the mapped object and continue.
         \Drupal::logger('Salesforce Pull')->notice(
           'No entity found for ID %id associated with Salesforce Object ID: %sfid ',
@@ -102,9 +117,11 @@ class DeleteHandler {
 
       try {
         // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
-        $sf_mapping = salesforce_mapping_load($mapped_object->salesforce_mapping->entity->id());
+        $sf_mapping = $this
+          ->mapping_storage
+          ->load($mapped_object->salesforce_mapping->entity->id());
       }
-      catch (\Exception $e) {
+      catch (EntityNotFoundException $e) {
         \Drupal::logger('Salesforce Pull')->notice(
           'No mapping exists for mapped object %id with Salesforce Object ID: %sfid',
           [
@@ -117,7 +134,7 @@ class DeleteHandler {
         continue;
       }
 
-      if (!$sf_mapping->checkTriggers([SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
+      if (!$sf_mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
         continue;
       }
 

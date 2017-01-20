@@ -14,6 +14,7 @@ use Drupal\salesforce\SObject;
 use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePushEvent;
+use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
@@ -24,6 +25,7 @@ use Drupal\salesforce_mapping\SalesforcePushEvent;
  *   label = @Translation("Salesforce Mapped Object"),
  *   module = "salesforce_mapping",
  *   handlers = {
+ *     "storage" = "Drupal\salesforce_mapping\MappedObjectStorage",
  *     "storage_schema" = "Drupal\salesforce_mapping\MappedObjectStorageSchema",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\salesforce_mapping\MappedObjectList",
@@ -193,7 +195,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setLabel(t('Action of most recent sync'))
       ->setDescription(t('Indicates acion which triggered most recent sync for this mapped object'))
       ->setSetting('is_ascii', TRUE)
-      ->setSetting('max_length', SALESFORCE_MAPPING_TRIGGER_MAX_LENGTH)
+      ->setSetting('max_length', MappingConstants::SALESFORCE_MAPPING_TRIGGER_MAX_LENGTH)
       ->setRevisionable(TRUE);
 
     // @see ContentEntityBase::baseFieldDefinitions
@@ -228,7 +230,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public function getSalesforceUrl() {
     // @TODO dependency injection here:
-    $sfapi = salesforce_get_api();
+    $sfapi = \Drupal::service('salesforce.client');
     if (!$sfapi) {
       return $this->salesforce_id->value;
     }
@@ -361,7 +363,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // If the pull isn't coming from a cron job.
     if ($this->sf_object == NULL) {
-      $client = salesforce_get_api();
+      $client = \Drupal::service('salesforce.client');
       if ($this->sfid()) {
         $this->sf_object = $client->objectRead(
           $mapping->getSalesforceObjectType(),

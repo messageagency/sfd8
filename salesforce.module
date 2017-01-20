@@ -79,17 +79,6 @@ function salesforce_help($route_name, RouteMatchInterface $route_match) {
 }
 
 /**
- * Wrapper around the API constructor passing consume key and secret.
- *
- * @return Salesforce
- *   Returns a Salesforce class object.
- * @deprecated use \Drupal::service('salesforce.client');
- */
-function salesforce_get_api() {
-  return \Drupal::service('salesforce.client');
-}
-
-/**
  * Salesforce set message.
  *
  * Wrapper around drupal_set_message(), checks for proper permissions.

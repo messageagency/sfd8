@@ -7,6 +7,9 @@
 
 module_load_include('test', 'salesforce_mapping', 'tests/salesforce_mapping');
 
+use Drupal\salesforce\EntityNotFoundException;
+use Drupal\salesforce\SFID;
+
 /**
  * Tests the entities storing the Drupal to Salesforce mapping.
  */
@@ -111,51 +114,52 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
     $test_map2 = entity_create('salesforce_mapping', $this->example_map2);
     entity_save('salesforce_mapping', $test_map2);
 
-    // salesforce_mapping_load() all available.
-    $result = salesforce_mapping_load();
+    $storage = \Drupal::service('entity.manager')
+      ->getStorage('salesforce_mapping');
+
+    // Load all mappings
+    $result = $storage->load();
     $this->assertTrue(is_array($result), 'Loading maps without stating a specific name returned an array.');
     $this->assertEqual(2, count($result), 'Loading maps without stating a specific name returned 2 maps.');
 
-    // salesforce_mapping_load() specific map.
-    $result = salesforce_mapping_load($test_map->name);
+    // Load specific maps
+    $result = $storage->load($test_map->name);
     $this->assertTrue(is_object($result), 'Loading maps stating a specific name returned an object.');
     $this->assertEqual($test_map->label, $result->label, 'Loading maps stating a specific name returned the requested map.');
-    $result = salesforce_mapping_load($test_map2->name);
+    $result = $storage->load($test_map2->name);
     $this->assertTrue(is_object($result), 'Loading maps stating a specific name returned an object.');
     $this->assertEqual($test_map2->label, $result->label, 'Loading maps stating a specific name returned the requested map.');
 
-    // salesforce_mapping_load() retreive nothing.
-    $result = salesforce_mapping_load('nothing');
-    $this->assertFalse(is_object($result), 'Loading maps stating a name that does not exist does not return an object.');
-    $this->assertFalse(is_array($result), 'Loading maps stating a name that does not exist does not return an array.');
-    $this->assertTrue(empty($result), 'Loading maps stating a name that does not exist returns nothing.');
-
-    // salesforce_mapping_load_multiple() all available.
-    $result = salesforce_mapping_load_multiple();
-    $this->assertTrue(is_array($result), 'Loading maps without stating a specific property returned an array.');
-    $this->assertEqual(2, count($result), 'Loading maps without stating a specific property returned 2 maps.');
+    try {
+      $result = $storage->load('nothing');
+    }
+    catch (\Exception $e) {
+      $this->assertTrue($e instanceof EntityNotFoundException, 'Loading maps stating a name that does not exist throws EntityNotFoundException');
+    }
 
     // salesforce_mapping_load_multiple() single property.
-    $result = salesforce_mapping_load_multiple(['drupal_bundle' => 'event']);
+    $result = $storage->loadByProperties(['drupal_bundle' => 'event']);
     $this->assertTrue(is_array($result), 'Loading maps stating the drupal_bundle returned an array.');
     $this->assertEqual(1, count($result), 'Loading maps stating the drupal_bundle property returned 1 map.');
     $map = reset($result);
     $this->assertEqual($test_map2->label, $map->label, 'Loading maps stating the drupal_bundle property returned the expected map.');
-    $result = salesforce_mapping_load_multiple(['drupal_entity_type' => 'node']);
+    $result = $storage->loadByProperties(['drupal_entity_type' => 'node']);
     $this->assertEqual(2, count($result), 'Loading maps stating the drupal_entity_type property returned 2 maps.');
 
     // salesforce_mapping_load_multiple() multiple property.
-    $result = salesforce_mapping_load_multiple(['drupal_entity_type' => 'node', 'drupal_bundle' => 'event']);
+    $result = $storage->loadByProperties(['drupal_entity_type' => 'node', 'drupal_bundle' => 'event']);
     $this->assertTrue(is_array($result), 'Loading maps stating the drupal_entity_type and drupal_bundle properties returned an array.');
     $this->assertEqual(1, count($result), 'Loading maps stating the drupal_entity_type and drupal_bundle properties returned 1 map.');
     $map = reset($result);
     $this->assertEqual($test_map2->label, $map->label, 'Loading maps stating the drupal_entity_type and drupal_bundle properties returned the expected map.');
 
     // salesforce_mapping_load_multiple() retreive nothing.
-    $result = salesforce_mapping_load_multiple(['drupal_entity_type' => 'nothing']);
-    $this->assertFalse(is_object($result), 'Loading maps stating a drupal_entity_type that does not exist does not return an object.');
-    $this->assertTrue(is_array($result), 'Loading maps stating a drupal_entity_type that does not exist does returns an array.');
-    $this->assertTrue(empty($result), 'Loading maps stating a drupal_entity_type that does not exist returns an empty array.');
+    try {
+      $result = $storage->loadByProperties(['drupal_entity_type' => 'nothing']);
+    }
+    catch (\Exception $e) {
+      $this->assertTrue($e instanceof EntityNotFoundException, 'Loading maps stating a drupal_entity_type that does not exist throws EntityNotFoundException');
+    }
   }
 
   /**
@@ -192,6 +196,7 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
    * Tests for salesforce_mapping_crud records.
    */
   public function testRecordMapCrud() {
+    $storage = \Drupal::service('entity.manager')->getStorage('salesforce_mapped_object');
     // Create two records to work with.
     $record = [
       'salesforce_id' => uniqid(),
@@ -209,19 +214,28 @@ class SalesforceMappingEntitiesTestCase extends SalesforceMappingTestCase {
     entity_save('salesforce_mapped_object', $record_map2);
 
     // salesforce_mapped_object_load_by_drupal() retreive map.
-    $result = salesforce_mapped_object_load_by_drupal($record_map->entity_type, $record_map->entity_id);
+    $result = $storage
+      ->loadByDrupal($record_map->entity_type, $record_map->entity_id);
     $this->assertEqual($record_map->salesforce_id, $result->salesforce_id, 'Loading map by drupal retreived correct map.');
 
     // salesforce_mapped_object_load_by_drupal() retreive nothing.
-    $result = salesforce_mapped_object_load_by_drupal('nothing', $record_map->entity_id);
-    $this->assertFalse($result, 'Loading map by drupal for something that does not exist returns FALSE.');
+    try {
+      $result = $storage->loadByDrupal('nothing', $record_map->entity_id);
+    }
+    catch (\Exception $e) {
+      $this->assertTrue($e instanceof EntityNotFoundException, 'Loading map by drupal for something that does not exist throws EntityNotFoundException');
+    }
 
     // salesforce_mapped_object_load_by_sfid() retreive map.
-    $result = salesforce_mapped_object_load_by_sfid($record_map->salesforce_id);
+    $result = $storage->loadBySfid(new SFID($record_map->salesforce_id));
     $this->assertEqual($record_map->entity_id, $result->entity_id, 'Loading map by salesforce_id retreived correct map.');
 
     // salesforce_mapped_object_load_by_sfid() retreive nothing.
-    $result = salesforce_mapped_object_load_by_sfid('nothing');
-    $this->assertFalse($result, 'Loading map by salesforce_id for something that does not exist returns FALSE.');
+    try {
+      $result = $storage->loadBySfid('nothing');
+    }
+    catch (\Exception $e) {
+      $this->assertTrue($e instanceof EntityNotFoundException, 'Loading map by salesforce_id for something that does not exist throws EntityNotFoundException');
+    }
   }
 }

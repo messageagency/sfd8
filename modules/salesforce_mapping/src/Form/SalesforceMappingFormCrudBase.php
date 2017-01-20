@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Form;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Salesforce Mapping Form base.
@@ -303,10 +304,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected function get_salesforce_object_type_options() {
     $sfobject_options = [];
-    // No need to cache here: Salesforce::objects() implements its own caching.
-    $sfapi = salesforce_get_api();
+
     // Note that we're filtering SF object types to a reasonable subset.
-    $sfobjects = $sfapi->objects([
+    $sfobjects = $this->client->objects([
       'updateable' => TRUE,
       'triggerable' => TRUE,
     ]);
@@ -325,12 +325,12 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected function get_sync_trigger_options() {
     return [
-      SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => t('Drupal entity create'),
-      SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => t('Drupal entity update'),
-      SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE => t('Drupal entity delete'),
-      SALESFORCE_MAPPING_SYNC_SF_CREATE => t('Salesforce object create'),
-      SALESFORCE_MAPPING_SYNC_SF_UPDATE => t('Salesforce object update'),
-      SALESFORCE_MAPPING_SYNC_SF_DELETE => t('Salesforce object delete'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => t('Drupal entity create'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => t('Drupal entity update'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE => t('Drupal entity delete'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE => t('Salesforce object create'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE => t('Salesforce object update'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE => t('Salesforce object delete'),
     ];
   }
 

@@ -163,7 +163,7 @@ function drush_salesforce_sf_rest_version() {
  * @TODO implement this function
  */
 function _drush_salesforce_drush_get_api() {
-  if ($salesforce = salesforce_get_api()) {
+  if ($salesforce = \Drupal::service('salesforce.client')) {
     return $salesforce;
   }
 }
