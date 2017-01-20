@@ -85,7 +85,9 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
     ];
     $mapped_object = FALSE;
     try {
-      $mapped_objects = salesforce_mapped_object_load_multiple($props);
+      $mapped_objects = \Drupal::service('entity.manager')
+        ->getStorage('salesforce_mapped_object')
+        ->loadByProperties($props);
       // There should really only be one, but the return value is always an array
       $mapped_object = current($mapped_objects);
     }
@@ -149,7 +151,10 @@ function salesforce_push_load_push_mappings($entity_type_id = NULL) {
   $properties = empty($entity_type_id)
     ? []
     : ["drupal_entity_type" => $entity_type_id];
-  $mappings = salesforce_mapping_load_multiple($properties);
+  $mappings = \Drupal::service('entity.manager')
+    ->getStorage('salesforce_mapping')
+    ->loadByProperties($properties);
+
   foreach ($mappings as $key => $mapping) {
     if (!$mapping->doesPush()) {
       continue;

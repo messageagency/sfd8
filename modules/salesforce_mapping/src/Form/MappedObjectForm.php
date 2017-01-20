@@ -6,7 +6,8 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Exception;
-
+use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -25,14 +26,17 @@ class MappedObjectForm extends ContentEntityForm {
 
   protected $pushPluginManager;
 
+  protected $mapping_storage;
   /**
    * Constructs a ContentEntityForm object.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager) {
+  public function __construct(EntityManagerInterface $entity_manager, RestClient $rest) {
     $this->entityManager = $entity_manager;
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->rest = $rest;
   }
 
   /**
@@ -40,7 +44,8 @@ class MappedObjectForm extends ContentEntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity.manager')
+      $container->get('entity.manager'),
+      $container->get('salesforce.client')
     );
   }
 
@@ -54,7 +59,9 @@ class MappedObjectForm extends ContentEntityForm {
     $drupal_entity = $this->getDrupalEntityFromUrl();
     // Allow exception to bubble up here, because we shouldn't have got here if
     // there isn't a mapping.
-    $mappings = salesforce_mapping_load_by_drupal($drupal_entity->getEntityTypeId());
+    $mappings = $this
+      ->mapping_storage
+      ->loadByDrupal($drupal_entity->getEntityTypeId());
     $options = array_keys($mappings) + ['_none'];
     // Filter options based on drupal entity type.
     $form['salesforce_mapping']['widget']['#options'] = array_intersect_key($form['salesforce_mapping']['widget']['#options'], array_flip($options));
@@ -170,8 +177,7 @@ class MappedObjectForm extends ContentEntityForm {
       return [];
     }
     // No need to cache here: Salesforce::objectDescribe implements caching.
-    $sfapi = salesforce_get_api();
-    $sfobject = $sfapi->objectDescribe($salesforce_object_type);
+    $sfobject = $this->rest->objectDescribe($salesforce_object_type);
     return $sfobject;
   }
 

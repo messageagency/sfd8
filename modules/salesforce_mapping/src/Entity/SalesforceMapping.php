@@ -16,6 +16,7 @@ use Drupal\salesforce_mapping\MappingConstants;
  *   label = @Translation("Salesforce Mapping"),
  *   module = "salesforce_mapping",
  *   handlers = {
+ *     "storage" = "Drupal\salesforce_mapping\SalesforceMappingStorage",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "access" = "Drupal\salesforce_mapping\SalesforceMappingAccessController",
  *     "list_builder" = "Drupal\salesforce_mapping\SalesforceMappingList",

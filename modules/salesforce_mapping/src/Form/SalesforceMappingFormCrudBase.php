@@ -304,10 +304,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected function get_salesforce_object_type_options() {
     $sfobject_options = [];
-    // No need to cache here: Salesforce::objects() implements its own caching.
-    $sfapi = salesforce_get_api();
+
     // Note that we're filtering SF object types to a reasonable subset.
-    $sfobjects = $sfapi->objects([
+    $sfobjects = $this->client->objects([
       'updateable' => TRUE,
       'triggerable' => TRUE,
     ]);
