@@ -14,6 +14,7 @@ use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Salesforce push queue.

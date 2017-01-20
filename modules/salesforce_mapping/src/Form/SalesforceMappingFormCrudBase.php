@@ -164,16 +164,17 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     }
 
     $form['queue'] = [
-      '#title' => 'Queue Settings',
+      '#title' => t('Queue Settings'),
       '#type' => 'details',
+      '#description' => t('The asynchronous push queue is always enabled in Drupal 8: real-time push fails are queued for async push. Alternatively, you can choose to disable real-time push and use async-only.'),
       '#open' => TRUE,
       '#tree' => FALSE,
     ];
 
     $form['queue']['async'] = [
-      '#title' => t('Enable queue'),
+      '#title' => t('Disable real-time push'),
       '#type' => 'checkbox',
-      '#description' => t('When enabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD.'),
+      '#description' => t('When real-time push is disabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD, and only enqueue failures for async push.'),
       '#default_value' => $mapping->async,
     ];
 
@@ -183,11 +184,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#options' => array_combine(range(-50,50), range(-50,50)),
       '#description' => t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
       '#default_value' => $mapping->weight,
-      '#states' => [
-        'visible' => [
-          ':input#edit-async' => ['checked' => TRUE],
-        ],
-      ],
     ];
 
     $form['meta'] = [

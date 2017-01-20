@@ -113,7 +113,12 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   protected $locked = FALSE;
 
   /**
-   * Whether to push asychronously (during dron) or immediately on entity CRUD.
+   * Whether to push asychronous only:
+   *   * If true, disable real-time push.
+   *   * If false (default), attempt real-time push and enqueue failures for
+   *     async push.
+   *
+   * Note this is different behavior compared to D7.
    *
    * @var bool
    */
