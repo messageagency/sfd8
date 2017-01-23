@@ -51,6 +51,8 @@ function salesforce_mapping_entity_operation(EntityInterface $entity) {
  * Return a unique list of mapped Salesforce object types.
  * @see salesforce_mapping_load_multiple()
  * @throws EntityNotFoundException if no mappings have been created yet.
+ * @TODO Delte - moved to
+ *  Drupal\salesforce_mapping\SalesforceMappingStorage::getMappedSobjectTypes()
  */
 function salesforce_mapping_get_mapped_sobject_types() {
   $object_types = [];

@@ -8,6 +8,7 @@
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_pull\QueueHandler;
 use Drupal\salesforce_pull\DeleteHandler;
+use Psr\Log\LoggerTrait;
 
 /**
  * Implements hook_cron().
@@ -24,7 +25,9 @@ function salesforce_pull_cron() {
     )->getUpdatedRecords();
     DeleteHandler::create(
       $sfapi,
-      \Drupal::service('entity.manager')      
+      \Drupal::service('entity_type.manager'),
+      \Drupal::state(),
+      \Drupal::logger()
     )->processDeletedRecords();
   }
 }
