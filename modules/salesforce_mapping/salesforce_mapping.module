@@ -17,40 +17,6 @@ use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce\EntityNotFoundException;
 
 /**
- * Define when a data sync should take place for a given mapping.
- */
-const SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE = 'push_create';
-const SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE = 'push_update';
-const SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE = 'push_delete';
-const SALESFORCE_MAPPING_SYNC_SF_CREATE = 'pull_create';
-const SALESFORCE_MAPPING_SYNC_SF_UPDATE = 'pull_update';
-const SALESFORCE_MAPPING_SYNC_SF_DELETE = 'pull_delete';
-
-const SALESFORCE_MAPPING_TRIGGER_MAX_LENGTH = 16;
-
-/**
- * Field mapping direction constants.
- */
-const SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF = 'drupal_sf';
-const SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL = 'sf_drupal';
-const SALESFORCE_MAPPING_DIRECTION_SYNC = 'sync';
-
-/**
- * Delimiter used in Salesforce multipicklists.
- */
-const SALESFORCE_MAPPING_ARRAY_DELIMITER =';';
-
-/**
- * Field mapping maximum name length.
- */
-const SALESFORCE_MAPPING_NAME_LENGTH = 128;
-
-
-const SALESFORCE_MAPPING_STATUS_SUCCESS = 1;
-const SALESFORCE_MAPPING_STATUS_ERROR = 0;
-
-
-/**
  * Implements hook_entity_type_alter().
  */
 function salesforce_mapping_entity_type_alter(array &$entity_types) {
@@ -79,120 +45,6 @@ function salesforce_mapping_entity_operation(EntityInterface $entity) {
     }
   }
   return $operations;
-}
-
-/**
- * Loads a single salesforce_mapping or all of them if no name provided.
- *
- * @param string $name
- *   Name of the map to load, or NULL to load all
- *
- * @return \Drupal\salesforce_mapping\Entity\SalesforceMapping
- *   The requested mapping or an array of all mappings, indexed by id, if $name
- *   was not specified
- *
- * @throws EntityNotFoundException if no mapping exists with the given name
- */
-function salesforce_mapping_load($name) {
-  $mapping = \Drupal::entityTypeManager()
-    ->getStorage('salesforce_mapping')
-    ->load($name);
-  if (empty($mapping)) {
-   throw new EntityNotFoundException($name, 'salesforce_mapping');
-  }
-  return $mapping;
-}
-
-/**
- * Loads multiple salesforce_mappings based on a set of matching conditions.
- *
- * @param array $properties (optional)
- *   An array of properties on the \Drupal\salesforce_mapping\Entity\SalesforceMapping in the form
- *     'field' => $value.
- *   If $properties is empty, return an array of all mappings.
- *
- * @return array
- *   An array of \Drupal\salesforce_mapping\Entity\SalesforceMapping objects, indexed by id
- *
- * @throws Exception if not mappings exist with the given properties
- */
-function salesforce_mapping_load_multiple($properties = []) {
-  $mappings = [];
-  $mappings = \Drupal::entityTypeManager()
-    ->getStorage('salesforce_mapping')
-    ->loadByProperties($properties);
-  if (empty($mappings)) {
-    $bt = debug_backtrace(FALSE);
-    foreach ($bt as &$e) {
-      unset($e['args']);
-    }
-    throw new EntityNotFoundException($properties, 'salesforce_mapping');
-  }
-  return $mappings;
-}
-
-/**
- * pass-through for salesforce_mapping_load_multiple()
- */
-function salesforce_mapping_load_by_drupal($entity_type) {
-  return salesforce_mapping_load_multiple(["drupal_entity_type" => $entity_type]);
-}
-
-/**
- * Returns Salesforce mapped objects for given properties.
- *
- * @param array $properties
- *   An array of properties on the {salesforce_mapping_object} table in the form
- *     'field' => $value.
- *
- * Note, entity_load_multiple_by_properties() does not provide a reset
- * parameter, and neither do we. If clearing the entire salesforce mapping cache
- * is necessary, it should be done explicitly by the caller.
- *
- * @return array
- *   An array of \Drupal\salesforce_mapping\Entity\MappedObject objects,
- *   indexed by id
- *
- * @throws EntityNotFoundException if no mapped objects exist with the given
- *   properties
- */
-function salesforce_mapped_object_load_multiple($properties = []) {
-  $mappings = \Drupal::entityTypeManager()
-    ->getStorage('salesforce_mapped_object')
-    ->loadByProperties($properties);
-  if (empty($mappings)) {
-    throw new EntityNotFoundException($properties, 'salesforce_mapped_object');
-  }
-  return $mappings;
-}
-
-/**
- * pass-through for salesforce_mapped_object_load_multiple()
- */
-function salesforce_mapped_object_load_by_drupal($entity_type, $entity_id) {
-  return salesforce_mapped_object_load_multiple([
-    'entity_type_id' => $entity_type,
-    'entity_id' => $entity_id,
-  ]);
-}
-
-/**
- * pass-through for salesforce_mapped_object_load_multiple()
- */
-function salesforce_mapped_object_load_by_entity($entity, $all = FALSE) {
-  return salesforce_mapped_object_load_multiple([
-    'entity_type_id' => $entity->getEntityTypeId(),
-    'entity_id' => $entity->id(),
-  ]);
-}
-
-/**
- * pass-through for salesforce_mapped_object_load_multiple()
- */
-function salesforce_mapped_object_load_by_sfid($salesforce_id) {
-  return salesforce_mapped_object_load_multiple([
-    'salesforce_id' => $salesforce_id,
-  ]);
 }
 
 /**
@@ -245,7 +97,14 @@ function salesforce_mapping_entity_extra_field_info() {
   // Include Salesforce data for mapped entities.
   // @TODO: these don't actually show up on the entity view. Have to implement hook_entity_view as well?
   $extra = [];
-  $mappings = salesforce_mapping_load_multiple();
+  try {
+    $mappings = \Drupal::service('entity.manager')
+      ->getStorage('salesforce_mapping')
+      ->loadMultiple();
+  }
+  catch (EntityNotFoundException $e) {
+    return [];
+  }
   foreach ($mappings as $mapping) {
     $extra[$mapping->drupal_entity_type][$mapping->drupal_bundle] = [
       'display' => [
@@ -273,17 +132,21 @@ function salesforce_mapping_entity_extra_field_info() {
 function salesforce_mapping_entity_update(EntityInterface $entity) {
   // Check for mappings (much faster than looking for mapped objects.)
   try {
-    salesforce_mapping_load_by_drupal($entity->getEntityTypeId());
+    \Drupal::service('entity.manager')
+      ->getStorage('salesforce_mapping')
+      ->loadByDrupal($entity->getEntityTypeId());
   }
-  catch (\Exception $e) {
+  catch (EntityNotFoundException $e) {
     return;
   }
 
   // If mappings, check for mapped objects.
   try {
-    $mapped_objects = salesforce_mapped_object_load_by_drupal($entity->getEntityTypeId(), $entity->id());
+    $mapped_objects = \Drupal::service('entity.manager')
+      ->getStorage('salesforce_mapped_object')
+      ->loadByDrupal($entity->getEntityTypeId(), $entity->id());
   }
-  catch (\Exception $e) {
+  catch (EntityNotFoundException $e) {
     return;
   }
 

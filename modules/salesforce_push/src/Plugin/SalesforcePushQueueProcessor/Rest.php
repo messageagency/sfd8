@@ -6,10 +6,14 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce_mapping\Entity\MappedObject;
+use Drupal\salesforce_mapping\MappedObjectStorage;
+use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_push\PushQueue;
 use Drupal\salesforce_push\PushQueueProcessorInterface;
-use Drupal\salesforce_mapping\Entity\MappedObject;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Entity\EntityManagerInterface;
 
 /**
  * Rest queue processor plugin.
@@ -22,9 +26,27 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class Rest extends PluginBase implements PushQueueProcessorInterface {
   protected $queue;
   protected $client;
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClient $client) {
+
+  /**
+   * Storage handler for SF mappings
+   *
+   * @var SalesforceMappingStorage
+   */
+  protected $mapping_storage;
+
+  /**
+   * Storage handler for Mapped Objects
+   *
+   * @var MappedObjectStorage
+   */
+  protected $mapped_object_storage
+
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClient $client, EntityManagerInterface $entity_manager) {
     $this->queue = $queue;
     $this->client = $client;
+    $this->entity_manager = $entity_manager;
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
   }
 
   /**
@@ -33,7 +55,8 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static($configuration, $plugin_id, $plugin_definition,
       $container->get('queue.salesforce_push'),
-      $container->get('salesforce.client')
+      $container->get('salesforce.client'),
+      $container->get('entity.manager')
     );
   }
 
@@ -53,15 +76,15 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   }
 
   protected function processItem(\stdClass $item) {
-    $mapped_object = \Drupal::entityTypeManager()
-      ->getStorage('salesforce_mapped_object')
+    $mapped_object = $this
+      ->mapped_object_storage
       ->load($item->mapped_object_id);
 
     // Allow exceptions to bubble up for PushQueue to sort things out.
-    $mapping = salesforce_mapping_load($item->name);
+    $mapping = $this->mapping_storage->load($item->name);
 
     if (!$mapped_object) {
-      if ($item->op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+      if ($item->op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
         // If mapped object doesn't exist or fails to load for this delete, this item can be considered successfully processed.
         return;
       }
@@ -75,7 +98,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     // @TODO: the following is nearly identical to the end of salesforce_push_entity_crud(). Can we DRY it? Do we care?
     try {
       // If this is a delete, destroy the SF object and we're done.
-      if ($item->op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+      if ($item->op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
         $mapped_object->pushDelete();
       }
       else {

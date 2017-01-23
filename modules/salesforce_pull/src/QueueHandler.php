@@ -10,7 +10,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\LoggingTrait;
-use Drupal\salesforce\LoggingLevels;
+use Psr\Log\LogLevel;
 
 /**
  * Handles pull cron queue set up.
@@ -63,7 +63,7 @@ class QueueHandler {
     if ($this->queue->numberOfItems() > $this->stateGet('salesforce_pull_max_queue_size', 100000)) {
       $this->log(
         'Salesforce Pull',
-        LoggingLevels::ALERT,
+        LogLevel::ALERT,
         'Pull Queue contains %noi items, exceeding the max size of %max items. Pull processing will be blocked until the number of items in the queue is reduced to below the max size.',
         [
           '%noi' => $this->queue->numberOfItems(),

@@ -13,26 +13,27 @@ use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use GuzzleHttp\Exception\RequestException;
+use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Implements hook_entity_insert().
  */
 function salesforce_push_entity_insert(EntityInterface $entity) {
-  salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE);
+  salesforce_push_entity_crud($entity, MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE);
 }
 
 /**
  * Implements hook_entity_update().
  */
 function salesforce_push_entity_update(EntityInterface $entity) {
-  salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE);
+  salesforce_push_entity_crud($entity, MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE);
 }
 
 /**
  * Implements hook_entity_delete().
  */
 function salesforce_push_entity_delete(EntityInterface $entity) {
-  salesforce_push_entity_crud($entity, SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE);
+  salesforce_push_entity_crud($entity, MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE);
 }
 
 function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity, SalesforceMappingInterface $mapping, $op) {
@@ -67,69 +68,103 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
   }
 
   foreach ($mappings as $mapping) {
-    $mapped_objects = [];
-    $mapped_object = FALSE;
-    // @TODO decide whether this hook is worth moving to Events framework, and how. Should subscribers throw an exception to prevent entity sync? Return false, like so? Something else entirely?
-    foreach (\Drupal::moduleHandler()->invokeAll('salesforce_push_entity_allowed', array($entity, $mapping, $op)) as $value) {
-      if ($value === FALSE) {
-        continue 2;
-      }
-    }
+    salesforce_push_entity_crud_mapping($entity, $op, $mapping);
+  }
+}
 
-    // Look for existing mapped object.
-    $props = [
-      'entity_id' => $entity->id(),
-      'entity_type_id' => $entity->getEntityTypeId(),
-      'salesforce_mapping' => $mapping->id(),
-    ];
-    $mapped_object = FALSE;
-    try {
-      $mapped_objects = salesforce_mapped_object_load_multiple($props);
-      // There should really only be one, but the return value is always an array
-      $mapped_object = current($mapped_objects);
-    }
-    catch (EntityNotFoundException $e) {
-      // No mappings found.
-      if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
-        // If no existing mapping, and this is a delete, purge any entries from push queue and we're done.
-        \Drupal::service('queue.salesforce_push')
-          ->setName($mapping->id())
-          ->deleteItemByEntity($entity);
-        return;
-      }
-      $mapped_object = new MappedObject($props);
-    }
-
-    if ($mapping->async) {
-      // Enqueue async push if the mapping is configured to do so, and quit.
-      try {
-        salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
-      }
-      catch (\Exception $e) {
-        // @TODO log: failed to enqueue changes.
-      }
+/**
+ * Helper method for salesforce_push_entity_crud()
+ *
+ * @param EntityInterface $entity 
+ * @param string $op 
+ * @param SalesforceMappingInterface $mapping 
+ * @return void
+ */
+function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
+  $mapped_objects = [];
+  $mapped_object = FALSE;
+  // @TODO decide whether this hook is worth moving to Events framework, and how. Should subscribers throw an exception to prevent entity sync? Return false, like so? Something else entirely?
+  foreach (\Drupal::moduleHandler()->invokeAll('salesforce_push_entity_allowed', array($entity, $mapping, $op)) as $value) {
+    if ($value === FALSE) {
       return;
     }
+  }
+
+  // Look for existing mapped object or create a new one (except for deletes).
+  $props = [
+    'entity_id' => $entity->id(),
+    'entity_type_id' => $entity->getEntityTypeId(),
+    'salesforce_mapping' => $mapping->id(),
+  ];
+  $mapped_object = FALSE;
+  try {
+    $mapped_objects = \Drupal::service('entity.manager')
+      ->getStorage('salesforce_mapped_object')
+      ->loadByProperties($props);
+    // There should really only be one in this case, since we're loading on a 
+    // multi-field unique key, but loadByProperties returns an array.
+    $mapped_object = current($mapped_objects);
+  }
+  catch (EntityNotFoundException $e) {
+    // No mappings found.
+    if ($op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+      // If no existing mapping, and this is a delete, purge any entries from push queue and we're done.
+      \Drupal::service('queue.salesforce_push')
+        ->setName($mapping->id())
+        ->deleteItemByEntity($entity);
+      return;
+    }
+    $mapped_object = new MappedObject($props);
+  }
+
+  // Enqueue async push if the mapping is configured to do so, and quit.
+  if ($mapping->async) {
+    try {
+      salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
+    }
+    catch (\Exception $e) {
+      watchdog_exception('Salesforce Push', $e);
+    }
+    return;
+  }
+
+  // Attempt real-time push. Enqueue async push on failure.
+  try {
+    // If this is a delete, destroy the SF object.
+    if ($op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+      $mapped_object->pushDelete();
+    }
+    else {
+      // Otherwise, push to SF. This also saves the mapped object.
+      $mapped_object->push();
+    }
+
+    // On success, delete any push queue items for this entity.
+    \Drupal::service('queue.salesforce_push')
+      ->setName($mapping->id())
+      ->deleteItemByEntity($entity);
+  }
+  catch (\Exception $e) {
+    // Don't let any exception interfere with drupal CRUD operations
+    watchdog_exception('Salesforce Push', $e);
+    try {
+      salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
+    }
+    catch (\Exception $e) {
+      watchdog_exception('Salesforce Push', $e);
+    }
 
     try {
-      // If this is a delete, destroy the SF object and we're done.
-      if ($op == SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
-        $mapped_object->pushDelete();
-      }
-      else {
-        // Push to SF. This also saves the mapped object.
-        $mapped_object->push();
-      }
-    }
-    catch (RequestException $e) {
       $mapped_object
         ->set('last_sync_action', $op)
         ->set('last_sync_status', FALSE)
         ->set('revision_log_message', $e->getMessage())
         ->save();
-      throw $e;
     }
-  }
+    catch (\Exception $e) {
+      watchdog_exception('Salesforce Push', $e);
+    }
+  }  
 }
 
 /**
@@ -148,7 +183,10 @@ function salesforce_push_load_push_mappings($entity_type_id = NULL) {
   $properties = empty($entity_type_id)
     ? []
     : ["drupal_entity_type" => $entity_type_id];
-  $mappings = salesforce_mapping_load_multiple($properties);
+  $mappings = \Drupal::service('entity.manager')
+    ->getStorage('salesforce_mapping')
+    ->loadByProperties($properties);
+
   foreach ($mappings as $key => $mapping) {
     if (!$mapping->doesPush()) {
       continue;

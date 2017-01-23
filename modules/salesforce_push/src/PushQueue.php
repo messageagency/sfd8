@@ -11,6 +11,10 @@ use Drupal\Core\State\State;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\Queue\RequeueException;
 use Drupal\salesforce\EntityNotFoundException;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\MappedObjectStorage;
+use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Salesforce push queue.
@@ -37,15 +41,32 @@ class PushQueue extends DatabaseQueue {
   protected $max_fails;
 
   /**
+   * Storage handler for SF mappings
+   *
+   * @var SalesforceMappingStorage
+   */
+  protected $mapping_storage;
+
+  /**
+   * Storage handler for Mapped Objects
+   *
+   * @var MappedObjectStorage
+   */
+  protected $mapped_object_storage;
+
+  /**
    * Constructs a \Drupal\Core\Queue\DatabaseQueue object.
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
    */
-  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager) {
+  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager, EntityManagerInterface $entity_manager) {
     $this->connection = $connection;
     $this->state = $state;
     $this->queueManager = $queue_manager;
+    $this->entity_manager = $entity_manager;
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
 
     $this->limit = $state->get('salesforce.push_limit', static::DEFAULT_CRON_PUSH_LIMIT);
 
@@ -121,7 +142,7 @@ class PushQueue extends DatabaseQueue {
   }
 
   /**
-   * Claim up to $n items from the current queue. 
+   * Claim up to $n items from the current queue.
    * If queue is empty, return an empty array.
    * @see DatabaseQueue::claimItem
    * @return array $items
@@ -131,7 +152,7 @@ class PushQueue extends DatabaseQueue {
     while (TRUE) {
       try {
         // @TODO: convert items to content entities.
-        // @see \Drupal::entityQuery()          
+        // @see \Drupal::entityQuery()
         $items = $this->connection->queryRange('SELECT * FROM {' . static::TABLE_NAME . '} q WHERE expire = 0 AND name = :name AND failures < :fail_limit ORDER BY created, item_id ASC', 0, $n, array(':name' => $this->name, ':fail_limit' => $this->max_fails))->fetchAllAssoc('item_id');
       }
       catch (\Exception $e) {
@@ -325,11 +346,11 @@ class PushQueue extends DatabaseQueue {
   public function failItem(\Exception $e, \stdClass $item) {
     // For now we only have special handling for EntityNotFoundException.
     // May want to distinguish in the future between network exceptions, etc.
-    $mapping = salesforce_mapping_load($item->name);
+    $mapping = $this->mapping_storage->load($item->name);
 
     if ($e instanceof EntityNotFoundException) {
       // If there was an exception loading any entities, we assume that this queue item is no longer relevant.
-      \Drupal::logger('Salesforce Push')->error($e->getMessage() . 
+      \Drupal::logger('Salesforce Push')->error($e->getMessage() .
         ' Exception while loading entity %type %id for salesforce mapping %mapping. Queue item deleted.',
         [
           '%type' => $mapping->get('drupal_entity_type'),
@@ -399,7 +420,7 @@ class PushQueue extends DatabaseQueue {
     }
     catch (\Exception $e) {
       $this->catchException($e);
-    }    
+    }
   }
 
 }

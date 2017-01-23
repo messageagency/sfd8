@@ -6,6 +6,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce\Exception;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -15,6 +16,7 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
  *   label = @Translation("Salesforce Mapping"),
  *   module = "salesforce_mapping",
  *   handlers = {
+ *     "storage" = "Drupal\salesforce_mapping\SalesforceMappingStorage",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "access" = "Drupal\salesforce_mapping\SalesforceMappingAccessController",
  *     "list_builder" = "Drupal\salesforce_mapping\SalesforceMappingList",
@@ -111,7 +113,12 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   protected $locked = FALSE;
 
   /**
-   * Whether to push asychronously (during dron) or immediately on entity CRUD.
+   * Whether to push asychronous only:
+   *   * If true, disable real-time push.
+   *   * If false (default), attempt real-time push and enqueue failures for
+   *     async push.
+   *
+   * Note this is different behavior compared to D7.
    *
    * @var bool
    */
@@ -280,17 +287,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     // @TODO #fieldMappingField
     $fields = [];
     foreach ($this->field_mappings as $field) {
-      try {
-        $fields[] = $this->fieldManager->createInstance(
-           $field['drupal_field_type'],
-           $field
-         );
-       }
-       catch (PluginNotFoundException $e) {
-         // Don't let a missing plugin kill our mapping.
-         watchdog_exception(__CLASS__, $e);
-         salesforce_set_message(t('Field plugin not found: %message The field will be removed from this mapping.', ['%message' => $e->getMessage()]), 'error');
-       }
+      $fields[] = $this->fieldManager->createInstance(
+         $field['drupal_field_type'],
+         $field
+       );
     }
     return $fields;
   }
@@ -306,7 +306,11 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   public function doesPush() {
-    return $this->checkTriggers([SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE, SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE, SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE]);
+    return $this->checkTriggers([
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
+    ]);
   }
 
   /**

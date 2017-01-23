@@ -13,13 +13,18 @@ use Drupal\salesforce_pull\DeleteHandler;
  * Implements hook_cron().
  */
 function salesforce_pull_cron() {
-  $sfapi = salesforce_get_api();
+  $sfapi = \Drupal::service('salesforce.client');
   if ($sfapi->isAuthorized()) {
     QueueHandler::create(
       $sfapi,
-      salesforce_mapping_load_multiple(),
+      \Drupal::service('entity.manager')
+        ->getStorage('salesforce_mapping')
+        ->loadMultiple(),
       \Drupal::queue('cron_salesforce_pull')
     )->getUpdatedRecords();
-    DeleteHandler::create($sfapi, \Drupal::state())->processDeletedRecords();
+    DeleteHandler::create(
+      $sfapi,
+      \Drupal::service('entity.manager')      
+    )->processDeletedRecords();
   }
 }

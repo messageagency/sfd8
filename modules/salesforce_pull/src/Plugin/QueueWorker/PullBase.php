@@ -16,12 +16,16 @@ use Drupal\salesforce\Exception;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce\LoggingTrait;
-use Drupal\salesforce\LoggingLevels;
+use Psr\Log\LogLevel;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\MappedObjectStorage;
+use Drupal\Core\Entity\EntityManagerInterface;
+
 
 /**
  * Provides base functionality for the Salesforce Pull Queue Workers.
@@ -59,15 +63,36 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   protected $done;
 
   /**
+   * Storage handler for SF mappings
+   *
+   * @var SalesforceMappingStorage
+   */
+  protected $mapping_storage;
+
+  /**
+   * Storage handler for Mapped Objects
+   *
+   * @var MappedObjectStorage
+   */
+  protected $mapped_object_storage;
+
+  protected $entityManager;
+
+  /**
    * Creates a new PullBase object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, EntityManagerInterface $entity_manager) {
     $this->etm = $entity_type_manager;
     $this->client = $client;
     $this->mh = $module_handler;
+
+    $this->entityManager = $entity_manager;
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
+
     $this->done = '';
   }
 
@@ -78,7 +103,8 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     return new static(
       $container->get('entity_type.manager'),
       $container->get('salesforce.client'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('entity.manager')
     );
   }
 
@@ -97,11 +123,12 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     }
 
     try {
-      // loadMappingObjects returns an array, but providing salesforce id and mapping guarantees at most one result.
-      $mapped_object = $this->loadMappingObjects([
+      // loadMappedObjects returns an array, but providing salesforce id and mapping guarantees at most one result.
+      $mapped_object = $this->loadMappedObjects([
         'salesforce_id' => (string)$sf_object->id(),
         'salesforce_mapping' => $mapping->id
       ]);
+      // @TODO one-to-many: this is a blocker for OTM support:
       $mapped_object = current($mapped_object);
       $this->updateEntity($mapping, $mapped_object, $sf_object);
       $this->done = 'update';
@@ -158,7 +185,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           ->setSalesforceRecord($sf_object)
           ->pull();
         $this->log('Salesforce Pull',
-          LoggingLevels::NOTICE,
+          LogLevel::NOTICE,
           'Updated entity %label associated with Salesforce Object ID: %sfid',
           [
             '%label' => $entity->label(),
@@ -170,7 +197,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     catch (\Exception $e) {
       if ($e instanceof EntityNotFoundException) {
         $this->log('Salesforce Pull',
-          LoggingLevels::ERROR,
+          LogLevel::ERROR,
           'Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist. Error: %msg',
           [
             '%sfobjectid' => (string)$sf_object->id(),
@@ -180,7 +207,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       }
       else {
         $this->log('Salesforce Pull',
-          LoggingLevels::ERROR,
+          LogLevel::ERROR,
           'Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
           [
             '%label' => $entity->label(),
@@ -227,8 +254,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $entity->salesforce_pull = TRUE;
 
       // Create mapping object.
-      $mapped_object = $this->etm->getStorage('salesforce_mapped_object')
-        ->create([
+      $mapped_object = new MappedObject([
           'entity_type_id' => $entity_type,
           'salesforce_mapping' => $mapping->id(),
           'salesforce_id' => (string)$sf_object->id(),
@@ -251,7 +277,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
 
       $this->log(
         'Salesforce Pull',
-        LoggingLevels::NOTICE,
+        LogLevel::NOTICE,
         'Created entity %id %label associated with Salesforce Object ID: %sfid',
         [
           '%id' => $entity->id(),
@@ -262,7 +288,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     }
     catch (\Exception $e) {
       $this->log('Salesforce Pull',
-        LoggingLevels::ERROR,
+        LogLevel::ERROR,
         '%msg Pull-create failed for Salesforce Object ID: %sfobjectid',
         [
           '%msg' => $e->getMessage(),
@@ -281,16 +307,16 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   }
 
   /**
-   * Wrapper for salesforce_mapping_load();
+   * Wrapper for salesforce_mapping load();
    */
   protected function loadMapping($id) {
-    return salesforce_mapping_load($id);
+    return $this->mapping_storage->load($id);
   }
 
   /**
    * Wrapper for salesforce_mapped_object_load_multiple();
    */
-  protected function loadMappingObjects(array $properties) {
-    return salesforce_mapped_object_load_multiple($properties);
+  protected function loadMappedObjects(array $properties) {
+    return $this->mapped_object_storage->loadByProperties($properties);
   }
 }

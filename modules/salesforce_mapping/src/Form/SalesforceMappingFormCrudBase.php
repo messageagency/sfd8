@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Form;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Salesforce Mapping Form base.
@@ -18,7 +19,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected $storageController;
 
-  protected $FieldManager;
+  protected $mappingFieldPluginManager;
 
   protected $pushPluginManager;
 
@@ -163,16 +164,17 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     }
 
     $form['queue'] = [
-      '#title' => 'Queue Settings',
+      '#title' => t('Queue Settings'),
       '#type' => 'details',
+      '#description' => t('The asynchronous push queue is always enabled in Drupal 8: real-time push fails are queued for async push. Alternatively, you can choose to disable real-time push and use async-only.'),
       '#open' => TRUE,
       '#tree' => FALSE,
     ];
 
     $form['queue']['async'] = [
-      '#title' => t('Enable queue'),
+      '#title' => t('Disable real-time push'),
       '#type' => 'checkbox',
-      '#description' => t('When enabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD.'),
+      '#description' => t('When real-time push is disabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD, and only enqueue failures for async push.'),
       '#default_value' => $mapping->async,
     ];
 
@@ -182,11 +184,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#options' => array_combine(range(-50,50), range(-50,50)),
       '#description' => t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
       '#default_value' => $mapping->weight,
-      '#states' => [
-        'visible' => [
-          ':input#edit-async' => ['checked' => TRUE],
-        ],
-      ],
     ];
 
     $form['meta'] = [
@@ -303,10 +300,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected function get_salesforce_object_type_options() {
     $sfobject_options = [];
-    // No need to cache here: Salesforce::objects() implements its own caching.
-    $sfapi = salesforce_get_api();
+
     // Note that we're filtering SF object types to a reasonable subset.
-    $sfobjects = $sfapi->objects([
+    $sfobjects = $this->client->objects([
       'updateable' => TRUE,
       'triggerable' => TRUE,
     ]);
@@ -325,12 +321,12 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected function get_sync_trigger_options() {
     return [
-      SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => t('Drupal entity create'),
-      SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => t('Drupal entity update'),
-      SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE => t('Drupal entity delete'),
-      SALESFORCE_MAPPING_SYNC_SF_CREATE => t('Salesforce object create'),
-      SALESFORCE_MAPPING_SYNC_SF_UPDATE => t('Salesforce object update'),
-      SALESFORCE_MAPPING_SYNC_SF_DELETE => t('Salesforce object delete'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => t('Drupal entity create'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => t('Drupal entity update'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE => t('Drupal entity delete'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE => t('Salesforce object create'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE => t('Salesforce object update'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE => t('Salesforce object delete'),
     ];
   }
 

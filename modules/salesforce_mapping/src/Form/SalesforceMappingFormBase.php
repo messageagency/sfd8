@@ -2,7 +2,7 @@
 
 namespace Drupal\salesforce_mapping\Form;
 
-use Drupal\Component\Plugin\PluginManagerInterface;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Rest\RestClient;
@@ -14,16 +14,8 @@ use Drupal\salesforce\Exception;
  */
 abstract class SalesforceMappingFormBase extends EntityForm {
 
-  /**
-   * The storage controller.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageControllerInterface
-   */
-  protected $storageController;
-
-  protected $FieldManager;
-
-  protected $pushPluginManager;
+  protected $mappingFieldPluginManager;
+  protected $client;
 
   /**
    * Constructs a \Drupal\system\ConfigFormBase object.
@@ -35,8 +27,8 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *
    * @throws RuntimeException
    */
-  public function __construct(PluginManagerInterface $FieldManager, RestClient $client) {
-    $this->FieldManager = $FieldManager;
+  public function __construct(SalesforceMappingFieldPluginManager $mappingFieldPluginManager, RestClient $client) {
+    $this->mappingFieldPluginManager = $mappingFieldPluginManager;
     $this->client = $client;
   }
 
