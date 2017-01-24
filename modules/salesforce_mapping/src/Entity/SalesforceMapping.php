@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce\Exception;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\Core\Entity\EntityStorageInterface;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -173,7 +174,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     // Entities don't support Dependency Injection, so we have to build a hard
     // dependency on the container here.
     // @TODO figure out a better way to do this.
-    $this->fieldManager = \Drupal::service('plugin.manager.salesforce_mapping_field');
+    //$this->fieldManager = \Drupal::service('plugin.manager.salesforce_mapping_field');
   }
 
   /**
@@ -326,4 +327,18 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     return FALSE;
   }
 
+  protected function setFieldManager() {
+    $this->fieldManager = \Drupal::service('plugin.manager.salesforce_mapping_field');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function postLoad(EntityStorageInterface $storage, array &$entities) {
+    parent::postLoad($storage, $entities);
+    // get that field manager in there
+    foreach($entities as $entity) {
+      $entity->setFieldManager();
+    }
+  }
 }
