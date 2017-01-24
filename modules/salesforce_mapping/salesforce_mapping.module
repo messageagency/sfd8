@@ -102,6 +102,7 @@ function salesforce_mapping_entity_extra_field_info() {
   try {
     $mappings = \Drupal::service('entity.manager')
       ->getStorage('salesforce_mapping')
+      ->throwExceptions()
       ->loadMultiple();
   }
   catch (EntityNotFoundException $e) {
@@ -136,6 +137,7 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
   try {
     \Drupal::service('entity.manager')
       ->getStorage('salesforce_mapping')
+      ->throwExceptions()
       ->loadByDrupal($entity->getEntityTypeId());
   }
   catch (EntityNotFoundException $e) {
@@ -146,6 +148,7 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
   try {
     $mapped_objects = \Drupal::service('entity.manager')
       ->getStorage('salesforce_mapped_object')
+      ->throwExceptions()
       ->loadByDrupal($entity->getEntityTypeId(), $entity->id());
   }
   catch (EntityNotFoundException $e) {
