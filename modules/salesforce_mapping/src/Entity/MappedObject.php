@@ -56,9 +56,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   protected $sf_object = NULL;
   protected $drupal_entity = NULL;
 
-  // Drupal\salesforce\RestClient
-  protected $client;
-
   /**
    * Overrides ContentEntityBase::__construct().
    */
@@ -71,7 +68,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       }
     }
     parent::__construct($values, 'salesforce_mapped_object');
-    $this->client = \Drupal::service('salesforce.client');
   }
 
   /**
@@ -233,11 +229,18 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
+   * Wrapper for salesforce.client Drupal\salesforce\Rest\RestClient service
+   */
+  public function client() {
+    return \Drupal::service('salesforce.client');
+  }
+
+  /**
    * @return string
    */
   public function getSalesforceUrl() {
     // @TODO dependency injection here:
-    return $this->client->getInstanceUrl() . '/' . $this->salesforce_id->value;
+    return $this->client()->getInstanceUrl() . '/' . $this->salesforce_id->value;
   }
 
   /**
@@ -276,7 +279,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $action = '';
     if ($mapping->hasKey()) {
       $action = 'upsert';
-      $result = $this->client->objectUpsert(
+      $result = $this->client()->objectUpsert(
         $mapping->getSalesforceObjectType(),
         $mapping->getKeyField(),
         $mapping->getKeyValue($drupal_entity),
@@ -285,7 +288,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     }
     elseif ($this->sfid()) {
       $action = 'update';
-      $this->client->objectUpdate(
+      $this->client()->objectUpdate(
         $mapping->getSalesforceObjectType(),
         $this->sfid(),
         $params->getParams()
@@ -293,7 +296,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     }
     else {
       $action = 'create';
-      $result = $this->client->objectCreate(
+      $result = $this->client()->objectCreate(
         $mapping->getSalesforceObjectType(),
         $params->getParams()
       );
@@ -329,7 +332,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public function pushDelete() {
     $mapping = $this->salesforce_mapping->entity;
-    $this->client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
+    $this->client()->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
     $this->setNewRevision(TRUE);
     $this
       ->set('last_sync_action', 'push_delete')
@@ -365,13 +368,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // If the pull isn't coming from a cron job.
     if ($this->sf_object == NULL) {
       if ($this->sfid()) {
-        $this->sf_object = $this->client->objectRead(
+        $this->sf_object = $this->client()->objectRead(
           $mapping->getSalesforceObjectType(),
           $this->sfid()
         );
       }
       elseif ($mapping->hasKey()) {
-        $this->sf_object = $this->client->objectReadbyExternalId(
+        $this->sf_object = $this->client()->objectReadbyExternalId(
           $mapping->getSalesforceObjectType(),
           $mapping->getKeyField(),
           $mapping->getKeyValue($this->drupal_entity)
