@@ -4,36 +4,39 @@ namespace Drupal\salesforce_mapping;
 
 use Symfony\Component\EventDispatcher\Event;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
-
+  
 /**
  *
  */
-class SalesforcePushEvent extends Event {
+class SalesforcePullEvent extends Event {
 
-  protected $params;
-  protected $mapping;
+  protected $entity_value;
+  protected $field_plugin;
   protected $mapped_object;
+  protected $mapping;
   protected $entity;
-  protected $op;
 
   /**
-   * {@inheritdoc}
+   * undocumented function
    *
+   * @param mixed &$value
+   * @param SalesforceMappingFieldPluginInterface $field_plugin 
    * @param MappedObjectInterface $mapped_object 
-   * @param PushParams $params 
-   * @param string $op
-   *   One of 
-   *     Drupal\salesforce_mapping\MappingConstants::
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
    */
-  public function __construct(MappedObjectInterface $mapped_object = NULL, PushParams $params = NULL, $op = NULL) {
+  public function __construct(&$value, SalesforceMappingFieldPluginInterface $field_plugin, MappedObjectInterface $mapped_object) {
+    $this->entity_value = $value;
+    $this->field_plugin = $field_plugin;
     $this->mapped_object = $mapped_object;
-    $this->params = $params;
-    $this->entity = $params->getDrupalEntity();
-    $this->mapping = $params->getMapping();
-    $this->op = $op;
+    $this->entity = $mapped_object->getMappedEntity();
+    $this->mapping = $mapped_object->salesforce_mapping->entity;
+  }
+
+  public function getEntityValue() {
+    return $this->entity_value;
+  }
+
+  public function getFieldPlugin() {
+    return $this->field_plugin;
   }
 
   /**
@@ -55,13 +58,6 @@ class SalesforcePushEvent extends Event {
    */
   public function getMappedObject() {
     return $this->mapped_object;
-  }
-
-  /**
-   * @return PushParams
-   */
-  public function getParams() {
-    return $this->params;
   }
 
   public function getOp() {

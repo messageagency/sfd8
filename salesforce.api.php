@@ -9,100 +9,96 @@
  */
 
 /**
- * Alter parameters mapped to a Salesforce object before syncing to Salesforce.
- *
- * @param array $params
- *   Associative array of key value pairs.
- * @param object $mapping
- *   Salesforce mapping object.
- * @param object $entity_wrapper
- *   EntityMetadataWrapper of entity being mapped.
+ * @defgroup salesforce_deprecated
+ * Hooks deprecated between 7.x and 8.x with pointers to new solutions.
+ * See salesforce_example for further explanation.
+ * @{
  */
-function hook_salesforce_push_params_alter(&$params, $mapping, $entity_wrapper) {
-
-}
 
 /**
- * Prevent push to SF for an entity.
- *
- * @param EntityInterface $entity 
- *   The type of entity the push is for.
- * @param SalesforceMappingInterface $mapping 
- *   The mapping being used for this push.
- * @param string $operation
- *   Constant for the Drupal operation that triggered the sync. 
- *   One of:
- *     MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
- *     MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
- *     MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
- *
- * @return bool
- *   FALSE if the entity should not be synced to Salesforce for the
- *   $sf_sync_trigger operation.
+ * Use the SalesforceMappinfField plugin system.
+ * @see Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Properties
  */
-function hook_salesforce_push_entity_allowed(EntityInterface $entity, SalesforceMappingInterface $mapping, $operation) {
-
-}
+function hook_salesforce_mapping_fieldmap_type() {}
 
 /**
- * Alter the value being mapped to an entity property from a Salesforce object.
- *
- * @param string $value
- *   Salesforce field value.
- * @param array $field_map
- *   Associative array containing the field mapping in the form
- *   <code>
- *   'fieldmap_name' => array(
- *      'drupal_field' => array(
- *        'fieldmap_type' => 'property',
- *        'fieldmap_value' => 'first_name'
- *      ),
- *      'salesforce_field' => array()
- *   )
- *   </code>.
- * @param object $sf_object
- *   Fully loaded Salesforce object.
+ * Use a Plugin API alter.
+ * @see https://api.drupal.org/api/drupal/core%21core.api.php/group/plugin_api/8.2.x
  */
-function hook_salesforce_pull_entity_value_alter(&$value, $field_map, $sf_object) {
-
-}
+function hook_salesforce_mapping_fieldmap_type_alter() {}
 
 /**
- * Alter a SOQL select query before it is executed.
- *
- * @param SalesforceSelectQuery $query
- *   The query object to alter.
+ * Implement an EventSubscriber on
+ * Drupal\salesforce\SalesforceEvents::PULL_QUERY
  */
-function hook_salesforce_query_alter(SalesforceSelectQuery &$query) {
-
-}
+function hook_salesforce_pull_select_query_alter() {}
 
 /**
- * Alter pull data before creating or updating Entity and Mapped Object.
- * Implementations should throw an Exception to halt processing of this record.
- *
- * When a Mapped Object exists and a Drupal entity is being updated,
- * $sf_record[$mapping->pull_trigger_date] is compared to entity->updated date:
- * if the Drupal entity was updated more recently than the Salesforce record,
- * the pull is ignored. To force a pull in this case, set the value
- * $sf_record["__salesforce_force_pull"] to TRUE.
- *
- * When a Mapped Object does not exist, a Drupal entity will be created. To
- * match an existing entity instead, implement this hook and replace $entity,
- * and set mapped_object->entity_id accordingly.
- * 
- * @param SObject $sf_record
- *   The data from SF about to be mapped to an entity and saved.
- * @param MappedObjectInterface $mapped_object
- *   The mapped object being created or updated. @see ::isNew()
- * @param EntityInterface $entity
- *   The entity being created or updated.
- *
+ * Implement an EventSubscriber on
+ * Drupal\salesforce\SalesforceEvents::PULL_PREPULL
  */
-function hook_salesforce_pull_pre_pull_alter(SObject $sf_record, MappedObjectInterface $mapped_object, EntityInterface $entity) {
-
-}
+function hook_salesforce_pull_mapping_object_alter() {}
 
 /**
- * @} salesforce_hooks
+ * Implement an EventSubscriber on
+ * Drupal\salesforce\SalesforceEvents::PULL_ENTITY_VALUE
  */
+function hook_salesforce_pull_entity_value_alter()
+
+/**
+ * Implement an EventSubscriber on
+ * Drupal\salesforce\SalesforceEvents::PULL_PRESAVE
+ */
+function hook_salesforce_pull_entity_presave() {}
+
+/**
+ * Use hook_entity_update or hook_mapped_object_insert
+ */
+function hook_salesforce_pull_entity_insert() {}
+
+/**
+ * Use hook_entity_update or hook_mapped_object_update
+ */
+function hook_salesforce_pull_entity_update() {}
+
+/**
+ * Implement an EventSubscriber on
+ * Drupal\salesforce\SalesforceEvents::PUSH_ALLOWED
+ * Throw an exception to indicate that push is not allowed
+ */
+function hook_salesforce_push_entity_allowed() {}
+
+/**
+ * Implement an EventSubscriber on
+ * Drupal\salesforce\SalesforceEvents::PUSH_MAPPING_OBJECT
+ */
+function hook_salesforce_push_mapping_object_alter() {}
+
+/**
+ * Implement an EventSubscriber on
+ * Drupal\salesforce\SalesforceEvents::PUSH_PARAMS
+ */
+function hook_salesforce_push_params_alter() {}
+
+/**
+ * Implement an EventSubscriber on
+ * Drupal\salesforce\SalesforceEvents::PUSH_SUCCESS
+ */
+function hook_salesforce_push_success() {}
+
+/**
+ * Implement an EventSubscriber on
+ * Drupal\salesforce\SalesforceEvents::PUSH_FAIL
+ */
+function hook_salesforce_push_fail() {}
+
+/**
+ * No replacement. Entities must implement proper URIs to take advantage of
+ * Salesforce mapping dynamic routing.
+ */
+function hook_salesforce_mapping_entity_uris_alter() {}
+
+/**
+ * @} salesforce_deprecated
+ */
+

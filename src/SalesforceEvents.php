@@ -5,9 +5,20 @@ namespace Drupal\salesforce;
 /**
  * Defines events for Salesforce.
  *
- * @see \Drupal\salesforce\SalesforceEvent
+ * @see \Drupal\salesforce\SalesforceEvents
  */
 final class SalesforceEvents {
+
+
+  /**
+   * Previously hook_salesforce_push_mapping_object_alter
+   */
+  const PUSH_MAPPING_OBJECT = 'salesforce.push_mapping_object';
+
+  /**
+   * Previously hook_salesforce_push_entity_allowed
+   */
+  const PUSH_ALLOWED = 'salesforce.push_allowed';
 
   /**
    * Name of the event fired when building params to push to Salesforce.
@@ -24,11 +35,6 @@ final class SalesforceEvents {
   const PUSH_PARAMS = 'salesforce.push_params';
 
   /**
-   * Hook_salesforce_push_entity_allowed.
-   */
-  const PUSH_CRUD_ALLOWED = 'salesforce.push_crud.allowed';
-
-  /**
     * Hook_salesforce_push_success.
     */
   const PUSH_SUCCESS = 'salesforce.push_success';
@@ -39,18 +45,29 @@ final class SalesforceEvents {
   const PUSH_FAIL = 'salesforce.push_fail';
 
   /**
-   * Hook_salesforce_pull_entity_presave.
+   * Previously hook_salesforce_pull_select_query_alter
+   */
+  const PULL_QUERY = 'salesforce.pull_query';
+
+  /**
+   * Previously hook_salesforce_pull_entity_value_alter
+   */
+  const PULL_ENTITY_VALUE = 'salesforce.pull_entity_value';
+
+  /**
+   * Previously hook_salesforce_pull_mapping_object_alter.
+   * Invoked prior to mapping entity fields for a pull. Can be used, for
+   * example, to alter SF object retrieved from Salesforce or to assign a
+   * different Drupal entity.
+   */
+  const PULL_PREPULL = 'salesforce.pull_prepull';
+
+  /**
+   * Previously hook_salesforce_pull_entity_presave.
+   * Invoked immediately prior to saving the pulled Drupal entity, after all
+   * fields have been mapped and values assigned. Can be used, for example, to 
+   * override mapping fields or implement data transformations.
    */
   const PULL_PRESAVE = 'salesforce.pull_presave';
-
-  /**
-   * Hook_salesforce_pull_entity_insert.
-   */
-  const PULL_INSERT = 'salesforce.pull_insert';
-
-  /**
-   * Hook_salesforce_pull_entity_update.
-   */
-  const PULL_UPDATE = 'salesforce.pull_update';
 
 }

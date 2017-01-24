@@ -20,7 +20,8 @@ function salesforce_pull_cron() {
       \Drupal::service('entity.manager')
         ->getStorage('salesforce_mapping')
         ->loadMultiple(),
-      \Drupal::queue('cron_salesforce_pull')
+      \Drupal::queue('cron_salesforce_pull'),
+      \Drupal::service('event_dispatcher')
     )->getUpdatedRecords();
     DeleteHandler::create(
       $sfapi,

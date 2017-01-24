@@ -14,6 +14,8 @@ use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use GuzzleHttp\Exception\RequestException;
 use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce_mapping\SalesforcePushEvent;
 
 /**
  * Implements hook_entity_insert().
@@ -68,7 +70,13 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
   }
 
   foreach ($mappings as $mapping) {
-    salesforce_push_entity_crud_mapping($entity, $op, $mapping);
+    try {
+      salesforce_push_entity_crud_mapping($entity, $op, $mapping);
+    }
+    catch (\Exception $e) {
+      // Do not allow any exception to prevent entity CRUD.
+      watchdog_exception('Salesforce Push', $e);
+    }
   }
 }
 
@@ -83,12 +91,14 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
 function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
   $mapped_objects = [];
   $mapped_object = FALSE;
-  // @TODO decide whether this hook is worth moving to Events framework, and how. Should subscribers throw an exception to prevent entity sync? Return false, like so? Something else entirely?
-  foreach (\Drupal::moduleHandler()->invokeAll('salesforce_push_entity_allowed', array($entity, $mapping, $op)) as $value) {
-    if ($value === FALSE) {
-      return;
-    }
-  }
+  // Implementations of hook_salesforce_push_entity_allowed should throw an
+  // exception to prevent push.
+  \Drupal::moduleHandler()->invokeAll('salesforce_push_entity_allowed', array($entity, $mapping, $op));
+  \Drupal::service('event_dispatcher')->dispatch(
+    SalesforceEvents::PUSH_ALLOWED,
+    new SalesforcePushEvent($mapped_object, NULL, $op)
+  );
+
 
   // Look for existing mapped object or create a new one (except for deletes).
   $props = [
@@ -131,6 +141,11 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
 
   // Attempt real-time push. Enqueue async push on failure.
   try {
+    \Drupal::service('event_dispatcher')->dispatch(
+      SalesforceEvents::PUSH_MAPPING_OBJECT,
+      new SalesforcePushEvent($mapped_object, NULL, $op)
+    );
+
     // If this is a delete, destroy the SF object.
     if ($op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
       $mapped_object->pushDelete();
@@ -146,7 +161,12 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       ->deleteItemByEntity($entity);
   }
   catch (\Exception $e) {
-    // Don't let any exception interfere with drupal CRUD operations
+
+    \Drupal::service('event_dispatcher')->dispatch(
+      SalesforceEvents::PUSH_FAIL,
+      new SalesforcePushEvent($mapped_object, NULL, $op)
+    );
+
     watchdog_exception('Salesforce Push', $e);
     try {
       salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
@@ -155,17 +175,12 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       watchdog_exception('Salesforce Push', $e);
     }
 
-    try {
-      $mapped_object
-        ->set('last_sync_action', $op)
-        ->set('last_sync_status', FALSE)
-        ->set('revision_log_message', $e->getMessage())
-        ->save();
-    }
-    catch (\Exception $e) {
-      watchdog_exception('Salesforce Push', $e);
-    }
-  }  
+    $mapped_object
+      ->set('last_sync_action', $op)
+      ->set('last_sync_status', FALSE)
+      ->set('revision_log_message', $e->getMessage())
+      ->save();
+  }
 }
 
 /**

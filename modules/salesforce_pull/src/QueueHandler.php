@@ -11,6 +11,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\LoggingTrait;
 use Psr\Log\LogLevel;
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 
 /**
  * Handles pull cron queue set up.
@@ -26,10 +27,12 @@ class QueueHandler {
   protected $queue;
   protected $mappings;
   protected $pull_fields;
+  protected $event_dispatcher;
 
-  protected function __construct(RestClient $sfapi, array $mappings, QueueInterface $queue) {
+  protected function __construct(RestClient $sfapi, array $mappings, QueueInterface $queue, ContainerAwareEventDispatcher $event_dispatcher) {
     $this->sfapi = $sfapi;
     $this->queue = $queue;
+    $this->event_dispatcher = $event_dispatcher;
     $this->mappings = $mappings;
     $this->pull_fields = [];
     $this->organizeMappings();
@@ -45,8 +48,8 @@ class QueueHandler {
    *
    * @return QueueHandler
    */
-  public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue) {
-    return new QueueHandler($sfapi, $mappings, $queue);
+  public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue, ContainerAwareEventDispatcher $event_dispatcher) {
+    return new QueueHandler($sfapi, $mappings, $queue, $event_dispatcher);
   }
 
   /**
@@ -130,6 +133,10 @@ class QueueHandler {
 
     // Execute query.
     try {
+      $this->event_dispatcher->dispatch(
+        SalesforceEvents::PULL_QUERY,
+        new SalesforceQueryEvent($mapping, $soql)
+      );
       return $this->sfapi->query($soql);
     }
     catch (\Exception $e) {
@@ -171,6 +178,7 @@ class QueueHandler {
   protected function insertIntoQueue(SalesforceMappingInterface $mapping, array $records) {
     try {
       foreach ($records as $record) {
+        Pull Queue Enqueue Event
         $this->queue->createItem(new PullQueueItem($record, $mapping));
       }
     }
