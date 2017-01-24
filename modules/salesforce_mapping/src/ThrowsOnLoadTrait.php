@@ -9,6 +9,18 @@ use Drupal\salesforce\EntityNotFoundException;
  */
 trait ThrowsOnLoadTrait {
 
+  protected $throwExceptions = FALSE;
+
+  public function throwExceptions() {
+    $this->throwExceptions = TRUE;
+    return $this;
+  }
+
+  public function supressExceptions() {
+    $this->throwExceptions = FALSE;
+    return $this;
+  }
+
   /**
    * Returns entities for given ids or throws exception.
    *
@@ -26,7 +38,12 @@ trait ThrowsOnLoadTrait {
   public function loadMultiple(array $ids = NULL) {
     $mappings = parent::loadMultiple($ids);
     if (empty($mappings)) {
-      throw new EntityNotFoundException($ids, $this->getEntityTypeId());
+      if ($this->throwExceptions) {
+        throw new EntityNotFoundException($ids, $this->getEntityTypeId());
+      }
+      else {
+        return [];
+      }
     }
     return $mappings;
   }
@@ -48,7 +65,12 @@ trait ThrowsOnLoadTrait {
   public function loadByProperties(array $properties = []) {
     $mappings = parent::loadByProperties($properties);
     if (empty($mappings)) {
-      throw new EntityNotFoundException($properties, $this->getEntityTypeId());
+      if ($this->throwExceptions) {
+        throw new EntityNotFoundException($properties, $this->getEntityTypeId());
+      }
+      else {
+        return [];
+      }
     }
     return $mappings;    
   }

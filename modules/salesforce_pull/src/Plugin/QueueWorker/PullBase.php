@@ -90,8 +90,8 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     $this->mh = $module_handler;
 
     $this->entityManager = $entity_manager;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object')->throwExceptions();
 
     $this->done = '';
   }

@@ -28,8 +28,8 @@ class DeleteHandler {
   private function __construct(RestClient $sfapi, EntityManagerInterface $entity_manager) {
     $this->sfapi = $sfapi;
     $this->entity_manager = $entity_manager;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object')->throwExceptions();
   }
 
   /**

@@ -65,8 +65,8 @@ class PushQueue extends DatabaseQueue {
     $this->state = $state;
     $this->queueManager = $queue_manager;
     $this->entity_manager = $entity_manager;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object')->throwExceptions();
 
     $this->limit = $state->get('salesforce.push_limit', static::DEFAULT_CRON_PUSH_LIMIT);
 
