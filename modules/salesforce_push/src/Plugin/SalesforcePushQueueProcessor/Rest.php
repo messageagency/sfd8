@@ -39,7 +39,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    *
    * @var MappedObjectStorage
    */
-  protected $mapped_object_storage
+  protected $mapped_object_storage;
 
   public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClient $client, EntityManagerInterface $entity_manager) {
     $this->queue = $queue;
@@ -93,8 +93,8 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
         'entity_type_id' => $mapping->drupal_entity_type,
         'salesforce_mapping' => $mapping->id(),
       ]);
-    } 
-   
+    }
+
     // @TODO: the following is nearly identical to the end of salesforce_push_entity_crud(). Can we DRY it? Do we care?
     try {
       // If this is a delete, destroy the SF object and we're done.

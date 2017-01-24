@@ -27,7 +27,7 @@ function salesforce_pull_cron() {
       $sfapi,
       \Drupal::service('entity_type.manager'),
       \Drupal::state(),
-      \Drupal::logger()
+      \Drupal::logger('Salesforce Pull')
     )->processDeletedRecords();
   }
 }
