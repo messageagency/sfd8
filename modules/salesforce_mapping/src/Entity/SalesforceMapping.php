@@ -7,7 +7,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce\Exception;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\Core\Entity\EntityStorageInterface;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
