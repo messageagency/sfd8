@@ -17,12 +17,12 @@ class SalesforceQueryEvent extends Event {
   /**
    * {@inheritdoc}
    *
-   * @param MappedObjectInterface $mapped_object 
+   * @param MappedObjectInterface $mapped_object
 
    */
   public function __construct(SalesforceMappingInterface $mapping, SelectQuery $query) {
     $this->mapping = $mapping;
-    $this->query = $query
+    $this->query = $query;
   }
 
   /**
