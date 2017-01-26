@@ -83,14 +83,14 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
 /**
  * Helper method for salesforce_push_entity_crud()
  *
- * @param EntityInterface $entity 
- * @param string $op 
- * @param SalesforceMappingInterface $mapping 
+ * @param EntityInterface $entity
+ * @param string $op
+ * @param SalesforceMappingInterface $mapping
  * @return void
  */
 function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
   $mapped_objects = [];
-  $mapped_object = FALSE;
+  $mapped_object = null;
   // Implementations of hook_salesforce_push_entity_allowed should throw an
   // exception to prevent push.
   \Drupal::moduleHandler()->invokeAll('salesforce_push_entity_allowed', array($entity, $mapping, $op));
@@ -112,7 +112,7 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       ->getStorage('salesforce_mapped_object')
       ->throwExceptions()
       ->loadByProperties($props);
-    // There should really only be one in this case, since we're loading on a 
+    // There should really only be one in this case, since we're loading on a
     // multi-field unique key, but loadByProperties returns an array.
     $mapped_object = current($mapped_objects);
   }
