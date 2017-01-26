@@ -106,7 +106,7 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
     'entity_type_id' => $entity->getEntityTypeId(),
     'salesforce_mapping' => $mapping->id(),
   ];
-  $mapped_object = FALSE;
+
   try {
     $mapped_objects = \Drupal::service('entity.manager')
       ->getStorage('salesforce_mapped_object')
