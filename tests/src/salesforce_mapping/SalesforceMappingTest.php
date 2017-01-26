@@ -83,26 +83,6 @@ class SalesforceMappingTest extends UnitTestCase {
     $prophecy->getDefinition($this->entityTypeId)->willReturn($this->entityDefinition);
     $this->etm = $prophecy->reveal();
 
-    //$this->uuid = $this->getMock('\Drupal\Component\Uuid\UuidInterface');
-    /*
-    $this->languageManager = $this->getMock('\Drupal\Core\Language\LanguageManagerInterface');
-    $this->languageManager->expects($this->any())
-      ->method('getLanguage')
-      ->with('en')
-      ->will($this->returnValue(new Language(array('id' => 'en'))));
-
-    $this->cacheTagsInvalidator = $this->getMock('Drupal\Core\Cache\CacheTagsInvalidatorInterface');
-
-    $this->typedConfigManager = $this->getMock('Drupal\Core\Config\TypedConfigManagerInterface');
-
-    $container = new ContainerBuilder();
-    $container->set('entity.manager', $this->entityManager);
-    $container->set('uuid', $this->uuid);
-    $container->set('language_manager', $this->languageManager);
-    $container->set('cache_tags.invalidator', $this->cacheTagsInvalidator);
-    $container->set('config.typed', $this->typedConfigManager);
-    \Drupal::setContainer($container);
-    */
     // moch Properties SalesforceMappingField
     $prophecy = $this->prophesize(Properties::CLASS);
     $prophecy->pull()->willReturn(true);
