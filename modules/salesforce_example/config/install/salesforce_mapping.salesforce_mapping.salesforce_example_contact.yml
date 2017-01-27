@@ -1,0 +1,36 @@
+id: salesforce_example_contact
+langcode: en
+dependencies:
+  module:
+    - user
+label: 'Salesforce Example Contact'
+type: salesforce_mapping
+key: ''
+async: false
+pull_trigger_date: LastModifiedDate
+sync_triggers:
+  push_create: true
+  push_update: true
+  push_delete: true
+  pull_create: true
+  pull_update: true
+  pull_delete: true
+salesforce_object_type: Contact
+drupal_entity_type: user
+drupal_bundle: user
+field_mappings:
+  -
+    drupal_field_type: properties
+    drupal_field_value: mail
+    salesforce_field: Email
+    direction: sync
+  -
+    drupal_field_type: properties
+    drupal_field_value: name
+    salesforce_field: LastName
+    direction: sync
+  -
+    drupal_field_type: Constant
+    drupal_field_value: Drupal
+    salesforce_field: LeadSource
+    direction: drupal_sf

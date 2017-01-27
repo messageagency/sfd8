@@ -1,0 +1,9 @@
+name: Salesforce Example
+type: module
+description: Salesforce Examples
+core: 8.x
+package: Salesforce
+dependencies:
+  - salesforce
+  - salesforce_push
+  - salesforce_mapping

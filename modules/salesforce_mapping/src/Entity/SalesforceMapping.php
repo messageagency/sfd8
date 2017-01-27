@@ -168,17 +168,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $values = [], $entity_type) {
-    parent::__construct($values, $entity_type);
-    // Entities don't support Dependency Injection, so we have to build a hard
-    // dependency on the container here.
-    // @TODO figure out a better way to do this.
-    $this->fieldManager = \Drupal::service('plugin.manager.salesforce_mapping_field');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function __get($key) {
     return $this->$key;
   }
@@ -287,7 +276,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     // @TODO #fieldMappingField
     $fields = [];
     foreach ($this->field_mappings as $field) {
-      $fields[] = $this->fieldManager->createInstance(
+      $fields[] = $this->fieldManager()->createInstance(
          $field['drupal_field_type'],
          $field
        );
@@ -299,7 +288,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * @return SalesforceMappingFieldPluginInterface
    */
   public function getFieldMapping(array $field) {
-    return $this->fieldManager->createInstance(
+    return $this->fieldManager()->createInstance(
       $field['drupal_field_type'],
       $field['config']
     );
@@ -324,6 +313,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
       }
     }
     return FALSE;
+  }
+
+  protected function fieldManager() {
+    return \Drupal::service('plugin.manager.salesforce_mapping_field');
   }
 
 }
