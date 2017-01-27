@@ -4,11 +4,11 @@ namespace Drupal\salesforce_mapping;
 
 use Symfony\Component\EventDispatcher\Event;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
-  
+
 /**
  *
  */
-class SalesforcePullEvent extends Event {
+class SalesforcePullEntityValueEvent extends Event {
 
   protected $entity_value;
   protected $field_plugin;
@@ -20,8 +20,8 @@ class SalesforcePullEvent extends Event {
    * undocumented function
    *
    * @param mixed &$value
-   * @param SalesforceMappingFieldPluginInterface $field_plugin 
-   * @param MappedObjectInterface $mapped_object 
+   * @param SalesforceMappingFieldPluginInterface $field_plugin
+   * @param MappedObjectInterface $mapped_object
    */
   public function __construct(&$value, SalesforceMappingFieldPluginInterface $field_plugin, MappedObjectInterface $mapped_object) {
     $this->entity_value = $value;

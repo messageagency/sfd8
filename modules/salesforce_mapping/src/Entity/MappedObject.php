@@ -4,18 +4,19 @@ namespace Drupal\salesforce_mapping\Entity;
 
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\PushParams;
+use Drupal\salesforce_mapping\SalesforcePullEntityValueEvent;
+use Drupal\salesforce_mapping\SalesforcePullEvent;
+use Drupal\salesforce_mapping\SalesforcePushEvent;
+use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\SalesforcePushEvent;
-use Drupal\salesforce_mapping\SalesforcePullEvent;
-use Drupal\salesforce_mapping\PushParams;
-use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
@@ -437,7 +438,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         ? MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
         : MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
     );
-  
+
     $this->drupal_entity->save();
 
     // Update mapping object.
@@ -453,4 +454,3 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
 }
-
