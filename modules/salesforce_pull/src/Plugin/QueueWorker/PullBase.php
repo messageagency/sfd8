@@ -7,25 +7,26 @@
 
 namespace Drupal\salesforce_pull\Plugin\QueueWorker;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce\Exception;
-use Drupal\salesforce\EntityNotFoundException;
-use Drupal\salesforce\SObject;
-use Drupal\salesforce\LoggingTrait;
-use Psr\Log\LogLevel;
-use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
-use Drupal\salesforce_mapping\PushParams;
-use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappedObjectStorage;
-use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
+use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\PushParams;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\SalesforcePullEvent;
+use Drupal\salesforce\EntityNotFoundException;
+use Drupal\salesforce\Exception;
+use Drupal\salesforce\LoggingTrait;
+use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce\SObject;
+use Psr\Log\LogLevel;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides base functionality for the Salesforce Pull Queue Workers.
@@ -85,17 +86,13 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, EntityManagerInterface $entity_manager, ContainerAwareEventDispatcher $event_dispatcher) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, ContainerAwareEventDispatcher $event_dispatcher) {
     $this->etm = $entity_type_manager;
     $this->client = $client;
     $this->mh = $module_handler;
-
-    $this->entityManager = $entity_manager;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object')->throwExceptions();
-
+    $this->mapping_storage = $this->etm->getStorage('salesforce_mapping')->throwExceptions();
+    $this->mapped_object_storage = $this->etm->getStorage('salesforce_mapped_object')->throwExceptions();
     $this->event_dispatcher = $event_dispatcher;
-
     $this->done = '';
   }
 
@@ -107,7 +104,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $container->get('entity_type.manager'),
       $container->get('salesforce.client'),
       $container->get('module_handler'),
-      $container->get('entity.manager'),
       $container->get('event_dispatcher')
     );
   }
