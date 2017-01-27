@@ -19,10 +19,10 @@ class SalesforcePushEvent extends Event {
   /**
    * {@inheritdoc}
    *
-   * @param MappedObjectInterface $mapped_object 
-   * @param PushParams $params 
+   * @param MappedObjectInterface $mapped_object
+   * @param PushParams $params
    * @param string $op
-   *   One of 
+   *   One of
    *     Drupal\salesforce_mapping\MappingConstants::
    *       SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
    *       SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
@@ -31,7 +31,7 @@ class SalesforcePushEvent extends Event {
   public function __construct(MappedObjectInterface $mapped_object = NULL, PushParams $params = NULL, $op = NULL) {
     $this->mapped_object = $mapped_object;
     $this->params = $params;
-    $this->entity = $params->getDrupalEntity();
+    $this->entity = ($params) ? $params->getDrupalEntity(): null;
     $this->mapping = $params->getMapping();
     $this->op = $op;
   }
