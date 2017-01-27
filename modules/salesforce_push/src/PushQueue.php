@@ -70,7 +70,7 @@ class PushQueue extends DatabaseQueue {
 
     $this->limit = $state->get('salesforce.push_limit', static::DEFAULT_CRON_PUSH_LIMIT);
 
-    $this->max_fails = \Drupal::state()->get('salesforce.push_queue_max_fails', static::DEFAULT_MAX_FAILS);
+    $this->max_fails = $state->get('salesforce.push_queue_max_fails', static::DEFAULT_MAX_FAILS);
   }
 
   /**

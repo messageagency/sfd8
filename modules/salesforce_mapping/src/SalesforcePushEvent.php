@@ -31,8 +31,8 @@ class SalesforcePushEvent extends Event {
   public function __construct(MappedObjectInterface $mapped_object = NULL, PushParams $params = NULL, $op = NULL) {
     $this->mapped_object = $mapped_object;
     $this->params = $params;
-    $this->entity = ($params) ? $params->getDrupalEntity(): null;
-    $this->mapping = $params->getMapping();
+    $this->entity = ($params) ? $params->getDrupalEntity() : null;
+    $this->mapping = ($params) ? $params->getMapping() : null;
     $this->op = $op;
   }
 
