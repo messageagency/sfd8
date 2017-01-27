@@ -9,28 +9,27 @@ namespace Drupal\salesforce_pull\Plugin\QueueWorker;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce\Exception;
-use Drupal\salesforce\EntityNotFoundException;
-use Drupal\salesforce\SObject;
-use Drupal\salesforce\LoggingTrait;
-use Psr\Log\LogLevel;
-use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
-use Drupal\salesforce_mapping\PushParams;
-use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappedObjectStorage;
+use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\PushParams;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce\EntityNotFoundException;
+use Drupal\salesforce\Exception;
+use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SObject;
+use Psr\Log\LogLevel;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides base functionality for the Salesforce Pull Queue Workers.
  */
 abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPluginInterface {
-
-  use LoggingTrait;
 
   /**
    * The entity type manager
@@ -75,16 +74,23 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   protected $mapped_object_storage;
 
   /**
+   * Logger ervice
+   *
+   * @var LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * Creates a new PullBase object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, LoggerChannelFactoryInterface $logger_factory) {
     $this->etm = $entity_type_manager;
     $this->client = $client;
     $this->mh = $module_handler;
-
+    $this->logger = $logger_factory->get('Salesforce Pull');
     $this->mapping_storage = $this->etm->getStorage('salesforce_mapping');
     $this->mapped_object_storage = $this->etm->getStorage('salesforce_mapped_object');
     $this->done = '';
@@ -97,7 +103,8 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     return new static(
       $container->get('entity_type.manager'),
       $container->get('salesforce.client'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('logger.factory')
     );
   }
 
@@ -107,7 +114,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   public function processItem($item) {
     $sf_object = $item->sobject;
     try {
-      $mapping = $this->loadMapping($item->mapping_id);
+      $mapping = $this->mapping_storage->load($item->mapping_id);
     }
     catch (\Exception $e) {
       // If the mapping was deleted since this pull queue item was added, no
@@ -117,7 +124,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
 
     try {
       // loadMappedObjects returns an array, but providing salesforce id and mapping guarantees at most one result.
-      $mapped_object = $this->loadMappedObjects([
+      $mapped_object = $this->mapped_object_storage->loadByProperties([
         'salesforce_id' => (string)$sf_object->id(),
         'salesforce_mapping' => $mapping->id
       ]);
@@ -177,7 +184,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           ->setDrupalEntity($entity)
           ->setSalesforceRecord($sf_object)
           ->pull();
-        $this->log('Salesforce Pull',
+        $this->logger->log(
           LogLevel::NOTICE,
           'Updated entity %label associated with Salesforce Object ID: %sfid',
           [
@@ -189,7 +196,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     }
     catch (\Exception $e) {
       if ($e instanceof EntityNotFoundException) {
-        $this->log('Salesforce Pull',
+        $this->logger->log(
           LogLevel::ERROR,
           'Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist. Error: %msg',
           [
@@ -199,7 +206,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         );
       }
       else {
-        $this->log('Salesforce Pull',
+        $this->logger->log(
           LogLevel::ERROR,
           'Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
           [
@@ -209,7 +216,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           ]
         );
       }
-      $this->watchdogException($e);
+      $this->logger->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
     }
   }
 
@@ -268,8 +279,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         $params->getParams()
       );
 
-      $this->log(
-        'Salesforce Pull',
+      $this->logger->log(
         LogLevel::NOTICE,
         'Created entity %id %label associated with Salesforce Object ID: %sfid',
         [
@@ -280,7 +290,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       );
     }
     catch (\Exception $e) {
-      $this->log('Salesforce Pull',
+      $this->logger->log(
         LogLevel::ERROR,
         '%msg Pull-create failed for Salesforce Object ID: %sfobjectid',
         [
@@ -288,7 +298,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           '%sfobjectid' => (string)$sf_object->id(),
         ]
       );
-      $this->watchdogException($e);
+      $this->logger->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
     }
   }
 
@@ -297,19 +311,5 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    */
   public function getDone() {
     return $this->done;
-  }
-
-  /**
-   * Wrapper for salesforce_mapping load();
-   */
-  protected function loadMapping($id) {
-    return $this->mapping_storage->load($id);
-  }
-
-  /**
-   * Wrapper for salesforce_mapped_object_load_multiple();
-   */
-  protected function loadMappedObjects(array $properties) {
-    return $this->mapped_object_storage->loadByProperties($properties);
   }
 }

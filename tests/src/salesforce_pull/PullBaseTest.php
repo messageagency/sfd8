@@ -1,21 +1,22 @@
 <?php
 namespace Drupal\Tests\salesforce\salesforce_pull;
 
-use Drupal\Tests\UnitTestCase;
-use Drupal\Tests\salesforce\salesforce_pull\TestPullBase;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\Core\Entity\EntityStorageBase;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\salesforce\SelectQueryResult;
-use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce\SObject;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce_pull\Plugin\QueueWorker\PullBase;
 use Drupal\salesforce_pull\PullQueueItem;
+use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\SObject;
+use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
-
+use Psr\Log\LoggerInterface;
 
 /**
  * Test Object instantitation
@@ -113,14 +114,26 @@ class PullBaseTest extends UnitTestCase {
     $prophecy = $this->prophesize(ModuleHandlerInterface::CLASS);
     $this->mh = $prophecy->reveal();
 
-    $this->pullWorker = new TestPullBase($this->etm, $this->sfapi, $this->mh);
+    // mock logger
+    $prophecy = $this->prophesize(LoggerInterface::CLASS);
+    $prophecy->log(Argument::any(),Argument::any(),Argument::any())->willReturn(null);
+    $this->logger = $prophecy->reveal();
+
+    // mock logger factory
+    $prophecy = $this->prophesize(LoggerChannelFactoryInterface::CLASS);
+    $prophecy->get(Argument::any())->willReturn($this->logger);
+    $this->lf = $prophecy->reveal();
+
+    $this->pullWorker = $this->getMockBuilder(PullBase::CLASS)
+      ->setConstructorArgs([$this->etm, $this->sfapi, $this->mh, $this->lf])
+      ->getMockForAbstractClass();
   }
 
   /**
    * Test object instantiation
    */
   public function testObject() {
-    $this->assertTrue($this->pullWorker instanceof TestPullBase);
+    $this->assertTrue($this->pullWorker instanceof PullBase);
   }
 
   /**
