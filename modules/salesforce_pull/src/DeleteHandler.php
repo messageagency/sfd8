@@ -47,7 +47,7 @@ class DeleteHandler {
    */
   public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
-    foreach (array_reverse(salesforce_mapping_get_mapped_sobject_types()) as $type) {
+    foreach (array_reverse($this->mapping_storage->getMappedSobjectTypes()) as $type) {
       $last_delete_sync = \Drupal::state()->get('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
       $now = time();
       // getDeleted() restraint: startDate must be at least one minute

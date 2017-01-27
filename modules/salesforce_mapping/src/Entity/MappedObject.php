@@ -4,17 +4,19 @@ namespace Drupal\salesforce_mapping\Entity;
 
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\PushParams;
+use Drupal\salesforce_mapping\SalesforcePullEntityValueEvent;
+use Drupal\salesforce_mapping\SalesforcePullEvent;
+use Drupal\salesforce_mapping\SalesforcePushEvent;
+use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\PushParams;
-use Drupal\salesforce_mapping\SalesforcePushEvent;
-use Drupal\salesforce_mapping\MappingConstants;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
@@ -211,7 +213,9 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   public function getMappedEntity() {
     $entity_id = $this->entity_id->value;
     $entity_type_id = $this->entity_type_id->value;
-    return $this->entityManager()->getStorage($entity_type_id)->load($entity_id);
+    return $this
+      ->entityManager()
+      ->getStorage($entity_type_id)->load($entity_id);
   }
 
   /**
@@ -226,15 +230,18 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
+   * Wrapper for salesforce.client Drupal\salesforce\Rest\RestClient service
+   */
+  public function client() {
+    return \Drupal::service('salesforce.client');
+  }
+
+  /**
    * @return string
    */
   public function getSalesforceUrl() {
     // @TODO dependency injection here:
-    $sfapi = \Drupal::service('salesforce.client');
-    if (!$sfapi) {
-      return $this->salesforce_id->value;
-    }
-    return $sfapi->getInstanceUrl() . '/' . $this->salesforce_id->value;
+    return $this->client()->getInstanceUrl() . '/' . $this->salesforce_id->value;
   }
 
   /**
@@ -251,16 +258,11 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public function push() {
     // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context, or short of that clear documentation on how callers should handle errors and exceptions. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
-    // @TODO better way to handle push/pull:
-    $client = \Drupal::service('salesforce.client');
 
     $mapping = $this->salesforce_mapping->entity;
 
-    // @TODO This is deprecated, but docs contain no pointer to the non-deprecated way to do it.
     // @TODO Convert to $this->drupal_entity
-    $drupal_entity = \Drupal::entityTypeManager()
-      ->getStorage($this->entity_type_id->value)
-      ->load($this->entity_id->value);
+    $drupal_entity = $this->getMappedEntity();
 
     // Previously hook_salesforce_push_params_alter.
     $params = new PushParams($mapping, $drupal_entity);
@@ -278,7 +280,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $action = '';
     if ($mapping->hasKey()) {
       $action = 'upsert';
-      $result = $client->objectUpsert(
+      $result = $this->client()->objectUpsert(
         $mapping->getSalesforceObjectType(),
         $mapping->getKeyField(),
         $mapping->getKeyValue($drupal_entity),
@@ -287,7 +289,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     }
     elseif ($this->sfid()) {
       $action = 'update';
-      $client->objectUpdate(
+      $this->client()->objectUpdate(
         $mapping->getSalesforceObjectType(),
         $this->sfid(),
         $params->getParams()
@@ -295,7 +297,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     }
     else {
       $action = 'create';
-      $result = $client->objectCreate(
+      $result = $this->client()->objectCreate(
         $mapping->getSalesforceObjectType(),
         $params->getParams()
       );
@@ -317,6 +319,12 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->set('last_sync_status', TRUE)
       ->save();
 
+    // Previously hook_salesforce_push_success.
+    \Drupal::service('event_dispatcher')->dispatch(
+      SalesforceEvents::PUSH_SUCCESS,
+      new SalesforcePushEvent($this, $params)
+    );
+
     return $result;
   }
 
@@ -324,9 +332,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * @return $this
    */
   public function pushDelete() {
-    $client = \Drupal::service('salesforce.client');
     $mapping = $this->salesforce_mapping->entity;
-    $client->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
+    $this->client()->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
     $this->setNewRevision(TRUE);
     $this
       ->set('last_sync_action', 'push_delete')
@@ -356,22 +363,19 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $mapping = $this->salesforce_mapping->entity;
 
     if ($this->drupal_entity == NULL) {
-      $this->drupal_entity = \Drupal::entityTypeManager()
-        ->getStorage($this->entity_type_id->value)
-        ->load($this->entity_id->value);
+      $this->drupal_entity = $this->getMappedEntity();
     }
 
     // If the pull isn't coming from a cron job.
     if ($this->sf_object == NULL) {
-      $client = \Drupal::service('salesforce.client');
       if ($this->sfid()) {
-        $this->sf_object = $client->objectRead(
+        $this->sf_object = $this->client()->objectRead(
           $mapping->getSalesforceObjectType(),
           $this->sfid()
         );
       }
       elseif ($mapping->hasKey()) {
-        $this->sf_object = $client->objectReadbyExternalId(
+        $this->sf_object = $this->client()->objectReadbyExternalId(
           $mapping->getSalesforceObjectType(),
           $mapping->getKeyField(),
           $mapping->getKeyValue($this->drupal_entity)
@@ -399,7 +403,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         continue;
       }
 
+      \Drupal::service('event_dispatcher')->dispatch(
+        SalesforceEvents::PULL_ENTITY_VALUE,
+        new SalesforcePullEntityValueEvent($value, $field, $this)
+      );
+
       $drupal_field = $field->get('drupal_field_value');
+
       try {
         $this->drupal_entity->set($drupal_field, $value);
       }
@@ -419,6 +429,15 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         continue;
       }
     }
+
+
+    // @TODO: Event dispatching and entity saving should not be happening in this context, but inside a controller. This class needs to be more model-like.
+    \Drupal::service('event_dispatcher')->dispatch(
+      SalesforceEvents::PULL_PRESAVE,
+      new SalesforcePullEvent($this, $this->drupal_entity->isNew()
+        ? MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
+        : MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
+    );
 
     $this->drupal_entity->save();
 

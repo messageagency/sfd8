@@ -8,7 +8,7 @@ use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 /**
  *
  */
-class SalesforcePushEvent extends Event {
+class SalesforcePullEvent extends Event {
 
   protected $params;
   protected $mapping;
@@ -19,20 +19,18 @@ class SalesforcePushEvent extends Event {
   /**
    * {@inheritdoc}
    *
-   * @param MappedObjectInterface $mapped_object
-   * @param PushParams $params
+   * @param MappedObjectInterface $mapped_object 
    * @param string $op
-   *   One of
+   *   One of 
    *     Drupal\salesforce_mapping\MappingConstants::
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
+   *       SALESFORCE_MAPPING_SYNC_SF_CREATE
+   *       SALESFORCE_MAPPING_SYNC_SF_UPDATE
+   *       SALESFORCE_MAPPING_SYNC_SF_DELETE
    */
-  public function __construct(MappedObjectInterface $mapped_object = NULL, PushParams $params = NULL, $op = NULL) {
+  public function __construct(MappedObjectInterface $mapped_object, $op) {
     $this->mapped_object = $mapped_object;
-    $this->params = $params;
-    $this->entity = ($params) ? $params->getDrupalEntity() : null;
-    $this->mapping = ($params) ? $params->getMapping() : null;
+    $this->entity = $mapped_object->getMappedEntity();
+    $this->mapping = $mapped_object->salesforce_mapping->entity;
     $this->op = $op;
   }
 
@@ -55,13 +53,6 @@ class SalesforcePushEvent extends Event {
    */
   public function getMappedObject() {
     return $this->mapped_object;
-  }
-
-  /**
-   * @return PushParams
-   */
-  public function getParams() {
-    return $this->params;
   }
 
   public function getOp() {

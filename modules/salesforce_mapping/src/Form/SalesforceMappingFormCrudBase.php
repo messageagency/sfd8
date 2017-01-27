@@ -133,14 +133,18 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#empty_option' => $this->t('- Select -'),
     ];
 
-    $form['salesforce_object']['pull_trigger_date'] = [
-      '#type' => 'select',
-      '#title' => t('Date field to trigger pull'),
-      '#description' => t('Select a date field to base pull triggers on. (Default of "Last Modified Date" is usually appropriate).'),
-      '#required' => $mapping->salesforce_object_type,
-      '#default_value' => $mapping->pull_trigger_date,
-      '#options' => $this->get_pull_trigger_options($salesforce_object_type),
-    ];
+    if (!$mapping->isNew()) {
+      // This doesn't work until after mapping gets saved.
+      // @TODO figure out best way to alert admins about this, or AJAX-ify it.
+      $form['salesforce_object']['pull_trigger_date'] = [
+        '#type' => 'select',
+        '#title' => t('Date field to trigger pull'),
+        '#description' => t('Select a date field to base pull triggers on. (Default of "Last Modified Date" is usually appropriate).'),
+        '#required' => $mapping->salesforce_object_type,
+        '#default_value' => $mapping->pull_trigger_date,
+        '#options' => $this->get_pull_trigger_options($salesforce_object_type),
+      ];
+    }
 
     // @TODO either change sync_triggers to human readable values, or make them work as hex flags again.
     $trigger_options = $this->get_sync_trigger_options();
@@ -214,10 +218,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // Fudge the Date Modified form values to get validation to pass on submit.
-    if (!empty($form_state->isSubmitted())) {
-      $form['salesforce_object']['pull_trigger_date']['#options'] = $this->get_pull_trigger_options($form_state->getValue('salesforce_object_type'));
-    }
     parent::validateForm($form, $form_state);
 
     $entity_type = $form_state->getValue('drupal_entity_type');

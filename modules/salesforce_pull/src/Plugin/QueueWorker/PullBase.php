@@ -7,25 +7,26 @@
 
 namespace Drupal\salesforce_pull\Plugin\QueueWorker;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce\Exception;
-use Drupal\salesforce\EntityNotFoundException;
-use Drupal\salesforce\SObject;
-use Drupal\salesforce\LoggingTrait;
-use Psr\Log\LogLevel;
-use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
-use Drupal\salesforce_mapping\PushParams;
-use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappedObjectStorage;
-use Drupal\Core\Entity\EntityManagerInterface;
-
+use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\PushParams;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\SalesforcePullEvent;
+use Drupal\salesforce\EntityNotFoundException;
+use Drupal\salesforce\Exception;
+use Drupal\salesforce\LoggingTrait;
+use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce\SObject;
+use Psr\Log\LogLevel;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides base functionality for the Salesforce Pull Queue Workers.
@@ -78,21 +79,20 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
 
   protected $entityManager;
 
+  protected $event_dispatcher;
   /**
    * Creates a new PullBase object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, EntityManagerInterface $entity_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, ContainerAwareEventDispatcher $event_dispatcher) {
     $this->etm = $entity_type_manager;
     $this->client = $client;
     $this->mh = $module_handler;
-
-    $this->entityManager = $entity_manager;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object')->throwExceptions();
-
+    $this->mapping_storage = $this->etm->getStorage('salesforce_mapping')->throwExceptions();
+    $this->mapped_object_storage = $this->etm->getStorage('salesforce_mapped_object')->throwExceptions();
+    $this->event_dispatcher = $event_dispatcher;
     $this->done = '';
   }
 
@@ -104,7 +104,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $container->get('entity_type.manager'),
       $container->get('salesforce.client'),
       $container->get('module_handler'),
-      $container->get('entity.manager')
+      $container->get('event_dispatcher')
     );
   }
 
@@ -116,7 +116,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     try {
       $mapping = $this->loadMapping($item->mapping_id);
     }
-    catch (\Exception $e) {
+    catch (\EntityNotFoundException $e) {
       // If the mapping was deleted since this pull queue item was added, no
       // further processing can be done and we allow this item to be deleted.
       return;
@@ -133,11 +133,10 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $this->updateEntity($mapping, $mapped_object, $sf_object);
       $this->done = 'update';
     }
-    catch (\Exception $e) {
+    catch (\EntityNotFoundException $e) {
       $this->createEntity($mapping, $sf_object);
       $this->done = 'create';
     }
-
   }
 
   /**
@@ -156,7 +155,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     }
 
     try {
-      $entity = $this->etm->getStorage($mapped_object->entity_type_id->value)
+      $entity = $this
+        ->etm
+        ->getStorage($mapped_object->entity_type_id->value)
         ->load($mapped_object->entity_id->value);
       if (!$entity) {
         throw new EntityNotFoundException($mapped_object->entity_id->value, $mapped_object->entity_type_id->value);
@@ -174,16 +175,20 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         $sf_object->field($mapping->get('pull_trigger_date'));
       $sf_record_updated = strtotime($pull_trigger_date);
 
-      $this->mh->alter('salesforce_pull_pre_pull', $sf_object, $mapped_object, $entity);
+      $mapped_object
+        ->setDrupalEntity($entity)
+        ->setSalesforceRecord($sf_object);
+
+      $this->event_dispatcher->dispatch(
+        SalesforceEvents::PULL_PREPULL,
+        new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
+      );
 
       // @TODO allow some means for contrib to force pull regardless
       // of updated dates
       if ($sf_record_updated > $entity_updated) {
         // Set fields values on the Drupal entity.
-        $mapped_object
-          ->setDrupalEntity($entity)
-          ->setSalesforceRecord($sf_object)
-          ->pull();
+        $mapped_object->pull();
         $this->log('Salesforce Pull',
           LogLevel::NOTICE,
           'Updated entity %label associated with Salesforce Object ID: %sfid',
@@ -260,14 +265,19 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           'salesforce_id' => (string)$sf_object->id(),
         ]);
 
-      $this->mh->alter('salesforce_pull_pre_pull', $sf_object, $mapped_object, $entity);
-
       $mapped_object
         ->setDrupalEntity($entity)
-        ->setSalesforceRecord($sf_object)
-        ->pull();
+        ->setSalesforceRecord($sf_object);
+
+      $this->event_dispatcher->dispatch(
+        SalesforceEvents::PULL_PREPULL,
+        new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE)
+      );
+
+      $mapped_object->pull();
 
       // Push upsert ID to SF object
+      // @TODO make this optional / configurable
       $params = new PushParams($mapping, $entity);
       $this->client->objectUpdate(
         $mapping->getSalesforceObjectType(),
