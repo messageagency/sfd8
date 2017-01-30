@@ -38,7 +38,9 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   static function getSubscribedEvents() {
-    $events = [SalesforceEvents::PUSH_PARAMS => 'pushParamsAlter'];
+    $events = [
+      SalesforceEvents::PUSH_PARAMS => 'pushParamsAlter'
+    ];
     return $events;
   }
 
