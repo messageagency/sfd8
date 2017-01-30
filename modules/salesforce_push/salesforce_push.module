@@ -136,6 +136,7 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
 
   // Attempt real-time push. Enqueue async push on failure.
   try {
+    // @TODO this doesn't really seem distinct from PUSH_ALLOWED anymore. Do we still have a use case for this event?
     \Drupal::service('event_dispatcher')->dispatch(
       SalesforceEvents::PUSH_MAPPING_OBJECT,
       new SalesforcePushOpEvent($mapped_object, $op)

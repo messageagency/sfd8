@@ -17,7 +17,14 @@ use Symfony\Component\EventDispatcher\Event;
  */
 class SalesforceExampleSubscriber implements EventSubscriberInterface {
 
-  public function pushParamsAlter(SalesforcePushEvent $event) {
+  public function pushAllowed(SalesforcePushOpEvent $event) {
+    $entity = $event->getEntity();
+    if ($entity->getEntityTypeId() = 'unpushable_entity') {
+      throw new Exception('Prevent push of Unpushable Entity');
+    }
+  }
+
+  public function pushParamsAlter(SalesforcePushParamsEvent $event) {
     $mapping = $event->getMapping();
     $mapped_object = $event->getMappedObject();
     $params = $event->getParams();
@@ -34,17 +41,13 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
     $params->setParam('FirstName', 'SalesforceExample');
   }
 
-  public function pushAllowed(SalesforcePushEvent $event) {
-    
-  }
-
   /**
    * {@inheritdoc}
    */
   static function getSubscribedEvents() {
     $events = [
+      SalesforceEvents::PUSH_ALLOWED => 'pushAllowed',
       SalesforceEvents::PUSH_PARAMS => 'pushParamsAlter',
-      SalesforceEvents::PUSH_ALLOWED => 
     ];
     return $events;
   }
