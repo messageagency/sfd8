@@ -14,6 +14,9 @@ use Drupal\salesforce_push\PushQueue;
 use Drupal\salesforce_push\PushQueueProcessorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce_mapping\SalesforcePushEvent;
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 
 /**
  * Rest queue processor plugin.
@@ -41,12 +44,16 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    */
   protected $mapped_object_storage;
 
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClient $client, EntityManagerInterface $entity_manager) {
+  protected $entity_manager;
+  protected $event_dispatcher;
+
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClient $client, EntityManagerInterface $entity_manager, ContainerAwareEventDispatcher $event_dispatcher) {
     $this->queue = $queue;
     $this->client = $client;
     $this->entity_manager = $entity_manager;
     $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
     $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object')->throwExceptions();
+    $this->event_dispatcher = $event_dispatcher;
   }
 
   /**
@@ -56,7 +63,8 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     return new static($configuration, $plugin_id, $plugin_definition,
       $container->get('queue.salesforce_push'),
       $container->get('salesforce.client'),
-      $container->get('entity.manager')
+      $container->get('entity.manager'),
+      $container->get('event_dispatcher')
     );
   }
 
@@ -97,6 +105,11 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
 
     // @TODO: the following is nearly identical to the end of salesforce_push_entity_crud(). Can we DRY it? Do we care?
     try {
+      \Drupal::service('event_dispatcher')->dispatch(
+        SalesforceEvents::PUSH_MAPPING_OBJECT,
+        new SalesforcePushEvent($mapped_object, NULL, $op)
+      );
+
       // If this is a delete, destroy the SF object and we're done.
       if ($item->op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
         $mapped_object->pushDelete();
@@ -117,6 +130,12 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
       }
     }
     catch (\Exception $e) {
+      $this->event_dispatcher->dispatch(
+        SalesforceEvents::PUSH_FAIL,
+        new SalesforcePushEvent($mapped_object, NULL, $item->op)
+      );
+
+      // Log errors and throw exception to cause this item to be re-queued.
       if (!$mapped_object->isNew()) {
         // Only update existing mapped objects.
         $mapped_object

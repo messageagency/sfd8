@@ -80,6 +80,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    */
   protected $logger;
 
+  protected $event_dispatcher;
   /**
    * Creates a new PullBase object.
    *
@@ -116,7 +117,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     try {
       $mapping = $this->mapping_storage->load($item->mapping_id);
     }
-    catch (\Exception $e) {
+    catch (\EntityNotFoundException $e) {
       // If the mapping was deleted since this pull queue item was added, no
       // further processing can be done and we allow this item to be deleted.
       return;
@@ -133,7 +134,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $this->updateEntity($mapping, $mapped_object, $sf_object);
       $this->done = 'update';
     }
-    catch (\Exception $e) {
+    catch (\EntityNotFoundException $e) {
       $this->createEntity($mapping, $sf_object);
       $this->done = 'create';
     }
@@ -174,17 +175,21 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         $sf_object->field($mapping->get('pull_trigger_date'));
       $sf_record_updated = strtotime($pull_trigger_date);
 
-      $this->mh->alter('salesforce_pull_pre_pull', $sf_object, $mapped_object, $entity);
+      $mapped_object
+        ->setDrupalEntity($entity)
+        ->setSalesforceRecord($sf_object);
+
+      $this->event_dispatcher->dispatch(
+        SalesforceEvents::PULL_PREPULL,
+        new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
+      );
 
       // @TODO allow some means for contrib to force pull regardless
       // of updated dates
       if ($sf_record_updated > $entity_updated) {
         // Set fields values on the Drupal entity.
-        $mapped_object
-          ->setDrupalEntity($entity)
-          ->setSalesforceRecord($sf_object)
-          ->pull();
-        $this->logger->log(
+        $mapped_object->pull();
+        $this->log('Salesforce Pull',
           LogLevel::NOTICE,
           'Updated entity %label associated with Salesforce Object ID: %sfid',
           [
@@ -264,14 +269,19 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           'salesforce_id' => (string)$sf_object->id(),
         ]);
 
-      $this->mh->alter('salesforce_pull_pre_pull', $sf_object, $mapped_object, $entity);
-
       $mapped_object
         ->setDrupalEntity($entity)
-        ->setSalesforceRecord($sf_object)
-        ->pull();
+        ->setSalesforceRecord($sf_object);
+
+      $this->event_dispatcher->dispatch(
+        SalesforceEvents::PULL_PREPULL,
+        new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE)
+      );
+
+      $mapped_object->pull();
 
       // Push upsert ID to SF object
+      // @TODO make this optional / configurable
       $params = new PushParams($mapping, $entity);
       $this->client->objectUpdate(
         $mapping->getSalesforceObjectType(),
