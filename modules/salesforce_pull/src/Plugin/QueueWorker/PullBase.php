@@ -215,7 +215,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           LogLevel::ERROR,
           'Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
           [
-            '%label' => $entity->label(),
+            '%label' => (isset($entity)) ? $entity->label() : "Unknown",
             '%sfobjectid' => (string)$sf_object->id(),
             '%msg' => $e->getMessage(),
           ]

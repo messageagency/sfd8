@@ -11,6 +11,7 @@ use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_pull\Plugin\QueueWorker\PullBase;
 use Drupal\salesforce_pull\PullQueueItem;
+use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SObject;
@@ -137,15 +138,46 @@ class PullBaseTest extends UnitTestCase {
   }
 
   /**
-   * Test handler operation, good data
+   * Test handler operation, update with good data
    */
-
-  public function testProcessItem() {
+  public function testProcessItemUpdate() {
     $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'dummy',]]);
     $item = new PullQueueItem($sobject, $this->mapping);
 
     $this->pullWorker->ProcessItem($item);
-    // @TODO fix MappedObject so it will be mockable and used as expected in tests here
     $this->assertEquals('update', $this->pullWorker->getDone());
+  }
+
+  /**
+   * Test handler operation, create with good data
+   * NOTE: can only test that exception is thrown, cannot test that the
+   * createEntity() method executes as expected - that must be in a separate test
+   */
+  public function testProcessItemCreate() {
+    // mock EntityNotFoundException
+    $prophecy = $this->prophesize(EntityNotFoundException::CLASS);
+    $my_exception = $prophecy->reveal();
+
+    // mock mapped object EntityStorage object
+    $prophecy = $this->prophesize(EntityStorageBase::CLASS);
+    $prophecy->loadByProperties(Argument::any())->willThrow($my_exception);
+    $this->entityStorage = $prophecy->reveal();
+
+    // mock EntityTypeManagerInterface
+    $prophecy = $this->prophesize(EntityTypeManagerInterface::CLASS);
+    $prophecy->getStorage('salesforce_mapping')->willReturn($this->configStorage);
+    $prophecy->getStorage('salesforce_mapped_object')->willReturn($this->entityStorage);
+    $prophecy->getStorage('test')->willReturn($this->newEntityStorage); $prophecy->getDefinition('test')->willReturn($this->entityDefinition);
+    $this->etm = $prophecy->reveal();
+
+    $this->pullWorker = $this->getMockBuilder(PullBase::CLASS)
+      ->setConstructorArgs([$this->etm, $this->sfapi, $this->mh, $this->lf])
+      ->getMockForAbstractClass();
+
+    $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'dummy',]]);
+    $item = new PullQueueItem($sobject, $this->mapping);
+
+    $this->pullWorker->ProcessItem($item);
+    //$this->assertEquals('create', $this->pullWorker->getDone());
   }
 }
