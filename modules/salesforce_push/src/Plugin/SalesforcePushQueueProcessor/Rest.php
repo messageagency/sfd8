@@ -15,7 +15,7 @@ use Drupal\salesforce_push\PushQueueProcessorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\SalesforcePushEvent;
+use Drupal\salesforce_mapping\SalesforcePushParamsEvent;
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 
 /**
@@ -107,7 +107,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     try {
       \Drupal::service('event_dispatcher')->dispatch(
         SalesforceEvents::PUSH_MAPPING_OBJECT,
-        new SalesforcePushEvent($mapped_object, NULL, $op)
+        new SalesforcePushParamsEvent($mapped_object, $op)
       );
 
       // If this is a delete, destroy the SF object and we're done.
@@ -132,7 +132,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     catch (\Exception $e) {
       $this->event_dispatcher->dispatch(
         SalesforceEvents::PUSH_FAIL,
-        new SalesforcePushEvent($mapped_object, NULL, $item->op)
+        new SalesforcePushParamsEvent($mapped_object, $item->op)
       );
 
       // Log errors and throw exception to cause this item to be re-queued.

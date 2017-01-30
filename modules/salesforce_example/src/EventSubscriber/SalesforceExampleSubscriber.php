@@ -34,12 +34,17 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
     $params->setParam('FirstName', 'SalesforceExample');
   }
 
+  public function pushAllowed(SalesforcePushEvent $event) {
+    
+  }
+
   /**
    * {@inheritdoc}
    */
   static function getSubscribedEvents() {
     $events = [
-      SalesforceEvents::PUSH_PARAMS => 'pushParamsAlter'
+      SalesforceEvents::PUSH_PARAMS => 'pushParamsAlter',
+      SalesforceEvents::PUSH_ALLOWED => 
     ];
     return $events;
   }
