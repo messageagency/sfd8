@@ -57,8 +57,8 @@ class QueueHandler {
    *
    * @return QueueHandler
    */
-  public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, ContainerAwareEventDispatcher $event_dispatcher) {
-    return new QueueHandler($sfapi, $mappings, $queue, $state, $logger, $event_dispatcher, \Drupal::request());
+  public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, ContainerAwareEventDispatcher $event_dispatcher, Request $request) {
+    return new QueueHandler($sfapi, $mappings, $queue, $state, $logger, $event_dispatcher, $request);
   }
 
   /**

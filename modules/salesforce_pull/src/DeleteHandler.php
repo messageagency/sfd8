@@ -15,7 +15,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\LoggerInterface;
-use Drupal\salesforce\LoggingTrait;
 
 /**
  * Handles pull cron deletion of Drupal entities based onSF mapping settings.
@@ -24,8 +23,6 @@ use Drupal\salesforce\LoggingTrait;
  */
 
 class DeleteHandler {
-
-  use LoggingTrait;
 
   protected $sfapi;
   protected $mapping_storage;

@@ -237,6 +237,20 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
+   * Wrapper for Drupal core event_dispatcher service.
+   */
+  public function eventDispatcher() {
+    return \Drupal::service('event_dispatcher');
+  }
+
+  /**
+   * Wrapper for Drupal core logger service.
+   */
+  public function logger($log) {
+    return \Drupal::logger($log);
+  }
+
+  /**
    * @return string
    */
   public function getSalesforceUrl() {
@@ -266,7 +280,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // Previously hook_salesforce_push_params_alter.
     $params = new PushParams($mapping, $drupal_entity);
-    \Drupal::service('event_dispatcher')->dispatch(
+    $this->eventDispatcher()->dispatch(
       SalesforceEvents::PUSH_PARAMS,
       new SalesforcePushEvent($this, $params)
     );
@@ -320,7 +334,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->save();
 
     // Previously hook_salesforce_push_success.
-    \Drupal::service('event_dispatcher')->dispatch(
+    $this->eventDispatcher()->dispatch(
       SalesforceEvents::PUSH_SUCCESS,
       new SalesforcePushEvent($this, $params)
     );
@@ -403,7 +417,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         continue;
       }
 
-      \Drupal::service('event_dispatcher')->dispatch(
+      $this->eventDispatcher()->dispatch(
         SalesforceEvents::PULL_ENTITY_VALUE,
         new SalesforcePullEntityValueEvent($value, $field, $this)
       );
@@ -415,7 +429,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       }
       catch (\Exception $e) {
         $message = t();
-        \Drupal::logger('Salesforce Pull')->notice('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
+        $this->logger('Salesforce Pull')->notice('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
           '@sfobj' => $mapping->getSalesforceObjectType(),
           '@sffield' => $sf_field,
           '@sfid' => $this->sfid(),
@@ -432,7 +446,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
 
     // @TODO: Event dispatching and entity saving should not be happening in this context, but inside a controller. This class needs to be more model-like.
-    \Drupal::service('event_dispatcher')->dispatch(
+    $this->eventDispatcher()->dispatch(
       SalesforceEvents::PULL_PRESAVE,
       new SalesforcePullEvent($this, $this->drupal_entity->isNew()
         ? MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE

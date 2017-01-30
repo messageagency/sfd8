@@ -8,18 +8,22 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Drupal\salesforce\Rest\RestClient;
+use GuzzleHttp\Client;
+use Drupal\Core\Url;
+
 /**
  *
  */
 class SalesforceController extends ControllerBase {
 
   protected $client;
-
+  protected $http_client;
   /**
    * {@inheritdoc}
    */
-  public function __construct(RestClient $rest) {
+  public function __construct(RestClient $rest, Client $http_client) {
     $this->client = $rest;
+    $this->http_client = $http_client;
   }
 
   /**
@@ -27,7 +31,8 @@ class SalesforceController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('salesforce.client')
+      $container->get('salesforce.client'),
+      $container->get('http_client')
     );
   }
 
@@ -56,12 +61,11 @@ class SalesforceController extends ControllerBase {
       'Content-Type' => 'application/x-www-form-urlencoded',
     ];
 
-    $http_client = \Drupal::service('http_client');
-    $response = $http_client->post($url, ['headers' => $headers, 'body' => $data]);
+    $response = $this->http_client->post($url, ['headers' => $headers, 'body' => $data]);
 
     $this->client->handleAuthResponse($response);
 
-    return new RedirectResponse(\Drupal::url('salesforce.authorize', [], ['absolute' => TRUE]));
+    return new RedirectResponse(Url::fromRoute('salesforce.authorize', [], ['absolute' => TRUE]));
   }
 
 }
