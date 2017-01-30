@@ -38,15 +38,6 @@ function salesforce_push_entity_delete(EntityInterface $entity) {
   salesforce_push_entity_crud($entity, MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE);
 }
 
-function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity, SalesforceMappingInterface $mapping, $op) {
-  // Don't allow mapped objects or mappings to be pushed!
-  // @TODO can we implement this instead with a validation constraint? This is fugly.
-  if ($entity instanceof MappedObjectInterface
-  || $entity instanceof SalesforceMappingInterface) {
-    return FALSE;
-  }
-}
-
 /**
  * Push entities to Salesforce.
  *
@@ -62,6 +53,12 @@ function salesforce_push_salesforce_push_entity_allowed(EntityInterface $entity,
  *   to be a very long ways away. https://www.drupal.org/node/2551893
  */
 function salesforce_push_entity_crud(EntityInterface $entity, $op) {
+  // Don't allow mapped objects or mappings to be pushed!
+  if ($entity instanceof MappedObjectInterface
+  || $entity instanceof SalesforceMappingInterface) {
+    return;
+  }
+
   try {
     $mappings = salesforce_push_load_push_mappings($entity->getEntityTypeId());
   }
@@ -91,14 +88,11 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
 function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
   $mapped_objects = [];
   $mapped_object = null;
-  // Implementations of hook_salesforce_push_entity_allowed should throw an
-  // exception to prevent push.
-  \Drupal::moduleHandler()->invokeAll('salesforce_push_entity_allowed', array($entity, $mapping, $op));
+  // Event subscribers should throw an exception to prevent push.
   \Drupal::service('event_dispatcher')->dispatch(
     SalesforceEvents::PUSH_ALLOWED,
     new SalesforcePushEvent($mapped_object, NULL, $op)
   );
-
 
   // Look for existing mapped object or create a new one (except for deletes).
   $props = [
