@@ -189,7 +189,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       if ($sf_record_updated > $entity_updated) {
         // Set fields values on the Drupal entity.
         $mapped_object->pull();
-        $this->log('Salesforce Pull',
+        $this->logger->log(
           LogLevel::NOTICE,
           'Updated entity %label associated with Salesforce Object ID: %sfid',
           [
