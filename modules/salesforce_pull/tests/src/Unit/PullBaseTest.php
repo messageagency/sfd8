@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\StringTranslation\Translator\TranslationInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
@@ -157,6 +158,10 @@ class PullBaseTest extends UnitTestCase {
    * createEntity() method executes as expected - that must be in a separate test
    */
   public function testProcessItemCreate() {
+    //mock StringTranslation service
+    $prophecy = $this->prophesize(TranslationInterface::CLASS);
+    $this->translation = $prophecy->reveal();
+
     // mock EntityNotFoundException
     // $prophecy = $this->prophesize(EntityNotFoundException::CLASS);
     // $my_exception = $prophecy->reveal();
