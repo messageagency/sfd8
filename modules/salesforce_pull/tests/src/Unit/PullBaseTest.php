@@ -9,12 +9,14 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_pull\Plugin\QueueWorker\PullBase;
 use Drupal\salesforce_pull\PullQueueItem;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SObject;
+use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
@@ -82,6 +84,7 @@ class PullBaseTest extends UnitTestCase {
     $prophecy->getKeys(Argument::any())->willReturn([
       'bundle' => 'test',
     ]);
+    $prophecy->id = 'test';
     $this->entityDefinition = $prophecy->reveal();
 
     // mock EntityTypeManagerInterface
@@ -155,18 +158,39 @@ class PullBaseTest extends UnitTestCase {
    */
   public function testProcessItemCreate() {
     // mock EntityNotFoundException
-    $prophecy = $this->prophesize(EntityNotFoundException::CLASS);
-    $my_exception = $prophecy->reveal();
+    // $prophecy = $this->prophesize(EntityNotFoundException::CLASS);
+    // $my_exception = $prophecy->reveal();
 
     // mock mapped object EntityStorage object
     $prophecy = $this->prophesize(EntityStorageBase::CLASS);
-    $prophecy->loadByProperties(Argument::any())->willThrow($my_exception);
-    $this->entityStorage = $prophecy->reveal();
+    $prophecy->loadByProperties(Argument::any())->willThrow(EntityNotFoundException::CLASS);
+    $this->mappedObjectStorage = $prophecy->reveal();
+    
+    // mock sf mapping 
+    // @TODO move this into setUp()?
+    $my_mapping = new SalesforceMapping([
+      'id' => 'test',
+      'drupal_bundle' => 'test',
+      'drupal_entity_type' => 'test',
+      'salesforce_object_type' => 'test',
+      'sync_triggers' => [
+        MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE => MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
+      ],
+    ], 'salesforce_mapping');
+
+    $this->assertEquals('test', $my_mapping->getDrupalBundle());
+    $this->assertEquals('test', $my_mapping->getDrupalEntityType());
+    $this->assertTrue($my_mapping->doesPull());
+  
+    // mock sf mapping entitystorage
+    $prophecy = $this->prophesize(EntityStorageBase::CLASS);
+    $prophecy->load(Argument::any())->willReturn($my_mapping);
+    $this->mappingObjectStorage = $prophecy->reveal();
 
     // mock EntityTypeManagerInterface
     $prophecy = $this->prophesize(EntityTypeManagerInterface::CLASS);
-    $prophecy->getStorage('salesforce_mapping')->willReturn($this->configStorage);
-    $prophecy->getStorage('salesforce_mapped_object')->willReturn($this->entityStorage);
+    $prophecy->getStorage('salesforce_mapping')->willReturn($this->mappingObjectStorage);
+    $prophecy->getStorage('salesforce_mapped_object')->willReturn($this->mappedObjectStorage);
     $prophecy->getStorage('test')->willReturn($this->newEntityStorage); $prophecy->getDefinition('test')->willReturn($this->entityDefinition);
     $this->etm = $prophecy->reveal();
 
@@ -174,10 +198,15 @@ class PullBaseTest extends UnitTestCase {
       ->setConstructorArgs([$this->etm, $this->sfapi, $this->mh, $this->lf])
       ->getMockForAbstractClass();
 
-    $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'dummy',]]);
+    $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'test',]]);
     $item = new PullQueueItem($sobject, $this->mapping);
 
-    $this->pullWorker->ProcessItem($item);
-    //$this->assertEquals('create', $this->pullWorker->getDone());
+    try {
+      $this->pullWorker->processItem($item);
+    }
+    catch (EntityNotFoundException $e) {
+      
+    }
+    $this->assertEquals('create', $this->pullWorker->getDone());
   }
 }

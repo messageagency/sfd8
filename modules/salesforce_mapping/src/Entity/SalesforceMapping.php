@@ -302,13 +302,21 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     ]);
   }
 
+  public function doesPull() {
+    return $this->checkTriggers([
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE,
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE,
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE
+    ]);
+  }
+
   /**
    * @return bool
    *   TRUE if this mapping uses any of the given $triggers, otherwise FALSE.
    */
   public function checkTriggers(array $triggers) {
     foreach ($triggers as $trigger) {
-      if ($this->sync_triggers[$trigger] == 1) {
+      if (!empty($this->sync_triggers[$trigger])) {
         return TRUE;
       }
     }
