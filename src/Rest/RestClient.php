@@ -5,19 +5,18 @@ namespace Drupal\salesforce\Rest;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
-use Drupal\salesforce\SFID;
-use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Cache\CacheBackendInterface;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
@@ -27,7 +26,7 @@ class RestClient {
   public $response;
   protected $httpClient;
   protected $configFactory;
-  protected $urlGenerator;
+  protected $url;
   private $config;
   private $configEditable;
   private $state;
@@ -43,10 +42,10 @@ class RestClient {
    * @param \Guzzle\Http\ClientInterface $http_client
    *   The config factory.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, UrlGeneratorInterface $url_generator, StateInterface $state, CacheBackendInterface $cache) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, Url $url, StateInterface $state, CacheBackendInterface $cache) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
-    $this->urlGenerator = $url_generator;
+    $this->url = $url;
     $this->config = $this->configFactory->get('salesforce.settings');
     $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
@@ -73,7 +72,7 @@ class RestClient {
    * @param string $method
    *   Method to initiate the call, such as GET or POST.  Defaults to GET.
    * @param bool $returnObject
-   *   If true, return a Drupal\salesforce\Rest\RestResponse; 
+   *   If true, return a Drupal\salesforce\Rest\RestResponse;
    *   Otherwise, return json-decoded response body only.
    *   Defaults to FALSE for backwards compatibility.
    *
@@ -179,7 +178,7 @@ class RestClient {
   /**
    * Extract normalized error information from a RequestException
    *
-   * @param RequestException $e 
+   * @param RequestException $e
    * @return array
    *   Error array with keys:
    *   * message
@@ -427,7 +426,7 @@ class RestClient {
    * @see Drupal\salesforce\Controller\SalesforceController
    */
   public function getAuthCallbackUrl() {
-    return Url::fromRoute('salesforce.oauth_callback', [], [
+    return $this->url->fromRoute('salesforce.oauth_callback', [], [
       'absolute' => TRUE,
       'https' => TRUE,
     ]);
@@ -718,11 +717,11 @@ class RestClient {
    *   Object type name, E.g., Contact, Account.
    *
    * @param int $start
-   *   unix timestamp for older timeframe for updates. 
+   *   unix timestamp for older timeframe for updates.
    *   Defaults to "-29 days" if empty.
    *
    * @param int $end
-   *   unix timestamp for end of timeframe for updates. 
+   *   unix timestamp for end of timeframe for updates.
    *   Defaults to now if empty
    *
    * @return array
@@ -741,12 +740,12 @@ class RestClient {
       $start = strtotime('-29 days');
     }
     $start = urlencode(gmdate(DATE_ATOM, $start));
-  
+
     if (empty($end)) {
       $end = time();
     }
     $end = urlencode(gmdate(DATE_ATOM, $end));
-  
+
     return $this->apiCall("sobjects/{$name}/updated/?start=$start&end=$end");
   }
 
@@ -796,7 +795,7 @@ class RestClient {
    * @param string $name
    *   Object type name, E.g., Contact, Account.
    *
-   * @param string $devname 
+   * @param string $devname
    *   RecordType DeveloperName, e.g. Donation, Membership, etc.
    *
    * @return SFID
@@ -813,9 +812,9 @@ class RestClient {
   }
 
   /**
-   * Utility function to determine object type for given SFID 
+   * Utility function to determine object type for given SFID
    *
-   * @param SFID $id 
+   * @param SFID $id
    * @return string
    * @throws Exception if SFID doesn't match any object type
    */
