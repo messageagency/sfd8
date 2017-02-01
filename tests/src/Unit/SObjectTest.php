@@ -10,7 +10,7 @@ use Drupal\salesforce\Exception;
  * @group salesforce_pull
  */
 
-class PullQueueItemTest extends UnitTestCase {
+class SObjectTest extends UnitTestCase {
   static $modules = ['salesforce'];
 
   /**
