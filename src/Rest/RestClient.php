@@ -427,7 +427,7 @@ class RestClient {
    * @see Drupal\salesforce\Controller\SalesforceController
    */
   public function getAuthCallbackUrl() {
-    return new Url::fromRoute('salesforce.oauth_callback', [], [
+    return Url::fromRoute('salesforce.oauth_callback', [], [
       'absolute' => TRUE,
       'https' => TRUE,
     ]);
