@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\Tests\salesforce\salesforce_pull;
+namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Queue\QueueInterface;

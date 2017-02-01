@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\Tests\salesforce\salesforce_pull;
+namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\Core\Entity\EntityStorageBase;

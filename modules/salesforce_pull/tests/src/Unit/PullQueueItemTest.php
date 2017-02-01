@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\Tests\salesforce\salesforce_pull;
+namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\SObject;

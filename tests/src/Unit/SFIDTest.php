@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\Tests\salesforce;
+namespace Drupal\Tests\salesforce\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\SFID;

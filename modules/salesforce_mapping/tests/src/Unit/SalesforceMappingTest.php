@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\Tests\salesforce\salesforce_mapping;
+namespace Drupal\Tests\salesforce_mapping\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
@@ -14,7 +14,7 @@ use Prophecy\Argument;
 /**
  * Test Object instantitation
  *
- * @group salesforce_pull
+ * @group salesforce_mapping
  */
 
 class SalesforceMappingTest extends UnitTestCase {
