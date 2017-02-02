@@ -36,7 +36,7 @@ class MappedObjectForm extends ContentEntityForm {
    */
   public function __construct(EntityManagerInterface $entity_manager, RestClient $rest, RouteMatchInterface $route_match) {
     $this->entityManager = $entity_manager;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->rest = $rest;
     $this->route_match = $route_match;
   }

@@ -7,7 +7,6 @@
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
@@ -59,10 +58,11 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
     return;
   }
 
-  try {
-    $mappings = salesforce_push_load_push_mappings($entity->getEntityTypeId());
-  }
-  catch (EntityNotFoundException $e) {
+  $mappings =
+    $mappings = \Drupal::service('entity.manager')
+      ->getStorage('salesforce_mapping')
+      ->loadByProperties($properties);
+  if (empty($mappings)) {
     return;
   }
 
@@ -101,16 +101,11 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
     'salesforce_mapping' => $mapping->id(),
   ];
 
-  try {
-    $mapped_objects = \Drupal::service('entity.manager')
-      ->getStorage('salesforce_mapped_object')
-      ->throwExceptions()
-      ->loadByProperties($props);
-    // There should really only be one in this case, since we're loading on a
-    // multi-field unique key, but loadByProperties returns an array.
-    $mapped_object = current($mapped_objects);
-  }
-  catch (EntityNotFoundException $e) {
+  $mapped_objects = \Drupal::service('entity.manager')
+    ->getStorage('salesforce_mapped_object')
+    ->loadByProperties($props);
+
+  if (empty($mapped_objects)) {
     // No mappings found.
     if ($op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
       // If no existing mapping, and this is a delete, purge any entries from push queue and we're done.
@@ -120,6 +115,11 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       return;
     }
     $mapped_object = new MappedObject($props);
+  }
+  else {
+    // There should really only be one in this case, since we're loading on a
+    // multi-field unique key, but loadByProperties returns an array.
+    $mapped_object = current($mapped_objects);
   }
 
   // Enqueue async push if the mapping is configured to do so, and quit.
@@ -175,39 +175,6 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       ->set('revision_log_message', $e->getMessage())
       ->save();
   }
-}
-
-/**
- * Helper function to load only those mappings which have at least one push
- * trigger enabled.
- *
- * @param $entity_type_id
- *   (optional) filter by mapping drupal entity type.
- *
- * @return array
- *
- * @throws EntityNotFoundException if no push mappings found.
- */
-function salesforce_push_load_push_mappings($entity_type_id = NULL) {
-  $push_mappings = [];
-  $properties = empty($entity_type_id)
-    ? []
-    : ["drupal_entity_type" => $entity_type_id];
-  $mappings = \Drupal::service('entity.manager')
-    ->getStorage('salesforce_mapping')
-    ->throwExceptions()
-    ->loadByProperties($properties);
-
-  foreach ($mappings as $key => $mapping) {
-    if (!$mapping->doesPush()) {
-      continue;
-    }
-    $push_mappings[$key] = $mapping;
-  }
-  if (empty($push_mappings)) {
-    throw new EntityNotFoundException($properties, 'salesforce_mapping');
-  }
-  return $push_mappings;
 }
 
 /**

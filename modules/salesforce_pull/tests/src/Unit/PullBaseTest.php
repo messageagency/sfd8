@@ -13,7 +13,6 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_pull\Plugin\QueueWorker\PullBase;
 use Drupal\salesforce_pull\PullQueueItem;
-use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SObject;
@@ -162,13 +161,9 @@ class PullBaseTest extends UnitTestCase {
     $prophecy = $this->prophesize(TranslationInterface::CLASS);
     $this->translation = $prophecy->reveal();
 
-    // mock EntityNotFoundException
-    // $prophecy = $this->prophesize(EntityNotFoundException::CLASS);
-    // $my_exception = $prophecy->reveal();
-
     // mock mapped object EntityStorage object
     $prophecy = $this->prophesize(EntityStorageBase::CLASS);
-    $prophecy->loadByProperties(Argument::any())->willThrow(EntityNotFoundException::CLASS);
+    $prophecy->loadByProperties(Argument::any())->willReturn([]);
     $this->mappedObjectStorage = $prophecy->reveal();
     
     // mock sf mapping 
@@ -206,12 +201,7 @@ class PullBaseTest extends UnitTestCase {
     $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'test',]]);
     $item = new PullQueueItem($sobject, $this->mapping);
 
-    try {
-      $this->pullWorker->processItem($item);
-    }
-    catch (EntityNotFoundException $e) {
-      
-    }
+    $this->pullWorker->processItem($item);
     $this->assertEquals('create', $this->pullWorker->getDone());
   }
 }

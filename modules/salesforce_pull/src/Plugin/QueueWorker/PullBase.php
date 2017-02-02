@@ -19,7 +19,6 @@ use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
-use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SObject;
@@ -114,27 +113,23 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    */
   public function processItem($item) {
     $sf_object = $item->sobject;
-    try {
-      $mapping = $this->mapping_storage->load($item->mapping_id);
-    }
-    catch (\EntityNotFoundException $e) {
-      // If the mapping was deleted since this pull queue item was added, no
-      // further processing can be done and we allow this item to be deleted.
+    $mapping = $this->mapping_storage->load($item->mapping_id);
+    if (!$mapping) {
       return;
     }
 
-    try {
-      // loadMappedObjects returns an array, but providing salesforce id and mapping guarantees at most one result.
-      $mapped_object = $this->mapped_object_storage->loadByProperties([
-        'salesforce_id' => (string)$sf_object->id(),
-        'salesforce_mapping' => $mapping->id
-      ]);
-      // @TODO one-to-many: this is a blocker for OTM support:
-      $mapped_object = current($mapped_object);
+    // loadMappedObjects returns an array, but providing salesforce id and mapping guarantees at most one result.
+    $mapped_object = $this->mapped_object_storage->loadByProperties([
+      'salesforce_id' => (string)$sf_object->id(),
+      'salesforce_mapping' => $mapping->id
+    ]);
+    // @TODO one-to-many: this is a blocker for OTM support:
+    $mapped_object = current($mapped_object);
+    if (!empty($mapped_object)) {
       $this->updateEntity($mapping, $mapped_object, $sf_object);
       $this->done = 'update';
     }
-    catch (\EntityNotFoundException $e) {
+    else {
       $this->createEntity($mapping, $sf_object);
       $this->done = 'create';
     }
@@ -160,7 +155,15 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $entity = $this->etm->getStorage($mapped_object->entity_type_id->value)
         ->load($mapped_object->entity_id->value);
       if (!$entity) {
-        throw new EntityNotFoundException($mapped_object->entity_id->value, $mapped_object->entity_type_id->value);
+        $this->logger->log(
+          LogLevel::ERROR,
+          'Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist. Error: %msg',
+          [
+            '%sfobjectid' => (string)$sf_object->id(),
+            '%msg' => $e->getMessage(),
+          ]
+        );
+        continue;
       }
 
       // Flag this entity as having been processed. This does not persist,
@@ -200,33 +203,21 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       }
     }
     catch (\Exception $e) {
-      if ($e instanceof EntityNotFoundException) {
-        $this->logger->log(
-          LogLevel::ERROR,
-          'Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist. Error: %msg',
-          [
-            '%sfobjectid' => (string)$sf_object->id(),
-            '%msg' => $e->getMessage(),
-          ]
-        );
-      }
-      else {
-        $this->logger->log(
-          LogLevel::ERROR,
-          'Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
-          [
-            '%label' => (isset($entity)) ? $entity->label() : "Unknown",
-            '%sfobjectid' => (string)$sf_object->id(),
-            '%msg' => $e->getMessage(),
-          ]
-        );
-      }
       $this->logger->log(
         LogLevel::ERROR,
-        '%type: @message in %function (line %line of %file).',
-        Error::decodeException($e)
+        'Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
+        [
+          '%label' => (isset($entity)) ? $entity->label() : "Unknown",
+          '%sfobjectid' => (string)$sf_object->id(),
+          '%msg' => $e->getMessage(),
+        ]
       );
     }
+    $this->logger->log(
+      LogLevel::ERROR,
+      '%type: @message in %function (line %line of %file).',
+      Error::decodeException($e)
+    );
   }
 
   /**

@@ -66,8 +66,8 @@ class PushQueue extends DatabaseQueue {
     $this->state = $state;
     $this->queueManager = $queue_manager;
     $this->entity_manager = $entity_manager;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object')->throwExceptions();
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
     $this->logger = $logger;
 
     $this->limit = $state->get('salesforce.push_limit', static::DEFAULT_CRON_PUSH_LIMIT);
@@ -276,10 +276,10 @@ class PushQueue extends DatabaseQueue {
    * Process Salesforce queues
    */
   public function processQueues() {
-    try {
-      $mappings = salesforce_push_load_push_mappings();
-    }
-    catch (EntityNotFoundException $e) {
+    $mappings = $this
+      ->mapping_storage
+      ->loadPushMappings();
+    if (empty($mappings)) {
       return $this;
     }
     $i = 0;
@@ -346,8 +346,6 @@ class PushQueue extends DatabaseQueue {
    * @param stdClass $item
    */
   public function failItem(\Exception $e, \stdClass $item) {
-    // For now we only have special handling for EntityNotFoundException.
-    // May want to distinguish in the future between network exceptions, etc.
     $mapping = $this->mapping_storage->load($item->name);
 
     if ($e instanceof EntityNotFoundException) {

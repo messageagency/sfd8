@@ -82,8 +82,8 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
     $this->salesforceClient = $rest_client;
     $this->entityManager = $entity_manager;
     $this->entityTypeManager = $etm;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object')->throwExceptions();
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
   }
 
   /**

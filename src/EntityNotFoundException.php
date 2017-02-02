@@ -6,7 +6,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * EntityNotFoundException extends Drupal\salesforce\Exception
- * Thrown when a load operation returns no results.
+ * Thrown when a mapped entity cannot be loaded.
  */
 class EntityNotFoundException extends \RuntimeException {
 

@@ -14,7 +14,6 @@ use Drupal\salesforce\Exception;
 // Not sure if we'll actually need these, since entity API seems to provide everything:
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\MappedObject;
-use Drupal\salesforce\EntityNotFoundException;
 
 /**
  * Implements hook_entity_type_alter().
@@ -54,15 +53,9 @@ function salesforce_mapping_entity_extra_field_info() {
   // Include Salesforce data for mapped entities.
   // @TODO: these don't actually show up on the entity view. Have to implement hook_entity_view as well?
   $extra = [];
-  try {
-    $mappings = \Drupal::service('entity.manager')
-      ->getStorage('salesforce_mapping')
-      ->throwExceptions()
-      ->loadMultiple();
-  }
-  catch (EntityNotFoundException $e) {
-    return [];
-  }
+  $mappings = \Drupal::service('entity.manager')
+    ->getStorage('salesforce_mapping')
+    ->loadPushMappings();
   foreach ($mappings as $mapping) {
     $extra[$mapping->drupal_entity_type][$mapping->drupal_bundle] = [
       'display' => [
@@ -89,26 +82,17 @@ function salesforce_mapping_entity_extra_field_info() {
  */
 function salesforce_mapping_entity_update(EntityInterface $entity) {
   // Check for mappings (much faster than looking for mapped objects.)
-  try {
-    \Drupal::service('entity.manager')
-      ->getStorage('salesforce_mapping')
-      ->throwExceptions()
-      ->loadByDrupal($entity->getEntityTypeId());
-  }
-  catch (EntityNotFoundException $e) {
+  $mappings = \Drupal::service('entity.manager')
+    ->getStorage('salesforce_mapping')
+    ->loadByDrupal($entity->getEntityTypeId());
+  if (empty($mappings)) {
     return;
   }
 
   // If mappings, check for mapped objects.
-  try {
-    $mapped_objects = \Drupal::service('entity.manager')
-      ->getStorage('salesforce_mapped_object')
-      ->throwExceptions()
-      ->loadByDrupal($entity->getEntityTypeId(), $entity->id());
-  }
-  catch (EntityNotFoundException $e) {
-    return;
-  }
+  $mapped_objects = \Drupal::service('entity.manager')
+    ->getStorage('salesforce_mapped_object')
+    ->loadByDrupal($entity->getEntityTypeId(), $entity->id());
 
   foreach ($mapped_objects as $mapped_object) {
     // Resaving the object should update the timestamp.

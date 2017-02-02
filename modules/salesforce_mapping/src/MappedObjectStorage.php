@@ -8,7 +8,6 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\SFID;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -21,8 +20,6 @@ use Drupal\Core\Entity\EntityTypeInterface;
  * @package Drupal\salesforce_mapping
  */
 class MappedObjectStorage extends SqlContentEntityStorage {
-
-  use ThrowsOnLoadTrait;
 
   /**
    * {@inheritdoc}

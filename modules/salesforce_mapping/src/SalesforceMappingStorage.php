@@ -8,7 +8,6 @@ use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\SFID;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -20,8 +19,6 @@ use Drupal\Core\Entity\EntityTypeInterface;
  * @package Drupal\salesforce_mapping
  */
 class SalesforceMappingStorage extends ConfigEntityStorage {
-
-  use ThrowsOnLoadTrait;
 
   /**
    * Drupal\Core\Config\ConfigFactory definition.
@@ -80,9 +77,34 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
   }
 
   /**
+   * Return an array of SalesforceMapping entities who are push-enabled.
+   *
+   * @param string $entity_type_id
+   *
+   * @return array
+   */
+  public function loadPushMappings($entity_type_id = NULL) {
+    $push_mappings = [];
+    $properties = empty($entity_type_id)
+      ? []
+      : ["drupal_entity_type" => $entity_type_id];
+    $mappings = $this->loadByProperties($properties);
+
+    foreach ($mappings as $key => $mapping) {
+      if (!$mapping->doesPush()) {
+        continue;
+      }
+      $push_mappings[$key] = $mapping;
+    }
+    if (empty($push_mappings)) {
+      return [];
+    }
+    return $push_mappings;
+  }
+
+  /**
    * Return a unique list of mapped Salesforce object types.
    * @see loadMultipleMapping()
-   * @throws EntityNotFoundException if no mappings have been created yet.
    */
   function getMappedSobjectTypes() {
     $object_types = [];

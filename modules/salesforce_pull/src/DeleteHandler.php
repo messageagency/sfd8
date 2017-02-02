@@ -2,7 +2,6 @@
 
 namespace Drupal\salesforce_pull;
 
-use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SFID;
@@ -80,13 +79,10 @@ class DeleteHandler {
       return;
     }
 
-    try {
-      $sf_mappings = $this->mapping_storage->loadByProperties(
-        ['salesforce_object_type' => $type]
-      );
-    }
-    catch (EntityNotFoundException $e) {
-      // No mappings found. Quit now.
+    $sf_mappings = $this->mapping_storage->loadByProperties(
+      ['salesforce_object_type' => $type]
+    );
+    if (empty($sf_mappings)) {
       return;
     }
 
@@ -96,44 +92,33 @@ class DeleteHandler {
   }
 
   protected function handleDeletedRecord($record, $type) {
-    try {
-      $mapped_objects = $this->mapped_object_storage->loadBySFID(new SFID($record['id']));
-    }
-    catch (EntityNotFoundException $e) {
-      // We do not need to know about every object which gets deleted in SF and
-      // isn't mapped to Drupal.
+    $mapped_objects = $this->mapped_object_storage->loadBySFID(new SFID($record['id']));
+    if (empty($mapped_objects)) {
       return;
     }
 
     foreach ($mapped_objects as $mapped_object) {
-      try {
         $entity = $this->etm
           ->getStorage($mapped_object->entity_type_id->value)
           ->load($mapped_object->entity_id->value);
         if (!$entity) {
-          throw new EntityNotFoundException(['entity_id' => $mapped_object->entity_id->value], $mapped_object->entity_type_id);
+          $this->logger->log(
+            LogLevel::NOTICE,
+            'No entity found for ID %id associated with Salesforce Object ID: %sfid ',
+            [
+              '%id' => $mapped_object->entity_id->value,
+              '%sfid' => $record['id'],
+            ]
+          );
+          $mapped_object->delete();
+          continue;
         }
       }
-      catch (EntityNotFoundException $e) {
-        // No mapped entity found for the mapped object. Just delete the mapped object and continue.
-        $this->logger->log(
-          LogLevel::NOTICE,
-          'No entity found for ID %id associated with Salesforce Object ID: %sfid ',
-          [
-            '%id' => $mapped_object->entity_id->value,
-            '%sfid' => $record['id'],
-          ]
-        );
-        $mapped_object->delete();
-        continue;
-      }
 
-      try {
-        // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
-        $sf_mapping = $this->mapping_storage
-          ->load($mapped_object->salesforce_mapping->entity->id());
-      }
-      catch (EntityNotFoundException $e) {
+      // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
+      $sf_mapping = $this->mapping_storage
+        ->load($mapped_object->salesforce_mapping->entity->id());
+      if (!$sf_mapping) {
         $this->logger->log(
           LogLevel::NOTICE,
           'No mapping exists for mapped object %id with Salesforce Object ID: %sfid',
