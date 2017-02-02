@@ -153,43 +153,16 @@ class PullBaseTest extends UnitTestCase {
 
   /**
    * Test handler operation, create with good data
-   * NOTE: can only test that exception is thrown, cannot test that the
-   * createEntity() method executes as expected - that must be in a separate test
    */
   public function testProcessItemCreate() {
-    //mock StringTranslation service
-    $prophecy = $this->prophesize(TranslationInterface::CLASS);
-    $this->translation = $prophecy->reveal();
-
     // mock mapped object EntityStorage object
     $prophecy = $this->prophesize(EntityStorageBase::CLASS);
     $prophecy->loadByProperties(Argument::any())->willReturn([]);
     $this->mappedObjectStorage = $prophecy->reveal();
-    
-    // mock sf mapping 
-    // @TODO move this into setUp()?
-    $my_mapping = new SalesforceMapping([
-      'id' => 'test',
-      'drupal_bundle' => 'test',
-      'drupal_entity_type' => 'test',
-      'salesforce_object_type' => 'test',
-      'sync_triggers' => [
-        MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE => MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
-      ],
-    ], 'salesforce_mapping');
-
-    $this->assertEquals('test', $my_mapping->getDrupalBundle());
-    $this->assertEquals('test', $my_mapping->getDrupalEntityType());
-    $this->assertTrue($my_mapping->doesPull());
-  
-    // mock sf mapping entitystorage
-    $prophecy = $this->prophesize(EntityStorageBase::CLASS);
-    $prophecy->load(Argument::any())->willReturn($my_mapping);
-    $this->mappingObjectStorage = $prophecy->reveal();
 
     // mock EntityTypeManagerInterface
     $prophecy = $this->prophesize(EntityTypeManagerInterface::CLASS);
-    $prophecy->getStorage('salesforce_mapping')->willReturn($this->mappingObjectStorage);
+    $prophecy->getStorage('salesforce_mapping')->willReturn($this->configStorage);
     $prophecy->getStorage('salesforce_mapped_object')->willReturn($this->mappedObjectStorage);
     $prophecy->getStorage('test')->willReturn($this->newEntityStorage); $prophecy->getDefinition('test')->willReturn($this->entityDefinition);
     $this->etm = $prophecy->reveal();
@@ -202,6 +175,7 @@ class PullBaseTest extends UnitTestCase {
     $item = new PullQueueItem($sobject, $this->mapping);
 
     $this->pullWorker->processItem($item);
+    $this->assertEmpty($this->etm->getStorage('salesforce_mapped_object')->loadByProperties(['name' => 'test_test']));
     $this->assertEquals('create', $this->pullWorker->getDone());
   }
 }

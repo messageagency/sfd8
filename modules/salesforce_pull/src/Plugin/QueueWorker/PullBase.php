@@ -163,7 +163,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
             '%msg' => $e->getMessage(),
           ]
         );
-        continue;
+        //continue;
       }
 
       // Flag this entity as having been processed. This does not persist,
