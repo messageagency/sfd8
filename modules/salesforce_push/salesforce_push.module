@@ -58,8 +58,10 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
     return;
   }
 
-  $mappings =
-    $mappings = \Drupal::service('entity.manager')
+  $properties = empty($entity->getEntityTypeId())
+    ? []
+    : ["drupal_entity_type" => $entity->getEntityTypeId()];
+  $mappings = \Drupal::service('entity.manager')
       ->getStorage('salesforce_mapping')
       ->loadByProperties($properties);
   if (empty($mappings)) {

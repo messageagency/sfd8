@@ -7,7 +7,6 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\StringTranslation\Translator\TranslationInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
@@ -58,9 +57,6 @@ class PullBaseTest extends UnitTestCase {
 
     // mock mapped object
     $prophecy = $this->prophesize(MappedObjectInterface::CLASS);
-    // @TODO: make MappedObjects testable and thus mockable better here
-    //$prophecy->get('entity_type_id')->willReturn($this->entityTypeId);
-    //$prophecy->get('entity_id')->willReturn($this->entityId);
     $this->mappedObject = $prophecy->reveal();
 
 

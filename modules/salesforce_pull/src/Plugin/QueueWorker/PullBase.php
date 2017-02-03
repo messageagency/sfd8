@@ -7,20 +7,24 @@
 
 namespace Drupal\salesforce_pull\Plugin\QueueWorker;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\Utility\Error;
+use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\SalesforcePullEvent;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce\SObject;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -80,19 +84,21 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   protected $logger;
 
   protected $event_dispatcher;
+
   /**
    * Creates a new PullBase object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, LoggerChannelFactoryInterface $logger_factory) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, LoggerChannelFactoryInterface $logger_factory, ContainerAwareEventDispatcher $event_dispatcher) {
     $this->etm = $entity_type_manager;
     $this->client = $client;
     $this->mh = $module_handler;
     $this->logger = $logger_factory->get('Salesforce Pull');
     $this->mapping_storage = $this->etm->getStorage('salesforce_mapping');
     $this->mapped_object_storage = $this->etm->getStorage('salesforce_mapped_object');
+    $this->event_dispatcher = $event_dispatcher;
     $this->done = '';
   }
 
@@ -104,7 +110,8 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $container->get('entity_type.manager'),
       $container->get('salesforce.client'),
       $container->get('module_handler'),
-      $container->get('logger.factory')
+      $container->get('logger.factory'),
+      $container->get('event_dispatcher')
     );
   }
 
@@ -256,7 +263,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       // Create mapping object.
       $mapped_object = new MappedObject([
           'entity_type_id' => $entity_type,
-          'salesforce_mapping' => $mapping->id(),
+          'salesforce_mapping' => $mapping->id,
           'salesforce_id' => (string)$sf_object->id(),
         ]);
 

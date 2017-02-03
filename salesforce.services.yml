@@ -1,4 +1,4 @@
 services:
   salesforce.client:
     class: Drupal\salesforce\Rest\RestClient
-    arguments: ['@http_client', '@config.factory', '@url', '@state', '@cache.default']
+    arguments: ['@http_client', '@config.factory', '@state', '@cache.default']
