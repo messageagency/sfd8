@@ -42,10 +42,9 @@ class RestClient {
    * @param \Guzzle\Http\ClientInterface $http_client
    *   The config factory.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, Url $url, StateInterface $state, CacheBackendInterface $cache) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
-    $this->url = $url;
     $this->config = $this->configFactory->get('salesforce.settings');
     $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
@@ -426,7 +425,7 @@ class RestClient {
    * @see Drupal\salesforce\Controller\SalesforceController
    */
   public function getAuthCallbackUrl() {
-    return $this->url->fromRoute('salesforce.oauth_callback', [], [
+    return Url::fromRoute('salesforce.oauth_callback', [], [
       'absolute' => TRUE,
       'https' => TRUE,
     ]);

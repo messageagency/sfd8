@@ -77,6 +77,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   protected $logger;
 
   protected $event_dispatcher;
+
   /**
    * Creates a new PullBase object.
    *
@@ -91,6 +92,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     $this->event_dispatcher = $event_dispatcher;
     $this->mapping_storage = $this->etm->getStorage('salesforce_mapping');
     $this->mapped_object_storage = $this->etm->getStorage('salesforce_mapped_object');
+    $this->event_dispatcher = $event_dispatcher;
   }
 
   /**
@@ -255,7 +257,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       echo __LINE__.PHP_EOL;
 
       // Create mapping object.
-      // @TODO this should go through a factory.
       $mapped_object = $this->mapped_object_storage->create([
         'entity_type_id' => $entity_type,
         'salesforce_mapping' => $mapping->id(),

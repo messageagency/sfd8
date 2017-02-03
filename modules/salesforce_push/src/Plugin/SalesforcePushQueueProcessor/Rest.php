@@ -4,6 +4,7 @@ namespace Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\salesforce\EntityNotFoundException;
@@ -43,18 +44,15 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    * @var MappedObjectStorage
    */
   protected $mapped_object_storage;
-
-  protected $entity_manager;
   protected $event_dispatcher;
-  protected $entityTypeManager;
+  protected $etm;
 
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClient $client, EntityManagerInterface $entity_manager, EntityTypeManagerInterface $etm, ContainerAwareEventDispatcher $event_dispatcher) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClient $client,  EntityTypeManager $etm, ContainerAwareEventDispatcher $event_dispatcher) {
     $this->queue = $queue;
     $this->client = $client;
-    $this->entity_manager = $entity_manager;
-    $this->entityTypeManager = $etm;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
+    $this->etm = $etm;
+    $this->mapping_storage = $etm->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $etm->getStorage('salesforce_mapped_object');
     $this->event_dispatcher = $event_dispatcher;
   }
 
@@ -65,7 +63,6 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     return new static($configuration, $plugin_id, $plugin_definition,
       $container->get('queue.salesforce_push'),
       $container->get('salesforce.client'),
-      $container->get('entity.manager'),
       $container->get('entity_type.manager'),
       $container->get('event_dispatcher')
     );
@@ -118,7 +115,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
         $mapped_object->pushDelete();
       }
       else {
-        $entity = $this->entityTypeManager
+        $entity = $this->etm
           ->getStorage($mapping->drupal_entity_type)
           ->load($item->entity_id);
         if (!$entity) {

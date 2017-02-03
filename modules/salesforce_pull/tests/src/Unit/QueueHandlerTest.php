@@ -9,7 +9,6 @@ use Drupal\salesforce_pull\QueueHandler;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SObject;
-use Drupal\Tests\salesforce\salesforce_pull\TestQueueHandler;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
