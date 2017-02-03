@@ -13,6 +13,7 @@ use Drupal\Core\StringTranslation\Translator\TranslationInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SObject;
+use Drupal\salesforce\SFID;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
@@ -44,6 +45,13 @@ class PullBaseTest extends UnitTestCase {
     $this->entityId->value = '1';
     $this->salesforce_id = '1234567890abcde';
 
+    // mock SFID
+    $prophecy = $this->prophesize(SFID::CLASS);
+    $prophecy
+      ->__toString(Argument::any())
+      ->willReturn($this->salesforce_id);
+    $this->sfid = $prophecy->reveal();
+
     // mock content entity
     $prophecy = $this->prophesize(ContentEntityInterface::CLASS);
     $prophecy->label(Argument::any())->willReturn('test');
@@ -52,7 +60,7 @@ class PullBaseTest extends UnitTestCase {
 
     // mock mapping object
     $this->mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)
-      ->setMethods(['__construct', '__get', 'checkTriggers', 'getDrupalEntityType', 'getDrupalBundle', 'id'])
+      ->setMethods(['__construct', '__get', 'checkTriggers', 'getDrupalEntityType', 'getDrupalBundle', 'id', 'getFieldMappings', 'getSalesforceObjectType'])
       ->getMock();
     $this->mapping->expects($this->any())
       ->method('__get')
@@ -65,10 +73,14 @@ class PullBaseTest extends UnitTestCase {
       ->method('checkTriggers')
       ->willReturn(true);
     $this->mapping->method('getDrupalEntityType')
-        ->willReturn('test');
+      ->willReturn('test');
     $this->mapping->method('getDrupalBundle')
-        ->willReturn('test');
-    $this->mapping->entity = $this->mapping;
+      ->willReturn('test');
+    $this->mapping->method('getSalesforceObjectType')
+      ->willReturn('test');
+    // @TODO testing a mapping with no fields is of questionable value:
+    $this->mapping->method('getFieldMappings')
+      ->willReturn([]);
 
     // mock mapped object
     $prophecy = $this->prophesize(MappedObject::CLASS);
@@ -86,6 +98,9 @@ class PullBaseTest extends UnitTestCase {
       ->get('salesforce_id')
       ->willReturn($this->salesforce_id);
     $prophecy
+      ->sfid(Argument::any())
+      ->willReturn($this->salesforce_id);
+    $prophecy
       ->setDrupalEntity(Argument::any())
       ->willReturn($prophecy->reveal());
     $prophecy
@@ -97,6 +112,15 @@ class PullBaseTest extends UnitTestCase {
     $prophecy
       ->getMapping(Argument::any())
       ->willReturn($this->mapping);
+    $prophecy
+      ->pull(Argument::any())
+      ->willReturn(NULL);
+    $prophecy
+      ->id(Argument::any())
+      ->willReturn($this->salesforce_id);
+    $prophecy
+      ->label(Argument::any())
+      ->willReturn('test');
     $this->mappedObject = $prophecy->reveal();
 
     // mock mapping ConfigEntityStorage object
@@ -152,7 +176,7 @@ class PullBaseTest extends UnitTestCase {
       'records' => [
         [
           'Id' => $this->salesforce_id,
-          'attributes' => ['type' => 'dummy',],
+          'attributes' => ['type' => 'test',],
           'name' => 'Example',
         ],
       ]
@@ -161,8 +185,15 @@ class PullBaseTest extends UnitTestCase {
 
     // mock rest cient
     $prophecy = $this->prophesize(RestClient::CLASS);
-    $prophecy->query(Argument::any())
+    $prophecy
+      ->query(Argument::any())
       ->willReturn($this->sqr);
+    $prophecy
+      ->objectUpdate(Argument::any(), Argument::any(), Argument::any())
+      ->willReturn(NULL);
+    $prophecy
+      ->objectCreate(Argument::any())
+      ->willReturn($this->sfid);
     $this->sfapi = $prophecy->reveal();
 
     // mock module handler
@@ -181,7 +212,7 @@ class PullBaseTest extends UnitTestCase {
 
     // mock event dispatcher
     $prophecy = $this->prophesize(ContainerAwareEventDispatcher::CLASS);
-    $prophecy->dispatch(Argument::any())->willReturn(NULL);
+    $prophecy->dispatch(Argument::any(),Argument::any())->willReturn(NULL);
     $this->ed = $prophecy->reveal();
 
     $this->pullWorker = $this->getMockBuilder(PullBase::CLASS)
@@ -206,7 +237,7 @@ class PullBaseTest extends UnitTestCase {
    * Test handler operation, update with good data
    */
   public function testProcessItemUpdate() {
-    $sobject = new SObject(['id' => $this->salesforce_id, 'attributes' => ['type' => 'dummy',]]);
+    $sobject = new SObject(['id' => $this->salesforce_id, 'attributes' => ['type' => 'test',]]);
     $item = new PullQueueItem($sobject, $this->mapping);
 
     ;

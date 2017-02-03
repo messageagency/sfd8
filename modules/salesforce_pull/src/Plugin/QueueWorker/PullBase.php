@@ -229,13 +229,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    */
   protected function createEntity(SalesforceMappingInterface $mapping, SObject $sf_object) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE])) {
-      echo __LINE__.PHP_EOL;
       return;
     }
     echo __LINE__.PHP_EOL;
 
     try {
-      echo __LINE__.PHP_EOL;
       // Define values to pass to entity_create().
       $entity_type = $mapping->getDrupalEntityType();
       $entity_keys = $this->etm->getDefinition($entity_type)->getKeys();
@@ -244,7 +242,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       && !empty($entity_keys['bundle'])) {
         $values[$entity_keys['bundle']] = $mapping->getDrupalBundle();
       }
-      echo __LINE__.PHP_EOL;
 
       // See note above about flag.
       $values['salesforce_pull'] = TRUE;
@@ -254,7 +251,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         ->getStorage($entity_type)
         ->create($values);
 
-      echo __LINE__.PHP_EOL;
 
       // Create mapping object.
       $mapped_object = $this->mapped_object_storage->create([
@@ -262,22 +258,18 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         'salesforce_mapping' => $mapping->id(),
         'salesforce_id' => (string)$sf_object->id(),
       ]);
-        echo __LINE__.PHP_EOL;
-        var_dump($mapped_object);
+          var_dump($mapped_object);
       $mapped_object
         ->setDrupalEntity($entity)
         ->setSalesforceRecord($sf_object);
 
-      echo __LINE__.PHP_EOL;
       $this->event_dispatcher->dispatch(
         SalesforceEvents::PULL_PREPULL,
         new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE)
       );
-      echo __LINE__.PHP_EOL;
 
       $mapped_object->pull();
 
-      echo __LINE__.PHP_EOL;
       // Push upsert ID to SF object
       // @TODO make this optional / configurable
       $params = new PushParams($mapping, $entity);
@@ -287,7 +279,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         $params->getParams()
       );
 
-      echo __LINE__.PHP_EOL;
       $this->logger->log(
         LogLevel::NOTICE,
         'Created entity %id %label associated with Salesforce Object ID: %sfid',
@@ -301,7 +292,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     }
     catch (\Exception $e) {
       var_dump($e);
-      echo __LINE__.PHP_EOL;
       $this->logger->log(
         LogLevel::ERROR,
         '%msg Pull-create failed for Salesforce Object ID: %sfobjectid',
