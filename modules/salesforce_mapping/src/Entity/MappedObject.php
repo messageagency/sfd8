@@ -208,6 +208,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
+   * @return return SalesforceMappingInterface
+   */
+  public function getMapping() {
+    return $this->salesforce_mapping->entity;
+  }
+
+  /**
    * @return EntityInterface
    */
   public function getMappedEntity() {

@@ -2,21 +2,21 @@
 
 namespace Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_mapping\SalesforcePushEvent;
 use Drupal\salesforce_push\PushQueue;
 use Drupal\salesforce_push\PushQueueProcessorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\SalesforcePushEvent;
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 
 /**
  * Rest queue processor plugin.
@@ -67,7 +67,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
       $container->get('salesforce.client'),
       $container->get('entity.manager'),
       $container->get('entity_type.manager'),
-      $container->get('event_dispatcher'),
+      $container->get('event_dispatcher')
     );
   }
 

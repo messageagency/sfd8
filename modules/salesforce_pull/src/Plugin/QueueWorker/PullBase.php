@@ -7,21 +7,25 @@
 
 namespace Drupal\salesforce_pull\Plugin\QueueWorker;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\Utility\Error;
+use Drupal\salesforce\Exception;
+use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SObject;
+use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
-use Drupal\salesforce\Exception;
-use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce\SObject;
+use Drupal\salesforce_mapping\SalesforcePullEvent;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -52,13 +56,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   protected $mh;
 
   /**
-   * Internal flow tracker for testing.
-   *
-   * @var string
-   */
-  protected $done;
-
-  /**
    * Storage handler for SF mappings
    *
    * @var SalesforceMappingStorage
@@ -73,7 +70,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   protected $mapped_object_storage;
 
   /**
-   * Logger ervice
+   * Logger service
    *
    * @var LoggerInterface
    */
@@ -86,14 +83,14 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, LoggerChannelFactoryInterface $logger_factory) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, ModuleHandlerInterface $module_handler, LoggerChannelFactoryInterface $logger_factory, ContainerAwareEventDispatcher $event_dispatcher) {
     $this->etm = $entity_type_manager;
     $this->client = $client;
     $this->mh = $module_handler;
     $this->logger = $logger_factory->get('Salesforce Pull');
+    $this->event_dispatcher = $event_dispatcher;
     $this->mapping_storage = $this->etm->getStorage('salesforce_mapping');
     $this->mapped_object_storage = $this->etm->getStorage('salesforce_mapped_object');
-    $this->done = '';
   }
 
   /**
@@ -104,7 +101,8 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $container->get('entity_type.manager'),
       $container->get('salesforce.client'),
       $container->get('module_handler'),
-      $container->get('logger.factory')
+      $container->get('logger.factory'),
+      $container->get('event_dispatcher')
     );
   }
 
@@ -126,12 +124,10 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     // @TODO one-to-many: this is a blocker for OTM support:
     $mapped_object = current($mapped_object);
     if (!empty($mapped_object)) {
-      $this->updateEntity($mapping, $mapped_object, $sf_object);
-      $this->done = 'update';
+      return $this->updateEntity($mapping, $mapped_object, $sf_object);
     }
     else {
-      $this->createEntity($mapping, $sf_object);
-      $this->done = 'create';
+      return $this->createEntity($mapping, $sf_object);
     }
 
   }
@@ -200,6 +196,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
             '%sfid' => (string)$sf_object->id(),
           ]
         );
+        return MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE;
       }
     }
     catch (\Exception $e) {
@@ -230,10 +227,13 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    */
   protected function createEntity(SalesforceMappingInterface $mapping, SObject $sf_object) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE])) {
+      echo __LINE__.PHP_EOL;
       return;
     }
+    echo __LINE__.PHP_EOL;
 
     try {
+      echo __LINE__.PHP_EOL;
       // Define values to pass to entity_create().
       $entity_type = $mapping->getDrupalEntityType();
       $entity_keys = $this->etm->getDefinition($entity_type)->getKeys();
@@ -242,35 +242,41 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       && !empty($entity_keys['bundle'])) {
         $values[$entity_keys['bundle']] = $mapping->getDrupalBundle();
       }
+      echo __LINE__.PHP_EOL;
 
       // See note above about flag.
       $values['salesforce_pull'] = TRUE;
 
       // Create entity.
-      $entity = $this->etm->getStorage($entity_type)->create($values);
+      $entity = $this->etm
+        ->getStorage($entity_type)
+        ->create($values);
 
-      // Flag this entity as having been processed. This does not persist,
-      // but is used by salesforce_push to avoid duplicate processing.
-      $entity->salesforce_pull = TRUE;
+      echo __LINE__.PHP_EOL;
 
       // Create mapping object.
-      $mapped_object = new MappedObject([
-          'entity_type_id' => $entity_type,
-          'salesforce_mapping' => $mapping->id(),
-          'salesforce_id' => (string)$sf_object->id(),
-        ]);
-
+      // @TODO this should go through a factory.
+      $mapped_object = $this->mapped_object_storage->create([
+        'entity_type_id' => $entity_type,
+        'salesforce_mapping' => $mapping->id(),
+        'salesforce_id' => (string)$sf_object->id(),
+      ]);
+        echo __LINE__.PHP_EOL;
+        var_dump($mapped_object);
       $mapped_object
         ->setDrupalEntity($entity)
         ->setSalesforceRecord($sf_object);
 
+      echo __LINE__.PHP_EOL;
       $this->event_dispatcher->dispatch(
         SalesforceEvents::PULL_PREPULL,
         new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE)
       );
+      echo __LINE__.PHP_EOL;
 
       $mapped_object->pull();
 
+      echo __LINE__.PHP_EOL;
       // Push upsert ID to SF object
       // @TODO make this optional / configurable
       $params = new PushParams($mapping, $entity);
@@ -280,6 +286,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         $params->getParams()
       );
 
+      echo __LINE__.PHP_EOL;
       $this->logger->log(
         LogLevel::NOTICE,
         'Created entity %id %label associated with Salesforce Object ID: %sfid',
@@ -289,8 +296,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           '%sfid' => (string)$sf_object->id(),
         ]
       );
+      return MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE;
     }
     catch (\Exception $e) {
+      var_dump($e);
+      echo __LINE__.PHP_EOL;
       $this->logger->log(
         LogLevel::ERROR,
         '%msg Pull-create failed for Salesforce Object ID: %sfobjectid',
@@ -305,12 +315,5 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         Error::decodeException($e)
       );
     }
-  }
-
-  /**
-   * Return internal process tracking property
-   */
-  public function getDone() {
-    return $this->done;
   }
 }
