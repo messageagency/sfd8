@@ -146,12 +146,15 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    */
   protected function updateEntity(SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object, SObject $sf_object) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
+      echo __LINE__.PHP_EOL;
       return;
     }
 
     try {
+      echo __LINE__.PHP_EOL;
       $entity = $this->etm->getStorage($mapped_object->entity_type_id->value)
         ->load($mapped_object->entity_id->value);
+      echo __LINE__.PHP_EOL;
       if (!$entity) {
         $this->logger->log(
           LogLevel::ERROR,
@@ -161,12 +164,14 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
             '%msg' => $e->getMessage(),
           ]
         );
+        echo __LINE__.PHP_EOL;
         return;
       }
 
       // Flag this entity as having been processed. This does not persist,
       // but is used by salesforce_push to avoid duplicate processing.
       $entity->salesforce_pull = TRUE;
+      echo __LINE__.PHP_EOL;
 
       $entity_updated = !empty($entity->changed->value)
         ? $entity->changed->value
@@ -175,6 +180,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $pull_trigger_date =
         $sf_object->field($mapping->get('pull_trigger_date'));
       $sf_record_updated = strtotime($pull_trigger_date);
+      echo __LINE__.PHP_EOL;
 
       $mapped_object
         ->setDrupalEntity($entity)
@@ -184,12 +190,15 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         SalesforceEvents::PULL_PREPULL,
         new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
       );
+      echo __LINE__.PHP_EOL;
 
       // @TODO allow some means for contrib to force pull regardless
       // of updated dates
       if ($sf_record_updated > $entity_updated) {
         // Set fields values on the Drupal entity.
+        echo __LINE__.PHP_EOL;
         $mapped_object->pull();
+        echo __LINE__.PHP_EOL;
         $this->logger->log(
           LogLevel::NOTICE,
           'Updated entity %label associated with Salesforce Object ID: %sfid',
@@ -198,10 +207,13 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
             '%sfid' => (string)$sf_object->id(),
           ]
         );
+        echo __LINE__.PHP_EOL;
         return MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE;
       }
     }
     catch (\Exception $e) {
+      var_dump($e);
+      echo __LINE__.PHP_EOL;
       $this->logger->log(
         LogLevel::ERROR,
         'Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
@@ -258,7 +270,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         'salesforce_mapping' => $mapping->id(),
         'salesforce_id' => (string)$sf_object->id(),
       ]);
-          var_dump($mapped_object);
       $mapped_object
         ->setDrupalEntity($entity)
         ->setSalesforceRecord($sf_object);
@@ -291,7 +302,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       return MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE;
     }
     catch (\Exception $e) {
-      var_dump($e);
       $this->logger->log(
         LogLevel::ERROR,
         '%msg Pull-create failed for Salesforce Object ID: %sfobjectid',
