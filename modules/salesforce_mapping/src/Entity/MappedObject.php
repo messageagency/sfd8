@@ -228,7 +228,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   /**
    * @return Link
    */
-  public function getSalesforceLink($options = []) {
+  public function getSalesforceLink(array $options = []) {
     // @TODO this doesn't work
     return;
     $defaults = ['attributes' => ['target' => '_blank']];
@@ -280,10 +280,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   public function push() {
     // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context, or short of that clear documentation on how callers should handle errors and exceptions. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
 
+    echo __LINE__.PHP_EOL;
     $mapping = $this->salesforce_mapping->entity;
+    echo __LINE__.PHP_EOL;
 
     // @TODO Convert to $this->drupal_entity
     $drupal_entity = $this->getMappedEntity();
+    echo __LINE__.PHP_EOL;
 
     // Previously hook_salesforce_push_params_alter.
     $params = new PushParams($mapping, $drupal_entity);
@@ -291,6 +294,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       SalesforceEvents::PUSH_PARAMS,
       new SalesforcePushEvent($this, $params)
     );
+    echo __LINE__.PHP_EOL;
 
     // @TODO is this the right place for this logic to live?
     // Cases:
