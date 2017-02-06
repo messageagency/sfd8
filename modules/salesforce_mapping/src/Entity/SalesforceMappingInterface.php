@@ -12,8 +12,10 @@ interface SalesforceMappingInterface {
   public function __construct(array $values = [], $entity_type);
 
   public function __get($key);
-  
+
   public function getFieldMappings();
+
+  public function getFieldMapping(array $field);
 
   public function getSalesforceObjectType();
 
@@ -23,5 +25,5 @@ interface SalesforceMappingInterface {
 
   public function id();
 
-  public function checkTriggers();
+  public function checkTriggers(array $triggers);
 }
