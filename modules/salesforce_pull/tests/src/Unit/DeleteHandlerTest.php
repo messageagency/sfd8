@@ -1,17 +1,16 @@
 <?php
 namespace Drupal\Tests\salesforce_pull\Unit;
 
-//use Drupal\Core\Config\Entity\ConfigEntityStorage;
-use Drupal\Core\Entity\EntityStorageBase;
-//use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Entity;
+use Drupal\Core\Entity\EntityStorageBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_mapping\MappedObjectStorage;
+use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_pull\DeleteHandler;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SelectQueryResult;
@@ -53,21 +52,32 @@ class DeleteHanderTest extends UnitTestCase {
       ->willReturn($result); // revisit
     $this->sfapi = $prophecy->reveal();
 
+    // mock Drupal entity
+    $prophecy = $this->prophesize(Entity::CLASS);
+    $prophecy->delete()->willReturn(true);
+    $prophecy->id()->willReturn(1);
+    $this->entity = $prophecy->reveal();
+
     $this->mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)
-      ->setMethods(['__construct', '__get', 'get', 'getSalesforceObjectType', 'getPullFieldsArray','checkTriggers'])
+      ->setMethods(['__construct', '__get', 'get', 'getSalesforceObjectType', 'getPullFieldsArray', 'checkTriggers'])
       ->getMock();
-    $this->mapping->expects($this->any())
+    $this->mapping->expects($this->at(0))
       ->method('__get')
       ->with($this->equalTo('id'))
       ->willReturn(1);
+    $this->mapping->expects($this->at(1))
+      ->method('__get')
+      ->with($this->equalTo('entity'))
+      ->willReturn($this->entity);
     $this->mapping->expects($this->any())
       ->method('getSalesforceObjectType')
       ->willReturn('default');
     $this->mapping->expects($this->any())
       ->method('getPullFieldsArray')
       ->willReturn(['Name' => 'Name', 'Account Number' => 'Account Number']);
-    $this->mapping->expects($this->any())
+    $this->mapping//->expects($this->any())
       ->method('checkTriggers')
+      ->with([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE])
       ->willReturn(true);
 
     // mock mapped object
@@ -86,11 +96,6 @@ class DeleteHanderTest extends UnitTestCase {
     $prophecy->salesforce_mapping = $this->mapping;
     $this->mappedObject = $prophecy->reveal();
     //print_r($this->mappedObject);
-
-    // mock Drupal entity
-    $prophecy = $this->prophesize(Entity::CLASS);
-    $prophecy->delete()->willReturn(true);
-    $this->entity = $prophecy->reveal();
 
     // mock mapping ConfigEntityStorage object
     $prophecy = $this->prophesize(SalesforceMappingStorage::CLASS);

@@ -60,14 +60,11 @@ class PullBaseTest extends UnitTestCase {
 
     // mock mapping object
     $this->mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)
-      ->setMethods(['__construct', '__get', 'checkTriggers', 'getDrupalEntityType', 'getDrupalBundle', 'id', 'getFieldMappings', 'getSalesforceObjectType'])
+      ->setMethods(['__construct', '__get', 'checkTriggers', 'getDrupalEntityType', 'getDrupalBundle', 'getFieldMappings', 'getSalesforceObjectType'])
       ->getMock();
     $this->mapping->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('id'))
-      ->willReturn(1);
-    $this->mapping->expects($this->any())
-      ->method('id')
       ->willReturn(1);
     $this->mapping->expects($this->any())
       ->method('checkTriggers')
@@ -239,15 +236,13 @@ class PullBaseTest extends UnitTestCase {
   public function testProcessItemUpdate() {
     $sobject = new SObject(['id' => $this->salesforce_id, 'attributes' => ['type' => 'test',]]);
     $item = new PullQueueItem($sobject, $this->mapping);
-
-    ;
     $this->assertEquals(MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE, $this->pullWorker->processItem($item));
   }
 
   /**
    * Test handler operation, create with good data
    */
-  public function testProcessItemCreate() {    
+  public function testProcessItemCreate() {
     // mock EntityTypeManagerInterface
     $prophecy = $this->prophesize(EntityTypeManagerInterface::CLASS);
     $prophecy

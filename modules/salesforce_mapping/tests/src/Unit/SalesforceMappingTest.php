@@ -3,7 +3,6 @@ namespace Drupal\Tests\salesforce_mapping\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\Core\Config\Entity\ConfigEntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -83,7 +82,7 @@ class SalesforceMappingTest extends UnitTestCase {
     $prophecy->getDefinition($this->entityTypeId)->willReturn($this->entityDefinition);
     $this->etm = $prophecy->reveal();
 
-    // moch Properties SalesforceMappingField
+    // mock Properties SalesforceMappingField
     $prophecy = $this->prophesize(Properties::CLASS);
     $prophecy->pull()->willReturn(true);
     $sf_mapping_field = $prophecy->reveal();
@@ -106,9 +105,8 @@ class SalesforceMappingTest extends UnitTestCase {
    * Test object instantiation
    */
   public function testObject() {
-    $mapping = new SalesforceMapping($this->values, $this->entityTypeId);
-    $this->assertTrue($mapping instanceof SalesforceMapping);
-    //$this->assertEquals(1, $item->mapping_id);
+    $this->assertTrue($this->mapping instanceof SalesforceMapping);
+    $this->assertEquals($this->id, $this->mapping->id);
   }
 
     /**

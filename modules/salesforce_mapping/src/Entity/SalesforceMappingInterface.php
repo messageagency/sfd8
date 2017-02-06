@@ -2,6 +2,8 @@
 
 namespace Drupal\salesforce_mapping\Entity;
 
+use Drupal\Core\Entity\EntityInterface;
+
 /**
  *
  */
@@ -9,21 +11,33 @@ interface SalesforceMappingInterface {
   // Placeholder interface.
   // @TODO figure out what to abstract out of SalesforceMapping
 
-  public function __construct(array $values = [], $entity_type);
-
   public function __get($key);
 
-  public function getFieldMappings();
+  //public function getPullFields();
 
-  public function getFieldMapping(array $field);
+  //public function getPullFieldsArray();
 
-  public function getSalesforceObjectType();
+  //public function getKeyField();
 
-  public function getDrupalEntityType();
+  //public function hasKey();
 
-  public function getDrupalBundle();
+  //public function getKeyValue(EntityInterface $entity);
 
-  public function id();
+  //public function getSalesforceObjectType();
 
-  public function checkTriggers(array $triggers);
+  //public function getDrupalEntityType();
+
+  //public function getDrupalBundle();
+
+  //public function getFieldMappings();
+
+  //public function getFieldMapping(array $field);
+
+  //public function doesPush();
+
+  //public function doesPull();
+
+  //public function checkTriggers(array $triggers);
+
+  //public function fieldManager();
 }

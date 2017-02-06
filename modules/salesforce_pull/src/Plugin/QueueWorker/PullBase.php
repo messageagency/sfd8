@@ -267,7 +267,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       // Create mapping object.
       $mapped_object = $this->mapped_object_storage->create([
         'entity_type_id' => $entity_type,
-        'salesforce_mapping' => $mapping->id(),
+        'salesforce_mapping' => $mapping->id,
         'salesforce_id' => (string)$sf_object->id(),
       ]);
       $mapped_object
