@@ -323,7 +323,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     return FALSE;
   }
 
-  protected function fieldManager() {
+  public function fieldManager() {
     return \Drupal::service('plugin.manager.salesforce_mapping_field');
   }
 

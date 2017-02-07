@@ -64,17 +64,17 @@ class DeleteHandler {
    */
   public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
-    foreach (array_reverse($this->mapping_storage->getMappedSobjectTypes()) as $type) {
-      $last_delete_sync = $this->state->get('salesforce_pull_last_delete_' . $type, $this->request->server->get('REQUEST_TIME'));
+    foreach (array_reverse($this->getMappingStorage()->getMappedSobjectTypes()) as $type) {
+      $last_delete_sync = $this->state()->get('salesforce_pull_last_delete_' . $type, $this->request()->server->get('REQUEST_TIME'));
       $now = time();
       // getDeleted() restraint: startDate must be at least one minute
       // greater than endDate.
       $now = $now > $last_delete_sync + 60 ? $now : $now + 60;
       $last_delete_sync_sf = gmdate('Y-m-d\TH:i:s\Z', $last_delete_sync);
       $now_sf = gmdate('Y-m-d\TH:i:s\Z', $now);
-      $deleted = $this->sfapi->getDeleted($type, $last_delete_sync_sf, $now_sf);
+      $deleted = $this->sfapi()->getDeleted($type, $last_delete_sync_sf, $now_sf);
       $this->handleDeletedRecords($deleted, $type);
-      $this->state->set('salesforce_pull_last_delete_' . $type, $this->request->server->get('REQUEST_TIME'));
+      $this->state()->set('salesforce_pull_last_delete_' . $type, $this->request()->server->get('REQUEST_TIME'));
     }
     return true;
   }
@@ -84,7 +84,7 @@ class DeleteHandler {
       return;
     }
 
-    $sf_mappings = $this->mapping_storage->loadByProperties(
+    $sf_mappings = $this->getMappingStorage()->loadByProperties(
       ['salesforce_object_type' => $type]
     );
     if (empty($sf_mappings)) {
@@ -96,18 +96,40 @@ class DeleteHandler {
     }
   }
 
+  protected function logger() {
+    return $this->logger;
+  }
+
+  protected function request() {
+    return $this->request;
+  }
+
+  protected function state() {
+    return $this->state;
+  }
+
+  protected function sfapi() {
+    return $this->sfapi;
+  }
+
+  protected function getMappingStorage() {
+    return $this->mapping_storage;
+  }
+
+  protected function getMappedObjectStorage() {
+    return $this->mapped_object_storage;
+  }
+
   protected function handleDeletedRecord($record, $type) {
-    $mapped_objects = $this->mapped_object_storage->loadBySfid(new SFID($record['id']));
+    $mapped_objects = $this->getMappedObjectStorage()->loadBySfid(new SFID($record['id']));
     if (empty($mapped_objects)) {
       return;
     }
 
     foreach ($mapped_objects as $mapped_object) {
-      $entity = $this->etm
-        ->getStorage($mapped_object->entity_type_id->value)
-        ->load($mapped_object->entity_id->value);
+      $entity = $mapped_object->getMappedEntity();
       if (!$entity) {
-        $this->logger->log(
+        $this->logger()->log(
           LogLevel::NOTICE,
           'No entity found for ID %id associated with Salesforce Object ID: %sfid ',
           [
@@ -121,12 +143,9 @@ class DeleteHandler {
     }
 
     // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
-    $foo = $mapped_object->salesforce_mapping->id;
-    $sf_mapping = $this->mapping_storage
-    //  ->load($mapped_object->salesforce_mapping->id);
-      ->load($mapped_object->salesforce_mapping->entity->id());
+    $sf_mapping = $mapped_object->getMapping();
     if (!$sf_mapping) {
-      $this->logger->log(
+      $this->logger()->log(
         LogLevel::NOTICE,
         'No mapping exists for mapped object %id with Salesforce Object ID: %sfid',
         [
@@ -134,6 +153,7 @@ class DeleteHandler {
           '%sfid' => $record['id'],
         ]
       );
+      print "NO MAPPING\n";
       // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
       // $mapped_object->delete();
       return;
@@ -145,7 +165,7 @@ class DeleteHandler {
 
     try {
       $entity->delete();
-      $this->logger->log(
+      $this->logger()->log(
         LogLevel::NOTICE,
         'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid',
         [
@@ -156,7 +176,7 @@ class DeleteHandler {
       );
     }
     catch (\Exception $e) {
-      $this->logger->log(
+      $this->logger()->log(
         LogLevel::ERROR,
         '%type: @message in %function (line %line of %file).',
         Error::decodeException($e)

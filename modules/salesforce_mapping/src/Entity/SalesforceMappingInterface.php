@@ -2,6 +2,8 @@
 
 namespace Drupal\salesforce_mapping\Entity;
 
+use Drupal\Core\Entity\EntityInterface;
+
 /**
  *
  */
@@ -46,6 +48,6 @@ interface SalesforceMappingInterface {
    *
    * @return string
    */
-  public function getKeyValue();
+  public function getKeyValue(EntityInterface $entity);
   
 }

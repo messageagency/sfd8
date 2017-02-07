@@ -505,7 +505,7 @@ class RestClient {
    * @addtogroup salesforce_apicalls
    */
   public function query(SelectQuery $query) {
-    // $this->moduleHander->alter('salesforce_query', $query);
+    // $this->moduleHandler->alter('salesforce_query', $query);
     // Casting $query as a string calls SelectQuery::__toString().
     return new SelectQueryResult($this->apiCall('query?q=' . (string) $query));
   }
