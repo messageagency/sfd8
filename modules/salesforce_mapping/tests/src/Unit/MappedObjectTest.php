@@ -15,8 +15,10 @@ use Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Properties;
 use Prophecy\Argument;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce\SFID;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\MappedObject;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 
 /**
  * Test Mapped Object instantitation
@@ -35,6 +37,26 @@ class MappedObjectTest extends UnitTestCase {
 
     $this->entityTypeId = $this->randomMachineName();
     $this->bundle = $this->randomMachineName();
+    $this->mapped_object_id = 1;
+    $this->salesforce_id = '1234567890abcdeAAA';
+    $this->mapping_id = 1;
+    $this->entity_id = 1;
+
+    $values = array(
+      'id' => $this->mapped_object_id,
+      // 'defaultLangcode' => array(LanguageInterface::LANGCODE_DEFAULT => 'en'),
+      'entity_id' => $this->entity_id,
+      'entity_type_id' => $this->entityTypeId,
+      'salesforce_id' => $this->salesforce_id,
+      'salesforce_mapping' => $this->mapping_id,
+    );
+
+    $this->sfid = $this->getMockBuilder(SFID::CLASS)
+      ->setConstructorArgs([$this->salesforce_id])
+      ->getMock();
+    $this->sfid->expects($this->any())
+      ->method('__toString')
+      ->willReturn($this->salesforce_id);
 
     $this->entityType = $this->getMock('\Drupal\Core\Entity\EntityTypeInterface');
     $this->entityType->expects($this->any())
@@ -55,7 +77,6 @@ class MappedObjectTest extends UnitTestCase {
       ->method('getKeys')
       ->will($this->returnValue([
         'id' => 'id',
-        'revision' => 'revision',
         'entity_id' => 'entity_id',
         'salesforce_id' => 'salesforce_id'
     ]));
@@ -83,7 +104,8 @@ class MappedObjectTest extends UnitTestCase {
       ->will($this->returnValue(array()));
     $this->fieldTypePluginManager->expects($this->any())
       ->method('createFieldItemList')
-      ->will($this->returnValue($this->getMock('Drupal\Core\Field\FieldItemListInterface')));
+      ->will($this->returnValue(
+        $this->getMock('Drupal\Core\Field\FieldItemListInterface')));
 
     $container = new ContainerBuilder();
     $container->set('entity.manager', $this->entityManager);
@@ -93,12 +115,6 @@ class MappedObjectTest extends UnitTestCase {
     $container->set('plugin.manager.field.field_type', $this->fieldTypePluginManager);
     \Drupal::setContainer($container);
 
-    // mock salesforce mapping
-    $this->mapping_id = 1;
-    $prophecy = $this->prophesize(SalesforceMappingInterface::CLASS);
-    $this->mapping = $prophecy->reveal();
-
-    $this->entity_id = 1;
     $this->entity = $this->getMock('\Drupal\Core\Entity\ContentEntityInterface');
     $this->entity
       ->expects($this->any())
@@ -110,21 +126,8 @@ class MappedObjectTest extends UnitTestCase {
       ->method('isTranslatable')
       ->willReturn(FALSE);
 
-    $this->mapped_object_id = 1;
-    $this->salesforce_id = '1234567890abcdeAAA';
-    $values = array(
-      'id' => $this->mapped_object_id,
-      // 'defaultLangcode' => array(LanguageInterface::LANGCODE_DEFAULT => 'en'),
-      'revision_id' => 1,
-      'entity_id' => $this->entity_id,
-      'entity_type_id' => $this->entityTypeId,
-      'salesforce_id' => $this->salesforce_id,
-      'salesforce_mapping' => $this->mapping_id,
-    );
-
     $this->fieldDefinitions = array(
       'id' => BaseFieldDefinition::create('integer'),
-      'revision_id' => BaseFieldDefinition::create('integer'),
       'entity_id' => BaseFieldDefinition::create('integer'),
       'entity_type_id' => BaseFieldDefinition::create('string'),
       'salesforce_id' => BaseFieldDefinition::create('string'),
@@ -136,32 +139,104 @@ class MappedObjectTest extends UnitTestCase {
       ->with('salesforce_mapped_object', 'salesforce_mapped_object')
       ->will($this->returnValue($this->fieldDefinitions));
 
-    $this->mapped_object = $this->getMockForAbstractClass('\Drupal\salesforce_mapping\Entity\MappedObjectInterface', array($values));
+    // mock salesforce mapping
+    $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
+    $this->mapping
+      ->expects($this->any())
+      ->method('getFieldMappings')
+      ->willReturn([]);
+    $this->mapping
+      ->expects($this->any())
+      ->method('getSalesforceObjectType')
+      ->willReturn('dummy_sf_object_type');
+
+    $this->mapped_object = $this->getMockBuilder(MappedObject::CLASS)
+      ->disableOriginalConstructor()
+      ->setMethods(['getMappedEntity', 'getMapping', 'getEntityType', 'sfid', 'set', 'save', 'setNewRevision', 'client'])
+      ->getMock();
     $this->mapped_object->expects($this->any())
       ->method('getMappedEntity')
       ->willReturn($this->entity);
-    
+    $this->mapped_object->expects($this->any())
+      ->method('getMapping')
+      ->willReturn($this->mapping);
+    $this->mapped_object->expects($this->any())
+      ->method('getEntityType')
+      ->willReturn($this->mappedObjectEntityType);
+    $this->mapped_object->expects($this->any())
+      ->method('set')
+      ->willReturn($this->mapped_object);
+    $this->mapped_object->expects($this->any())
+      ->method('client')
+      ->willReturn($this->client);
   }
 
   /**
    * @covers ::push
    */
-  public function testPush() {
+  public function testPushUpsert() {
+    // First pass: test upsert
+    $this->mapping->expects($this->any())
+      ->method('hasKey')
+      ->will($this->returnValue(TRUE));
+    $this->client->expects($this->once())
+      ->method('objectUpsert')
+      ->willReturn(NULL);
+    $this->assertNull($this->mapped_object->push());
+  }
 
+  /**
+   * @covers ::push
+   */
+  public function testPushUpdate() {
+    // Second pass: test update
+    $this->mapping->expects($this->once())
+      ->method('hasKey')
+      ->willReturn(FALSE);
+    $this->mapped_object->expects($this->any())
+      ->method('sfid')
+      ->willReturn($this->sfid);
+    $this->client->expects($this->once())
+      ->method('objectUpdate')
+      ->willReturn(NULL);
+    $this->assertNull($this->mapped_object->push());
+  }
+  
+  /**
+   * @covers ::push
+   */
+  public function testPushCreate() {
+    // Third pass: test create
+    $this->mapping->expects($this->once())
+      ->method('hasKey')
+      ->will($this->returnValue(FALSE));
+    $this->mapped_object->expects($this->any())
+      ->method('sfid')
+      ->willReturn(FALSE);
+    $this->client->expects($this->once())
+      ->method('objectCreate')
+      ->willReturn($this->sfid);
+
+    $result = $this->mapped_object->push();
+    $this->assertTrue($result instanceof SFID);
+    $this->assertEquals($this->salesforce_id, (string)$result);
   }
 
   /**
    * @covers ::pushDelete
    */
   public function testPushDelete() {
-    
+    $this->client->expects($this->once())
+      ->method('objectDelete')
+      ->willReturn(NULL);
+    $this->assertEquals($this->mapped_object, $this->mapped_object->pushDelete());
   }
 
   /**
    * @covers ::pull
    */
   public function testPull() {
-    
+    // @TODO writeme
   }
 
 }

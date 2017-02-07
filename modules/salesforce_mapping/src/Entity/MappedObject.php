@@ -280,13 +280,10 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   public function push() {
     // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context, or short of that clear documentation on how callers should handle errors and exceptions. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
 
-    echo __LINE__.PHP_EOL;
-    $mapping = $this->salesforce_mapping->entity;
-    echo __LINE__.PHP_EOL;
+    $mapping = $this->getMapping();
 
     // @TODO Convert to $this->drupal_entity
     $drupal_entity = $this->getMappedEntity();
-    echo __LINE__.PHP_EOL;
 
     // Previously hook_salesforce_push_params_alter.
     $params = new PushParams($mapping, $drupal_entity);
@@ -294,7 +291,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       SalesforceEvents::PUSH_PARAMS,
       new SalesforcePushEvent($this, $params)
     );
-    echo __LINE__.PHP_EOL;
 
     // @TODO is this the right place for this logic to live?
     // Cases:
@@ -303,6 +299,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // 3. no upsert key, sfid: use update
     $result = FALSE;
     $action = '';
+
     if ($mapping->hasKey()) {
       $action = 'upsert';
       $result = $this->client()->objectUpsert(
@@ -314,7 +311,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     }
     elseif ($this->sfid()) {
       $action = 'update';
-      $this->client()->objectUpdate(
+      $result = $this->client()->objectUpdate(
         $mapping->getSalesforceObjectType(),
         $this->sfid(),
         $params->getParams()
@@ -357,7 +354,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * @return $this
    */
   public function pushDelete() {
-    $mapping = $this->salesforce_mapping->entity;
+    $mapping = $this->getMapping();
     $this->client()->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
     $this->setNewRevision(TRUE);
     $this
@@ -385,7 +382,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * @return $this
    */
   public function pull() {
-    $mapping = $this->salesforce_mapping->entity;
+    $mapping = $this->getMapping();
 
     if ($this->drupal_entity == NULL) {
       $this->drupal_entity = $this->getMappedEntity();
@@ -454,7 +451,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         continue;
       }
     }
-
 
     // @TODO: Event dispatching and entity saving should not be happening in this context, but inside a controller. This class needs to be more model-like.
     $this->eventDispatcher()->dispatch(

@@ -90,4 +90,11 @@ class RecordType extends SalesforceMappingFieldPluginBase {
     return \Drupal::service('salesforce.client');
   }
 
+  /**
+   * @TODO figure out what it means to pull Record Type
+   */
+  public function pull() {
+    return FALSE;
+  }
+
 }
