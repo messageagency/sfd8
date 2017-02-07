@@ -156,28 +156,13 @@ class DeleteHandlerTest extends UnitTestCase {
     $prophecy->server = $this->server;
     $this->request = $prophecy->reveal();
 
-    $this->dh = $this->getMockBuilder(DeleteHandler::CLASS)
-      ->disableOriginalConstructor()
-      ->setMethods(['logger', 'request', 'state', 'sfapi', 'getMappingStorage', 'getMappedObjectStorage'])
-      ->getMock();
-    $this->dh->expects($this->any())
-      ->method('logger')
-      ->willReturn($this->logger);
-    $this->dh->expects($this->any())
-      ->method('request')
-      ->willReturn($this->request);
-    $this->dh->expects($this->any())
-      ->method('state')
-      ->willReturn($this->state);
-    $this->dh->expects($this->any())
-      ->method('sfapi')
-      ->willReturn($this->sfapi);
-    $this->dh->expects($this->any())
-      ->method('getMappingStorage')
-      ->willReturn($this->configStorage);
-    $this->dh->expects($this->any())
-      ->method('getMappedObjectStorage')
-      ->willReturn($this->entityStorage);
+    $this->dh = DeleteHandler::create(
+      $this->sfapi,
+      $this->etm,
+      $this->state,
+      $this->logger,
+      $this->request
+    );
   }
 
   /**
