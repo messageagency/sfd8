@@ -129,7 +129,6 @@ class DeleteHandler {
           '%sfid' => $record['id'],
         ]
       );
-      print "NO MAPPING\n";
       // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
       // $mapped_object->delete();
       return;

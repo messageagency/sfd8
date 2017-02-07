@@ -152,8 +152,10 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
 
     try {
       echo __LINE__.PHP_EOL;
+      //print_r($mapped_object->entity_type_id);
       $entity = $this->etm->getStorage($mapped_object->entity_type_id->value)
         ->load($mapped_object->entity_id->value);
+      //print_r($entity);
       echo __LINE__.PHP_EOL;
       if (!$entity) {
         $this->logger->log(
@@ -173,6 +175,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $entity->salesforce_pull = TRUE;
       echo __LINE__.PHP_EOL;
 
+      print_r(empty($entity->changed->value));
       $entity_updated = !empty($entity->changed->value)
         ? $entity->changed->value
         : $mapped_object->get('entity_updated');
@@ -212,7 +215,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       }
     }
     catch (\Exception $e) {
-      var_dump($e);
+      var_dump(Error::decodeException($e));
       echo __LINE__.PHP_EOL;
       $this->logger->log(
         LogLevel::ERROR,

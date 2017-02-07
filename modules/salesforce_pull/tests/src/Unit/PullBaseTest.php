@@ -3,7 +3,7 @@ namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
-use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityStorageBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -18,12 +18,15 @@ use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+//use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_pull\Plugin\QueueWorker\PullBase;
 use Drupal\salesforce_pull\PullQueueItem;
 use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
+use Drupal\Core\Field\Plugin\Field\FieldType\StringItem;
+//use Drupal\Core\TypedData\DataDefinitionInterface;
+use Drupal\Core\Language\LanguageInterface;
 
 /**
  * Test Object instantitation
@@ -40,9 +43,6 @@ class PullBaseTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->entityTypeId = $this->entityId = new \stdClass();
-    $this->entityTypeId->value = 'test';
-    $this->entityId->value = '1';
     $this->salesforce_id = '1234567890abcde';
 
     // mock SFID
@@ -52,15 +52,43 @@ class PullBaseTest extends UnitTestCase {
       ->willReturn($this->salesforce_id);
     $this->sfid = $prophecy->reveal();
 
+    // mock StringItem for mock Entity
+    $changed_value = $this->getMockBuilder(StringItem::CLASS)
+      ->setMethods(['__get'])
+      ->disableOriginalConstructor()
+      //->setConstructorArgs([$ddi,null,null])
+      ->getMock();
+    $changed_value->expects($this->once())
+      ->method('__get')
+      ->with($this->equalTo('value'))
+      ->willReturn('999999');
+
     // mock content entity
-    $prophecy = $this->prophesize(ContentEntityInterface::CLASS);
-    $prophecy->label(Argument::any())->willReturn('test');
-    $prophecy->id(Argument::any())->willReturn(1);
-    $this->entity = $prophecy->reveal();
+    $this->entity = $this->getMockBuilder(ContentEntityBase::CLASS)
+      ->setMethods(['__construct', '__get', '__set', 'label', 'id', '__isset'])
+      ->disableOriginalConstructor()
+      ->getMock();
+    //$this->entity->method('label')
+    //  ->willReturn('test');
+    //$this->entity->method('id')
+    //  ->willReturn(1);
+    $this->entity->expects($this->any())
+      ->method('__get')
+      ->with($this->equalTo('changed'))
+      ->willReturn($changed_value);
+    $this->entity->expects($this->once())
+      ->method('__set')
+      ->with($this->equalTo('salesforce_pull'));
+    // to handle !empty($entity->changed->value) call
+    $this->entity->expects($this->any())
+      ->method('__isset')
+      ->with($this->equalTo('changed'))
+      ->willReturn(true);
 
     // mock mapping object
-    $this->mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)
-      ->setMethods(['__construct', '__get', 'checkTriggers', 'getDrupalEntityType', 'getDrupalBundle', 'getFieldMappings', 'getSalesforceObjectType'])
+    $this->mapping = $this->getMockBuilder(SalesforceMapping::CLASS)
+      ->setMethods(['__construct', '__get', 'get', 'checkTriggers', 'getDrupalEntityType', 'getDrupalBundle', 'getFieldMappings', 'getSalesforceObjectType'])
+      ->disableOriginalConstructor()
       ->getMock();
     $this->mapping->expects($this->any())
       ->method('__get')
@@ -69,6 +97,11 @@ class PullBaseTest extends UnitTestCase {
     $this->mapping->expects($this->any())
       ->method('checkTriggers')
       ->willReturn(true);
+    $this->mapping->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([
+        ['pull_trigger_date', 'pull_trigger_date']
+      ]));
     $this->mapping->method('getDrupalEntityType')
       ->willReturn('test');
     $this->mapping->method('getDrupalBundle')
@@ -79,46 +112,49 @@ class PullBaseTest extends UnitTestCase {
     $this->mapping->method('getFieldMappings')
       ->willReturn([]);
 
-    // mock mapped object
-    $prophecy = $this->prophesize(MappedObject::CLASS);
-    // @TODO: make MappedObjects testable and thus mockable better here
-    $prophecy
-      ->get('entity_type_id')
-      ->willReturn($this->entityTypeId);
-    $prophecy
-      ->get('entity_id')
-      ->willReturn($this->entityId);
-    $prophecy
-      ->get('salesforce_mapping')
-      ->willReturn($this->mapping);
-    $prophecy
-      ->get('salesforce_id')
-      ->willReturn($this->salesforce_id);
-    $prophecy
-      ->sfid(Argument::any())
-      ->willReturn($this->salesforce_id);
-    $prophecy
-      ->setDrupalEntity(Argument::any())
-      ->willReturn($prophecy->reveal());
-    $prophecy
-      ->setSalesforceRecord(Argument::any())
-      ->willReturn($prophecy->reveal());
-    $prophecy
-      ->getMappedEntity(Argument::any())
-      ->willReturn($this->entity);
-    $prophecy
-      ->getMapping(Argument::any())
-      ->willReturn($this->mapping);
-    $prophecy
-      ->pull(Argument::any())
-      ->willReturn(NULL);
-    $prophecy
-      ->id(Argument::any())
-      ->willReturn($this->salesforce_id);
-    $prophecy
-      ->label(Argument::any())
+    // mock StringItem (get ready for some tedium)
+    $entity_type_id_value = $this->getMockBuilder(StringItem::CLASS)
+      ->setMethods(['__get'])
+      ->disableOriginalConstructor()
+      //->setConstructorArgs([$ddi,null,null])
+      ->getMock();
+    $entity_type_id_value->expects($this->once())
+      ->method('__get')
+      ->with($this->equalTo('value'))
       ->willReturn('test');
-    $this->mappedObject = $prophecy->reveal();
+
+    // mock StringItem (get ready for some tedium)
+    $entity_id_value = $this->getMockBuilder(StringItem::CLASS)
+      ->setMethods(['__get'])
+      ->disableOriginalConstructor()
+      //->setConstructorArgs([$ddi,null,null])
+      ->getMock();
+    $entity_id_value->expects($this->once())
+      ->method('__get')
+      ->with($this->equalTo('value'))
+      ->willReturn('1');
+
+    // mock mapped object
+    $this->mappedObject = $this->getMockBuilder(MappedObject::CLASS)
+      ->setMethods(['__construct', '__get', 'get', 'setDrupalEntity', 'setSalesforceRecord', 'pull'])
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->mappedObject->expects($this->at(0))
+      ->method('__get')
+      ->with($this->equalTo('entity_type_id'))
+      ->willReturn($entity_type_id_value);
+    $this->mappedObject->expects($this->at(1))
+      ->method('__get')
+      ->with($this->equalTo('entity_id'))
+      ->willReturn($entity_id_value);
+    $this->mappedObject->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([
+        ['entity_updated', '1486490500']
+      ]));
+    $this->mappedObject->expects($this->any())
+      ->method('setDrupalEntity')
+      ->willReturn($this->mappedObject);
 
     // mock mapping ConfigEntityStorage object
     $prophecy = $this->prophesize(ConfigEntityStorage::CLASS);
@@ -135,8 +171,8 @@ class PullBaseTest extends UnitTestCase {
     // mock new Drupal entity EntityStorage object
     $prophecy = $this->prophesize(EntityStorageBase::CLASS);
     $prophecy
-      ->loadByProperties(Argument::any())
-      ->willReturn([]);
+      ->load(Argument::any())
+      ->willReturn($this->entity);
     $prophecy
       ->create(Argument::any())
       ->willReturn($this->mappedObject);
@@ -234,7 +270,11 @@ class PullBaseTest extends UnitTestCase {
    * Test handler operation, update with good data
    */
   public function testProcessItemUpdate() {
-    $sobject = new SObject(['id' => $this->salesforce_id, 'attributes' => ['type' => 'test',]]);
+    $sobject = new SObject([
+      'id' => $this->salesforce_id,
+      'attributes' => ['type' => 'test',],
+      'pull_trigger_date' => 'now'
+    ]);
     $item = new PullQueueItem($sobject, $this->mapping);
     $this->assertEquals(MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE, $this->pullWorker->processItem($item));
   }
@@ -243,6 +283,13 @@ class PullBaseTest extends UnitTestCase {
    * Test handler operation, create with good data
    */
   public function testProcessItemCreate() {
+    // mock mapped object EntityStorage object
+    $prophecy = $this->prophesize(EntityStorageBase::CLASS);
+    $prophecy
+      ->loadByProperties(Argument::any())
+      ->willReturn([]);
+    $entityStorage = $prophecy->reveal();
+
     // mock EntityTypeManagerInterface
     $prophecy = $this->prophesize(EntityTypeManagerInterface::CLASS);
     $prophecy
@@ -250,7 +297,7 @@ class PullBaseTest extends UnitTestCase {
       ->willReturn($this->configStorage);
     $prophecy
       ->getStorage('salesforce_mapped_object')
-      ->willReturn($this->newEntityStorage);
+      ->willReturn($entityStorage);
     $prophecy
       ->getStorage('test')
       ->willReturn($this->newEntityStorage);
