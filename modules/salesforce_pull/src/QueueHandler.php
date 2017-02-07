@@ -17,6 +17,7 @@ use Drupal\salesforce\SelectQueryResult;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Handles pull cron queue set up.
@@ -35,7 +36,7 @@ class QueueHandler {
   protected $logger;
   protected $request;
 
-  public function __construct(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, ContainerAwareEventDispatcher $event_dispatcher, Request $request) {
+  public function __construct(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
     $this->sfapi = $sfapi;
     $this->queue = $queue;
     $this->state = $state;
@@ -57,7 +58,7 @@ class QueueHandler {
    *
    * @return QueueHandler
    */
-  public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, ContainerAwareEventDispatcher $event_dispatcher, Request $request) {
+  public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
     return new QueueHandler($sfapi, $mappings, $queue, $state, $logger, $event_dispatcher, $request);
   }
 
@@ -124,7 +125,7 @@ class QueueHandler {
     $soql = new SelectQuery($mapping->getSalesforceObjectType());
 
     // Convert field mappings to SOQL.
-    $soql->fields = ['Id', $mapping->get('pull_trigger_date')];
+    $soql->fields = ['Id', $mapping->getPullTriggerDate()];
     $mapped_fields = $this->pull_fields[$mapping->getSalesforceObjectType()];
     foreach ($mapped_fields as $field) {
       $soql->fields[] = $field;
@@ -134,7 +135,7 @@ class QueueHandler {
     $sf_last_sync = $this->state->get('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), NULL);
     if ($sf_last_sync) {
       $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
-      $soql->addCondition($mapping->get('pull_trigger_date'), $last_sync, '>');
+      $soql->addCondition($mapping->getPullTriggerDate(), $last_sync, '>');
     }
 
     $soql->fields = array_unique($soql->fields);

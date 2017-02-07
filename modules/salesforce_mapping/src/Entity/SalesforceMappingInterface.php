@@ -25,7 +25,11 @@ interface SalesforceMappingInterface {
 
   public function getDrupalBundle();
 
-  public function id();
+  public function getPullFieldsArray();
+
+  public function getPullTriggerDate();
+
+  //public function id();
 
   public function checkTriggers(array $triggers);
 
@@ -49,5 +53,5 @@ interface SalesforceMappingInterface {
    * @return string
    */
   public function getKeyValue(EntityInterface $entity);
-  
+
 }

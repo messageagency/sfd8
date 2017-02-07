@@ -47,9 +47,7 @@ class QueueHandlerTest extends UnitTestCase {
       ->willReturn($this->sqr);
     $this->sfapi = $prophecy->reveal();
 
-    $this->mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)
-      ->setMethods(['__construct', '__get', 'get', 'getSalesforceObjectType', 'getPullFieldsArray'])
-      ->getMock();
+    $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
     $this->mapping->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('id'))

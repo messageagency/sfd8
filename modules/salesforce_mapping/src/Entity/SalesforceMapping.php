@@ -294,6 +294,13 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     );
   }
 
+  /**
+   * @return string
+   */
+  public function getPullTriggerDate() {
+    return $this->pull_trigger_date;
+  }
+
   public function doesPush() {
     return $this->checkTriggers([
       MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,

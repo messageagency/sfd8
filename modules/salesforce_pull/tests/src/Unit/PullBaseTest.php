@@ -1,32 +1,31 @@
 <?php
 namespace Drupal\Tests\salesforce_pull\Unit;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
+//use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityStorageBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Field\Plugin\Field\FieldType\StringItem;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\StringTranslation\Translator\TranslationInterface;
-use Drupal\Tests\UnitTestCase;
-use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce\SObject;
-use Drupal\salesforce\SFID;
-use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-//use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\SalesforcePullEvent;
 use Drupal\salesforce_pull\Plugin\QueueWorker\PullBase;
 use Drupal\salesforce_pull\PullQueueItem;
+use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
+use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
-use Drupal\Core\Field\Plugin\Field\FieldType\StringItem;
-//use Drupal\Core\TypedData\DataDefinitionInterface;
-use Drupal\Core\Language\LanguageInterface;
 
 /**
  * Test Object instantitation
@@ -58,7 +57,7 @@ class PullBaseTest extends UnitTestCase {
       ->disableOriginalConstructor()
       //->setConstructorArgs([$ddi,null,null])
       ->getMock();
-    $changed_value->expects($this->once())
+    $changed_value->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('value'))
       ->willReturn('999999');
@@ -68,28 +67,20 @@ class PullBaseTest extends UnitTestCase {
       ->setMethods(['__construct', '__get', '__set', 'label', 'id', '__isset'])
       ->disableOriginalConstructor()
       ->getMock();
-    //$this->entity->method('label')
-    //  ->willReturn('test');
-    //$this->entity->method('id')
-    //  ->willReturn(1);
     $this->entity->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('changed'))
       ->willReturn($changed_value);
-    $this->entity->expects($this->once())
+    $this->entity->expects($this->any())
       ->method('__set')
       ->with($this->equalTo('salesforce_pull'));
-    // to handle !empty($entity->changed->value) call
     $this->entity->expects($this->any())
       ->method('__isset')
       ->with($this->equalTo('changed'))
       ->willReturn(true);
 
     // mock mapping object
-    $this->mapping = $this->getMockBuilder(SalesforceMapping::CLASS)
-      ->setMethods(['__construct', '__get', 'get', 'checkTriggers', 'getDrupalEntityType', 'getDrupalBundle', 'getFieldMappings', 'getSalesforceObjectType'])
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
     $this->mapping->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('id'))
@@ -97,11 +88,8 @@ class PullBaseTest extends UnitTestCase {
     $this->mapping->expects($this->any())
       ->method('checkTriggers')
       ->willReturn(true);
-    $this->mapping->expects($this->any())
-      ->method('get')
-      ->will($this->returnValueMap([
-        ['pull_trigger_date', 'pull_trigger_date']
-      ]));
+    $this->mapping->method('getPullTriggerDate')
+      ->willReturn('pull_trigger_date');
     $this->mapping->method('getDrupalEntityType')
       ->willReturn('test');
     $this->mapping->method('getDrupalBundle')
@@ -116,9 +104,8 @@ class PullBaseTest extends UnitTestCase {
     $entity_type_id_value = $this->getMockBuilder(StringItem::CLASS)
       ->setMethods(['__get'])
       ->disableOriginalConstructor()
-      //->setConstructorArgs([$ddi,null,null])
       ->getMock();
-    $entity_type_id_value->expects($this->once())
+    $entity_type_id_value->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('value'))
       ->willReturn('test');
@@ -127,9 +114,8 @@ class PullBaseTest extends UnitTestCase {
     $entity_id_value = $this->getMockBuilder(StringItem::CLASS)
       ->setMethods(['__get'])
       ->disableOriginalConstructor()
-      //->setConstructorArgs([$ddi,null,null])
       ->getMock();
-    $entity_id_value->expects($this->once())
+    $entity_id_value->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('value'))
       ->willReturn('1');
@@ -244,9 +230,7 @@ class PullBaseTest extends UnitTestCase {
     $this->lf = $prophecy->reveal();
 
     // mock event dispatcher
-    $prophecy = $this->prophesize(ContainerAwareEventDispatcher::CLASS);
-    $prophecy->dispatch(Argument::any(),Argument::any())->willReturn(NULL);
-    $this->ed = $prophecy->reveal();
+    $this->ed = $this->getMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
 
     $this->pullWorker = $this->getMockBuilder(PullBase::CLASS)
       ->setConstructorArgs([
@@ -256,7 +240,10 @@ class PullBaseTest extends UnitTestCase {
         $this->lf,
         $this->ed
       ])
+      ->setMethods(['salesforcePullEvent'])
       ->getMockForAbstractClass();
+    $this->pullWorker->method('salesforcePullEvent')
+      ->willReturn(null);
   }
 
   /**
