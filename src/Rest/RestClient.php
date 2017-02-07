@@ -95,7 +95,9 @@ class RestClient {
       if ($this->response->getStatusCode() != 401) {
         throw $e;
       }
+    }
 
+    if ($this->response->getStatusCode() == 401) {
       // The session ID or OAuth token used has expired or is invalid: refresh
       // token. If refreshToken() throws an exception, or if apiHttpRequest()
       // throws anything but a RequestException, let it bubble up.
@@ -170,8 +172,7 @@ class RestClient {
    */
   protected function httpRequest($url, $data = NULL, array $headers = [], $method = 'GET') {
     // Build the request, including path and headers. Internal use.
-    $response = $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
-    return $response;
+    return $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
   }
 
   /**
