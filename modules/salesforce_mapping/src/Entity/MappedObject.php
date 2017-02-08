@@ -9,14 +9,15 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\salesforce\Exception as SalesforceException;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
+use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePullEntityValueEvent;
 use Drupal\salesforce_mapping\SalesforcePullEvent;
 use Drupal\salesforce_mapping\SalesforcePushEvent;
-use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce\SFID;
-use Drupal\salesforce\SObject;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
@@ -208,6 +209,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
+   * @return return SalesforceMappingInterface
+   */
+  public function getMapping() {
+    return $this->salesforce_mapping->entity;
+  }
+
+  /**
    * @return EntityInterface
    */
   public function getMappedEntity() {
@@ -221,7 +229,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   /**
    * @return Link
    */
-  public function getSalesforceLink($options = []) {
+  public function getSalesforceLink(array $options = []) {
     // @TODO this doesn't work
     return;
     $defaults = ['attributes' => ['target' => '_blank']];
@@ -234,6 +242,20 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public function client() {
     return \Drupal::service('salesforce.client');
+  }
+
+  /**
+   * Wrapper for Drupal core event_dispatcher service.
+   */
+  public function eventDispatcher() {
+    return \Drupal::service('event_dispatcher');
+  }
+
+  /**
+   * Wrapper for Drupal core logger service.
+   */
+  public function logger($log) {
+    return \Drupal::logger($log);
   }
 
   /**
@@ -259,14 +281,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   public function push() {
     // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context, or short of that clear documentation on how callers should handle errors and exceptions. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
 
-    $mapping = $this->salesforce_mapping->entity;
+    $mapping = $this->getMapping();
 
     // @TODO Convert to $this->drupal_entity
     $drupal_entity = $this->getMappedEntity();
 
     // Previously hook_salesforce_push_params_alter.
     $params = new PushParams($mapping, $drupal_entity);
-    \Drupal::service('event_dispatcher')->dispatch(
+    $this->eventDispatcher()->dispatch(
       SalesforceEvents::PUSH_PARAMS,
       new SalesforcePushEvent($this, $params)
     );
@@ -278,6 +300,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // 3. no upsert key, sfid: use update
     $result = FALSE;
     $action = '';
+
     if ($mapping->hasKey()) {
       $action = 'upsert';
       $result = $this->client()->objectUpsert(
@@ -289,7 +312,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     }
     elseif ($this->sfid()) {
       $action = 'update';
-      $this->client()->objectUpdate(
+      $result = $this->client()->objectUpdate(
         $mapping->getSalesforceObjectType(),
         $this->sfid(),
         $params->getParams()
@@ -320,7 +343,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->save();
 
     // Previously hook_salesforce_push_success.
-    \Drupal::service('event_dispatcher')->dispatch(
+    $this->eventDispatcher()->dispatch(
       SalesforceEvents::PUSH_SUCCESS,
       new SalesforcePushEvent($this, $params)
     );
@@ -332,7 +355,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * @return $this
    */
   public function pushDelete() {
-    $mapping = $this->salesforce_mapping->entity;
+    $mapping = $this->getMapping();
     $this->client()->objectDelete($mapping->getSalesforceObjectType(), $this->sfid());
     $this->setNewRevision(TRUE);
     $this
@@ -345,7 +368,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
   public function setDrupalEntity(EntityInterface $entity = NULL) {
     if ($entity->id() != $this->entity_id->value) {
-      throw new \Exception('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
+      throw new SalesforceException('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
     }
     $this->drupal_entity = $entity;
     return $this;
@@ -356,11 +379,15 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
+  public function getSalesforceRecord() {
+    return $this->sf_object;
+  }
+
   /**
    * @return $this
    */
   public function pull() {
-    $mapping = $this->salesforce_mapping->entity;
+    $mapping = $this->getMapping();
 
     if ($this->drupal_entity == NULL) {
       $this->drupal_entity = $this->getMappedEntity();
@@ -386,13 +413,11 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // No object found means there's nothing to pull.
     if (!($this->sf_object instanceof SObject)) {
-      drupal_set_message('Nothing to pull. Please specify a Salesforce ID, or choose a mapping with an Upsert Key defined.', 'warning');
-      return;
+      throw new SalesforceException('Nothing to pull. Please specify a Salesforce ID, or choose a mapping with an Upsert Key defined.');
     }
 
     // @TODO better way to handle push/pull:
     $fields = $mapping->getPullFields();
-
     foreach ($fields as $field) {
       // @TODO: The field plugin should be in charge of setting its value on an entity, we should not assume the field plugin's logic as we're doing here.
       try {
@@ -403,7 +428,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         continue;
       }
 
-      \Drupal::service('event_dispatcher')->dispatch(
+      $this->eventDispatcher()->dispatch(
         SalesforceEvents::PULL_ENTITY_VALUE,
         new SalesforcePullEntityValueEvent($value, $field, $this)
       );
@@ -415,7 +440,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       }
       catch (\Exception $e) {
         $message = t();
-        \Drupal::logger('Salesforce Pull')->notice('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
+        $this->logger('Salesforce Pull')->notice('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
           '@sfobj' => $mapping->getSalesforceObjectType(),
           '@sffield' => $sf_field,
           '@sfid' => $this->sfid(),
@@ -430,9 +455,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       }
     }
 
-
     // @TODO: Event dispatching and entity saving should not be happening in this context, but inside a controller. This class needs to be more model-like.
-    \Drupal::service('event_dispatcher')->dispatch(
+    $this->eventDispatcher()->dispatch(
       SalesforceEvents::PULL_PRESAVE,
       new SalesforcePullEvent($this, $this->drupal_entity->isNew()
         ? MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
@@ -444,13 +468,17 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // Update mapping object.
     $this
       ->set('entity_id', $this->drupal_entity->id())
-      ->set('entity_updated', REQUEST_TIME)
+      ->set('entity_updated', $this->getRequestTime())
       ->set('last_sync_action', 'pull')
       ->set('last_sync_status', TRUE)
       // ->set('last_sync_message', '')
       ->save();
 
     return $this;
+  }
+
+  protected function getRequestTime() {
+    return defined('REQUEST_TIME') ? REQUEST_TIME : (int) $_SERVER['REQUEST_TIME'];
   }
 
 }

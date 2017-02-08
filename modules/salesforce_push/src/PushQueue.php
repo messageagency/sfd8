@@ -3,18 +3,19 @@
 namespace Drupal\salesforce_push;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\Merge;
 use Drupal\Core\Database\SchemaObjectExistsException;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
-use Drupal\Core\Database\Query\Merge;
-use Drupal\Core\Queue\DatabaseQueue;
-use Drupal\Core\State\State;
-use Drupal\Core\Queue\SuspendQueueException;
-use Drupal\Core\Queue\RequeueException;
-use Drupal\salesforce\EntityNotFoundException;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
-use Drupal\salesforce_mapping\MappedObjectStorage;
-use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Queue\DatabaseQueue;
+use Drupal\Core\Queue\RequeueException;
+use Drupal\Core\Queue\SuspendQueueException;
+use Drupal\Core\State\State;
+use Drupal\salesforce_mapping\MappedObjectStorage;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce\EntityNotFoundException;
 
 /**
  * Salesforce push queue.
@@ -60,13 +61,14 @@ class PushQueue extends DatabaseQueue {
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
    */
-  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager, EntityManagerInterface $entity_manager) {
+  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager, EntityManagerInterface $entity_manager, LoggerChannelFactoryInterface $logger_factory) {
     $this->connection = $connection;
     $this->state = $state;
     $this->queueManager = $queue_manager;
     $this->entity_manager = $entity_manager;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object')->throwExceptions();
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
+    $this->logger = $logger_factory->get('Salesforce Push');
 
     $this->limit = $state->get('salesforce.push_limit', static::DEFAULT_CRON_PUSH_LIMIT);
 
@@ -274,16 +276,16 @@ class PushQueue extends DatabaseQueue {
    * Process Salesforce queues
    */
   public function processQueues() {
-    try {
-      $mappings = salesforce_push_load_push_mappings();
-    }
-    catch (EntityNotFoundException $e) {
+    $mappings = $this
+      ->mapping_storage
+      ->loadPushMappings();
+    if (empty($mappings)) {
       return $this;
     }
     $i = 0;
 
     // @TODO push queue processor could be set globally, or per-mapping. Exposing some UI setting would probably be better than this:
-    $plugin_name = \Drupal::state()->get('salesforce.push_queue_processor', static::DEFAULT_QUEUE_PROCESSOR);
+    $plugin_name = $this->state->get('salesforce.push_queue_processor', static::DEFAULT_QUEUE_PROCESSOR);
 
     $queue_processor = $this->queueManager->createInstance($plugin_name);
 
@@ -344,13 +346,11 @@ class PushQueue extends DatabaseQueue {
    * @param stdClass $item
    */
   public function failItem(\Exception $e, \stdClass $item) {
-    // For now we only have special handling for EntityNotFoundException.
-    // May want to distinguish in the future between network exceptions, etc.
     $mapping = $this->mapping_storage->load($item->name);
 
     if ($e instanceof EntityNotFoundException) {
       // If there was an exception loading any entities, we assume that this queue item is no longer relevant.
-      \Drupal::logger('Salesforce Push')->error($e->getMessage() .
+      $this->logger->error($e->getMessage() .
         ' Exception while loading entity %type %id for salesforce mapping %mapping. Queue item deleted.',
         [
           '%type' => $mapping->get('drupal_entity_type'),
@@ -372,7 +372,7 @@ class PushQueue extends DatabaseQueue {
       $message = 'Queue item %item failed %fail times. Exception while pushing entity %type %id for salesforce mapping %mapping. ' . $message;
     }
 
-    \Drupal::logger('Salesforce Push')->error($message,
+    $this->logger->error($message,
       [
         '%type' => $mapping->get('drupal_entity_type'),
         '%id' => $item->entity_id,

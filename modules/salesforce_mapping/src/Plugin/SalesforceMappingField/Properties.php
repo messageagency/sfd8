@@ -90,10 +90,4 @@ class Properties extends SalesforceMappingFieldPluginBase {
     return $options;
   }
 
-  /**
-   *
-   */
-  public function pull() {
-    return TRUE;
-  }
 }

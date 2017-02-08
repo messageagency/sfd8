@@ -2,7 +2,9 @@
 
 namespace Drupal\salesforce_pull;
 
-use Drupal\salesforce\EntityNotFoundException;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\State\StateInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SFID;
@@ -11,7 +13,9 @@ use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Psr\Log\LogLevel;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Handles pull cron deletion of Drupal entities based onSF mapping settings.
@@ -20,26 +24,39 @@ use Drupal\Core\Entity\EntityManagerInterface;
  */
 
 class DeleteHandler {
+
   protected $sfapi;
   protected $mapping_storage;
   protected $mapped_object_storage;
-  protected $entity_manager;
+  protected $etm;
+  protected $state;
+  protected $logger;
+  protected $request;
 
-  private function __construct(RestClient $sfapi, EntityManagerInterface $entity_manager) {
+  private function __construct(RestClient $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
     $this->sfapi = $sfapi;
-    $this->entity_manager = $entity_manager;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object')->throwExceptions();
+    $this->etm = $entity_type_manager;
+    $this->mapping_storage = $this->etm->getStorage('salesforce_mapping');
+    $this->mapped_object_storage = $this->etm->getStorage('salesforce_mapped_object');
+    $this->state = $state;
+    $this->logger = $logger;
+    $this->request = $request;
   }
 
   /**
    * Chainable instantiation method for class
    *
-   * @param object
+   * @param \Drupal\salesforce\Rest\RestClient $sfapi
    *  RestClient object
+   * @param \Drupal\Core\Entity\EntityTyprManagerInterface $$entity_type_manager
+   *  Entity Manager service
+   * @param \Drupal\Core\State\StatInterface $state
+   *  State service
+   * @param Psr\Log\LoggerInterface $logger
+   *  Logging service
    */
-  public static function create(RestClient $sfapi, EntityManagerInterface $entity_manager) {
-    return new DeleteHandler($sfapi, $entity_manager);
+  public static function create(RestClient $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
+    return new DeleteHandler($sfapi, $entity_type_manager, $state, $logger, $request);
   }
 
   /**
@@ -48,7 +65,7 @@ class DeleteHandler {
   public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
     foreach (array_reverse($this->mapping_storage->getMappedSobjectTypes()) as $type) {
-      $last_delete_sync = \Drupal::state()->get('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
+      $last_delete_sync = $this->state->get('salesforce_pull_last_delete_' . $type, $this->request->server->get('REQUEST_TIME'));
       $now = time();
       // getDeleted() restraint: startDate must be at least one minute
       // greater than endDate.
@@ -57,8 +74,9 @@ class DeleteHandler {
       $now_sf = gmdate('Y-m-d\TH:i:s\Z', $now);
       $deleted = $this->sfapi->getDeleted($type, $last_delete_sync_sf, $now_sf);
       $this->handleDeletedRecords($deleted, $type);
-      \Drupal::state()->set('salesforce_pull_delete_last_' . $type, REQUEST_TIME);
+      $this->state->set('salesforce_pull_last_delete_' . $type, $this->request->server->get('REQUEST_TIME'));
     }
+    return true;
   }
 
   protected function handleDeletedRecords(array $deleted, $type) {
@@ -66,13 +84,10 @@ class DeleteHandler {
       return;
     }
 
-    try {
-      $sf_mappings = $this->mapping_storage->loadByProperties(
-        ['salesforce_object_type' => $type]
-      );
-    }
-    catch (EntityNotFoundException $e) {
-      // No mappings found. Quit now.
+    $sf_mappings = $this->mapping_storage->loadByProperties(
+      ['salesforce_object_type' => $type]
+    );
+    if (empty($sf_mappings)) {
       return;
     }
 
@@ -82,29 +97,16 @@ class DeleteHandler {
   }
 
   protected function handleDeletedRecord($record, $type) {
-    try {
-      $mapped_objects = $this
-        ->mapped_object_storage
-        ->loadBySFID(new SFID($record['id']));
-    }
-    catch (EntityNotFoundException $e) {
-      // We do not need to know about every object which gets deleted in SF and
-      // isn't mapped to Drupal.
+    $mapped_objects = $this->mapped_object_storage->loadBySfid(new SFID($record['id']));
+    if (empty($mapped_objects)) {
       return;
     }
 
     foreach ($mapped_objects as $mapped_object) {
-      try {
-        $entity = \Drupal::entityTypeManager()
-          ->getStorage($mapped_object->entity_type_id->value)
-          ->load($mapped_object->entity_id->value);
-        if (!$entity) {
-          throw new EntityNotFoundException(['entity_id' => $mapped_object->entity_id->value], $mapped_object->entity_type_id);
-        }
-      }
-      catch (EntityNotFoundException $e) {
-        // No mapped entity found for the mapped object. Just delete the mapped object and continue.
-        \Drupal::logger('Salesforce Pull')->notice(
+      $entity = $mapped_object->getMappedEntity();
+      if (!$entity) {
+        $this->logger->log(
+          LogLevel::NOTICE,
           'No entity found for ID %id associated with Salesforce Object ID: %sfid ',
           [
             '%id' => $mapped_object->entity_id->value,
@@ -112,50 +114,52 @@ class DeleteHandler {
           ]
         );
         $mapped_object->delete();
-        continue;
+        return;
       }
-
-      try {
-        // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
-        $sf_mapping = $this
-          ->mapping_storage
-          ->load($mapped_object->salesforce_mapping->entity->id());
-      }
-      catch (EntityNotFoundException $e) {
-        \Drupal::logger('Salesforce Pull')->notice(
-          'No mapping exists for mapped object %id with Salesforce Object ID: %sfid',
-          [
-            '%id' => $mapped_object->id(),
-            '%sfid' => $record['id'],
-          ]
-        );
-        // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
-        // $mapped_object->delete();
-        continue;
-      }
-
-      if (!$sf_mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
-        continue;
-      }
-
-      try {
-        $entity->delete();
-        \Drupal::logger('Salesforce Pull')->notice(
-          'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid',
-          [
-            '%label' => $entity->label(),
-            '%id' => $mapped_object->entity_id,
-            '%sfid' => $record->id,
-          ]
-        );
-      }
-      catch (\Exception $e) {
-        watchdog_exception(__CLASS__, $e);
-        // If mapped entity couldn't be deleted, do not delete the mapped object either.
-        continue;
-      }
-
-      $mapped_object->delete();
     }
+
+    // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
+    $sf_mapping = $mapped_object->getMapping();
+    if (!$sf_mapping) {
+      $this->logger->log(
+        LogLevel::NOTICE,
+        'No mapping exists for mapped object %id with Salesforce Object ID: %sfid',
+        [
+          '%id' => $mapped_object->id(),
+          '%sfid' => $record['id'],
+        ]
+      );
+      // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
+      // $mapped_object->delete();
+      return;
+    }
+
+    if (!$sf_mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
+      return;
+    }
+
+    try {
+      $entity->delete();
+      $this->logger->log(
+        LogLevel::NOTICE,
+        'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid',
+        [
+          '%label' => $entity->label(),
+          '%id' => $mapped_object->entity_id,
+          '%sfid' => $record->id,
+        ]
+      );
+    }
+    catch (\Exception $e) {
+      $this->logger->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
+      // If mapped entity couldn't be deleted, do not delete the mapped object either.
+      return;
+    }
+
+    $mapped_object->delete();
   }
 }

@@ -1,0 +1,8 @@
+administer salesforce mapping:
+  title: 'Administer Salesforce mapping'
+  description: 'Administer Salesforce field maps.'
+  restrict access: TRUE
+view salesforce mapping:
+  title: 'View Salesforce mapping'
+  description: 'View Salesforce mapping data.'
+  restrict access: TRUE

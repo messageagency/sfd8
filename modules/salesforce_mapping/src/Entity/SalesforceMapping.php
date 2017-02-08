@@ -294,11 +294,26 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     );
   }
 
+  /**
+   * @return string
+   */
+  public function getPullTriggerDate() {
+    return $this->pull_trigger_date;
+  }
+
   public function doesPush() {
     return $this->checkTriggers([
       MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
       MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
       MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
+    ]);
+  }
+
+  public function doesPull() {
+    return $this->checkTriggers([
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE,
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE,
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE
     ]);
   }
 
@@ -308,14 +323,14 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   public function checkTriggers(array $triggers) {
     foreach ($triggers as $trigger) {
-      if ($this->sync_triggers[$trigger] == 1) {
+      if (!empty($this->sync_triggers[$trigger])) {
         return TRUE;
       }
     }
     return FALSE;
   }
 
-  protected function fieldManager() {
+  public function fieldManager() {
     return \Drupal::service('plugin.manager.salesforce_mapping_field');
   }
 

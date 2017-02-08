@@ -2,19 +2,22 @@
 
 namespace Drupal\salesforce_pull;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Queue\QueueInterface;
+use Drupal\Core\State\StateInterface;
+use Drupal\Core\Utility\Error;
+use Drupal\salesforce\Exception;
+use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
-use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce_mapping\SalesforceQueryEvent;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use Drupal\salesforce\Exception;
-use Drupal\salesforce\LoggingTrait;
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
+use Drupal\salesforce_mapping\SalesforceQueryEvent;
 use Psr\Log\LogLevel;
-
+use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Handles pull cron queue set up.
@@ -24,18 +27,22 @@ use Psr\Log\LogLevel;
 
 class QueueHandler {
 
-  use LoggingTrait;
-
   protected $sfapi;
   protected $queue;
   protected $mappings;
   protected $pull_fields;
   protected $event_dispatcher;
+  protected $state;
+  protected $logger;
+  protected $request;
 
-  protected function __construct(RestClient $sfapi, array $mappings, QueueInterface $queue, ContainerAwareEventDispatcher $event_dispatcher) {
+  public function __construct(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
     $this->sfapi = $sfapi;
     $this->queue = $queue;
+    $this->state = $state;
+    $this->logger = $logger;
     $this->event_dispatcher = $event_dispatcher;
+    $this->request = $request;
     $this->mappings = $mappings;
     $this->pull_fields = [];
     $this->organizeMappings();
@@ -51,8 +58,8 @@ class QueueHandler {
    *
    * @return QueueHandler
    */
-  public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue, ContainerAwareEventDispatcher $event_dispatcher) {
-    return new QueueHandler($sfapi, $mappings, $queue, $event_dispatcher);
+  public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
+    return new QueueHandler($sfapi, $mappings, $queue, $state, $logger, $event_dispatcher, $request);
   }
 
   /**
@@ -66,14 +73,13 @@ class QueueHandler {
   public function getUpdatedRecords() {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
-    if ($this->queue->numberOfItems() > $this->stateGet('salesforce_pull_max_queue_size', 100000)) {
-      $this->log(
-        'Salesforce Pull',
+    if ($this->queue->numberOfItems() > $this->state->get('salesforce_pull_max_queue_size', 100000)) {
+      $this->logger->log(
         LogLevel::ALERT,
         'Pull Queue contains %noi items, exceeding the max size of %max items. Pull processing will be blocked until the number of items in the queue is reduced to below the max size.',
         [
           '%noi' => $this->queue->numberOfItems(),
-          '%max' => $this->stateGet('salesforce_pull_max_queue_size', 100000),
+          '%max' => $this->state->get('salesforce_pull_max_queue_size', 100000),
         ]
       );
       return false;
@@ -84,9 +90,9 @@ class QueueHandler {
       $results = $this->doSfoQuery($mapping);
       $this->insertIntoQueue($mapping, $results->records());
       $this->handleLargeRequests($mapping, $results);
-      $this->stateSet(
+      $this->state->set(
         'salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(),
-        $this->requestTime()
+        $this->request->server->get('REQUEST_TIME')
       );
     }
     return true;
@@ -119,17 +125,17 @@ class QueueHandler {
     $soql = new SelectQuery($mapping->getSalesforceObjectType());
 
     // Convert field mappings to SOQL.
-    $soql->fields = ['Id', $mapping->get('pull_trigger_date')];
+    $soql->fields = ['Id', $mapping->getPullTriggerDate()];
     $mapped_fields = $this->pull_fields[$mapping->getSalesforceObjectType()];
     foreach ($mapped_fields as $field) {
       $soql->fields[] = $field;
     }
 
     // If no lastupdate, get all records, else get records since last pull.
-    $sf_last_sync = $this->stateGet('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), NULL);
+    $sf_last_sync = $this->state->get('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), NULL);
     if ($sf_last_sync) {
       $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
-      $soql->addCondition($mapping->get('pull_trigger_date'), $last_sync, '>');
+      $soql->addCondition($mapping->getPullTriggerDate(), $last_sync, '>');
     }
 
     $soql->fields = array_unique($soql->fields);
@@ -143,7 +149,11 @@ class QueueHandler {
       return $this->sfapi->query($soql);
     }
     catch (\Exception $e) {
-      $this->watchdogException($e);
+      $this->logger->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
     }
   }
 
@@ -165,7 +175,11 @@ class QueueHandler {
        $this->handleLargeRequests($mapping, $new_result);
      }
      catch (\Exception $e) {
-       $this->watchdogException($e);
+       $this->logger->log(
+         LogLevel::ERROR,
+         '%type: @message in %function (line %line of %file).',
+         Error::decodeException($e)
+       );
      }
    }
   }
@@ -186,35 +200,18 @@ class QueueHandler {
       }
     }
     catch (\Exception $e) {
-      $this->watchdogException($e);
+      $this->logger->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
     }
   }
 
   /**
-   * Wrapper for Drupal::state()->get()
-   */
-  protected function stateGet($name, $value) {
-    return \Drupal::state()->get($name, $value);
-  }
-
-  /**
-   * Wrapper for Drupal::state()->set()
-   */
-  protected function stateSet($name, $value) {
-    return \Drupal::state()->set($name, $value);
-  }
-
-  /**
-   * Wrapper for Drupal::state()->set()
+   * Wrapper for parse_url()
    */
   protected function parseUrl() {
     parse_url($this->sfapi->getApiEndPoint(), PHP_URL_PATH);
-  }
-
-  /**
-   * Wrapper for \Drupal::request()
-   */
-  protected function requestTime() {
-    return \Drupal::request()->server->get('REQUEST_TIME');
   }
 }

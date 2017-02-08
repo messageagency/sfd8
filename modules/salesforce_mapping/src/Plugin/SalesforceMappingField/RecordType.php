@@ -74,14 +74,27 @@ class RecordType extends SalesforceMappingFieldPluginBase {
    */
   public static function isAllowed(SalesforceMappingInterface $mapping) {
     try {
-      $client = \Drupal::service('salesforce.client');
       $record_types =
-        $client->getRecordTypes($mapping->getSalesforceObjectType());
+        $this->client()->getRecordTypes($mapping->getSalesforceObjectType());
       return count($record_types) > 1;
     }
     catch (\Exception $e) {
       return FALSE;
     }
+  }
+
+  /**
+   * Wrapper for Salesforce client service.
+   */
+  public function client() {
+    return \Drupal::service('salesforce.client');
+  }
+
+  /**
+   * @TODO figure out what it means to pull Record Type
+   */
+  public function pull() {
+    return FALSE;
   }
 
 }

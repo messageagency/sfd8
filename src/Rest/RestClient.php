@@ -5,8 +5,8 @@ namespace Drupal\salesforce\Rest;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\salesforce\SFID;
@@ -18,7 +18,6 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
  */
@@ -27,10 +26,11 @@ class RestClient {
   public $response;
   protected $httpClient;
   protected $configFactory;
-  protected $urlGenerator;
+  protected $url;
   private $config;
   private $configEditable;
   private $state;
+  protected $cache;
 
   const CACHE_LIFETIME = 300;
 
@@ -42,13 +42,13 @@ class RestClient {
    * @param \Guzzle\Http\ClientInterface $http_client
    *   The config factory.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, UrlGeneratorInterface $url_generator, StateInterface $state) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
-    $this->urlGenerator = $url_generator;
     $this->config = $this->configFactory->get('salesforce.settings');
     $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
+    $this->cache = $cache;
     return $this;
   }
 
@@ -71,7 +71,7 @@ class RestClient {
    * @param string $method
    *   Method to initiate the call, such as GET or POST.  Defaults to GET.
    * @param bool $returnObject
-   *   If true, return a Drupal\salesforce\Rest\RestResponse; 
+   *   If true, return a Drupal\salesforce\Rest\RestResponse;
    *   Otherwise, return json-decoded response body only.
    *   Defaults to FALSE for backwards compatibility.
    *
@@ -95,7 +95,9 @@ class RestClient {
       if ($this->response->getStatusCode() != 401) {
         throw $e;
       }
+    }
 
+    if ($this->response->getStatusCode() == 401) {
       // The session ID or OAuth token used has expired or is invalid: refresh
       // token. If refreshToken() throws an exception, or if apiHttpRequest()
       // throws anything but a RequestException, let it bubble up.
@@ -170,14 +172,13 @@ class RestClient {
    */
   protected function httpRequest($url, $data = NULL, array $headers = [], $method = 'GET') {
     // Build the request, including path and headers. Internal use.
-    $response = $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
-    return $response;
+    return $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
   }
 
   /**
    * Extract normalized error information from a RequestException
    *
-   * @param RequestException $e 
+   * @param RequestException $e
    * @return array
    *   Error array with keys:
    *   * message
@@ -425,7 +426,7 @@ class RestClient {
    * @see Drupal\salesforce\Controller\SalesforceController
    */
   public function getAuthCallbackUrl() {
-    return \Drupal::url('salesforce.oauth_callback', [], [
+    return Url::fromRoute('salesforce.oauth_callback', [], [
       'absolute' => TRUE,
       'https' => TRUE,
     ]);
@@ -470,7 +471,7 @@ class RestClient {
    * @addtogroup salesforce_apicalls
    */
   public function objects(array $conditions = ['updateable' => TRUE], $reset = FALSE) {
-    $cache = \Drupal::cache()->get('salesforce:objects');
+    $cache = $$this->cache->get('salesforce:objects');
 
     // Force the recreation of the cache when it is older than 5 minutes.
     if ($cache && REQUEST_TIME < ($cache->created + self::CACHE_LIFETIME) && !$reset) {
@@ -478,7 +479,7 @@ class RestClient {
     }
     else {
       $result = $this->apiCall('sobjects');
-      \Drupal::cache()->set('salesforce:objects', $result, 0, ['salesforce']);
+      $$this->cache->set('salesforce:objects', $result, 0, ['salesforce']);
     }
 
     if (!empty($conditions)) {
@@ -505,7 +506,7 @@ class RestClient {
    * @addtogroup salesforce_apicalls
    */
   public function query(SelectQuery $query) {
-    // $this->moduleHander->alter('salesforce_query', $query);
+    // $this->moduleHandler->alter('salesforce_query', $query);
     // Casting $query as a string calls SelectQuery::__toString().
     return new SelectQueryResult($this->apiCall('query?q=' . (string) $query));
   }
@@ -527,14 +528,14 @@ class RestClient {
       throw new \Exception('No name provided to describe');
     }
 
-    $cache = \Drupal::cache()->get('salesforce:object:' . $name);
+    $cache = $$this->cache->get('salesforce:object:' . $name);
     // Force the recreation of the cache when it is older than 5 minutes.
     if ($cache && REQUEST_TIME < ($cache->created + self::CACHE_LIFETIME) && !$reset) {
       return $cache->data;
     }
     else {
       $response = new RestResponse_Describe($this->apiCall("sobjects/{$name}/describe", [], 'GET', TRUE));
-      \Drupal::cache()->set('salesforce:object:' . $name, $response, 0, ['salesforce']);
+      $$this->cache->set('salesforce:object:' . $name, $response, 0, ['salesforce']);
       return $response;
     }
   }
@@ -716,11 +717,11 @@ class RestClient {
    *   Object type name, E.g., Contact, Account.
    *
    * @param int $start
-   *   unix timestamp for older timeframe for updates. 
+   *   unix timestamp for older timeframe for updates.
    *   Defaults to "-29 days" if empty.
    *
    * @param int $end
-   *   unix timestamp for end of timeframe for updates. 
+   *   unix timestamp for end of timeframe for updates.
    *   Defaults to now if empty
    *
    * @return array
@@ -739,12 +740,12 @@ class RestClient {
       $start = strtotime('-29 days');
     }
     $start = urlencode(gmdate(DATE_ATOM, $start));
-  
+
     if (empty($end)) {
       $end = time();
     }
     $end = urlencode(gmdate(DATE_ATOM, $end));
-  
+
     return $this->apiCall("sobjects/{$name}/updated/?start=$start&end=$end");
   }
 
@@ -760,7 +761,7 @@ class RestClient {
    *   Otherwise, an array of record type arrays, indexed by object type name.
    */
   public function getRecordTypes($name = NULL) {
-    $cache = \Drupal::cache()->get('salesforce:record_types');
+    $cache = $$this->cache->get('salesforce:record_types');
 
     // Force the recreation of the cache when it is older than CACHE_LIFETIME
     if ($cache && REQUEST_TIME < ($cache->created + self::CACHE_LIFETIME) && !$reset) {
@@ -774,7 +775,7 @@ class RestClient {
       foreach ($result->records() as $rt) {
         $record_types[$rt->field('SobjectType')][$rt->field('DeveloperName')] = $rt;
       }
-      \Drupal::cache()->set('salesforce:record_types', $record_types, 0, ['salesforce']);
+      $$this->cache->set('salesforce:record_types', $record_types, 0, ['salesforce']);
     }
 
     if ($name != NULL) {
@@ -794,7 +795,7 @@ class RestClient {
    * @param string $name
    *   Object type name, E.g., Contact, Account.
    *
-   * @param string $devname 
+   * @param string $devname
    *   RecordType DeveloperName, e.g. Donation, Membership, etc.
    *
    * @return SFID
@@ -811,9 +812,9 @@ class RestClient {
   }
 
   /**
-   * Utility function to determine object type for given SFID 
+   * Utility function to determine object type for given SFID
    *
-   * @param SFID $id 
+   * @param SFID $id
    * @return string
    * @throws Exception if SFID doesn't match any object type
    */

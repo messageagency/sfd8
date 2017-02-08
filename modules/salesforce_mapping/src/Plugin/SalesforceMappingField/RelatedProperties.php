@@ -75,7 +75,8 @@ $mapping) {
     // Now we can actually fetch the referenced entity.
     $field_settings = $field->getFieldDefinition()->getFieldSettings();
     try {
-      $referenced_entity = \Drupal::entityTypeManager()
+      $referenced_entity = $this
+        ->entityTypeManager
         ->getStorage($field_settings['target_type'])
         ->load($field->value);
     }
