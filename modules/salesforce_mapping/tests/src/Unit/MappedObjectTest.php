@@ -16,6 +16,7 @@ use Prophecy\Argument;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
@@ -41,6 +42,11 @@ class MappedObjectTest extends UnitTestCase {
     $this->salesforce_id = '1234567890abcdeAAA';
     $this->mapping_id = 1;
     $this->entity_id = 1;
+    $this->sf_object = new SObject([
+      'id' => $this->salesforce_id,
+      'attributes' => ['type' => $this->randomMachineName()],
+      'foo' => 'bar',
+    ]);
 
     $values = array(
       'id' => $this->mapped_object_id,
@@ -147,6 +153,10 @@ class MappedObjectTest extends UnitTestCase {
       ->willReturn([]);
     $this->mapping
       ->expects($this->any())
+      ->method('getPullFields')
+      ->willReturn([]);
+    $this->mapping
+      ->expects($this->any())
       ->method('getSalesforceObjectType')
       ->willReturn('dummy_sf_object_type');
 
@@ -234,9 +244,108 @@ class MappedObjectTest extends UnitTestCase {
 
   /**
    * @covers ::pull
+   * @expectedException \Drupal\salesforce\Exception
+   */
+  public function testPullException() {
+    $this->mapped_object->expects($this->any())
+      ->method('sfid')
+      ->willReturn(FALSE);
+    $this->mapping->expects($this->any())
+      ->method('hasKey')
+      ->willReturn(FALSE);
+
+    $this->mapped_object->pull();
+  }
+
+  /**
+   * @covers ::pull
+   */
+  public function testPullExisting() {
+    $this->mapped_object->expects($this->any())
+      ->method('sfid')
+      ->willReturn($this->sfid);
+
+    $this->client->expects($this->once())
+      ->method('objectRead')
+      ->willReturn($this->sf_object);
+
+    $this->assertNull($this->mapped_object->getSalesforceRecord());
+    $this->mapped_object->pull();
+    $this->assertEquals($this->sf_object, $this->mapped_object->getSalesforceRecord());
+  }
+
+  /**
+   * @covers ::pull
    */
   public function testPull() {
-    // @TODO writeme
+    // Set sf_object to mock coming from cron pull.
+    $this->mapped_object->setSalesforceRecord($this->sf_object);
+    // $this->event_dispatcher->expects($this->once())
+    //   ->method('dispatch');
+
+    $this->assertEquals($this->mapped_object, $this->mapped_object->pull());
+    return;
+      // @TODO better way to handle push/pull:
+      $fields = $mapping->getPullFields();
+
+      foreach ($fields as $field) {
+        // @TODO: The field plugin should be in charge of setting its value on an entity, we should not assume the field plugin's logic as we're doing here.
+        try {
+          $value = $this->sf_object->field($field->get('salesforce_field'));
+        }
+        catch (\Exception $e) {
+          // Field missing from SObject? Skip it.
+          continue;
+        }
+
+        $this->eventDispatcher()->dispatch(
+          SalesforceEvents::PULL_ENTITY_VALUE,
+          new SalesforcePullEntityValueEvent($value, $field, $this)
+        );
+
+        $drupal_field = $field->get('drupal_field_value');
+
+        try {
+          $this->drupal_entity->set($drupal_field, $value);
+        }
+        catch (\Exception $e) {
+          $message = t();
+          $this->logger('Salesforce Pull')->notice('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
+            '@sfobj' => $mapping->getSalesforceObjectType(),
+            '@sffield' => $sf_field,
+            '@sfid' => $this->sfid(),
+            '@dobj' => $this->entity_type_id->value,
+            '@dprop' => $drupal_field,
+            '@did' => $this->entity_id->value,
+            '@v' => $value,
+            '@e' => $e->getMessage(),
+          ]);
+          watchdog_exception(__CLASS__, $e);
+          continue;
+        }
+      }
+
+      // @TODO: Event dispatching and entity saving should not be happening in this context, but inside a controller. This class needs to be more model-like.
+      $this->eventDispatcher()->dispatch(
+        SalesforceEvents::PULL_PRESAVE,
+        new SalesforcePullEvent($this, $this->drupal_entity->isNew()
+          ? MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
+          : MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
+      );
+
+      $this->drupal_entity->save();
+
+      // Update mapping object.
+      $this
+        ->set('entity_id', $this->drupal_entity->id())
+        ->set('entity_updated', $this->getRequestTime())
+        ->set('last_sync_action', 'pull')
+        ->set('last_sync_status', TRUE)
+        // ->set('last_sync_message', '')
+        ->save();
+
+      return $this;
+    
   }
 
 }

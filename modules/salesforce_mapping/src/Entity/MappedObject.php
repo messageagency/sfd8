@@ -17,6 +17,7 @@ use Drupal\salesforce_mapping\SalesforcePushEvent;
 use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
+use Drupal\salesforce\Exception as SalesforceException;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
@@ -367,7 +368,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
   public function setDrupalEntity(EntityInterface $entity = NULL) {
     if ($entity->id() != $this->entity_id->value) {
-      throw new \Exception('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
+      throw new SalesforceException('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
     }
     $this->drupal_entity = $entity;
     return $this;
@@ -376,6 +377,10 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   public function setSalesforceRecord(SObject $sf_object) {
     $this->sf_object = $sf_object;
     return $this;
+  }
+
+  public function getSalesforceRecord() {
+    return $this->sf_object;
   }
 
   /**
@@ -408,13 +413,11 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // No object found means there's nothing to pull.
     if (!($this->sf_object instanceof SObject)) {
-      drupal_set_message('Nothing to pull. Please specify a Salesforce ID, or choose a mapping with an Upsert Key defined.', 'warning');
-      return;
+      throw new SalesforceException('Nothing to pull. Please specify a Salesforce ID, or choose a mapping with an Upsert Key defined.');
     }
 
     // @TODO better way to handle push/pull:
     $fields = $mapping->getPullFields();
-
     foreach ($fields as $field) {
       // @TODO: The field plugin should be in charge of setting its value on an entity, we should not assume the field plugin's logic as we're doing here.
       try {
@@ -465,13 +468,17 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // Update mapping object.
     $this
       ->set('entity_id', $this->drupal_entity->id())
-      ->set('entity_updated', REQUEST_TIME)
+      ->set('entity_updated', $this->getRequestTime())
       ->set('last_sync_action', 'pull')
       ->set('last_sync_status', TRUE)
       // ->set('last_sync_message', '')
       ->save();
 
     return $this;
+  }
+
+  protected function getRequestTime() {
+    return defined('REQUEST_TIME') ? REQUEST_TIME : (int) $_SERVER['REQUEST_TIME'];
   }
 
 }

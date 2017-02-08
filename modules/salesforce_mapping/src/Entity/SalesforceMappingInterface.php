@@ -25,6 +25,8 @@ interface SalesforceMappingInterface {
 
   public function getDrupalBundle();
 
+  public function getPullFields();
+
   public function getPullFieldsArray();
 
   public function getPullTriggerDate();
