@@ -9,15 +9,15 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\salesforce\Exception as SalesforceException;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
+use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePullEntityValueEvent;
 use Drupal\salesforce_mapping\SalesforcePullEvent;
 use Drupal\salesforce_mapping\SalesforcePushEvent;
-use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce\SFID;
-use Drupal\salesforce\SObject;
-use Drupal\salesforce\Exception as SalesforceException;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content

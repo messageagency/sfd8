@@ -3,11 +3,11 @@
 namespace Drupal\Tests\salesforce\Unit;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\salesforce\SFID;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
-use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use Drupal\salesforce\Rest\RestResponse as RestResponse;
+use Drupal\salesforce\SFID;
+use GuzzleHttp\Psr7\Response as GuzzleResponse;
 
 /**
  * @coversDefaultClass \Drupal\salesforce\Rest\RestClient

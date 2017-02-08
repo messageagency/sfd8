@@ -5,16 +5,16 @@ namespace Drupal\salesforce_pull;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Utility\Error;
+use Drupal\salesforce\Exception;
+use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
-use Drupal\salesforce\Exception;
-use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce\SFID;
-use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

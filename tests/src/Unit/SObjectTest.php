@@ -2,8 +2,9 @@
 namespace Drupal\Tests\salesforce\Unit;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\salesforce\SObject;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\SObject;
+
 /**
  * Test Object instantitation
  *

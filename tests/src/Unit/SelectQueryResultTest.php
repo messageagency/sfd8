@@ -2,9 +2,9 @@
 namespace Drupal\Tests\salesforce\Unit;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\salesforce\SelectQueryResult;
-use Drupal\salesforce\SFID;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SelectQueryResult;
 
 /**
  * Test Object instantitation
