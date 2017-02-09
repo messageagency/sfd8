@@ -20,7 +20,7 @@ class RestClientTest extends UnitTestCase {
 
   public function setUp() {
     parent::setUp();
-    $methods = [
+    $this->methods = [
       'getConsumerKey',
       'getConsumerSecret',
       'getRefreshToken',
@@ -40,18 +40,34 @@ class RestClientTest extends UnitTestCase {
         ->disableOriginalConstructor()
         ->getMock();
     $this->cache = $this->getMock('\Drupal\Core\Cache\CacheBackendInterface');
+  }
+
+  private function initClient($methods = NULL) {
+    if (empty($methods)) {
+      $methods = $this->methods;
+    }
+
     $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache];
 
     $this->client = $this->getMock(RestClient::CLASS, $methods, $args);
-    $this->client->expects($this->any())
-      ->method('getApiEndPoint')
-      ->willReturn('https://example.com');
+
+    if (in_array('getApiEndPoint', $methods)) {
+      $this->client->expects($this->any())
+        ->method('getApiEndPoint')
+        ->willReturn('https://example.com');
+    }
+    if (in_array('getAccessToken', $methods)) {
+      $this->client->expects($this->any())
+        ->method('getAccessToken')
+        ->willReturn(TRUE);
+    }
   }
 
   /**
    * @covers ::isAuthorized
    */
   public function testAuthorized() {
+    $this->initClient();
     $this->client->expects($this->at(0))
       ->method('getConsumerKey')
       ->willReturn($this->randomMachineName());
@@ -72,13 +88,11 @@ class RestClientTest extends UnitTestCase {
    * @covers ::apiCall
    */
   public function testSimpleApiCall() {
+    $this->initClient();
+    
     // Test that an apiCall returns a json-decoded value.
     $body = array('foo' => 'bar');
     $response = new GuzzleResponse(200, [], json_encode($body));
-
-    $this->client->expects($this->any())
-      ->method('getAccessToken')
-      ->willReturn(TRUE);
 
     $this->client->expects($this->any())
       ->method('httpRequest')
@@ -93,12 +107,11 @@ class RestClientTest extends UnitTestCase {
    * @expectedException Exception
    */
   public function testExceptionApiCall() {
+    $this->initClient();
+    
     // Test that SF client throws an exception for non-200 response 
     $response = new GuzzleResponse(456);
 
-    $this->client->expects($this->any())
-      ->method('getAccessToken')
-      ->willReturn(TRUE);
     $this->client->expects($this->any())
       ->method('httpRequest')
       ->willReturn($response);
@@ -110,13 +123,12 @@ class RestClientTest extends UnitTestCase {
    * @covers ::apiCall
    */
   public function testReauthApiCall() {
+    $this->initClient();
+    
     // Test that apiCall does auto-re-auth after 401 response
     $response_401 = new GuzzleResponse(401);
     $response_200 = new GuzzleResponse(200);
 
-    $this->client->expects($this->any())
-      ->method('getAccessToken')
-      ->willReturn(TRUE);
     // First httpRequest() is position 4.
     // @TODO this is extremely brittle, exposes complexity in underlying client. Refactor this.
     $this->client->expects($this->at(3))
@@ -134,7 +146,39 @@ class RestClientTest extends UnitTestCase {
    * @covers ::objects
    */
   public function testObjects() {
+    $this->initClient(array_merge($this->methods, ['apiCall']));
 
+    $objects = [
+      'sobjects' => [
+        'Test' => [
+          'updateable' => TRUE,
+        ],
+        'NonUpdateable' => [
+          'updateable' => FALSE,
+        ]
+      ],
+    ];
+    $cache = (object)[
+      'created' => time(),
+      'data' => $objects,
+    ];
+    unset($cache->data['sobjects']['NonUpdateable']);
+
+    $this->cache->expects($this->at(0))
+      ->method('get')
+      ->willReturn($cache);
+    $this->cache->expects($this->at(1))
+      ->method('get')
+      ->willReturn(FALSE);
+    $this->client->expects($this->once())
+      ->method('apiCall')
+      ->willReturn($objects);
+
+    // First call, from cache:
+    $this->assertEquals($cache->data['sobjects'], $this->client->objects());
+    
+    // Second call, from apiCall()
+    $this->assertEquals($cache->data['sobjects'], $this->client->objects());
   }
 
   /**
