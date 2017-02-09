@@ -7,6 +7,8 @@ use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\Rest\RestResponse as RestResponse;
 use Drupal\salesforce\SFID;
+use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\SelectQuery;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
 
 /**
@@ -20,6 +22,7 @@ class RestClientTest extends UnitTestCase {
 
   public function setUp() {
     parent::setUp();
+    $this->salesforce_id = '1234567890abcde';
     $this->methods = [
       'getConsumerKey',
       'getConsumerSecret',
@@ -185,7 +188,27 @@ class RestClientTest extends UnitTestCase {
    * @covers ::query
    */
   public function testQuery() {
+    $this->initClient(array_merge($this->methods, ['apiCall']));
+    $this->rawQueryResult = [
+      'totalSize' => 1,
+      'done' => true,
+      'records' => [
+        0 => [
+          'attributes' => [
+            'type' => 'Foo',
+            'url' => 'Bar'
+          ],
+          'Id' => $this->salesforce_id,
+        ],
+      ],
+    ];
 
+    $this->client->expects($this->once())
+      ->method('apiCall')
+      ->willReturn($this->rawQueryResult);
+
+    // @TODO this doesn't seem like a very good test.
+    $this->assertEquals(new SelectQueryResult($this->rawQueryResult), $this->client->query(new SelectQuery("")));
   }
 
   /**
