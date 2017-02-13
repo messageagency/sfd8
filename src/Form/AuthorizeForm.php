@@ -2,15 +2,18 @@
 
 namespace Drupal\salesforce\Form;
 
-use GuzzleHttp\Exception\RequestException;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\Url;
+use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SalesforceClient;
-use Drupal\Core\Url;
+use GuzzleHttp\Exception\RequestException;
+use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -28,6 +31,8 @@ class AuthorizeForm extends ConfigFormBase {
    */
   protected $state;
 
+  protected $logger;
+
   /**
    * Constructs a \Drupal\system\ConfigFormBase object.
    *
@@ -40,10 +45,11 @@ class AuthorizeForm extends ConfigFormBase {
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, RestClient $salesforce_client, StateInterface $state) {
+  public function __construct(ConfigFactoryInterface $config_factory, RestClient $salesforce_client, StateInterface $state, LoggerChannelFactoryInterface $logger_factory) {
     parent::__construct($config_factory);
     $this->sf_client = $salesforce_client;
     $this->state = $state;
+    $this->logger = $logger_factory->get(__CLASS__);
   }
 
   /**
@@ -53,7 +59,8 @@ class AuthorizeForm extends ConfigFormBase {
     return new static(
       $container->get('config.factory'),
       $container->get('salesforce.client'),
-      $container->get('state')
+      $container->get('state'),
+      $container->get('logger.factory')
     );
   }
 
@@ -120,7 +127,11 @@ class AuthorizeForm extends ConfigFormBase {
         ];
       }
       catch (RequestException $e) {
-        watchdog_exception(__CLASS__, $e);
+        $this->logger->log(
+          LogLevel::ERROR,
+          '%type: @message in %function (line %line of %file).',
+          Error::decodeException($e)
+        );
         salesforce_set_message($e->getMessage(), 'warning');
       }
     }
@@ -156,7 +167,11 @@ class AuthorizeForm extends ConfigFormBase {
     }
     catch (RequestException $e) {
       drupal_set_message(t("Error during authorization: %message", $e->getMessage()), 'error');
-      watchdog_exception(__CLASS__, $e);
+      $this->logger->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
     }
 
     parent::submitForm($form, $form_state);

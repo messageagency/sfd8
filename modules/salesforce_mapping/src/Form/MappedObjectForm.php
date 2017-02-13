@@ -5,11 +5,15 @@ namespace Drupal\salesforce_mapping\Form;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Utility\Error;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+
 
 /**
  * Salesforce Mapping Form base.
@@ -28,16 +32,26 @@ class MappedObjectForm extends ContentEntityForm {
   protected $pushPluginManager;
 
   protected $mapping_storage;
+
+  protected $logger;
+
+  protected $entityManager;
+
+  protected $rest;
+
+  protected $route_match;
+
   /**
    * Constructs a ContentEntityForm object.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager, RestClient $rest, RouteMatchInterface $route_match) {
+  public function __construct(EntityManagerInterface $entity_manager, RestClient $rest, LoggerChannelFactoryInterface $logger_factory, RouteMatchInterface $route_match) {
     $this->entityManager = $entity_manager;
     $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->rest = $rest;
+    $this->logger = $logger_factory->get(__CLASS__);
     $this->route_match = $route_match;
   }
 
@@ -48,6 +62,7 @@ class MappedObjectForm extends ContentEntityForm {
     return new static(
       $container->get('entity.manager'),
       $container->get('salesforce.client'),
+      $container->get('logger.factory'),
       $container->get('current_route_match')
     );
   }
@@ -116,7 +131,11 @@ class MappedObjectForm extends ContentEntityForm {
       $mapped_object->push();
     }
     catch (\Exception $e) {
-      watchdog_exception(__CLASS__, $e);
+      $this->logger->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
       drupal_set_message(t('Push failed with an exception: %exception', array('%exception' => $e->getMessage())), 'error');
       return;
     }

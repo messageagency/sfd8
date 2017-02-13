@@ -7,10 +7,7 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\Tests\UnitTestCase;
-use Drupal\salesforce\Rest\RestClientInterface;
-use Drupal\salesforce\SFID;
-use Drupal\salesforce\SObject;
+use Drupal\Core\Utility\Error;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
@@ -19,7 +16,12 @@ use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Properties;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
+use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
+use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
+use Psr\Log\LogLevel;
 
 /**
  * Test Mapped Object instantitation
@@ -126,7 +128,7 @@ class MappedObjectTest extends UnitTestCase {
       ->expects($this->any())
       ->method('id')
       ->willReturn($this->entity_id);
-  
+
     $this->entity
       ->expects($this->any())
       ->method('isTranslatable')
@@ -211,7 +213,7 @@ class MappedObjectTest extends UnitTestCase {
       ->willReturn(NULL);
     $this->assertNull($this->mapped_object->push());
   }
-  
+
   /**
    * @covers ::push
    */
@@ -320,7 +322,11 @@ class MappedObjectTest extends UnitTestCase {
             '@v' => $value,
             '@e' => $e->getMessage(),
           ]);
-          watchdog_exception(__CLASS__, $e);
+          $this->logger(__CLASS__)->log(
+            LogLevel::ERROR,
+            '%type: @message in %function (line %line of %file).',
+            Error::decodeException($e)
+          );
           continue;
         }
       }
@@ -345,7 +351,7 @@ class MappedObjectTest extends UnitTestCase {
         ->save();
 
       return $this;
-    
+
   }
 
 }

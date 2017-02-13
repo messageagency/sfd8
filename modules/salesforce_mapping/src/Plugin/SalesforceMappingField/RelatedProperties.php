@@ -4,9 +4,11 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\field\Field;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
+use Psr\Log\LogLevel;
 
 /**
  * Adapter for entity Reference and fields.
@@ -81,8 +83,11 @@ $mapping) {
         ->load($field->value);
     }
     catch (\Exception $e) {
-      // @TODO something about this exception
-      watchdog_exception(__CLASS__, $e);
+      $this->logger(__CLASS__)->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
       return;
     }
 
@@ -163,4 +168,10 @@ $mapping) {
     return $options;
   }
 
+  /**
+   * Wrapper for Drupal core logger service.
+   */
+  public function logger($log) {
+    return \Drupal::logger($log);
+  }
 }

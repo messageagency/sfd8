@@ -5,16 +5,18 @@
  * Push updates to Salesforce when a Drupal entity is updated.
  */
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use GuzzleHttp\Exception\RequestException;
 use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\SalesforcePushEvent;
+use Drupal\salesforce\SalesforceEvents;
+use GuzzleHttp\Exception\RequestException;
+use Psr\Log\LogLevel;
 
 /**
  * Implements hook_entity_insert().
@@ -74,7 +76,11 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
     }
     catch (\Exception $e) {
       // Do not allow any exception to prevent entity CRUD.
-      watchdog_exception('Salesforce Push', $e);
+      \Drupal::logger('Salesforce Push')->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
     }
   }
 }
@@ -130,7 +136,11 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
     }
     catch (\Exception $e) {
-      watchdog_exception('Salesforce Push', $e);
+      \Drupal::logger('Salesforce Push')->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
     }
     return;
   }
@@ -163,12 +173,20 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       new SalesforcePushEvent($mapped_object, NULL, $op)
     );
 
-    watchdog_exception('Salesforce Push', $e);
+    \Drupal::logger('Salesforce Push')->log(
+      LogLevel::ERROR,
+      '%type: @message in %function (line %line of %file).',
+      Error::decodeException($e)
+    );
     try {
       salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
     }
     catch (\Exception $e) {
-      watchdog_exception('Salesforce Push', $e);
+      \Drupal::logger('Salesforce Push')->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
     }
 
     $mapped_object
@@ -213,6 +231,10 @@ function salesforce_push_cron() {
     $queue->processQueues();
   }
   catch (\Exception $e) {
-    watchdog_exception('Salesforce Push', $e);
+    \Drupal::logger('Salesforce Push')->log(
+      LogLevel::ERROR,
+      '%type: @message in %function (line %line of %file).',
+      Error::decodeException($e)
+    );
   }
 }
