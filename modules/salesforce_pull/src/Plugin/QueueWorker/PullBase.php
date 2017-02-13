@@ -138,7 +138,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    */
   protected function updateEntity(SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object, SObject $sf_object) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
-            return;
+      return;
     }
 
     try {
@@ -174,7 +174,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
 
       $this->event_dispatcher->dispatch(
         SalesforceEvents::PULL_PREPULL,
-        //new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
         $this->salesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
       );
 
@@ -195,7 +194,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       }
     }
     catch (\Exception $e) {
-      var_dump(Error::decodeException($e));
       $this->logger->log(
         LogLevel::ERROR,
         'Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
