@@ -53,7 +53,7 @@ class SalesforceController extends ControllerBase {
       'grant_type' => 'authorization_code',
       'client_id' => $this->client->getConsumerKey(),
       'client_secret' => $this->client->getConsumerSecret(),
-      'redirect_uri' => $this->client->getAuthCallbackUrl(),
+      'redirect_uri' => $this->client->getAuthCallbackUrl()->toString(),
     ]));
     $url = $this->client->getAuthTokenUrl();
     $headers = [
@@ -65,7 +65,7 @@ class SalesforceController extends ControllerBase {
 
     $this->client->handleAuthResponse($response);
 
-    return new RedirectResponse(Url::fromRoute('salesforce.authorize', [], ['absolute' => TRUE]));
+    return new RedirectResponse(Url::fromRoute('salesforce.authorize', [], ['absolute' => TRUE])->toString());
   }
 
 }

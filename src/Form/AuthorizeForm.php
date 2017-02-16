@@ -143,7 +143,7 @@ class AuthorizeForm extends ConfigFormBase {
     try {
       $path = $this->sf_client->getAuthEndpointUrl();
       $query = [
-        'redirect_uri' => $this->sf_client->getAuthCallbackUrl(),
+        'redirect_uri' => $this->sf_client->getAuthCallbackUrl()->toString(),
         'response_type' => 'code',
         'client_id' => $values['consumer_key'],
       ];
