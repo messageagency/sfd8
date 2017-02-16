@@ -5,7 +5,8 @@ namespace Drupal\Tests\salesforce\Unit;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce\Rest\RestResponse as RestResponse;
+use Drupal\salesforce\Rest\RestResponse;
+use Drupal\salesforce\Rest\RestResponse_Describe;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SelectQuery;
@@ -189,7 +190,7 @@ class RestClientTest extends UnitTestCase {
    */
   public function testQuery() {
     $this->initClient(array_merge($this->methods, ['apiCall']));
-    $this->rawQueryResult = [
+    $rawQueryResult = [
       'totalSize' => 1,
       'done' => true,
       'records' => [
@@ -205,17 +206,67 @@ class RestClientTest extends UnitTestCase {
 
     $this->client->expects($this->once())
       ->method('apiCall')
-      ->willReturn($this->rawQueryResult);
+      ->willReturn($rawQueryResult);
 
     // @TODO this doesn't seem like a very good test.
-    $this->assertEquals(new SelectQueryResult($this->rawQueryResult), $this->client->query(new SelectQuery("")));
+    $this->assertEquals(new SelectQueryResult($rawQueryResult), $this->client->query(new SelectQuery("")));
   }
 
   /**
    * @covers ::objectDescribe
+   *
+   * @expectedException Exception
    */
   public function testObjectDescribe() {
+    $this->initClient(array_merge($this->methods, ['apiCall']));
+    $name = $this->randomMachineName();
+    // @TODO this is fugly, do we need a refactor on RestResponse?
+    $restResponse = new RestResponse(
+      new GuzzleResponse('200', [], json_encode([
+        'name' => $name,
+        'fields' => [
+          [
+            'name' => $this->randomMachineName(),
+            'label' => 'Foo Bar',
+            $this->randomMachineName() => $this->randomMachineName(),
+            $this->randomMachineName() => [
+              $this->randomMachineName() => $this->randomMachineName(),
+              $this->randomMachineName() => $this->randomMachineName()
+            ],
+          ],
+          [
+            'name' => $this->randomMachineName(),
+          ],
+        ],
+      ]))
+    );
 
+    $this->client->expects($this->once())
+      ->method('apiCall')
+      ->willReturn($restResponse);
+
+    // Test that we hit "apiCall" and get expected result:
+    $result = $this->client->objectDescribe($name);
+    $expected = new RestResponse_Describe($restResponse);
+    $this->assertEquals($expected, $result);
+
+    // Test that cache gets set correctly:
+    $this->cache->expects($this->any())
+      ->method('get')
+      ->willReturn((object)[
+        'data' => $expected,
+        'created' => time()
+      ]);
+
+    // Test that we hit cache when we call again.
+    // (Otherwise, we'll blow the "once" condition)
+    $this->assertEquals($expected, $this->client->objectDescribe($name));
+
+    // @TODO what happens when we provide a name for non-existent SF table?
+    // 404 exception?
+
+    // Test that we throw an exception if name is not provided.
+    $this->client->objectDescribe('');
   }
 
   /**
