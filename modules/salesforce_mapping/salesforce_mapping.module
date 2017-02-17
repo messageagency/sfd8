@@ -14,7 +14,6 @@ use Drupal\salesforce\Exception;
 // Not sure if we'll actually need these, since entity API seems to provide everything:
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\MappedObject;
-use Drupal\salesforce\EntityNotFoundException;
 
 /**
  * Implements hook_entity_type_alter().
@@ -48,64 +47,15 @@ function salesforce_mapping_entity_operation(EntityInterface $entity) {
 }
 
 /**
- * Return a unique list of mapped Salesforce object types.
- * @see salesforce_mapping_load_multiple()
- * @throws EntityNotFoundException if no mappings have been created yet.
- */
-function salesforce_mapping_get_mapped_sobject_types() {
-  $object_types = [];
-  $mappings = salesforce_mapping_load_multiple();
-  foreach ($mappings as $mapping) {
-    $type = $mapping->getSalesforceObjectType();
-    $object_types[$type] = $type;
-  }
-  return $object_types;
-}
-
-/**
- * Sort mappings by weight.
- */
-function salesforce_mapping_sort($mapping_a, $mapping_b) {
-  if ($mapping_a->get('weight') == $mapping_b->get('weight')) {
-    return 0;
-  }
-  return ($mapping_a->get('weight') < $mapping_b->get('weight')) ? -1 : 1;
-}
-
-/**
- * Implements hook_permission().
- */
-function salesforce_mapping_permission() {
-  return [
-    'administer salesforce mapping' => [
-      'title' => t('Administer Salesforce mapping'),
-      'description' => t('Administer Salesforce field maps.'),
-      'restrict access' => TRUE,
-    ],
-    'view salesforce mapping' => [
-      'title' => t('View Salesforce mapping'),
-      'description' => t('View Salesforce mapping data.'),
-      'restrict access' => TRUE,
-    ],
-  ];
-}
-
-/**
- * Implements hook_field_extra_fields().
+ * Implements hook_entity_extra_field_info().
  */
 function salesforce_mapping_entity_extra_field_info() {
   // Include Salesforce data for mapped entities.
   // @TODO: these don't actually show up on the entity view. Have to implement hook_entity_view as well?
   $extra = [];
-  try {
-    $mappings = \Drupal::service('entity.manager')
-      ->getStorage('salesforce_mapping')
-      ->throwExceptions()
-      ->loadMultiple();
-  }
-  catch (EntityNotFoundException $e) {
-    return [];
-  }
+  $mappings = \Drupal::service('entity.manager')
+    ->getStorage('salesforce_mapping')
+    ->loadPushMappings();
   foreach ($mappings as $mapping) {
     $extra[$mapping->drupal_entity_type][$mapping->drupal_bundle] = [
       'display' => [
@@ -132,26 +82,17 @@ function salesforce_mapping_entity_extra_field_info() {
  */
 function salesforce_mapping_entity_update(EntityInterface $entity) {
   // Check for mappings (much faster than looking for mapped objects.)
-  try {
-    \Drupal::service('entity.manager')
-      ->getStorage('salesforce_mapping')
-      ->throwExceptions()
-      ->loadByDrupal($entity->getEntityTypeId());
-  }
-  catch (EntityNotFoundException $e) {
+  $mappings = \Drupal::service('entity.manager')
+    ->getStorage('salesforce_mapping')
+    ->loadByDrupal($entity->getEntityTypeId());
+  if (empty($mappings)) {
     return;
   }
 
   // If mappings, check for mapped objects.
-  try {
-    $mapped_objects = \Drupal::service('entity.manager')
-      ->getStorage('salesforce_mapped_object')
-      ->throwExceptions()
-      ->loadByDrupal($entity->getEntityTypeId(), $entity->id());
-  }
-  catch (EntityNotFoundException $e) {
-    return;
-  }
+  $mapped_objects = \Drupal::service('entity.manager')
+    ->getStorage('salesforce_mapped_object')
+    ->loadByDrupal($entity->getEntityTypeId(), $entity->id());
 
   foreach ($mapped_objects as $mapped_object) {
     // Resaving the object should update the timestamp.

@@ -61,4 +61,26 @@ interface SalesforceMappingFieldPluginInterface {
    */
   public static function isAllowed(SalesforceMappingInterface $mapping);
 
+  /**
+   * Get/set a key-value config pair for this plugin.
+   *
+   * @param string $key 
+   * @param mixed $value 
+   */
+  public function config($key = NULL, $value = NULL);
+
+  /**
+   * Whether this plugin supports "push" operations
+   *
+   * @return bool
+   */
+  public function push();
+
+  /**
+   * Whether this plugin supports "pull" operations
+   *
+   * @return bool
+   */
+  public function pull();
+
 }

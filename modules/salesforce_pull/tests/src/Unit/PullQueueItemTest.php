@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\Tests\salesforce\salesforce_pull;
+namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\SObject;
@@ -28,9 +28,7 @@ class PullQueueItemTest extends UnitTestCase {
   public function testObject() {
     $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'dummy',]]);
     // OF COURSE Prophesy doesn't do magic methods well.
-    $mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)
-      ->setMethods(['__construct', '__get'])
-      ->getMock();
+    $mapping = $this->getMock(SalesforceMappingInterface::CLASS);
     $mapping->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('id'))

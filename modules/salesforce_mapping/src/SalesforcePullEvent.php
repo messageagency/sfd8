@@ -30,7 +30,7 @@ class SalesforcePullEvent extends Event {
   public function __construct(MappedObjectInterface $mapped_object, $op) {
     $this->mapped_object = $mapped_object;
     $this->entity = $mapped_object->getMappedEntity();
-    $this->mapping = $mapped_object->salesforce_mapping->entity;
+    $this->mapping = $mapped_object->getMapping();
     $this->op = $op;
   }
 

@@ -31,7 +31,7 @@ abstract class SalesforcePushEvent extends Event {
   public function __construct(MappedObjectInterface $mapped_object) {
     $this->mapped_object = $mapped_object;
     $this->entity = ($mapped_object) ? $mapped_object->getMappedEntity() : NULL;
-    $this->mapping = ($mapped_object) ? $mapped_object->salesforce_mapping->entity : NULL;
+    $this->mapping = ($mapped_object) ? $mapped_object->getMapping() : NULL;
   }
 
   /**

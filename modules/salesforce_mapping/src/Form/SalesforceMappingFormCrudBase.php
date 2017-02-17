@@ -78,7 +78,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
 
     $form['drupal_entity']['drupal_bundle'] = ['#title' => 'Drupal Bundle', '#tree' => TRUE];
     foreach ($entity_types as $entity_type => $label) {
-      $bundle_info = \Drupal::entityManager()->getBundleInfo($entity_type);
+      $bundle_info = $this->entityManager->getBundleInfo($entity_type);
       if (empty($bundle_info)) {
         continue;
       }
@@ -267,7 +267,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected function get_entity_type_options() {
     $options = [];
-    $entity_info = \Drupal::entityTypeManager()->getDefinitions();
+    $entity_info = $this->entityTypeManager->getDefinitions();
 
     // For now, let's only concern ourselves with fieldable entities. This is an
     // arbitrary restriction, but otherwise there would be dozens of entities,

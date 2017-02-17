@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Form;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
@@ -33,10 +34,11 @@ class MappedObjectForm extends ContentEntityForm {
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager, RestClient $rest) {
+  public function __construct(EntityManagerInterface $entity_manager, RestClient $rest, RouteMatchInterface $route_match) {
     $this->entityManager = $entity_manager;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping')->throwExceptions();
+    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->rest = $rest;
+    $this->route_match = $route_match;
   }
 
   /**
@@ -45,7 +47,8 @@ class MappedObjectForm extends ContentEntityForm {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity.manager'),
-      $container->get('salesforce.client')
+      $container->get('salesforce.client'),
+      $container->get('current_route_match')
     );
   }
 
@@ -55,7 +58,7 @@ class MappedObjectForm extends ContentEntityForm {
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Include the parent entity on the form.
     $form = parent::buildForm($form, $form_state);
-    $url_params = \Drupal::routeMatch()->getParameters();
+    $url_params = $this->route_match->getParameters();
     $drupal_entity = $this->getDrupalEntityFromUrl();
     // Allow exception to bubble up here, because we shouldn't have got here if
     // there isn't a mapping.
@@ -187,7 +190,7 @@ class MappedObjectForm extends ContentEntityForm {
   private function getDrupalEntityFromUrl() {
     // Fetch the current entity from context.
     // @TODO what if there's more than one entity in route params?
-    $params = \Drupal::routeMatch()->getParameters();
+    $params = $this->route_match->getParameters();
 
     if (empty($params)) {
       throw new \Exception('Invalid route parameters when attempting push to Salesforce.');

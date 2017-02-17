@@ -1,16 +1,17 @@
 <?php
-namespace Drupal\Tests\salesforce;
+namespace Drupal\Tests\salesforce\Unit;
 
 use Drupal\Tests\UnitTestCase;
-use Drupal\salesforce\SObject;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\SObject;
+
 /**
  * Test Object instantitation
  *
  * @group salesforce_pull
  */
 
-class PullQueueItemTest extends UnitTestCase {
+class SObjectTest extends UnitTestCase {
   static $modules = ['salesforce'];
 
   /**
