@@ -587,11 +587,11 @@ class RestClient {
     $response = $this->apiCall("sobjects/{$name}/{$key}/{$value}", $params, 'PATCH', TRUE);
 
     // On update, upsert method returns an empty body. Retreive object id, so that we can return a consistent response.
-    if ($this->response->getStatusCode() == 204) {
+    if ($response->getStatusCode() == 204) {
       // We need a way to allow callers to distinguish updates and inserts. To
       // that end, cache the original response and reset it after fetching the
       // ID.
-      $this->original_response = $this->response;
+      $this->original_response = $response;
       $sf_object = $this->objectReadbyExternalId($name, $key, $value);
       return $sf_object->id();
     }
@@ -760,7 +760,7 @@ class RestClient {
    *   If $name is given, an array of record types indexed by developer name.
    *   Otherwise, an array of record type arrays, indexed by object type name.
    */
-  public function getRecordTypes($name = NULL) {
+  public function getRecordTypes($name = NULL, $reset = FALSE) {
     $cache = $this->cache->get('salesforce:record_types');
 
     // Force the recreation of the cache when it is older than CACHE_LIFETIME

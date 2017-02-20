@@ -17,7 +17,7 @@ use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePullEntityValueEvent;
 use Drupal\salesforce_mapping\SalesforcePullEvent;
-use Drupal\salesforce_mapping\SalesforcePushEvent;
+use Drupal\salesforce_mapping\SalesforcePushParamsEvent;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
@@ -290,7 +290,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $params = new PushParams($mapping, $drupal_entity);
     $this->eventDispatcher()->dispatch(
       SalesforceEvents::PUSH_PARAMS,
-      new SalesforcePushEvent($this, $params)
+      new SalesforcePushParamsEvent($this, $params)
     );
 
     // @TODO is this the right place for this logic to live?
@@ -345,7 +345,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // Previously hook_salesforce_push_success.
     $this->eventDispatcher()->dispatch(
       SalesforceEvents::PUSH_SUCCESS,
-      new SalesforcePushEvent($this, $params)
+      new SalesforcePushParamsEvent($this, $params)
     );
 
     return $result;

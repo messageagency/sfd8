@@ -14,7 +14,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use GuzzleHttp\Exception\RequestException;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\SalesforcePushEvent;
+use Drupal\salesforce_mapping\SalesforcePushOpEvent;
 
 /**
  * Implements hook_entity_insert().
@@ -90,11 +90,6 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
 function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
   $mapped_objects = [];
   $mapped_object = null;
-  // Event subscribers should throw an exception to prevent push.
-  \Drupal::service('event_dispatcher')->dispatch(
-    SalesforceEvents::PUSH_ALLOWED,
-    new SalesforcePushEvent($mapped_object, NULL, $op)
-  );
 
   // Look for existing mapped object or create a new one (except for deletes).
   $props = [
@@ -124,6 +119,12 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
     $mapped_object = current($mapped_objects);
   }
 
+  // Event subscribers should throw an exception to prevent push.
+  \Drupal::service('event_dispatcher')->dispatch(
+    SalesforceEvents::PUSH_ALLOWED,
+    new SalesforcePushOpEvent($mapped_object, $op)
+  );
+
   // Enqueue async push if the mapping is configured to do so, and quit.
   if ($mapping->async) {
     try {
@@ -137,9 +138,10 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
 
   // Attempt real-time push. Enqueue async push on failure.
   try {
+    // @TODO this doesn't really seem distinct from PUSH_ALLOWED anymore. Do we still have a use case for this event?
     \Drupal::service('event_dispatcher')->dispatch(
       SalesforceEvents::PUSH_MAPPING_OBJECT,
-      new SalesforcePushEvent($mapped_object, NULL, $op)
+      new SalesforcePushOpEvent($mapped_object, $op)
     );
 
     // If this is a delete, destroy the SF object.
@@ -160,7 +162,7 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
 
     \Drupal::service('event_dispatcher')->dispatch(
       SalesforceEvents::PUSH_FAIL,
-      new SalesforcePushEvent($mapped_object, NULL, $op)
+      new SalesforcePushOpEvent($mapped_object, $op)
     );
 
     watchdog_exception('Salesforce Push', $e);

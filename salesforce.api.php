@@ -2,16 +2,18 @@
 
 /**
  * @file
- * These are the hooks that are invoked by the Salesforce core.
+ * Legacy documentation, mapping of old hook system to new Events system.
  *
- * Core hooks are typically called in all modules at once using
- * module_invoke_all().
+ * @see Drupal\salesforce\SalesforceEvents.php
+ * @see salesforce_example.module
  */
 
 /**
  * @defgroup salesforce_deprecated
  * Hooks deprecated between 7.x and 8.x with pointers to new solutions.
- * See salesforce_example for further explanation.
+ * See SalesforceEvents.php for events documentation.
+ * See salesforce_example for example Event Subscriber implementation.
+ *
  * @{
  */
 
