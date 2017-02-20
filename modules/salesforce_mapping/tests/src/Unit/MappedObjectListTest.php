@@ -2,20 +2,23 @@
 
 /**
  * @file
- * Contains \Drupal\Tests\Core\Entity\EntityListBuilderTest.
+ * Contains \Drupal\Tests\salesforce_mapping\Unit\MappedObjectListTest.
  */
 
 namespace Drupal\Tests\salesforce_mapping\Unit;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityListBuilder;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Field\Plugin\Field\FieldType\StringItem;
 use Drupal\entity_test\EntityTestListBuilder;
-use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce_mapping\MappedObjectList;
-//use Drupal\Core\Entity\EntityStorageInterface;
-
+use Drupal\Tests\UnitTestCase;
+use Prophecy\Argument;
 
 /**
  * @coversDefaultClass \Drupal\salesforce_mapping\MappedObjectList
@@ -31,13 +34,6 @@ class MappedObjectListTest extends UnitTestCase {
   protected $entityType;
 
   /**
-   * The module handler used for testing.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
-  protected $moduleHandler;
-
-  /**
    * The translation manager used for testing.
    *
    * @var \Drupal\Core\StringTranslation\TranslationInterface
@@ -45,11 +41,11 @@ class MappedObjectListTest extends UnitTestCase {
   protected $translationManager;
 
   /**
-   * The role storage used for testing.
+   * The entity storage used for testing.
    *
-   * @var \Drupal\user\RoleStorageInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Entity\EntityStorageInterface|\PHPUnit_Framework_MockObject_MockObject
    */
-  protected $roleStorage;
+  protected $storage;
 
   /**
    * The service container used for testing.
@@ -59,18 +55,18 @@ class MappedObjectListTest extends UnitTestCase {
   protected $container;
 
   /**
-   * The entity used to construct the EntityListBuilder.
+   * The entity used for testing.
    *
-   * @var \Drupal\user\RoleInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Entity\ContentEntityBase|\PHPUnit_Framework_MockObject_MockObject
    */
-  protected $role;
+  protected $entity;
 
   /**
-   * The EntityListBuilder object to test.
+   * The query interface used for testing.
    *
-   * @var \Drupal\Core\Entity\EntityListBuilder
+   * @var \Drupal\Core\Entity\Query\QueryInterface|\PHPUnit_Framework_MockObject_MockObject
    */
-  protected $entityListBuilder;
+  protected $entityQuery;
 
   /**
    * {@inheritdoc}
@@ -78,78 +74,45 @@ class MappedObjectListTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    //$this->role = $this->getMock('Drupal\user\RoleInterface');
-    //$this->roleStorage = $this->getMock('\Drupal\user\RoleStorageInterface');
-    //$this->moduleHandler = $this->getMock('\Drupal\Core\Extension\ModuleHandlerInterface');
-    $this->entityType = $this->getMock('\Drupal\Core\Entity\EntityTypeInterface');
+    // mock content entity
+    $this->entity = $this->getMockBuilder(ContentEntityBase::CLASS)
+      ->setMethods(['__construct', '__get', 'get', 'sfid', 'id', '__isset', 'getAccessControlHandler'])
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->entity->expects($this->any())
+      ->method('__get')
+      ->will($this->returnValueMap([
+        ['entity_id',$this->setPropertyValue('1')],
+        ['entity_type', $this->setPropertyValue('Foo')]
+      ]));
+    $this->entity->expects($this->any())
+      ->method('sfid')
+      ->willReturn('1234567890abcdeAAA');
+    $this->entity->expects($this->any())
+      ->method('get')->with('changed')
+      ->willReturn($this->setPropertyValue('12:00:00'));
+
+    $this->entityQuery = $this->prophesize(QueryInterface::class);
+    $this->entityQuery->sort(Argument::any())->willReturn($this->entityQuery);
+    $this->entityQuery->pager(Argument::any())->willReturn($this->entityQuery);
+    $this->entityQuery->execute()->willReturn(['foo', 'bar']);
+
+    $this->entityType = $this->prophesize(EntityTypeInterface::class);
     $this->translationManager = $this->getMock('\Drupal\Core\StringTranslation\TranslationInterface');
-    $this->storage = $this->getMock('\Drupal\Core\Entity\EntityStorageInterface');
+    $this->storage = $this->prophesize(EntityStorageInterface::class);
+    $this->storage->getQuery()->willReturn($this->entityQuery->reveal());
+    $this->storage->loadMultiple(['foo', 'bar'])->willReturn([$this->entity]);
+
     $this->url_generator = $this->getMock('\Drupal\Core\Routing\UrlGeneratorInterface');
-    $this->entity = $this->getMock('DDrupal\salesforce_mapping\Entity\MappedObjectInterface');
-    //$this->entityListBuilder = new TestEntityListBuilder($this->entityType, $this->roleStorage, $this->moduleHandler);
     $this->container = new ContainerBuilder();
     \Drupal::setContainer($this->container);
   }
 
   /**
-   * @covers ::getOperations
-   */
-/*
-  public function testGetOperations() {
-    $operation_name = $this->randomMachineName();
-    $operations = array(
-      $operation_name => array(
-        'title' => $this->randomMachineName(),
-      ),
-    );
-    $this->moduleHandler->expects($this->once())
-      ->method('invokeAll')
-      ->with('entity_operation', array($this->role))
-      ->will($this->returnValue($operations));
-    $this->moduleHandler->expects($this->once())
-      ->method('alter')
-      ->with('entity_operation');
-
-    $this->container->set('module_handler', $this->moduleHandler);
-
-    $this->role->expects($this->any())
-      ->method('access')
-      ->will($this->returnValue(AccessResult::allowed()));
-    $this->role->expects($this->any())
-      ->method('hasLinkTemplate')
-      ->will($this->returnValue(TRUE));
-    $url = $this->getMockBuilder('\Drupal\Core\Url')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $url->expects($this->any())
-      ->method('toArray')
-      ->will($this->returnValue(array()));
-    $this->role->expects($this->any())
-      ->method('urlInfo')
-      ->will($this->returnValue($url));
-
-    $list = new EntityListBuilder($this->entityType, $this->roleStorage, $this->moduleHandler);
-    $list->setStringTranslation($this->translationManager);
-
-    $operations = $list->getOperations($this->role);
-    $this->assertInternalType('array', $operations);
-    $this->assertArrayHasKey('edit', $operations);
-    $this->assertInternalType('array', $operations['edit']);
-    $this->assertArrayHasKey('title', $operations['edit']);
-    $this->assertArrayHasKey('delete', $operations);
-    $this->assertInternalType('array', $operations['delete']);
-    $this->assertArrayHasKey('title', $operations['delete']);
-    $this->assertArrayHasKey($operation_name, $operations);
-    $this->assertInternalType('array', $operations[$operation_name]);
-    $this->assertArrayHasKey('title', $operations[$operation_name]);
-  }
-*/
-  /**
    * @covers ::render
    */
   public function testRender() {
-
-    $list = new MappedObjectList($this->entityType, $this->storage, $this->url_generator);
+    $list = new TestMappedObjectList($this->entityType->reveal(), $this->storage->reveal(), $this->url_generator);
     $list->setStringTranslation($this->translationManager);
     $build = $list->render();
     $this->assertArrayHasKey('#markup', $build['description']);
@@ -159,7 +122,7 @@ class MappedObjectListTest extends UnitTestCase {
    * @covers ::buildHeader
    */
   public function testBuildHeader() {
-    $list = new MappedObjectList($this->entityType, $this->storage, $this->url_generator);
+    $list = new TestMappedObjectList($this->entityType->reveal(), $this->storage->reveal(), $this->url_generator);
     $list->setStringTranslation($this->translationManager);
     $header = $list->buildHeader();
     $this->assertArrayHasKey('id', $header);
@@ -174,20 +137,7 @@ class MappedObjectListTest extends UnitTestCase {
    * @covers ::buildRow
    */
   public function testBuildRow() {
-    $entity_id = new \stdClass();
-    $entity_id->value = 1;
-    $this->entity->entity_id = $entity_id;
-    $entity_type = new \stdClass();
-    $entity_type->value = 'Foo';
-    $this->entity->entity_type = $entity_type;
-    $this->entity->expects($this->any())
-      ->method('sfid')
-      ->will($this->returnValue('1234567890abcdeAAA'));
-    //$this->entity->expects($this->any())
-    //  ->method('sfid')
-    //  ->will($this->returnValue('1234567890abcdeAAA'));
-    var_dump($this->entity);
-    $list = new MappedObjectList($this->entityType, $this->storage, $this->url_generator);
+    $list = new TestMappedObjectList($this->entityType->reveal(), $this->storage->reveal(), $this->url_generator);
     $row = $list->buildRow($this->entity);
     $this->assertArrayHasKey('id', $row);
     $this->assertArrayHasKey('entity_id', $row);
@@ -196,10 +146,29 @@ class MappedObjectListTest extends UnitTestCase {
     $this->assertArrayHasKey('changed', $row);
   }
 
+  /**
+   * Creates a value object for $entity->property_name->value pattern calls.
+   *
+   * @param $value
+   *   Value to be return by $property_name->value.
+   *
+   * @return \Drupal\Core\Field\Plugin\Field\FieldType\StringItem
+   */
+  public function setPropertyValue($value) {
+    $valueObject = $this->getMockBuilder(StringItem::CLASS)
+      ->setMethods(['__get'])
+      ->disableOriginalConstructor()
+      ->getMock();
+    $valueObject->expects($this->any())
+      ->method('__get')
+      ->with($this->equalTo('value'))
+      ->willReturn($value);
+    return $valueObject;
+  }
+
 }
 
-
-class TestEntityListBuilder extends EntityTestListBuilder {
+class TestMappedObjectList extends MappedObjectList {
   public function buildOperations(EntityInterface $entity) {
     return array();
   }
