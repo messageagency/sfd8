@@ -15,9 +15,10 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Field\Plugin\Field\FieldType\StringItem;
+use Drupal\Tests\UnitTestCase;
+use Drupal\salesforce_mapping\Tests\TestMappedObjectList;
 use Drupal\entity_test\EntityTestListBuilder;
 use Drupal\salesforce_mapping\MappedObjectList;
-use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 
 /**
@@ -116,6 +117,7 @@ class MappedObjectListTest extends UnitTestCase {
     $list->setStringTranslation($this->translationManager);
     $build = $list->render();
     $this->assertArrayHasKey('#markup', $build['description']);
+    $this->assertArrayHasKey('table', $build);
   }
 
   /**
@@ -168,9 +170,3 @@ class MappedObjectListTest extends UnitTestCase {
 
 }
 
-class TestMappedObjectList extends MappedObjectList {
-  public function buildOperations(EntityInterface $entity) {
-    return array();
-  }
-
-}
