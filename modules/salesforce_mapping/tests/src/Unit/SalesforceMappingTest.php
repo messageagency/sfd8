@@ -106,7 +106,7 @@ class SalesforceMappingTest extends UnitTestCase {
    */
   public function testObject() {
     $this->assertTrue($this->mapping instanceof SalesforceMapping);
-    $this->assertEquals($this->id, $this->mapping->id);
+    $this->assertEquals($this->id, $this->mapping->id());
   }
 
     /**

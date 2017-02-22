@@ -3,6 +3,7 @@
 namespace Drupal\salesforce_mapping\Entity;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 
 /**
  *
@@ -14,6 +15,8 @@ interface SalesforceMappingInterface {
   public function __construct(array $values = [], $entity_type);
 
   public function __get($key);
+
+  public function get($property_name);
 
   public function getFieldMappings();
 
@@ -31,7 +34,7 @@ interface SalesforceMappingInterface {
 
   public function getPullTriggerDate();
 
-  //public function id();
+  public function doesPush();
 
   public function checkTriggers(array $triggers);
 
