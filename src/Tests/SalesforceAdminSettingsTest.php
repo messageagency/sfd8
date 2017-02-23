@@ -88,7 +88,8 @@ class SalesforceAdminSettingsTest extends WebTestBase {
     $this->drupalHead('salesforce/oauth_callback', ['query' => ['code' => $code]]);
 
     // Confirm that oauth_callback redirected properly
-    $this->assertEqual('/admin/config/salesforce/authorize', $this->drupalGetHeader('location'));
+    $url = parse_url($this->drupalGetHeader('location'));
+    $this->assertEqual('/admin/config/salesforce/authorize', $url['path']);
   }
 
 }
