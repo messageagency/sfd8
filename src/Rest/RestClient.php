@@ -21,7 +21,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
  */
-class RestClient {
+class RestClient implements RestClientInterface {
 
   public $response;
   protected $httpClient;
@@ -92,7 +92,7 @@ class RestClient {
       $this->response = $e->getResponse();
 
       // Any exceptions besides 401 get bubbled up.
-      if ($this->response->getStatusCode() != 401) {
+      if (!$this->response || $this->response->getStatusCode() != 401) {
         throw $e;
       }
     }
@@ -429,7 +429,7 @@ class RestClient {
     return Url::fromRoute('salesforce.oauth_callback', [], [
       'absolute' => TRUE,
       'https' => TRUE,
-    ]);
+    ])->toString();
   }
 
   /**

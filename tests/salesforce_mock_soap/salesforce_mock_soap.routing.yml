@@ -1,7 +1,0 @@
-salesforce_mock_soap.oauth_callback:
-  path: '/salesforce_mock_soap/endpoint'
-  defaults:
-    _controller: '\Drupal\salesforce_mock_soap\Controller\MockSoapEndpointController::endpoint'
-  requirements:
-    _permission: 'access content'
-

@@ -2,18 +2,19 @@
 
 namespace Drupal\salesforce\Form;
 
-use GuzzleHttp\Exception\RequestException;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Exception;
-use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SalesforceClient;
-use Drupal\Core\Url;
+use GuzzleHttp\Exception\RequestException;
+use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-
+  
 /**
  * Creates authorization form for Salesforce.
  */
@@ -40,7 +41,7 @@ class AuthorizeForm extends ConfigFormBase {
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, RestClient $salesforce_client, StateInterface $state) {
+  public function __construct(ConfigFactoryInterface $config_factory, RestClientInterface $salesforce_client, StateInterface $state) {
     parent::__construct($config_factory);
     $this->sf_client = $salesforce_client;
     $this->state = $state;
@@ -113,19 +114,25 @@ class AuthorizeForm extends ConfigFormBase {
         foreach ($resources->resources as $key => $path) {
           $items[] = $key . ': ' . $path;
         }
-        $form['resources'] = [
-          '#title' => $this->t('Your Salesforce instance is authorized and has access to the following resources:'),
-          '#items' => $items,
-          '#theme' => 'item_list',
-        ];
+        if ($items) {
+          $form['resources'] = [
+            '#title' => $this->t('Your Salesforce instance is authorized and has access to the following resources:'),
+            '#items' => $items,
+            '#theme' => 'item_list',
+          ];
+        }
       }
       catch (RequestException $e) {
-        watchdog_exception(__CLASS__, $e);
-        salesforce_set_message($e->getMessage(), 'warning');
+        drupal_set_message($e->getMessage(), 'warning');
+        $this->logger(__CLASS__)->log(
+          LogLevel::ERROR,
+          '%type: @message in %function (line %line of %file).',
+          Error::decodeException($e)
+        );
       }
     }
     else {
-      salesforce_set_message(t('Salesforce needs to be authorized to connect to this website.'), 'salesforce_oauth_error error');
+      drupal_set_message(t('Salesforce needs to be authorized to connect to this website.'), 'salesforce_oauth_error error');
     }
 
     return parent::buildForm($form, $form_state);
@@ -143,23 +150,26 @@ class AuthorizeForm extends ConfigFormBase {
     try {
       $path = $this->sf_client->getAuthEndpointUrl();
       $query = [
-        'redirect_uri' => $this->sf_client->getAuthCallbackUrl()->toString(),
+        'redirect_uri' => $this->sf_client->getAuthCallbackUrl(),
         'response_type' => 'code',
         'client_id' => $values['consumer_key'],
       ];
 
       // Send the user along to the Salesforce OAuth login form. If successful, the user will be redirected to {redirect_uri} to complete the OAuth handshake.
-      $response = new RedirectResponse(
-        Url::fromUri($path, ['query' => $query, 'absolute' => TRUE])->toUriString()
-      );
-      $response->send();
+      $form_state->setResponse(new TrustedRedirectResponse($path . '?' . http_build_query($query), 302));
     }
     catch (RequestException $e) {
-      drupal_set_message(t("Error during authorization: %message", $e->getMessage()), 'error');
-      watchdog_exception(__CLASS__, $e);
+      drupal_set_message(t("Error during authorization: %message", ['%message' => $e->getMessage()]), 'error');
+      $this->logger(__CLASS__)->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
     }
+  }
 
-    parent::submitForm($form, $form_state);
+  private function getAuthUrl() {
+    
   }
 
 }
