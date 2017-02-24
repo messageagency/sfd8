@@ -205,12 +205,13 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           '%msg' => $e->getMessage(),
         ]
       );
+
+      $this->logger->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
     }
-    $this->logger->log(
-      LogLevel::ERROR,
-      '%type: @message in %function (line %line of %file).',
-      Error::decodeException($e)
-    );
   }
 
   /**

@@ -45,7 +45,7 @@ function hook_salesforce_pull_mapping_object_alter() {}
  * Implement an EventSubscriber on
  * Drupal\salesforce\SalesforceEvents::PULL_ENTITY_VALUE
  */
-function hook_salesforce_pull_entity_value_alter()
+function hook_salesforce_pull_entity_value_alter() {}
 
 /**
  * Implement an EventSubscriber on
