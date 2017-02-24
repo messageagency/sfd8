@@ -18,6 +18,7 @@ function salesforce_push_uninstall() {
   \Drupal::state()->delete('salesforce.push_limit');
   \Drupal::state()->delete('salesforce.push_queue_processor');
   \Drupal::state()->delete('salesforce.push_queue_max_fails');
+  \Drupal::service('queue.salesforce_push')->deleteTable();
 }
 
 function salesforce_push_update_1() {
