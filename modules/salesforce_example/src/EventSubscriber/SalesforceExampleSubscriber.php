@@ -22,7 +22,7 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
   public function pushAllowed(SalesforcePushOpEvent $event) {
     /** @var Entity $entity */
     $entity = $event->getEntity();
-    if ($entity->getEntityTypeId() == 'unpushable_entity') {
+    if ($entity && $entity->getEntityTypeId() == 'unpushable_entity') {
       throw new Exception('Prevent push of Unpushable Entity');
     }
   }

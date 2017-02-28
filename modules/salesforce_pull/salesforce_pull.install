@@ -16,5 +16,11 @@ function salesforce_pull_install() {
  * Implements hook_uninstall().
  */
 function salesforce_pull_uninstall() {
-  \Drupal::state()->delete('salesforce.pull_max_queue_size');
+  $delete = ['salesforce.pull_max_queue_size'];
+  $objects = \Drupal::service('salesforce.client')->objects();
+  foreach ($objects as $type) {
+    $delete[] = 'salesforce_pull_last_delete_' . $type['name'];
+    $delete[] = 'salesforce_pull_last_sync_' . $type['name'];
+  }
+  \Drupal::state()->deleteMultiple($delete);
 }

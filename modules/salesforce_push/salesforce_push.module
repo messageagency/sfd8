@@ -53,7 +53,8 @@ function salesforce_push_entity_delete(EntityInterface $entity) {
  */
 function salesforce_push_entity_crud(EntityInterface $entity, $op) {
   // Don't allow mapped objects or mappings to be pushed!
-  if ($entity instanceof MappedObjectInterface
+  if (!empty($entity->salesforce_pull)
+  || $entity instanceof MappedObjectInterface
   || $entity instanceof SalesforceMappingInterface) {
     return;
   }

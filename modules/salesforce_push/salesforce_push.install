@@ -15,9 +15,12 @@ function salesforce_push_install() {
  * Implements hook_uninstall().
  */
 function salesforce_push_uninstall() {
-  \Drupal::state()->delete('salesforce.push_limit');
-  \Drupal::state()->delete('salesforce.push_queue_processor');
-  \Drupal::state()->delete('salesforce.push_queue_max_fails');
+  $delete = [
+    'salesforce.push_limit',
+    'salesforce.push_queue_processor',
+    'salesforce.push_queue_max_fails',
+  ];
+  \Drupal::state()->deleteMultiple($delete);
   \Drupal::service('queue.salesforce_push')->deleteTable();
 }
 
