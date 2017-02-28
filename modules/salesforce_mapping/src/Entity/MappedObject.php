@@ -262,7 +262,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * Wrapper for Drupal core logger service.
    */
   public function logger($log) {
-    return \Drupal::logger($log);
+    return \Drupal::service('logger.factory')->get($log);
   }
 
   /**

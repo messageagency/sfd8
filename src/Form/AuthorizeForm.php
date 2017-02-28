@@ -14,7 +14,7 @@ use Drupal\salesforce\SalesforceClient;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-  
+
 /**
  * Creates authorization form for Salesforce.
  */
@@ -169,7 +169,7 @@ class AuthorizeForm extends ConfigFormBase {
   }
 
   private function getAuthUrl() {
-    
+
   }
 
 }
