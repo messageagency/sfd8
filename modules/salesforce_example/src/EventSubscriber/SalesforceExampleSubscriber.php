@@ -46,6 +46,14 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
     $params->setParam('FirstName', 'SalesforceExample');
   }
 
+  public function pushSuccess(SalesforcePushParamsEvent $event) {
+    drupal_set_message('push success: ' . $event->getMappedObject()->sfid());
+  }
+
+  public function pushFail(SalesforcePushOpEvent $event) {
+    drupal_set_message('push fail: ' . $event->getMappedObject()->id());
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -53,6 +61,8 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
     $events = [
       SalesforceEvents::PUSH_ALLOWED => 'pushAllowed',
       SalesforceEvents::PUSH_PARAMS => 'pushParamsAlter',
+      SalesforceEvents::PUSH_SUCCESS => 'pushSuccess',
+      SalesforceEvents::PUSH_FAIL => 'pushFail',
     ];
     return $events;
   }
