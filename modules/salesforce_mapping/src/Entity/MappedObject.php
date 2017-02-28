@@ -9,15 +9,16 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\salesforce\Exception as SalesforceException;
-use Drupal\salesforce\SFID;
-use Drupal\salesforce\SObject;
-use Drupal\salesforce\SalesforceEvents;
+use Drupal\Core\Utility\Error;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePullEntityValueEvent;
 use Drupal\salesforce_mapping\SalesforcePullEvent;
 use Drupal\salesforce_mapping\SalesforcePushParamsEvent;
+use Drupal\salesforce\Exception as SalesforceException;
+use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
 
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
@@ -450,7 +451,11 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
           '@v' => $value,
           '@e' => $e->getMessage(),
         ]);
-        watchdog_exception(__CLASS__, $e);
+        $this->logger(__CLASS__)->log(
+          LogLevel::ERROR,
+          '%type: @message in %function (line %line of %file).',
+          Error::decodeException($e)
+        );
         continue;
       }
     }

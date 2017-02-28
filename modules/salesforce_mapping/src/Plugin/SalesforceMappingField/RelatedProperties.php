@@ -82,7 +82,11 @@ $mapping) {
     }
     catch (\Exception $e) {
       // @TODO something about this exception
-      watchdog_exception(__CLASS__, $e);
+      $this->logger(__CLASS__)->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
       return;
     }
 

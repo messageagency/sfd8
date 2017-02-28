@@ -23,21 +23,72 @@ class MappedObjectForm extends ContentEntityForm {
    */
   protected $storageController;
 
+  /**
+   * [$mappingFieldPluginManager description]
+   *
+   * @var [type]
+   */
   protected $mappingFieldPluginManager;
 
+  /**
+   * [$pushPluginManager description]
+   *
+   * @var [type]
+   */
   protected $pushPluginManager;
 
+  /**
+   * Mapping entity storage service.
+   *
+   * @var SalesforcesMappingStorage
+   */
   protected $mapping_storage;
+
+  /**
+   * Logger service.
+   *
+   * @var Logger
+   */
+  protected $logger;
+
+  /**
+   * Entity manager service.
+   *
+   * @var EntityManagerInterface
+   */
+  protected $entityManager;
+
+  /**
+   * REST Client service
+   *
+   * @var RestClient
+   */
+  protected $rest;
+
+  /**
+   * Route matching service
+   *
+   * @var RouteMatchInterface
+   */
+  protected $route_match;
+
   /**
    * Constructs a ContentEntityForm object.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param EntityManagerInterface        $entity_manager
    *   The entity manager.
+   * @param RestClient                    $rest
+   *   The Rest Client.
+   * @param LoggerChannelFactoryInterface $logger_factory
+   *   Logging service factory.
+   * @param RouteMatchInterface           $route_match
+   *   Route matching service.
    */
-  public function __construct(EntityManagerInterface $entity_manager, RestClient $rest, RouteMatchInterface $route_match) {
+  public function __construct(EntityManagerInterface $entity_manager, RestClient $rest, LoggerChannelFactoryInterface $logger_factory, RouteMatchInterface $route_match) {
     $this->entityManager = $entity_manager;
     $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->rest = $rest;
+    $this->logger = $logger_factory->get(__CLASS__);
     $this->route_match = $route_match;
   }
 
@@ -48,6 +99,7 @@ class MappedObjectForm extends ContentEntityForm {
     return new static(
       $container->get('entity.manager'),
       $container->get('salesforce.client'),
+      $container->get('logger.factory'),
       $container->get('current_route_match')
     );
   }
@@ -116,7 +168,11 @@ class MappedObjectForm extends ContentEntityForm {
       $mapped_object->push();
     }
     catch (\Exception $e) {
-      watchdog_exception(__CLASS__, $e);
+      $this->logger(__CLASS__)->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
       drupal_set_message(t('Push failed with an exception: %exception', array('%exception' => $e->getMessage())), 'error');
       return;
     }
