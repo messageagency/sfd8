@@ -56,7 +56,18 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
   use EntityChangedTrait;
 
+  /**
+   * Salesforce Object
+   *
+   * @var SObject
+   */
   protected $sf_object = NULL;
+
+  /**
+   * Drupal Entity
+   *
+   * @var \Drupal\Core\Entity\EntityInterface
+   */
   protected $drupal_entity = NULL;
 
   /**
@@ -373,7 +384,11 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
-
+  /**
+   * @param EntityInterface $entity
+   *
+   * @return $this
+   */
   public function setDrupalEntity(EntityInterface $entity = NULL) {
     if ($entity->id() != $this->entity_id->value) {
       throw new SalesforceException('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
@@ -382,11 +397,19 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
+  /**
+   * @param SObject $sf_object
+   *
+   * @return $this
+   */
   public function setSalesforceRecord(SObject $sf_object) {
     $this->sf_object = $sf_object;
     return $this;
   }
 
+  /**
+   * @return SObject
+   */
   public function getSalesforceRecord() {
     return $this->sf_object;
   }
@@ -489,7 +512,12 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
+  /**
+   * @return REQUEST_TIME
+   */
   protected function getRequestTime() {
+    // @TODO Replace this with a better implementation when available,
+    // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
     return defined('REQUEST_TIME') ? REQUEST_TIME : (int) $_SERVER['REQUEST_TIME'];
   }
 
