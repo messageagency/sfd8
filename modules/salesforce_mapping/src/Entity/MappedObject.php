@@ -346,6 +346,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $this
       ->set('last_sync_action', 'push_' . $action)
       ->set('last_sync_status', TRUE)
+      ->set('revision_log_message', '')
       ->save();
 
     // Previously hook_salesforce_push_success.

@@ -3,6 +3,11 @@ langcode: en
 dependencies:
   module:
     - user
+    - salesforce_example
+  enforced:
+    module:
+      - user
+      - salesforce_example      
 label: 'Salesforce Example Contact'
 type: salesforce_mapping
 key: ''
