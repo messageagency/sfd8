@@ -5,12 +5,12 @@ namespace Drupal\salesforce\Form;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelFactory;
+use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\State\StateInterface;
-use Drupal\Core\Url;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Exception;
-use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SalesforceClient;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LogLevel;
@@ -44,7 +44,7 @@ class AuthorizeForm extends ConfigFormBase {
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, RestClient $salesforce_client, StateInterface $state, LoggerChannelFactoryInterface $logger_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, RestClient $salesforce_client, StateInterface $state, LoggerChannelFactory $logger_factory) {
     parent::__construct($config_factory);
     $this->sf_client = $salesforce_client;
     $this->state = $state;
@@ -171,9 +171,6 @@ class AuthorizeForm extends ConfigFormBase {
         Error::decodeException($e)
       );
     }
-
-  private function getAuthUrl() {
-
   }
 
 }
