@@ -1,0 +1,19 @@
+<?php
+
+
+/**
+ * Purge Salesforce module state variables
+ */
+function salesforce_uninstall() {
+  $delete = [
+    'salesforce.consumer_key',
+    'salesforce.consumer_secret',
+    'salesforce.login_url',
+    'salesforce.instance_url',
+    'salesforce.access_token',
+    'salesforce.refresh_token',
+    'salesforce.identity',
+  ];
+  \Drupal::state()->deleteMultiple($delete);
+}
+
