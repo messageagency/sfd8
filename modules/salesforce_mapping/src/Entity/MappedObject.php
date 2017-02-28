@@ -221,10 +221,16 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public function getMappedEntity() {
     $entity_id = $this->entity_id->value;
-    $entity_type_id = $this->entity_type_id->value;
-    return $this
-      ->entityManager()
-      ->getStorage($entity_type_id)->load($entity_id);
+    if(!$entity_id) {
+      // this is a new entity...
+      return $this->drupal_entity;
+    }
+    else {
+      $entity_type_id = $this->entity_type_id->value;
+      return $this
+        ->entityTypeManager()
+        ->getStorage($entity_type_id)->load($entity_id);
+    }
   }
 
   /**
