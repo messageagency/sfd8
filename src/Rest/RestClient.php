@@ -21,34 +21,84 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
  */
-class RestClient {
+class RestClient implements RestClientInterface {
 
+  /**
+   * Reponse object.
+   *
+   * @var \GuzzleHttp\Psr7\Response
+   */
   public $response;
+
+  /**
+   * GuzzleHttp client.
+   *
+   * @var \GuzzleHttp\ClientInterface
+   */
   protected $httpClient;
+
+  /**
+   * Config factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
   protected $configFactory;
+
+  /**
+   * Salesforce API URL.
+   *
+   * @var Drupal\Core\Url
+   */
   protected $url;
+
+  /**
+   * Salesforce config entity.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
   private $config;
+
+  /**
+   * editable version of config entity.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
   private $configEditable;
+
+  /**
+   * The state service.
+   *
+   * @var \Drupal\Core\State\StateInterface $state
+   */
   private $state;
+
+  /**
+   * The cache service.
+   *
+   * @var Drupal\Core\Cache\CacheBackendInterface cache
+   */
   protected $cache;
+
+  /**
+   * The JSON serializer service.
+   *
+   * @var \Drupal\Component\Serialization\Json $json
+   */
+  protected $json;
 
   const CACHE_LIFETIME = 300;
 
   /**
-   * Constructor which initializes the consumer.
-   *
-   * @param \Drupal\Core\Http\Client $http_client
-   *   The config factory.
-   * @param \Guzzle\Http\ClientInterface $http_client
-   *   The config factory.
+   * {@inheritdoc}
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
     $this->config = $this->configFactory->get('salesforce.settings');
     $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
     $this->cache = $cache;
+    $this->json = $json;
     return $this;
   }
 
@@ -62,22 +112,7 @@ class RestClient {
   }
 
   /**
-   * Make a call to the Salesforce REST API.
-   *
-   * @param string $path
-   *   Path to resource.
-   * @param array $params
-   *   Parameters to provide.
-   * @param string $method
-   *   Method to initiate the call, such as GET or POST.  Defaults to GET.
-   * @param bool $returnObject
-   *   If true, return a Drupal\salesforce\Rest\RestResponse;
-   *   Otherwise, return json-decoded response body only.
-   *   Defaults to FALSE for backwards compatibility.
-   *
-   * @return mixed
-   *
-   * @throws GuzzleHttp\Exception\RequestException
+   * {@inheritdoc}
    */
   public function apiCall($path, array $params = [], $method = 'GET', $returnObject = FALSE) {
     if (!$this->getAccessToken()) {
@@ -92,7 +127,7 @@ class RestClient {
       $this->response = $e->getResponse();
 
       // Any exceptions besides 401 get bubbled up.
-      if ($this->response->getStatusCode() != 401) {
+      if (!$this->response || $this->response->getStatusCode() != 401) {
         throw $e;
       }
     }
@@ -148,8 +183,7 @@ class RestClient {
     ];
     $data = NULL;
     if (!empty($params)) {
-      // @TODO: convert this into Dependency Injection
-      $data = Json::encode($params);
+      $data = $this->json->encode($params);
     }
     return $this->httpRequest($url, $data, $headers, $method);
   }
@@ -188,7 +222,7 @@ class RestClient {
   protected function getErrorData(RequestException $e) {
     $response = $e->getResponse();
     $response_body = $response->getBody()->getContents();
-    $data = Json::decode($response_body);
+    $data = $this->json->decode($response_body);
     if (!empty($data[0])) {
       $data = $data[0];
     }
@@ -429,7 +463,7 @@ class RestClient {
     return Url::fromRoute('salesforce.oauth_callback', [], [
       'absolute' => TRUE,
       'https' => TRUE,
-    ]);
+    ])->toString();
   }
 
   /**
@@ -587,11 +621,11 @@ class RestClient {
     $response = $this->apiCall("sobjects/{$name}/{$key}/{$value}", $params, 'PATCH', TRUE);
 
     // On update, upsert method returns an empty body. Retreive object id, so that we can return a consistent response.
-    if ($this->response->getStatusCode() == 204) {
+    if ($response->getStatusCode() == 204) {
       // We need a way to allow callers to distinguish updates and inserts. To
       // that end, cache the original response and reset it after fetching the
       // ID.
-      $this->original_response = $this->response;
+      $this->original_response = $response;
       $sf_object = $this->objectReadbyExternalId($name, $key, $value);
       return $sf_object->id();
     }
@@ -760,7 +794,7 @@ class RestClient {
    *   If $name is given, an array of record types indexed by developer name.
    *   Otherwise, an array of record type arrays, indexed by object type name.
    */
-  public function getRecordTypes($name = NULL) {
+  public function getRecordTypes($name = NULL, $reset = FALSE) {
     $cache = $this->cache->get('salesforce:record_types');
 
     // Force the recreation of the cache when it is older than CACHE_LIFETIME

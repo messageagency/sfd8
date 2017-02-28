@@ -4,12 +4,13 @@ namespace Drupal\salesforce\Controller;
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Render\MetadataBubblingUrlGenerator;
+use Drupal\salesforce\Rest\RestClientInterface;
+use GuzzleHttp\Client;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Drupal\salesforce\Rest\RestClient;
-use GuzzleHttp\Client;
-use Drupal\Core\Url;
 
 /**
  *
@@ -21,9 +22,10 @@ class SalesforceController extends ControllerBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(RestClient $rest, Client $http_client) {
+  public function __construct(RestClientInterface $rest, Client $http_client, MetadataBubblingUrlGenerator $url_generator) {
     $this->client = $rest;
     $this->http_client = $http_client;
+    $this->url_generator = $url_generator;
   }
 
   /**
@@ -32,8 +34,17 @@ class SalesforceController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('salesforce.client'),
-      $container->get('http_client')
+      $container->get('http_client'),
+      $container->get('url_generator')
     );
+  }
+
+  protected function request() {
+    return \Drupal::request();
+  }
+
+  protected function successMessage() {
+    drupal_set_message(t('Successfully connected to %endpoint', ['%endpoint' => $this->client->getInstanceUrl()]));
   }
 
   /**
@@ -44,12 +55,12 @@ class SalesforceController extends ControllerBase {
    */
   public function oauthCallback() {
     // If no code is provided, return access denied.
-    if (!isset($_GET['code'])) {
+    if (empty($this->request()->get('code'))) {
       throw new AccessDeniedHttpException();
     }
 
     $data = urldecode(UrlHelper::buildQuery([
-      'code' => $_GET['code'],
+      'code' => $this->request()->get('code'),
       'grant_type' => 'authorization_code',
       'client_id' => $this->client->getConsumerKey(),
       'client_secret' => $this->client->getConsumerSecret(),
@@ -65,7 +76,9 @@ class SalesforceController extends ControllerBase {
 
     $this->client->handleAuthResponse($response);
 
-    return new RedirectResponse(Url::fromRoute('salesforce.authorize', [], ['absolute' => TRUE]));
+    $this->successMessage();
+
+    return new RedirectResponse($this->url_generator->generateFromRoute('salesforce.authorize', [], ["absolute" => true], false));
   }
 
 }

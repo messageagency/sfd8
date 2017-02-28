@@ -2,11 +2,13 @@
 
 namespace Drupal\salesforce_example\EventSubscriber;
 
+use Drupal\Core\Entity\Entity;
 use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\SalesforcePushEvent;
-
+use Drupal\salesforce_mapping\SalesforcePushOpEvent;
+use Drupal\salesforce_mapping\SalesforcePushParamsEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\EventDispatcher\Event;
+use Drupal\salesforce\Exception;
+
 
 /**
  * Class SalesforceExampleSubscriber.
@@ -17,10 +19,20 @@ use Symfony\Component\EventDispatcher\Event;
  */
 class SalesforceExampleSubscriber implements EventSubscriberInterface {
 
-  public function pushParamsAlter(SalesforcePushEvent $event) {
+  public function pushAllowed(SalesforcePushOpEvent $event) {
+    /** @var Entity $entity */
+    $entity = $event->getEntity();
+    if ($entity && $entity->getEntityTypeId() == 'unpushable_entity') {
+      throw new Exception('Prevent push of Unpushable Entity');
+    }
+  }
+
+  public function pushParamsAlter(SalesforcePushParamsEvent $event) {
     $mapping = $event->getMapping();
     $mapped_object = $event->getMappedObject();
     $params = $event->getParams();
+
+    /** @var Entity $entity */
     $entity = $event->getEntity();
     if ($entity->getEntityTypeId() != 'user') {
       return;
@@ -34,11 +46,24 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
     $params->setParam('FirstName', 'SalesforceExample');
   }
 
+  public function pushSuccess(SalesforcePushParamsEvent $event) {
+    drupal_set_message('push success: ' . $event->getMappedObject()->sfid());
+  }
+
+  public function pushFail(SalesforcePushOpEvent $event) {
+    drupal_set_message('push fail: ' . $event->getMappedObject()->id());
+  }
+
   /**
    * {@inheritdoc}
    */
   static function getSubscribedEvents() {
-    $events = [SalesforceEvents::PUSH_PARAMS => 'pushParamsAlter'];
+    $events = [
+      SalesforceEvents::PUSH_ALLOWED => 'pushAllowed',
+      SalesforceEvents::PUSH_PARAMS => 'pushParamsAlter',
+      SalesforceEvents::PUSH_SUCCESS => 'pushSuccess',
+      SalesforceEvents::PUSH_FAIL => 'pushFail',
+    ];
     return $events;
   }
 

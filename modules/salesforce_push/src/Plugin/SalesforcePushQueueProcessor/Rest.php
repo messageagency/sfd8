@@ -11,10 +11,8 @@ use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\Entity\MappedObject;
-use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
-use Drupal\salesforce_mapping\SalesforcePushEvent;
+use Drupal\salesforce_mapping\SalesforcePushOpEvent;
 use Drupal\salesforce_push\PushQueue;
 use Drupal\salesforce_push\PushQueueProcessorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -107,7 +105,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     try {
       $this->event_dispatcher->dispatch(
         SalesforceEvents::PUSH_MAPPING_OBJECT,
-        new SalesforcePushEvent($mapped_object, NULL, $op)
+        new SalesforcePushOpEvent($mapped_object, $item->op)
       );
 
       // If this is a delete, destroy the SF object and we're done.
@@ -132,7 +130,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     catch (\Exception $e) {
       $this->event_dispatcher->dispatch(
         SalesforceEvents::PUSH_FAIL,
-        new SalesforcePushEvent($mapped_object, NULL, $item->op)
+        new SalesforcePushOpEvent($mapped_object, $item->op)
       );
 
       // Log errors and throw exception to cause this item to be re-queued.

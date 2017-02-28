@@ -203,12 +203,13 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
           '%msg' => $e->getMessage(),
         ]
       );
+
+      $this->logger->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
     }
-    $this->logger->log(
-      LogLevel::ERROR,
-      '%type: @message in %function (line %line of %file).',
-      Error::decodeException($e)
-    );
   }
 
   /**
@@ -295,6 +296,12 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     }
   }
 
+  /**
+   * Wrapper function for SalesforcePullEvent
+   *
+   * @param  MappedObjectInterface $mapped_object
+   * @param  MappingConstants $mapping_constant
+   */
   public function salesforcePullEvent($mapped_object, $mapping_constant) {
     return new SalesforcePullEvent($mapped_object, $mapping_constant);
   }

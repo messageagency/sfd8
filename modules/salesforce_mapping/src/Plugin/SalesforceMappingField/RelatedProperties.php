@@ -83,6 +83,7 @@ $mapping) {
         ->load($field->value);
     }
     catch (\Exception $e) {
+      // @TODO something about this exception
       $this->logger(__CLASS__)->log(
         LogLevel::ERROR,
         '%type: @message in %function (line %line of %file).',
@@ -168,10 +169,4 @@ $mapping) {
     return $options;
   }
 
-  /**
-   * Wrapper for Drupal core logger service.
-   */
-  public function logger($log) {
-    return \Drupal::logger($log);
-  }
 }

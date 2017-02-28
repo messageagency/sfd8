@@ -322,7 +322,7 @@ class MappedObjectTest extends UnitTestCase {
             '@v' => $value,
             '@e' => $e->getMessage(),
           ]);
-          $this->logger(__CLASS__)->log(
+          \Drupal::logger(__CLASS__)->log(
             LogLevel::ERROR,
             '%type: @message in %function (line %line of %file).',
             Error::decodeException($e)

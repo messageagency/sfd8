@@ -8,7 +8,7 @@ use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 /**
  *
  */
-class SalesforcePushEvent extends Event {
+abstract class SalesforcePushEvent extends Event {
 
   protected $params;
   protected $mapping;
@@ -28,12 +28,10 @@ class SalesforcePushEvent extends Event {
    *       SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
    *       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
    */
-  public function __construct(MappedObjectInterface $mapped_object = NULL, PushParams $params = NULL, $op = NULL) {
+  public function __construct(MappedObjectInterface $mapped_object) {
     $this->mapped_object = $mapped_object;
-    $this->params = $params;
-    $this->entity = ($params) ? $params->getDrupalEntity() : null;
-    $this->mapping = ($params) ? $params->getMapping() : null;
-    $this->op = $op;
+    $this->entity = ($mapped_object) ? $mapped_object->getMappedEntity() : NULL;
+    $this->mapping = ($mapped_object) ? $mapped_object->getMapping() : NULL;
   }
 
   /**
@@ -55,17 +53,6 @@ class SalesforcePushEvent extends Event {
    */
   public function getMappedObject() {
     return $this->mapped_object;
-  }
-
-  /**
-   * @return PushParams
-   */
-  public function getParams() {
-    return $this->params;
-  }
-
-  public function getOp() {
-    return $this->op;
   }
 
 }

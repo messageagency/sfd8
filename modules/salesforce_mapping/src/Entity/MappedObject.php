@@ -57,7 +57,18 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
   use EntityChangedTrait;
 
+  /**
+   * Salesforce Object
+   *
+   * @var SObject
+   */
   protected $sf_object = NULL;
+
+  /**
+   * Drupal Entity
+   *
+   * @var \Drupal\Core\Entity\EntityInterface
+   */
   protected $drupal_entity = NULL;
 
   /**
@@ -222,10 +233,16 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public function getMappedEntity() {
     $entity_id = $this->entity_id->value;
-    $entity_type_id = $this->entity_type_id->value;
-    return $this
-      ->entityManager()
-      ->getStorage($entity_type_id)->load($entity_id);
+    if(!$entity_id) {
+      // this is a new entity...
+      return $this->drupal_entity;
+    }
+    else {
+      $entity_type_id = $this->entity_type_id->value;
+      return $this
+        ->entityTypeManager()
+        ->getStorage($entity_type_id)->load($entity_id);
+    }
   }
 
   /**
@@ -257,7 +274,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * Wrapper for Drupal core logger service.
    */
   public function logger($log) {
-    return \Drupal::logger($log);
+    return \Drupal::service('logger.factory')->get($log);
   }
 
   /**
@@ -292,7 +309,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $params = new PushParams($mapping, $drupal_entity);
     $this->eventDispatcher()->dispatch(
       SalesforceEvents::PUSH_PARAMS,
-      new SalesforcePushEvent($this, $params)
+      new SalesforcePushParamsEvent($this, $params)
     );
 
     // @TODO is this the right place for this logic to live?
@@ -342,12 +359,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $this
       ->set('last_sync_action', 'push_' . $action)
       ->set('last_sync_status', TRUE)
+      ->set('revision_log_message', '')
       ->save();
 
     // Previously hook_salesforce_push_success.
     $this->eventDispatcher()->dispatch(
       SalesforceEvents::PUSH_SUCCESS,
-      new SalesforcePushEvent($this, $params)
+      new SalesforcePushParamsEvent($this, $params)
     );
 
     return $result;
@@ -367,7 +385,11 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
-
+  /**
+   * @param EntityInterface $entity
+   *
+   * @return $this
+   */
   public function setDrupalEntity(EntityInterface $entity = NULL) {
     if ($entity->id() != $this->entity_id->value) {
       throw new SalesforceException('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
@@ -376,11 +398,19 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
+  /**
+   * @param SObject $sf_object
+   *
+   * @return $this
+   */
   public function setSalesforceRecord(SObject $sf_object) {
     $this->sf_object = $sf_object;
     return $this;
   }
 
+  /**
+   * @return SObject
+   */
   public function getSalesforceRecord() {
     return $this->sf_object;
   }
@@ -483,7 +513,12 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
+  /**
+   * @return REQUEST_TIME
+   */
   protected function getRequestTime() {
+    // @TODO Replace this with a better implementation when available,
+    // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
     return defined('REQUEST_TIME') ? REQUEST_TIME : (int) $_SERVER['REQUEST_TIME'];
   }
 

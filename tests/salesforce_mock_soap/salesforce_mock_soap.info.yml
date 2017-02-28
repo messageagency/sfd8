@@ -1,8 +1,0 @@
-name: Salesforce Mock SOAP API Endpoint
-type: module
-description: Defines an mock webservice for Drupal testing of Salesforce module.
-package: Salesforce
-core: 8.x
-dependencies:
-  - salesforce
-  - salesforce_soap

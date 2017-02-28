@@ -442,4 +442,11 @@ class PushQueue extends DatabaseQueue {
     }
   }
 
+  /**
+   * Uninstall function: cleanup our queue's database table.
+   */
+  public function deleteTable() {
+    $this->connection->schema()->dropTable(static::TABLE_NAME);
+  }
+
 }

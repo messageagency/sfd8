@@ -5,7 +5,7 @@ namespace Drupal\salesforce_mapping\Form;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelFactory;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
@@ -27,27 +27,68 @@ class MappedObjectForm extends ContentEntityForm {
    */
   protected $storageController;
 
+  /**
+   * [$mappingFieldPluginManager description]
+   *
+   * @var [type]
+   */
   protected $mappingFieldPluginManager;
 
+  /**
+   * [$pushPluginManager description]
+   *
+   * @var [type]
+   */
   protected $pushPluginManager;
 
+  /**
+   * Mapping entity storage service.
+   *
+   * @var SalesforcesMappingStorage
+   */
   protected $mapping_storage;
 
+  /**
+   * Logger service.
+   *
+   * @var Logger
+   */
   protected $logger;
 
+  /**
+   * Entity manager service.
+   *
+   * @var EntityManagerInterface
+   */
   protected $entityManager;
 
+  /**
+   * REST Client service
+   *
+   * @var RestClient
+   */
   protected $rest;
 
+  /**
+   * Route matching service
+   *
+   * @var RouteMatchInterface
+   */
   protected $route_match;
 
   /**
    * Constructs a ContentEntityForm object.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param EntityManagerInterface        $entity_manager
    *   The entity manager.
+   * @param RestClient                    $rest
+   *   The Rest Client.
+   * @param LoggerChannelFactory          $logger_factory
+   *   Logging service factory.
+   * @param RouteMatchInterface           $route_match
+   *   Route matching service.
    */
-  public function __construct(EntityManagerInterface $entity_manager, RestClient $rest, LoggerChannelFactoryInterface $logger_factory, RouteMatchInterface $route_match) {
+  public function __construct(EntityManagerInterface $entity_manager, RestClient $rest, LoggerChannelFactory $logger_factory, RouteMatchInterface $route_match) {
     $this->entityManager = $entity_manager;
     $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->rest = $rest;
@@ -131,7 +172,7 @@ class MappedObjectForm extends ContentEntityForm {
       $mapped_object->push();
     }
     catch (\Exception $e) {
-      $this->logger->log(
+      $this->logger(__CLASS__)->log(
         LogLevel::ERROR,
         '%type: @message in %function (line %line of %file).',
         Error::decodeException($e)
@@ -226,5 +267,4 @@ class MappedObjectForm extends ContentEntityForm {
     }
     return $drupal_entity;
   }
-
 }

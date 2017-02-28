@@ -65,7 +65,7 @@ class DeleteHandler {
   public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
     foreach (array_reverse($this->mapping_storage->getMappedSobjectTypes()) as $type) {
-      $last_delete_sync = $this->state->get('salesforce_pull_last_delete_' . $type, $this->request->server->get('REQUEST_TIME'));
+      $last_delete_sync = $this->state->get('salesforce_pull_last_delete_' . $type, strtotime('-29 days'));
       $now = time();
       // getDeleted() restraint: startDate must be at least one minute
       // greater than endDate.
@@ -74,7 +74,7 @@ class DeleteHandler {
       $now_sf = gmdate('Y-m-d\TH:i:s\Z', $now);
       $deleted = $this->sfapi->getDeleted($type, $last_delete_sync_sf, $now_sf);
       $this->handleDeletedRecords($deleted, $type);
-      $this->state->set('salesforce_pull_last_delete_' . $type, $this->request->server->get('REQUEST_TIME'));
+      $this->state->set('salesforce_pull_last_delete_' . $type, $now);
     }
     return true;
   }
@@ -139,6 +139,9 @@ class DeleteHandler {
     }
 
     try {
+      // Flag this entity to avoid duplicate processing.
+      $entity->salesforce_pull = TRUE;      
+
       $entity->delete();
       $this->logger->log(
         LogLevel::NOTICE,
@@ -146,7 +149,7 @@ class DeleteHandler {
         [
           '%label' => $entity->label(),
           '%id' => $mapped_object->entity_id,
-          '%sfid' => $record->id,
+          '%sfid' => $record['id'],
         ]
       );
     }

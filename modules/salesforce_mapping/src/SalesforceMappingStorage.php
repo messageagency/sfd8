@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_mapping;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
@@ -106,7 +107,7 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
    * Return a unique list of mapped Salesforce object types.
    * @see loadMultipleMapping()
    */
-  function getMappedSobjectTypes() {
+  public function getMappedSobjectTypes() {
     $object_types = [];
     $mappings = $this->loadByProperties();
     foreach ($mappings as $mapping) {
@@ -115,4 +116,16 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
     }
     return $object_types;
   }
+
+  /**
+   * Returns the name of this configuration object.
+   * from ConfiBase...
+   *
+   * @return string
+   *   The name of the configuration object.
+   */
+  public function getName() {
+    return $this->name;
+  }
+
 }

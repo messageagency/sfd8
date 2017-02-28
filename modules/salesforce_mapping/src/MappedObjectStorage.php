@@ -32,7 +32,7 @@ class MappedObjectStorage extends SqlContentEntityStorage {
     // @TODO the $entity_type needs to be in the constructor and not
     // devrived from from $entity_type_id. This is because of the parent
     // class SqlContentEntityStorage's createInstance method, which while
-    // ultimately calls it's own constructer through here, is calling this 
+    // ultimately calls it's own constructer through here, is calling this
     // constuctor with the same paramter blueprint, which expects
     // EntityTypeInterface and not a string.
     $entity_type = $entity_manager->getDefinition($entity_type_id);

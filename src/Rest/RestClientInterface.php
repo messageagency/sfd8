@@ -27,11 +27,17 @@ interface RestClientInterface {
    * Constructor which initializes the consumer.
    *
    * @param \Drupal\Core\Http\Client $http_client
-   *   The config factory.
+   *   The HTTP Client.
    * @param \Guzzle\Http\ClientInterface $http_client
-   *   The config factory.
+   *   The Guzzle Client.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   The state service.
+   * @param \Drupal\Core\Cache\CacheBackendInterface cache
+   *   The cache service.
+   * @param \Drupal\Component\Serialization\Json $json
+   *   The JSON serializer service.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache);
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json);
 
   /**
    * Determine if this SF instance is fully configured.
