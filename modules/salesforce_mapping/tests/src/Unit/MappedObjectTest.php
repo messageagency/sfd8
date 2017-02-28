@@ -126,7 +126,7 @@ class MappedObjectTest extends UnitTestCase {
       ->expects($this->any())
       ->method('id')
       ->willReturn($this->entity_id);
-  
+
     $this->entity
       ->expects($this->any())
       ->method('isTranslatable')
@@ -211,7 +211,7 @@ class MappedObjectTest extends UnitTestCase {
       ->willReturn(NULL);
     $this->assertNull($this->mapped_object->push());
   }
-  
+
   /**
    * @covers ::push
    */
@@ -320,7 +320,11 @@ class MappedObjectTest extends UnitTestCase {
             '@v' => $value,
             '@e' => $e->getMessage(),
           ]);
-          watchdog_exception(__CLASS__, $e);
+          \Drupal::logger(__CLASS__)->log(
+            LogLevel::ERROR,
+            '%type: @message in %function (line %line of %file).',
+            Error::decodeException($e)
+          );
           continue;
         }
       }
@@ -345,7 +349,7 @@ class MappedObjectTest extends UnitTestCase {
         ->save();
 
       return $this;
-    
+
   }
 
 }

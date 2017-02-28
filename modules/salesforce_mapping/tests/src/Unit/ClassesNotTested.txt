@@ -1,5 +1,4 @@
 MappedObjectAccessControlHandler - no significant logic
-MappedObjectStorage - no significant logic (all functions use loadByProperties method of tested parent object)
 MappedObjectStorageSchema - no significant logic (MappedObjectStorageSchema::getEntitySchema decorates tested parent method)
 MappingConstants - nothing but constants - nothing to test
 PushParams - no significant logic (all get methods)

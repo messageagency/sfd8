@@ -10,6 +10,8 @@ use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Utility\Error;
+use Psr\Log\LogLevel;
 
 /**
  * Salesforce Mapping Form base.
@@ -263,5 +265,4 @@ class MappedObjectForm extends ContentEntityForm {
     }
     return $drupal_entity;
   }
-
 }

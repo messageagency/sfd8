@@ -15,6 +15,8 @@ use GuzzleHttp\Exception\RequestException;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\SalesforcePushOpEvent;
+use Drupal\Core\Utility\Error;
+use Psr\Log\LogLevel;
 
 /**
  * Implements hook_entity_insert().
@@ -74,7 +76,7 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
     }
     catch (\Exception $e) {
       // Do not allow any exception to prevent entity CRUD.
-      watchdog_exception('Salesforce Push', $e);
+      salesforce_push_log_error($e);
     }
   }
 }
@@ -131,7 +133,7 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
     }
     catch (\Exception $e) {
-      watchdog_exception('Salesforce Push', $e);
+      salesforce_push_log_error($e);
     }
     return;
   }
@@ -165,12 +167,12 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       new SalesforcePushOpEvent($mapped_object, $op)
     );
 
-    watchdog_exception('Salesforce Push', $e);
+    salesforce_push_log_error($e);
     try {
       salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
     }
     catch (\Exception $e) {
-      watchdog_exception('Salesforce Push', $e);
+      salesforce_push_log_error($e);
     }
 
     $mapped_object
@@ -215,6 +217,19 @@ function salesforce_push_cron() {
     $queue->processQueues();
   }
   catch (\Exception $e) {
-    watchdog_exception('Salesforce Push', $e);
+    salesforce_push_log_error($e);
   }
+}
+
+/**
+ * Helper watchdog_exception replacemnt function
+ *
+ * @param  \Exception $e
+ */
+function salesforce_push_log_error(\Exception $e) {
+  \Drupal::logger('Salesforce Push')->log(
+    LogLevel::ERROR,
+    '%type: @message in %function (line %line of %file).',
+    Error::decodeException($e)
+  );
 }

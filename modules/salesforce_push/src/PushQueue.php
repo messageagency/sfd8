@@ -13,9 +13,11 @@ use Drupal\Core\Queue\DatabaseQueue;
 use Drupal\Core\Queue\RequeueException;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\State\State;
+use Drupal\Core\Utility\Error;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce\EntityNotFoundException;
+use Psr\Log\LogLevel;
 
 /**
  * Salesforce push queue.
@@ -309,14 +311,22 @@ class PushQueue extends DatabaseQueue {
           // Getting a Requeue here is weird for a group of items, but we'll
           // deal with it.
           $this->releaseItems($items);
-          watchdog_exception('Salesforce Push', $e);
+          \Drupal::logger(__CLASS__)->log(
+            LogLevel::ERROR,
+            '%type: @message in %function (line %line of %file).',
+            Error::decodeException($e)
+          );
         }
         catch (SuspendQueueException $e) {
           // Getting a SuspendQueue is more likely, e.g. because of a network
           // or authorization error. Release items and move on to the next
           // mapping in this case.
           $this->releaseItems($items);
-          watchdog_exception('Salesforce Push', $e);
+          \Drupal::logger(__CLASS__)->log(
+            LogLevel::ERROR,
+            '%type: @message in %function (line %line of %file).',
+            Error::decodeException($e)
+          );
 
           continue 2;
         }
@@ -324,7 +334,11 @@ class PushQueue extends DatabaseQueue {
           // In case of any other kind of exception, log it and leave the item
           // in the queue to be processed again later.
           // @TODO: this is how Cron.php queue works, but I don't really understand why it doesn't get re-queued.
-          watchdog_exception('Salesforce Push', $e);
+          \Drupal::logger(__CLASS__)->log(
+            LogLevel::ERROR,
+            '%type: @message in %function (line %line of %file).',
+            Error::decodeException($e)
+          );
         }
         finally {
           // If we've reached our limit, we're done. Otherwise, continue to next items.
@@ -404,7 +418,11 @@ class PushQueue extends DatabaseQueue {
       return $update->execute();
     }
     catch (\Exception $e) {
-      watchdog_exception('Salesforce Push', $e);
+      \Drupal::logger(__CLASS__)->log(
+        LogLevel::ERROR,
+        '%type: @message in %function (line %line of %file).',
+        Error::decodeException($e)
+      );
       $this->catchException($e);
       // If the table doesn't exist we should consider the item released.
       return TRUE;
