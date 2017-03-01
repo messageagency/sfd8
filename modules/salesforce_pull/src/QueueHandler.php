@@ -2,7 +2,6 @@
 
 namespace Drupal\salesforce_pull;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Utility\Error;
@@ -24,18 +23,52 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * @see \Drupal\salesforce_pull\QueueHandler
  */
-
 class QueueHandler {
 
+  /**
+   * @var \Drupal\salesforce\Rest\RestClient
+   */
   protected $sfapi;
+
+  /**
+   * @var \Drupal\Core\Queue\QueueInterface
+   */
   protected $queue;
+
+  /**
+   * @var array of \Drupal\salesforce_mapping\Entity\SalesforceMapping
+   */
   protected $mappings;
-  protected $pull_fields;
+
+  /**
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
   protected $event_dispatcher;
+
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
   protected $state;
+
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
+
+  /**
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
   protected $request;
 
+  /**
+   * @param RestClient               $sfapi
+   * @param array                    $mappings
+   * @param QueueInterface           $queue
+   * @param StateInterface           $state
+   * @param LoggerInterface          $logger
+   * @param EventDispatcherInterface $event_dispatcher
+   * @param Request                  $request
+   */
   public function __construct(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
     $this->sfapi = $sfapi;
     $this->queue = $queue;
@@ -51,10 +84,13 @@ class QueueHandler {
   /**
    * Chainable instantiation method for class
    *
-   * @param object
-   *   RestClient object
-   * @param array
-   *   Arry of SalesforceMapping objects
+   * @param  RestClient               $sfapi
+   * @param  array                    $mappings
+   * @param  QueueInterface           $queue
+   * @param  StateInterface           $state
+   * @param  LoggerInterface          $logger
+   * @param  EventDispatcherInterface $event_dispatcher
+   * @param  Request                  $request
    *
    * @return QueueHandler
    */

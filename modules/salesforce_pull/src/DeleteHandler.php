@@ -22,17 +22,53 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * @see \Drupal\salesforce_pull\DeleteHandler
  */
-
 class DeleteHandler {
 
+  /**
+   * @var \Drupal\salesforce\Rest\RestClient
+   */
   protected $sfapi;
+
+  /**
+   * @var \Drupal\salesforce_mapping\SalesforceMappingStorage
+   */
   protected $mapping_storage;
+
+  /**
+   * @var \Drupal\salesforce_mapping\MappedObjectStorage
+   */
   protected $mapped_object_storage;
+
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $etm;
+
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
   protected $state;
+
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
+
+  /**
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
   protected $request;
 
+  /**
+   * @param \Drupal\salesforce\Rest\RestClient $sfapi
+   *  RestClient object
+   * @param \Drupal\Core\Entity\EntityTyprManagerInterface $$entity_type_manager
+   *  Entity Manager service
+   * @param \Drupal\Core\State\StatInterface $state
+   *  State service
+   * @param Psr\Log\LoggerInterface $logger
+   *  Logging service
+   */
   private function __construct(RestClient $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
     $this->sfapi = $sfapi;
     $this->etm = $entity_type_manager;
@@ -61,6 +97,8 @@ class DeleteHandler {
 
   /**
    * Process deleted records from salesforce.
+   *
+   * @return boolean
    */
   public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
@@ -79,6 +117,11 @@ class DeleteHandler {
     return true;
   }
 
+  /**
+   * [handleDeletedRecords description]
+   * @param  array  $deleted
+   * @param  string $type
+   */
   protected function handleDeletedRecords(array $deleted, $type) {
     if (empty($deleted['deletedRecords'])) {
       return;
@@ -96,6 +139,12 @@ class DeleteHandler {
     }
   }
 
+  /**
+   * [handleDeletedRecord description]
+   * @param  [type] $record [description]
+   * @param  [type] $type   [description]
+   * @return [type]         [description]
+   */
   protected function handleDeletedRecord($record, $type) {
     $mapped_objects = $this->mapped_object_storage->loadBySfid(new SFID($record['id']));
     if (empty($mapped_objects)) {
@@ -140,7 +189,7 @@ class DeleteHandler {
 
     try {
       // Flag this entity to avoid duplicate processing.
-      $entity->salesforce_pull = TRUE;      
+      $entity->salesforce_pull = TRUE;
 
       $entity->delete();
       $this->logger->log(

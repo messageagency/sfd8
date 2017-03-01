@@ -50,26 +50,31 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   protected $client;
 
   /**
-   * Storage handler for SF mappings
+   * Storage handler for SF mappings.
    *
    * @var SalesforceMappingStorage
    */
   protected $mapping_storage;
 
   /**
-   * Storage handler for Mapped Objects
+   * Storage handler for Mapped Objects.
    *
    * @var MappedObjectStorage
    */
   protected $mapped_object_storage;
 
   /**
-   * Logger service
+   * Logger service.
    *
    * @var LoggerInterface
    */
   protected $logger;
 
+  /**
+   * Event dispatcher service.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
   protected $event_dispatcher;
 
   /**
@@ -77,6 +82,12 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity type manager.
+   * @param \Drupal\salesforce\Rest\RestClient $client
+   *   Salesforce REST client.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   Logger factory service.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   Event dispatcher service.
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, LoggerChannelFactoryInterface $logger_factory, EventDispatcherInterface $event_dispatcher) {
     $this->etm = $entity_type_manager;
