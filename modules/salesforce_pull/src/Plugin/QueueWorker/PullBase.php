@@ -281,15 +281,26 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
 
       $mapped_object->pull();
 
-      // Push upsert ID to SF object
-      // @TODO make this optional / configurable
-      if ($mapping->hasKey()) {
-        $params = new PushParams($mapping, $entity);
-        $this->client->objectUpdate(
-          $mapping->getSalesforceObjectType(),
-          $mapped_object->sfid(),
-          $params->getParams()
-        );
+      // Push upsert ID to SF object, if allowed
+      if ($mapping->hasKey() && $mapping->checkTriggers([
+            MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
+            MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
+          ])) {
+        try {
+          $params = new PushParams($mapping, $entity);
+          $this->client->objectUpdate(
+            $mapping->getSalesforceObjectType(),
+            $mapped_object->sfid(),
+            $params->getParams()
+          );
+        }
+        catch(\Exception $e) {
+          $this->logger->log(
+            LogLevel::ERROR,
+            'Unable to contact Salesforce API, suspending queue'
+          );
+          throw new SuspendQueueException();
+        }
       }
 
       $this->logger->log(
