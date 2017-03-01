@@ -13,11 +13,9 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\Core\Queue\SuspendQueueException;
+use Drupal\Core\State\State;
 use Drupal\Core\Utility\Error;
-use Drupal\salesforce\Exception;
-use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce\SObject;
-use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
@@ -26,10 +24,14 @@ use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_mapping\SalesforcePullEvent;
+use Drupal\salesforce\Exception;
+use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestException;
+use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce\SObject;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Drupal\Core\State\State;
 
 /**
  * Provides base functionality for the Salesforce Pull Queue Workers.
@@ -136,6 +138,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     ]);
     // @TODO one-to-many: this is a blocker for OTM support:
     $mapped_object = current($mapped_object);
+    $mapped_object = NULL;
     if (!empty($mapped_object)) {
       return $this->updateEntity($mapping, $mapped_object, $sf_object);
     }
@@ -196,11 +199,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         $this->salesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
       );
 
-      // By default this is FALSE. To force true, set the state in the prepull
-      // event hook above.
+      // By default $mapped_object->forceUpdate() is FALSE. To force true, call
+      // $mapped_object->setForceUpdate() in the prepull event hook above.
       $force_update = $this->state->get('salesforce.pull_force_update', FALSE);
 
-      if ($sf_record_updated > $entity_updated || $force_update) {
+      if ($sf_record_updated > $entity_updated || $mapped_object->forceUpdate()) {
         // Set fields values on the Drupal entity.
         $mapped_object->pull();
         $this->logger->log(
@@ -287,6 +290,8 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
             MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
           ])) {
         try {
+          throw new RestException(new \Drupal\salesforce\Rest\RestResponse(new \GuzzleHttp\Psr7\Response(403), 'test'));
+
           $params = new PushParams($mapping, $entity);
           $this->client->objectUpdate(
             $mapping->getSalesforceObjectType(),
@@ -294,7 +299,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
             $params->getParams()
           );
         }
-        catch(\Exception $e) {
+        catch(RestException $e) {
           $this->logger->log(
             LogLevel::ERROR,
             'Unable to contact Salesforce API, suspending queue'

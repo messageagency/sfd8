@@ -72,6 +72,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   protected $drupal_entity = NULL;
 
   /**
+   * Force update of mapped entity Flag
+   *
+   * @var boolean
+   */
+  protected $force_update = FALSE;
+
+  /**
    * Overrides ContentEntityBase::__construct().
    */
   public function __construct(array $values) {
@@ -520,6 +527,19 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // @TODO Replace this with a better implementation when available,
     // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
     return defined('REQUEST_TIME') ? REQUEST_TIME : (int) $_SERVER['REQUEST_TIME'];
+  }
+
+  /**
+   * Set the force entity update flag to desired state
+   *
+   * @param boolean $state\
+   */
+  public function setForceUpdate(boolean $state) {
+    $this->force_update = $state;
+  }
+
+  public function forceUpdate() {
+    return $this->force_update;
   }
 
 }

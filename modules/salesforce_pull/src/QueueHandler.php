@@ -124,14 +124,16 @@ class QueueHandler {
     // Iterate over each field mapping to determine our query parameters.
     foreach ($this->mappings as $mapping) {
       $results = $this->doSfoQuery($mapping);
-      $this->insertIntoQueue($mapping, $results->records());
-      $this->handleLargeRequests($mapping, $results);
-      $this->state->set(
-        'salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(),
-        // @TODO Replace this with a better implementation when available,
-        // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
-        $this->request->server->get('REQUEST_TIME')
-      );
+      if ($results) {
+        $this->insertIntoQueue($mapping, $results->records());
+        $this->handleLargeRequests($mapping, $results);
+        $this->state->set(
+          'salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(),
+          // @TODO Replace this with a better implementation when available,
+          // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
+          $this->request->server->get('REQUEST_TIME')
+        );
+      }
     }
     return true;
   }

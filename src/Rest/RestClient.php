@@ -9,10 +9,11 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
-use Drupal\salesforce\SFID;
-use Drupal\salesforce\SObject;
+use Drupal\salesforce\Rest\RestException;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
@@ -128,7 +129,7 @@ class RestClient implements RestClientInterface {
 
       // Any exceptions besides 401 get bubbled up.
       if (!$this->response || $this->response->getStatusCode() != 401) {
-        throw $e;
+        throw new RestException($this->response, $e->getMessage());
       }
     }
 
@@ -142,13 +143,13 @@ class RestClient implements RestClientInterface {
       }
       catch (RequestException $e) {
         $this->response = $e->getResponse();
-        throw $e;
+        throw new RestException($this->response, $e->getMessage());
       }
     }
 
     if (empty($this->response)
     || ((int)floor($this->response->getStatusCode() / 100)) != 2) {
-      throw new \Exception('Unknown error occurred during API call');
+      throw new RestException($this->response, 'Unknown error occurred during API call');
     }
 
     if ($returnObject) {
