@@ -29,6 +29,7 @@ use Drupal\salesforce_mapping\SalesforcePullEvent;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Drupal\Core\State\State;
 
 /**
  * Provides base functionality for the Salesforce Pull Queue Workers.
@@ -64,6 +65,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   protected $mapped_object_storage;
 
   /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
    * Logger service.
    *
    * @var LoggerInterface
@@ -89,9 +95,10 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   Event dispatcher service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, LoggerChannelFactoryInterface $logger_factory, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, State $state, LoggerChannelFactoryInterface $logger_factory, EventDispatcherInterface $event_dispatcher) {
     $this->etm = $entity_type_manager;
     $this->client = $client;
+    $this->state = $state;
     $this->logger = $logger_factory->get('Salesforce Pull');
     $this->event_dispatcher = $event_dispatcher;
     $this->mapping_storage = $this->etm->getStorage('salesforce_mapping');
@@ -106,6 +113,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     return new static(
       $container->get('entity_type.manager'),
       $container->get('salesforce.client'),
+      $container->get('state'),
       $container->get('logger.factory'),
       $container->get('event_dispatcher')
     );
@@ -188,9 +196,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         $this->salesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
       );
 
-      // @TODO allow some means for contrib to force pull regardless
-      // of updated dates
-      if ($sf_record_updated > $entity_updated) {
+      // By default this is FALSE. To force true, set the state in the prepull
+      // event hook above.
+      $force_update = $this->state->get('salesforce.pull_force_update', FALSE);
+
+      if ($sf_record_updated > $entity_updated || $force_update) {
         // Set fields values on the Drupal entity.
         $mapped_object->pull();
         $this->logger->log(
@@ -273,12 +283,15 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
 
       // Push upsert ID to SF object
       // @TODO make this optional / configurable
-      $params = new PushParams($mapping, $entity);
-      $this->client->objectUpdate(
-        $mapping->getSalesforceObjectType(),
-        $mapped_object->sfid(),
-        $params->getParams()
-      );
+      if ($mapping->hasKey()) {
+        $params = new PushParams($mapping, $entity);
+        $this->client->objectUpdate(
+          $mapping->getSalesforceObjectType(),
+          $mapped_object->sfid(),
+          $params->getParams()
+        );
+      }
+
       $this->logger->log(
         LogLevel::NOTICE,
         'Created entity %id %label associated with Salesforce Object ID: %sfid',
