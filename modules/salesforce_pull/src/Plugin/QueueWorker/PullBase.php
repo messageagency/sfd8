@@ -24,6 +24,7 @@ use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_mapping\SalesforcePullEvent;
+use Drupal\salesforce_pull\PullException;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\Rest\RestException;
@@ -138,7 +139,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     ]);
     // @TODO one-to-many: this is a blocker for OTM support:
     $mapped_object = current($mapped_object);
-    $mapped_object = NULL;
     if (!empty($mapped_object)) {
       return $this->updateEntity($mapping, $mapped_object, $sf_object);
     }
@@ -194,6 +194,25 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         ->setDrupalEntity($entity)
         ->setSalesforceRecord($sf_object);
 
+      // Push upsert ID to SF object, if allowed and not set
+      if (
+        $mapping->hasKey()
+        && $mapping->checkTriggers([
+            MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
+            MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
+          ])
+        && $sf_object->field($mapping->getKeyField()) === NULL
+      ) {
+        $sent_id = $this->sendEntityId(
+          $mapping->getSalesforceObjectType(),
+          $mapped_object->sfid(),
+          new PushParams($mapping, $entity)
+        );
+        if (!$sent_id) {
+          throw new PullException;
+        }
+      }
+
       $this->event_dispatcher->dispatch(
         SalesforceEvents::PULL_PREPULL,
         $this->salesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
@@ -201,11 +220,10 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
 
       // By default $mapped_object->forceUpdate() is FALSE. To force true, call
       // $mapped_object->setForceUpdate() in the prepull event hook above.
-      $force_update = $this->state->get('salesforce.pull_force_update', FALSE);
-
       if ($sf_record_updated > $entity_updated || $mapped_object->forceUpdate()) {
         // Set fields values on the Drupal entity.
         $mapped_object->pull();
+
         $this->logger->log(
           LogLevel::NOTICE,
           'Updated entity %label associated with Salesforce Object ID: %sfid',
@@ -233,6 +251,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         '%type: @message in %function (line %line of %file).',
         Error::decodeException($e)
       );
+
+      if ($e instanceof PullException) {
+        // Throwing a new exception to keep current item in queue in Cron
+        throw new \Exception;
+      }
     }
   }
 
@@ -289,22 +312,13 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
             MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
             MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
           ])) {
-        try {
-          throw new RestException(new \Drupal\salesforce\Rest\RestResponse(new \GuzzleHttp\Psr7\Response(403), 'test'));
-
-          $params = new PushParams($mapping, $entity);
-          $this->client->objectUpdate(
-            $mapping->getSalesforceObjectType(),
-            $mapped_object->sfid(),
-            $params->getParams()
-          );
-        }
-        catch(RestException $e) {
-          $this->logger->log(
-            LogLevel::ERROR,
-            'Unable to contact Salesforce API, suspending queue'
-          );
-          throw new SuspendQueueException();
+        $sent_id = $this->sendEntityId(
+          $mapping->getSalesforceObjectType(),
+          $mapped_object->sfid(),
+          new PushParams($mapping, $entity)
+        );
+        if (!$sent_id) {
+          throw new PullException;
         }
       }
 
@@ -333,6 +347,32 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         '%type: @message in %function (line %line of %file).',
         Error::decodeException($e)
       );
+      if ($e instanceof PullException) {
+        // Throwing a new exception to keep current item in queue in Cron
+        throw new \Exception;
+      }
+    }
+  }
+
+  /**
+   * push the Entity ID up to Salesforce
+   *
+   * @param  string $object_type
+   * @param  string $sfid
+   * @param  PushParams $params
+   * @return boolean
+   */
+  protected function sendEntityId(string $object_type, string $sfid, PushParams $params) {
+    try {
+      $this->client->objectUpdate($object_type, $sfid, $params->getParams());
+      return TRUE;
+    }
+    catch(RestException $e) {
+      $this->logger->log(
+        LogLevel::ERROR,
+        'Unable to contact Salesforce API, suspending queue'
+      );
+      return FALSE;
     }
   }
 
