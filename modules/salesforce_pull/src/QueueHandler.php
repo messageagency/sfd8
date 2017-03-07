@@ -7,7 +7,7 @@ use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Exception;
-use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
@@ -36,7 +36,7 @@ class QueueHandler {
   protected $logger;
   protected $request;
 
-  public function __construct(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
+  public function __construct(RestClientInterface $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
     $this->sfapi = $sfapi;
     $this->queue = $queue;
     $this->state = $state;
@@ -58,7 +58,7 @@ class QueueHandler {
    *
    * @return QueueHandler
    */
-  public static function create(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
+  public static function create(RestClientInterface $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
     return new QueueHandler($sfapi, $mappings, $queue, $state, $logger, $event_dispatcher, $request);
   }
 

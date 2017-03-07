@@ -3,6 +3,7 @@
 namespace Drupal\salesforce;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Component\Render\FormattableMarkup;
 
 /**
  * EntityNotFoundException extends Drupal\salesforce\Exception
@@ -29,5 +30,8 @@ class EntityNotFoundException extends \RuntimeException {
   public function getEntityTypeId() {
     return $this->entity_type_id;
   }
-  
+
+  public function getFormattableMessage() {
+    return new FormattableMarkup('Entity not found. type: %type properties: %props', ['%type' => $this->entity_type_id, '%props' => var_export($this->entity_properties, TRUE)]);
+  }
 }

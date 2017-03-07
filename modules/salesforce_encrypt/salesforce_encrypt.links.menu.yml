@@ -1,0 +1,6 @@
+salesforce_encrypt.settings:
+  route_name: salesforce_encrypt.settings
+  parent: salesforce.admin_config_salesforce
+  title: Salesforce Encrypt
+  description: 'Encrypt sensitive Salesforce OAuth credentials and identity.'
+  weight: 10

@@ -8,21 +8,22 @@
 namespace Drupal\salesforce_mapping;
 
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\PluginFormInterface;
-use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
+use Drupal\Core\Plugin\PluginBase;
+use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce\SFID;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use Drupal\salesforce\Rest\RestClient;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_mapping\MappedObjectStorage;
-use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a base Salesforce Mapping Field Plugin implementation.
@@ -75,7 +76,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $mapping
    *   The entity manager to get the SF listing, mapped entity, etc.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClient $rest_client, EntityManagerInterface $entity_manager, EntityTypeManagerInterface $etm) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityManagerInterface $entity_manager, EntityTypeManagerInterface $etm) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->entityFieldManager = $entity_field_manager;

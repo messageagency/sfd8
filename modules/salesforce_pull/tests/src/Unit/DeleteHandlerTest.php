@@ -12,7 +12,7 @@ use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_pull\DeleteHandler;
-use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SObject;
 use Drupal\Tests\UnitTestCase;
@@ -47,7 +47,7 @@ class DeleteHandlerTest extends UnitTestCase {
       ]
     ];
 
-    $prophecy = $this->prophesize(RestClient::CLASS);
+    $prophecy = $this->prophesize(RestClientInterface::CLASS);
     $prophecy->getDeleted(Argument::any(),Argument::any(),Argument::any())
       ->willReturn($result); // revisit
     $this->sfapi = $prophecy->reveal();

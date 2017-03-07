@@ -1,0 +1,42 @@
+<?php
+
+use Drupal\Core\Url;
+use Drupal\salesforce\EntityNotFoundException;
+
+/**
+ * Implements hook_requirements
+ * Throw a runtime error if Salesforce encryption profile is not selected.
+ */
+
+function salesforce_encrypt_requirements($phase) {
+  if ($phase == 'runtime') {
+    $profile_id = NULL;   
+    try {
+      $profile_id = \Drupal::service('salesforce.client')->getEncryptionProfile();
+    }
+    catch (EntityNotFoundException $e) {
+      // noop
+    }
+    $requirements['salesforce_encrypt'] = array(
+      'title' => t('Salesforce Encrypt'),
+      'value' => t('Encryption Profile'),
+    );
+    if (empty($profile_id)) {
+      $requirements['salesforce_encrypt'] += array(
+        'severity' => REQUIREMENT_ERROR,
+        'description' => t('You need to <a href="@url">select an encryption profile</a> in order to fully enable Salesforce Encrypt and protect sensitive information.', array('@url' => Url::fromRoute('salesforce_encrypt.settings')->toString())),
+      );
+    }
+    else {
+      $requirements['salesforce_encrypt'] += array(
+        'severity' => REQUIREMENT_OK,
+      );
+    }
+  }
+  return $requirements;
+}
+
+function salesforce_encrypt_uninstall() {
+  \Drupal::service('salesforce.client')->disableEncryption();
+  \Drupal::state()->delete('salesforce_encrypt.profile');
+}

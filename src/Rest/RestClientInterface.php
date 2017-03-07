@@ -24,16 +24,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 interface RestClientInterface {
 
   /**
-   * Constructor which initializes the consumer.
-   *
-   * @param \Drupal\Core\Http\Client $http_client
-   *   The config factory.
-   * @param \Guzzle\Http\ClientInterface $http_client
-   *   The config factory.
-   */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache);
-
-  /**
    * Determine if this SF instance is fully configured.
    *
    * @TODO: Consider making a test API call.

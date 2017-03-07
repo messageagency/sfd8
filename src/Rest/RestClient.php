@@ -16,7 +16,6 @@ use Drupal\salesforce\SelectQueryResult;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
@@ -49,7 +48,6 @@ class RestClient implements RestClientInterface {
     $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
     $this->cache = $cache;
-    return $this;
   }
 
   /**
@@ -271,7 +269,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Set the SF instanc URL.
+   * Set the SF instance URL.
    *
    * @param string $url
    *   URL to set.
@@ -402,7 +400,7 @@ class RestClient implements RestClientInterface {
   /**
    *
    */
-  protected function setIdentity(array $data) {
+  protected function setIdentity($data) {
     $this->state->set('salesforce.identity', $data);
     return $this;
   }

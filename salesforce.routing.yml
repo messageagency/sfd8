@@ -3,32 +3,31 @@ salesforce.oauth_callback:
   defaults:
     _controller: '\Drupal\salesforce\Controller\SalesforceController::oauthCallback'
   requirements:
-    _permission: 'administer salesforce'
+    _permission: 'authorize salesforce'
 
 salesforce.authorize:
   path: '/admin/config/salesforce/authorize'
   defaults:
     _form: '\Drupal\salesforce\Form\AuthorizeForm'
-    _title: 'Authorize'
-    _description: 'Authorize this website to communicate with Salesforce.'
+    _title: 'Salesforce Authorization'
+    _description: 'Manage Salesforce OAuth consumer key and secret and authorize. View existing Salesforce authorization details.'
+  requirements:
+    _permission: 'authorize salesforce'
+
+salesforce.admin_config_salesforce:
+  path: '/admin/config/salesforce'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Salesforce'
+    _description: 'Manage settings for Salesforce Suite.'
   requirements:
     _permission: 'administer salesforce'
-
-# @TODO at some point, hopefully, the configure path from info.yml will be included automatically and we won't need these two routes:
-# salesforce.config_index:
-#   path: '/admin/config/salesforce'
-#   defaults:
-#     _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
-#     _title: 'Salesforce'
-#     _description: 'Salesforce settings'
-#   requirements:
-#     _permission: 'access administration pages'
 
 salesforce.structure_index:
   path: '/admin/structure/salesforce'
   defaults:
     _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
     _title: 'Salesforce'
-    _description: 'Configuration for Salesforce integration'
+    _description: 'Manage Salesforce mappings.'
   requirements:
     _permission: 'administer salesforce'
