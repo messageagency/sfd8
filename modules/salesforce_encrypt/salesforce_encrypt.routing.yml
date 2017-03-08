@@ -1,0 +1,8 @@
+salesforce_encrypt.settings:
+  path: '/admin/config/salesforce/encrypt'
+  defaults:
+    _form: '\Drupal\salesforce_encrypt\Form\SettingsForm'
+    _title: 'Salesforce Encryption'
+    _description: 'Encrypt sensitive Salesforce OAuth credentials and identity.'
+  requirements:
+    _permission: 'administer salesforce encryption'

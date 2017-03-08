@@ -6,7 +6,7 @@ use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_pull\QueueHandler;
-use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SObject;
 use Drupal\Tests\UnitTestCase;
@@ -42,7 +42,7 @@ class QueueHandlerTest extends UnitTestCase {
     ];
     $this->sqr = new SelectQueryResult($result);
 
-    $prophecy = $this->prophesize(RestClient::CLASS);
+    $prophecy = $this->prophesize(RestClientInterface::CLASS);
     $prophecy->query(Argument::any())
       ->willReturn($this->sqr);
     $this->sfapi = $prophecy->reveal();

@@ -8,9 +8,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactory;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Utility\Error;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce\Exception;
-use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -80,14 +80,14 @@ class MappedObjectForm extends ContentEntityForm {
    *
    * @param EntityManagerInterface        $entity_manager
    *   The entity manager.
-   * @param RestClient                    $rest
+   * @param RestClientInterface           $rest
    *   The Rest Client.
    * @param LoggerChannelFactory          $logger_factory
    *   Logging service factory.
    * @param RouteMatchInterface           $route_match
    *   Route matching service.
    */
-  public function __construct(EntityManagerInterface $entity_manager, RestClient $rest, LoggerChannelFactory $logger_factory, RouteMatchInterface $route_match) {
+  public function __construct(EntityManagerInterface $entity_manager, RestClientInterface $rest, LoggerChannelFactory $logger_factory, RouteMatchInterface $route_match) {
     $this->entityManager = $entity_manager;
     $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->rest = $rest;

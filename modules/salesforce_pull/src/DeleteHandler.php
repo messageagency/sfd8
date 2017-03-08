@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Exception;
-use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
@@ -33,7 +33,7 @@ class DeleteHandler {
   protected $logger;
   protected $request;
 
-  private function __construct(RestClient $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
+  private function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
     $this->sfapi = $sfapi;
     $this->etm = $entity_type_manager;
     $this->mapping_storage = $this->etm->getStorage('salesforce_mapping');
@@ -46,7 +46,7 @@ class DeleteHandler {
   /**
    * Chainable instantiation method for class
    *
-   * @param \Drupal\salesforce\Rest\RestClient $sfapi
+   * @param \Drupal\salesforce\Rest\RestClientInterface $sfapi
    *  RestClient object
    * @param \Drupal\Core\Entity\EntityTyprManagerInterface $$entity_type_manager
    *  Entity Manager service
@@ -55,7 +55,7 @@ class DeleteHandler {
    * @param Psr\Log\LoggerInterface $logger
    *  Logging service
    */
-  public static function create(RestClient $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
+  public static function create(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
     return new DeleteHandler($sfapi, $entity_type_manager, $state, $logger, $request);
   }
 

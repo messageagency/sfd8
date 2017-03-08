@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\salesforce\Unit;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
@@ -48,6 +49,7 @@ class RestClientTest extends UnitTestCase {
         ->disableOriginalConstructor()
         ->getMock();
     $this->cache = $this->getMock('\Drupal\Core\Cache\CacheBackendInterface');
+    $this->json = $this->getMock(Json::CLASS);
   }
 
   private function initClient($methods = NULL) {
@@ -55,7 +57,7 @@ class RestClientTest extends UnitTestCase {
       $methods = $this->methods;
     }
 
-    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache];
+    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json];
 
     $this->client = $this->getMock(RestClient::CLASS, $methods, $args);
 
