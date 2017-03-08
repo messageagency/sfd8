@@ -41,6 +41,12 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
    *   The cache service.
    * @param \Drupal\Component\Serialization\Json $json
    *   The JSON serializer service.
+   * @param \Drupal\encrypt\EncryptServiceInterface $encryption
+   *   The encryption service.
+   * @param \Drupal\encrypt\EncryptionProfileManagerInterface $encryptionProfileManager
+   *   The Encryption profile manager service.
+   * @param \Drupal\Core\Lock\LockBackendInterface $lock
+   *   The lock backend service.
    */
   public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
     parent::__construct($http_client, $config_factory, $state, $cache, $json);
