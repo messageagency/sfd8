@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_encrypt\Rest;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -13,14 +14,13 @@ use Drupal\encrypt\EncryptServiceInterface;
 use Drupal\encrypt\EncryptionProfileInterface;
 use Drupal\encrypt\EncryptionProfileManagerInterface;
 use Drupal\salesforce\EntityNotFoundException;
-use Drupal\salesforce\Rest\RestClientBase;
+use Drupal\salesforce\Rest\RestClient as SalesforceRestClient;
 use GuzzleHttp\ClientInterface;
-use Drupal\salesforce_encrypt\Rest\EncryptedRestClientInterface;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
  */
-class RestClient extends RestClientBase implements EncryptedRestClientInterface {
+class RestClient extends SalesforceRestClient implements EncryptedRestClientInterface {
 
   use StringTranslationTrait;
 
@@ -32,17 +32,18 @@ class RestClient extends RestClientBase implements EncryptedRestClientInterface 
    * Constructor which initializes the consumer.
    *
    * @param \GuzzleHttp\ClientInterface $http_client
-   *   The config factory.
-   * @param \Guzzle\Http\ClientInterface $http_client
-   *   The config factory.
+   *   The GuzzleHttp Client.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   The state service.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
+   *   The cache service.
+   * @param \Drupal\Component\Serialization\Json $json
+   *   The JSON serializer service.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
-    $this->configFactory = $config_factory;
-    $this->httpClient = $http_client;
-    $this->config = $this->configFactory->get('salesforce.settings');
-    $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
-    $this->state = $state;
-    $this->cache = $cache;
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
+    parent::__construct($http_client, $config_factory, $state, $cache, $json);
     $this->encryption = $encryption;
     $this->encryptionProfileId = $state->get('salesforce_encrypt.profile');
     $this->encryptionProfileManager = $encryptionProfileManager;

@@ -2,37 +2,14 @@
 
 namespace Drupal\salesforce_encrypt\Rest;
 
-use Drupal\salesforce\Rest\RestClientBaseInterface;
-use Drupal\encrypt\Entity\EncryptionProfile;
-use Drupal\encrypt\EncryptServiceInterface;
-use Drupal\encrypt\EncryptionProfileManagerInterface;
 use Drupal\encrypt\EncryptionProfileInterface;
-use Drupal\Core\Lock\LockBackendInterface;
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\State\StateInterface;
-use GuzzleHttp\ClientInterface;
+use Drupal\salesforce\Rest\RestClientInterface;
+
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
  */
-interface EncryptedRestClientInterface extends RestClientBaseInterface {
-
-  /**
-   * Constructor which initializes the consumer.
-   *
-   * @param \GuzzleHttp\ClientInterface $http_client
-   *   The GuzzleHttp Client.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory service.
-   * @param \Drupal\Core\State\StateInterface $state
-   *   The state service.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
-   *   The cache service.
-   * @param \Drupal\Component\Serialization\Json $json
-   *   The JSON serializer service.
-   */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock);
+interface EncryptedRestClientInterface extends RestClientInterface {
 
   /**
    * Encrypts all sensitive salesforce config values.

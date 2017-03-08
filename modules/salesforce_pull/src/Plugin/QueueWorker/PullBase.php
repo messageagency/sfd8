@@ -7,16 +7,16 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\Utility\Error;
+use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestException;
+use Drupal\salesforce\SObject;
+use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_mapping\SalesforcePullEvent;
 use Drupal\salesforce_pull\PullException;
-use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce\Rest\RestException;
-use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce\SObject;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -98,7 +98,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $container->get('entity_type.manager'),
       $container->get('salesforce.client'),
       $container->get('logger.factory'),
-      $container->get('eventDispatcher')
+      $container->get('event_dispatcher')
     );
   }
 
