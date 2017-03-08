@@ -5,9 +5,9 @@ namespace Drupal\salesforce\Tests;
 use Drupal\simpletest\WebTestBase;
 
 /**
- * Tests for webform entity.
+ * Tests for salesforce admin settings.
  *
- * @group Webform
+ * @group Salesforce
  */
 class SalesforceAdminSettingsTest extends WebTestBase {
 
@@ -32,14 +32,13 @@ class SalesforceAdminSettingsTest extends WebTestBase {
     parent::setUp();
 
     // Admin salesforce user.
-    $this->adminSalesforceUser = $this->drupalCreateUser(['administer salesforce']);
+    $this->adminSalesforceUser = $this->drupalCreateUser(['administer salesforce', 'authorize salesforce']);
   }
 
   /**
    * Tests webform admin settings.
    */
   public function testAdminSettings() {
-    return;
     global $base_path, $base_url;
 
     $this->drupalLogin($this->adminSalesforceUser);
