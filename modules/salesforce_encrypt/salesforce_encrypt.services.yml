@@ -1,0 +1,4 @@
+services:
+  salesforce_encrypt.client:
+    class: Drupal\salesforce_encrypt\Rest\RestClient
+    arguments: ['@http_client', '@config.factory', '@state', '@cache.default', '@encryption', '@encrypt.encryption_profile.manager', '@lock']

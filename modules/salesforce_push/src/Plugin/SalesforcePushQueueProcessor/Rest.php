@@ -8,7 +8,7 @@ use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\salesforce\EntityNotFoundException;
-use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\MappingConstants;
@@ -45,7 +45,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   protected $event_dispatcher;
   protected $etm;
 
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClient $client,  EntityTypeManager $etm, ContainerAwareEventDispatcher $event_dispatcher) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClientInterface $client,  EntityTypeManager $etm, ContainerAwareEventDispatcher $event_dispatcher) {
     $this->queue = $queue;
     $this->client = $client;
     $this->etm = $etm;

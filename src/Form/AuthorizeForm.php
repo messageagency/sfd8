@@ -85,32 +85,36 @@ class AuthorizeForm extends ConfigFormBase {
     // something that makes sense.
     $config = $this->config('salesforce.settings');
 
-    $form['message'] = [
-      '#type' => 'item',
-      '#markup' => $this->t('Authorize this website to communicate with Salesforce by entering the consumer key and secret from a remote application. Clicking authorize will redirect you to Salesforce where you will be asked to grant access.'),
+    $form['creds'] = [
+      '#title' => $this->t('API / OAuth Connection Settings'),
+      '#type' => 'details',
+      '#open' => TRUE,
+      '#description' => $this->t('Authorize this website to communicate with Salesforce by entering the consumer key and secret from a remote application. Submitting the form will redirect you to Salesforce where you will be asked to grant access.'),
     ];
-
-    $form['consumer_key'] = [
+    $form['creds']['consumer_key'] = [
       '#title' => $this->t('Salesforce consumer key'),
       '#type' => 'textfield',
       '#description' => $this->t('Consumer key of the Salesforce remote application you want to grant access to'),
-      '#default_value' => $this->sf_client->getConsumerKey(),
+      '#required' => TRUE,
     ];
-    $form['consumer_secret'] = [
+    $form['creds']['consumer_secret'] = [
       '#title' => $this->t('Salesforce consumer secret'),
-      '#type' => 'textfield',
+      '#type' => 'password',
       '#description' => $this->t('Consumer secret of the Salesforce remote application you want to grant access to'),
-      '#default_value' => $this->sf_client->getConsumerSecret(),
+      '#required' => TRUE,
     ];
-    $form['login_url'] = [
+    $form['creds']['login_url'] = [
       '#title' => $this->t('Login URL'),
       '#type' => 'textfield',
       '#default_value' => $this->sf_client->getLoginUrl(),
+      '#required' => TRUE,
     ];
 
     // If fully configured, attempt to connect to Salesforce and return a list
     // of resources.
     if ($this->sf_client->isAuthorized()) {
+      $form['creds']['#open'] = FALSE;
+      $form['creds']['#description'] = $this->t('Your Salesforce salesforce instance is currently authorized. Enter credentials here only to change credentials.');
       unset($_SESSION['messages']['salesforce_oauth_error error']);
       try {
         $resources = $this->sf_client->listResources();
@@ -138,7 +142,10 @@ class AuthorizeForm extends ConfigFormBase {
       drupal_set_message(t('Salesforce needs to be authorized to connect to this website.'), 'salesforce_oauth_error error');
     }
 
-    return parent::buildForm($form, $form_state);
+    $form = parent::buildForm($form, $form_state);
+    $form['creds']['actions'] = $form['actions'];
+    unset($form['actions']);
+    return $form;
   }
 
   /**

@@ -103,7 +103,7 @@ class DeleteHandler {
    * @param Psr\Log\LoggerInterface $logger
    *   Logging service.
    */
-  public static function create(RestClient $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
+  public static function create(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
     return new DeleteHandler($sfapi, $entity_type_manager, $state, $logger, $request);
   }
 

@@ -5,10 +5,8 @@
  * Pull updates from Salesforce when a Salesforce object is updated.
  */
 
-use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_pull\QueueHandler;
 use Drupal\salesforce_pull\DeleteHandler;
-use Psr\Log\LoggerTrait;
 
 /**
  * Implements hook_cron().
