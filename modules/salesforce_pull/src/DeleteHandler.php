@@ -5,14 +5,10 @@ namespace Drupal\salesforce_pull;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Utility\Error;
-use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SFID;
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Psr\Log\LogLevel;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,71 +21,87 @@ use Symfony\Component\HttpFoundation\Request;
 class DeleteHandler {
 
   /**
+   * Rest client service.
+   *
    * @var \Drupal\salesforce\Rest\RestClient
    */
   protected $sfapi;
 
   /**
+   * Salesforce mapping storage service.
+   *
    * @var \Drupal\salesforce_mapping\SalesforceMappingStorage
    */
-  protected $mapping_storage;
+  protected $mappingStorage;
 
   /**
+   * Mapped Object storage service.
+   *
    * @var \Drupal\salesforce_mapping\MappedObjectStorage
    */
-  protected $mapped_object_storage;
+  protected $mappedObjectStorage;
 
   /**
+   * Entity tpye manager service.
+   *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $etm;
 
   /**
+   * State service.
+   *
    * @var \Drupal\Core\State\StateInterface
    */
   protected $state;
 
   /**
+   * Logging service.
+   *
    * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
 
   /**
+   * Request service.
+   *
    * @var \Symfony\Component\HttpFoundation\Request
    */
   protected $request;
 
   /**
+   * Constructor.
+   *
    * @param \Drupal\salesforce\Rest\RestClient $sfapi
-   *  RestClient object
-   * @param \Drupal\Core\Entity\EntityTyprManagerInterface $$entity_type_manager
-   *  Entity Manager service
-   * @param \Drupal\Core\State\StatInterface $state
-   *  State service
+   *   RestClient object.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity Manager service.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   State service.
    * @param Psr\Log\LoggerInterface $logger
-   *  Logging service
+   *   Logging service.
    */
   private function __construct(RestClient $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
     $this->sfapi = $sfapi;
     $this->etm = $entity_type_manager;
-    $this->mapping_storage = $this->etm->getStorage('salesforce_mapping');
-    $this->mapped_object_storage = $this->etm->getStorage('salesforce_mapped_object');
+    $this->mappingStorage = $this->etm->getStorage('salesforce_mapping');
+    $this->mappedObjectStorage = $this->etm->getStorage('salesforce_mapped_object');
     $this->state = $state;
     $this->logger = $logger;
     $this->request = $request;
   }
 
   /**
-   * Chainable instantiation method for class
+   * Chainable instantiation method for class.
    *
    * @param \Drupal\salesforce\Rest\RestClient $sfapi
-   *  RestClient object
-   * @param \Drupal\Core\Entity\EntityTyprManagerInterface $$entity_type_manager
-   *  Entity Manager service
-   * @param \Drupal\Core\State\StatInterface $state
-   *  State service
+   *   RestClient object.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity Manager service.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   State service.
    * @param Psr\Log\LoggerInterface $logger
-   *  Logging service
+   *   Logging service.
    */
   public static function create(RestClient $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
     return new DeleteHandler($sfapi, $entity_type_manager, $state, $logger, $request);
@@ -98,11 +110,12 @@ class DeleteHandler {
   /**
    * Process deleted records from salesforce.
    *
-   * @return boolean
+   * @return bool
+   *   TRUE.
    */
   public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
-    foreach (array_reverse($this->mapping_storage->getMappedSobjectTypes()) as $type) {
+    foreach (array_reverse($this->mappingStorage->getMappedSobjectTypes()) as $type) {
       $last_delete_sync = $this->state->get('salesforce_pull_last_delete_' . $type, strtotime('-29 days'));
       $now = time();
       // getDeleted() restraint: startDate must be at least one minute
@@ -114,20 +127,23 @@ class DeleteHandler {
       $this->handleDeletedRecords($deleted, $type);
       $this->state->set('salesforce_pull_last_delete_' . $type, $now);
     }
-    return true;
+    return TRUE;
   }
 
   /**
-   * [handleDeletedRecords description]
-   * @param  array  $deleted
-   * @param  string $type
+   * Delete records.
+   *
+   * @param array $deleted
+   *   Array of deleted records.
+   * @param string $type
+   *   Salesforce object type.
    */
   protected function handleDeletedRecords(array $deleted, $type) {
     if (empty($deleted['deletedRecords'])) {
       return;
     }
 
-    $sf_mappings = $this->mapping_storage->loadByProperties(
+    $sf_mappings = $this->mappingStorage->loadByProperties(
       ['salesforce_object_type' => $type]
     );
     if (empty($sf_mappings)) {
@@ -140,13 +156,15 @@ class DeleteHandler {
   }
 
   /**
-   * [handleDeletedRecord description]
-   * @param  [type] $record [description]
-   * @param  [type] $type   [description]
-   * @return [type]         [description]
+   * Delete single mapped object.
+   *
+   * @param array $record
+   *   Record array.
+   * @param string $type
+   *   Salesforce object type.
    */
-  protected function handleDeletedRecord($record, $type) {
-    $mapped_objects = $this->mapped_object_storage->loadBySfid(new SFID($record['id']));
+  protected function handleDeletedRecord(array $record, $type) {
+    $mapped_objects = $this->mappedObjectStorage->loadBySfid(new SFID($record['id']));
     if (empty($mapped_objects)) {
       return;
     }
@@ -167,7 +185,8 @@ class DeleteHandler {
       }
     }
 
-    // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
+    // The mapping entity is an Entity reference field on mapped object, so we
+    // need to get the id value this way.
     $sf_mapping = $mapped_object->getMapping();
     if (!$sf_mapping) {
       $this->logger->log(
@@ -208,10 +227,12 @@ class DeleteHandler {
         '%type: @message in %function (line %line of %file).',
         Error::decodeException($e)
       );
-      // If mapped entity couldn't be deleted, do not delete the mapped object either.
+      // If mapped entity couldn't be deleted, do not delete the mapped object
+      // either.
       return;
     }
 
     $mapped_object->delete();
   }
+
 }
