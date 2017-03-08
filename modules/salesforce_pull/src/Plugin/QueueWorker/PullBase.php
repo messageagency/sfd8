@@ -367,10 +367,10 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *
    * @param MappedObjectInterface $mapped_object
    *   Mapeed object entity.
-   * @param MappingConstants $mapping_constant
+   * @param string $mapping_constant
    *   MappingConstants value.
    */
-  public function salesforcePullEvent(MappedObjectInterface $mapped_object, MappingConstants $mapping_constant) {
+  public function salesforcePullEvent(MappedObjectInterface $mapped_object, string $mapping_constant) {
     return new SalesforcePullEvent($mapped_object, $mapping_constant);
   }
 

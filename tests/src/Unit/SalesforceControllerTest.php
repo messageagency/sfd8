@@ -3,7 +3,6 @@
 namespace Drupal\Tests\salesforce\Unit;
 
 use Drupal\Core\Render\MetadataBubblingUrlGenerator;
-use Drupal\Core\Url;
 use Drupal\salesforce\Controller\SalesforceController;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\Tests\UnitTestCase;
@@ -18,10 +17,12 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * @coversDefaultClass \Drupal\salesforce\Controller\SalesforceController
  * @group salesforce
  */
-
 class SalesforceControllerTest extends UnitTestCase {
 
-  function setUp() {
+  /**
+   * Set up for each test.
+   */
+  public function setUp() {
     parent::setUp();
 
     $this->example_url = 'https://example.com';
@@ -39,10 +40,27 @@ class SalesforceControllerTest extends UnitTestCase {
         ->disableOriginalConstructor()
         ->getMock();
     $this->cache = $this->getMock('\Drupal\Core\Cache\CacheBackendInterface');
+    $this->json = $this->getMock('Drupal\Component\Serialization\Json');
 
-    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache];
+    $args = [
+      $this->httpClient,
+      $this->configFactory,
+      $this->state,
+      $this->cache,
+      $this->json,
+    ];
 
-    $this->client = $this->getMock(RestClient::class, ['getConsumerKey', 'getConsumerSecret', 'getAuthCallbackUrl', 'getAuthTokenUrl', 'handleAuthResponse'], $args);
+    $this->client = $this->getMock(
+      RestClient::class,
+      [
+        'getConsumerKey',
+        'getConsumerSecret',
+        'getAuthCallbackUrl',
+        'getAuthTokenUrl',
+        'handleAuthResponse',
+      ],
+      $args
+    );
     $this->client->expects($this->once())
       ->method('getConsumerKey')
       ->willReturn($this->randomMachineName());
@@ -67,7 +85,12 @@ class SalesforceControllerTest extends UnitTestCase {
       ->willReturn($this->request);
 
     $this->url_generator = $this->prophesize(MetadataBubblingUrlGenerator::class);
-    $this->url_generator->generateFromRoute('salesforce.authorize',[],["absolute" => true], false)
+    $this->url_generator->generateFromRoute(
+      'salesforce.authorize',
+      [],
+      ["absolute" => TRUE],
+      FALSE
+    )
       ->willReturn('foo/bar');
 
     $container = new ContainerBuilder();
@@ -82,8 +105,16 @@ class SalesforceControllerTest extends UnitTestCase {
   /**
    * @covers ::oauthCallback
    */
-  function testOauthCallback() {
-    $this->controller = $this->getMock(SalesforceController::class, ['successMessage'], [$this->client, $this->httpClient, $this->url_generator->reveal()]);
+  public function testOauthCallback() {
+    $this->controller = $this->getMock(
+      SalesforceController::class,
+      ['successMessage'],
+      [
+        $this->client,
+        $this->httpClient,
+        $this->url_generator->reveal(),
+      ]
+    );
     $this->controller
       ->expects($this->once())
       ->method('successMessage')

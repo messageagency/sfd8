@@ -9,9 +9,7 @@ use Drupal\Core\Logger\LoggerChannelFactory;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Utility\Error;
-use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce\SalesforceClient;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -21,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class AuthorizeForm extends ConfigFormBase {
 
-  protected $sf_client;
+  protected $sfClient;
 
   /**
    * The state keyvalue collection.
@@ -35,14 +33,14 @@ class AuthorizeForm extends ConfigFormBase {
   /**
    * Constructs a \Drupal\system\ConfigFormBase object.
    *
-   * @param \Drupal\Core\Config\ConfigFactory $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
-   * @param \Drupal\Core\Config\Context\ContextInterface $context
-   *   The configuration context to use.
-   * @param \Drupal\salesforce\SalesforceClient $sf_client
+   * @param \Drupal\salesforce\RestClient $salesforce_client
    *   The factory for configuration objects.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
+   * @param \Drupal\Core\Logger\LoggerChannelFactory $logger_factory
+   *   The logger factory service.
    */
   public function __construct(ConfigFactoryInterface $config_factory, RestClient $salesforce_client, StateInterface $state, LoggerChannelFactory $logger_factory) {
     parent::__construct($config_factory);
@@ -66,7 +64,7 @@ class AuthorizeForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID() {
+  public function getFormId() {
     return 'salesforce_oauth';
   }
 
@@ -160,7 +158,9 @@ class AuthorizeForm extends ConfigFormBase {
         'client_id' => $values['consumer_key'],
       ];
 
-      // Send the user along to the Salesforce OAuth login form. If successful, the user will be redirected to {redirect_uri} to complete the OAuth handshake.
+      // Send the user along to the Salesforce OAuth login form. If successful,
+      // the user will be redirected to {redirect_uri} to complete the OAuth
+      // handshake.
       $form_state->setResponse(new TrustedRedirectResponse($path . '?' . http_build_query($query), 302));
     }
     catch (RequestException $e) {
