@@ -118,7 +118,7 @@ class AuthorizeForm extends ConfigFormBase {
         foreach ($resources->resources as $key => $path) {
           $items[] = $key . ': ' . $path;
         }
-        if ($items) {
+        if (!empty($items)) {
           $form['resources'] = [
             '#title' => $this->t('Your Salesforce instance is authorized and has access to the following resources:'),
             '#items' => $items,
