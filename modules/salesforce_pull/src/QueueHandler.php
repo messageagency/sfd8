@@ -26,7 +26,7 @@ use Symfony\Component\HttpFoundation\Request;
 class QueueHandler {
 
   /**
-   * @var \Drupal\salesforce\Rest\RestClient
+   * @var \Drupal\salesforce\Rest\RestClientInterface
    */
   protected $sfapi;
 
@@ -61,7 +61,7 @@ class QueueHandler {
   protected $request;
 
   /**
-   * @param RestClient               $sfapi
+   * @param RestClientInterface               $sfapi
    * @param array                    $mappings
    * @param QueueInterface           $queue
    * @param StateInterface           $state
@@ -69,7 +69,7 @@ class QueueHandler {
    * @param EventDispatcherInterface $event_dispatcher
    * @param Request                  $request
    */
-  public function __construct(RestClient $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
+  public function __construct(RestClientInterface $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
     $this->sfapi = $sfapi;
     $this->queue = $queue;
     $this->state = $state;
@@ -84,7 +84,7 @@ class QueueHandler {
   /**
    * Chainable instantiation method for class
    *
-   * @param  RestClient               $sfapi
+   * @param  RestClientInterface               $sfapi
    * @param  array                    $mappings
    * @param  QueueInterface           $queue
    * @param  StateInterface           $state

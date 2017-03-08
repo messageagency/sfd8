@@ -54,7 +54,7 @@ class RestClientTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::__constrict
+   * @covers ::__construct
    */
   private function initClient($methods = NULL) {
     if (empty($methods)) {

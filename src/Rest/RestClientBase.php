@@ -21,7 +21,7 @@ use GuzzleHttp\Psr7\Response;
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
  */
-class RestClient extends RestClientBase implements RestClientInterface {
+class RestClientBase implements RestClientBaseInterface {
 
   /**
    * Reponse object.
@@ -87,20 +87,6 @@ class RestClient extends RestClientBase implements RestClientInterface {
   protected $json;
 
   const CACHE_LIFETIME = 300;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json) {
-    $this->configFactory = $config_factory;
-    $this->httpClient = $http_client;
-    $this->config = $this->configFactory->get('salesforce.settings');
-    $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
-    $this->state = $state;
-    $this->cache = $cache;
-    $this->json = $json;
-    return $this;
-  }
 
   /**
    * Determine if this SF instance is fully configured.

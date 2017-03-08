@@ -5,7 +5,7 @@ namespace Drupal\salesforce_pull;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Utility\Error;
-use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
@@ -23,7 +23,7 @@ class DeleteHandler {
   /**
    * Rest client service.
    *
-   * @var \Drupal\salesforce\Rest\RestClient
+   * @var \Drupal\salesforce\Rest\RestClientInterface
    */
   protected $sfapi;
 
@@ -72,7 +72,7 @@ class DeleteHandler {
   /**
    * Constructor.
    *
-   * @param \Drupal\salesforce\Rest\RestClient $sfapi
+   * @param \Drupal\salesforce\Rest\RestClientInterface $sfapi
    *   RestClient object.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity Manager service.
@@ -81,7 +81,7 @@ class DeleteHandler {
    * @param Psr\Log\LoggerInterface $logger
    *   Logging service.
    */
-  private function __construct(RestClient $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
+  private function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
     $this->sfapi = $sfapi;
     $this->etm = $entity_type_manager;
     $this->mappingStorage = $this->etm->getStorage('salesforce_mapping');
@@ -94,7 +94,7 @@ class DeleteHandler {
   /**
    * Chainable instantiation method for class.
    *
-   * @param \Drupal\salesforce\Rest\RestClient $sfapi
+   * @param \Drupal\salesforce\Rest\RestClientInterface $sfapi
    *   RestClient object.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity Manager service.
