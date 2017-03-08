@@ -6,7 +6,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Drupal\Core\State\State;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
@@ -56,13 +55,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   protected $mappedObjectStorage;
 
   /**
-   * States ervice.
-   *
-   * @var \Drupal\Core\State\StateInterface
-   */
-  protected $state;
-
-  /**
    * Logger service.
    *
    * @var LoggerInterface
@@ -88,10 +80,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   Event dispatcher service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, State $state, LoggerChannelFactoryInterface $logger_factory, EventDispatcherInterface $eventDispatcher) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClient $client, LoggerChannelFactoryInterface $logger_factory, EventDispatcherInterface $eventDispatcher) {
     $this->etm = $entity_type_manager;
     $this->client = $client;
-    $this->state = $state;
     $this->logger = $logger_factory->get('Salesforce Pull');
     $this->eventDispatcher = $eventDispatcher;
     $this->mappingStorage = $this->etm->getStorage('salesforce_mapping');
@@ -106,7 +97,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     return new static(
       $container->get('entity_type.manager'),
       $container->get('salesforce.client'),
-      $container->get('state'),
       $container->get('logger.factory'),
       $container->get('eventDispatcher')
     );
