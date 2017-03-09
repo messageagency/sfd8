@@ -38,12 +38,6 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
   public function eventDispatcher();
 
   /**
-   * Wrapper for Drupal core logger service.
-   * @param string $log the log name
-   */
-  public function logger($log);
-
-  /**
    * @return string
    */
   public function getSalesforceUrl();

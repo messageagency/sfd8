@@ -17,9 +17,11 @@ use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
 use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent;
 use Drupal\salesforce\Exception as SalesforceException;
 use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce\Event\SalesforceWarningEvent;
+use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
-
+  
 /**
  * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
  * entities, since they're defined by references to other content entities.
@@ -270,13 +272,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
-   * Wrapper for Drupal core logger service.
-   */
-  public function logger($log) {
-    return \Drupal::service('logger.factory')->get($log);
-  }
-
-  /**
    * @return string
    */
   public function getSalesforceUrl() {
@@ -456,6 +451,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       }
       catch (\Exception $e) {
         // Field missing from SObject? Skip it.
+        $message = 'Field @sobj.@sffield not found on @sfid';
+        $args = [
+          '@sfobj' => $mapping->getSalesforceObjectType(),
+          '@sffield' => $sf_field,
+          '@sfid' => $this->sfid(),
+        ];
+        $this->eventDispatcher()->dispatch(new SalesforceNoticeEvent($e, $message, $args));
         continue;
       }
 
@@ -470,22 +472,17 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         $this->drupal_entity->set($drupal_field, $value);
       }
       catch (\Exception $e) {
-        $message = t();
-        $this->logger('Salesforce Pull')->notice('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
-          '@sfobj' => $mapping->getSalesforceObjectType(),
-          '@sffield' => $sf_field,
-          '@sfid' => $this->sfid(),
-          '@dobj' => $this->entity_type_id->value,
-          '@dprop' => $drupal_field,
-          '@did' => $this->entity_id->value,
-          '@v' => $value,
-          '@e' => $e->getMessage(),
-        ]);
-        $this->logger(__CLASS__)->log(
-          LogLevel::ERROR,
-          '%type: @message in %function (line %line of %file).',
-          Error::decodeException($e)
-        );
+        $message = 'Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v';
+        $args = [
+            '@sfobj' => $mapping->getSalesforceObjectType(),
+            '@sffield' => $sf_field,
+            '@sfid' => $this->sfid(),
+            '@dobj' => $this->entity_type_id->value,
+            '@dprop' => $drupal_field,
+            '@did' => $this->entity_id->value,
+            '@v' => $value,
+          ];
+        $this->eventDispatcher()->dispatch(new SalesforceWarningEvent($e, $message, $args));
         continue;
       }
     }
