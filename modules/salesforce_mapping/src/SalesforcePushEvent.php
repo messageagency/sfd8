@@ -4,55 +4,20 @@ namespace Drupal\salesforce_mapping;
 
 use Symfony\Component\EventDispatcher\Event;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
+use Drupal\salesforce\Event\SalesforceBaseEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePushEvent as ParentSalesforcePushEvent;
 
 /**
+ * @deprecated Will be removed before Salesforce 8.x-3.0
  *
+ * Use the parent class.
  */
-abstract class SalesforcePushEvent extends Event {
+abstract class SalesforcePushEvent extends ParentSalesforcePushEvent {
 
-  protected $params;
-  protected $mapping;
-  protected $mapped_object;
-  protected $entity;
-  protected $op;
-
-  /**
-   * {@inheritdoc}
-   *
-   * @param MappedObjectInterface $mapped_object
-   * @param PushParams $params
-   * @param string $op
-   *   One of
-   *     Drupal\salesforce_mapping\MappingConstants::
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
-   */
-  public function __construct(MappedObjectInterface $mapped_object) {
-    $this->mapped_object = $mapped_object;
-    $this->entity = ($mapped_object) ? $mapped_object->getMappedEntity() : NULL;
-    $this->mapping = ($mapped_object) ? $mapped_object->getMapping() : NULL;
-  }
-
-  /**
-   * @return EntityInterface (from PushParams)
-   */
-  public function getEntity() {
-    return $this->entity;
-  }
-
-  /**
-   * @return SalesforceMappingInterface (from PushParams)
-   */
-  public function getMapping() {
-    return $this->mapping;
-  }
-
-  /**
-   * @return MappedObjectInterface
-   */
-  public function getMappedObject() {
-    return $this->mapped_object;
+  public function __construct() {
+    @trigger_error(__CLASS__ . ' is deprecated. Use the parent class in the Drupal\salesforce_mapping\Event namespace.', E_USER_DEPRECATED);
+    $args = func_get_args();
+    call_user_func_array('parent::__construct', $args);
   }
 
 }

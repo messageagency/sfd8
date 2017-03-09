@@ -3,9 +3,9 @@
 namespace Drupal\salesforce_example\EventSubscriber;
 
 use Drupal\Core\Entity\Entity;
-use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\SalesforcePushOpEvent;
-use Drupal\salesforce_mapping\SalesforcePushParamsEvent;
+use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\salesforce\Exception;
 

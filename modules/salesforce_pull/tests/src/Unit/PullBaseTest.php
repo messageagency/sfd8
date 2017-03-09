@@ -15,7 +15,7 @@ use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce_mapping\SalesforcePullEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
 use Drupal\salesforce_pull\Plugin\QueueWorker\PullBase;
 use Drupal\salesforce_pull\PullQueueItem;
 use Drupal\salesforce\Rest\RestClient;

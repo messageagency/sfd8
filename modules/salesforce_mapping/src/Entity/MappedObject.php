@@ -12,11 +12,11 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
-use Drupal\salesforce_mapping\SalesforcePullEntityValueEvent;
-use Drupal\salesforce_mapping\SalesforcePullEvent;
-use Drupal\salesforce_mapping\SalesforcePushParamsEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePullEntityValueEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent;
 use Drupal\salesforce\Exception as SalesforceException;
-use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 
