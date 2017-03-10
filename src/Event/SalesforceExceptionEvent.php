@@ -8,47 +8,49 @@ use Drupal\Component\Render\FormattableMarkup;
 /**
  *
  */
-abstract class SalesforceExceptionEvent extends SalesforceBaseEvent {
+abstract class SalesforceExceptionEvent extends SalesforceBaseEvent implements SalesforceExceptionEventInterface {
 
   protected $exception;
   protected $message;
-  protected $args;
+  protected $context;
   protected $level;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct($level, \Exception $e = NULL, $message = '', array $args = []) {
+  public function __construct($level, \Exception $e = NULL, $message = '', array $context = []) {
     $this->exception = $e;
     $this->level = $level;
     $this->message = $message;
-    $this->args = $args;
+    $this->context = $context;
   }
 
   /**
-   * @return \Exception
-   *   The exception
+   * {@inheritdoc}
    */
   public function getException() {
     return $this->exception;
   }
 
   /**
-   * @return mixed Log Level
-   *   Severity level for the event. Probably a Drupal\Core\Logger\RfcLogLevel 
-   *   or Psr\Log\LogLevel value.
+   * {@inheritdoc}
    */
   public function getLevel() {
     return $this->level;
   }
 
   /**
-   * @return FormattableMarkup
-   *   The formatted message for this event. (Note: to get the Exception
-   *   message, use ::getException()->getMessage()).
+   * {@inheritdoc}
    */
   public function getMessage() {
-    return new FormattableMarkup($message, $args);
+    return $this->message;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContext() {
+    return $this->context;
   }
 
 }

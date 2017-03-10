@@ -7,7 +7,9 @@ use Drupal\salesforce\Event\SalesforceEvents as ParentSalesforceEvents;
 /**
  * @deprecated Will be removed before Salesforce 8.x-3.0
  *
- * Use the parent class.
+ * The file has been moved to Drupal\salesforce\Event namespace (in src\Event 
+ * directory). Implementations should use the same class name with the new 
+ * namespace.
  */
 final class SalesforceEvents extends ParentSalesforceEvents {
 

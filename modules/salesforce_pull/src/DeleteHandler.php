@@ -142,9 +142,7 @@ class DeleteHandler {
       $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
     }
     catch (\Exception $e) {
-      $message = '%type: @message in %function (line %line of %file).';
-      $args = Error::decodeException($e);
-      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e, $message, $args));
+      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
       // If mapped entity couldn't be deleted, do not delete the mapped object either.
       return;
     }

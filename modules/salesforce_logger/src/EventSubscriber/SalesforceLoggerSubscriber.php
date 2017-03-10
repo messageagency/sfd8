@@ -2,12 +2,14 @@
 
 namespace Drupal\salesforce_logger\EventSubscriber;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\Entity;
+use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Event\SalesforceEvents;
-use Drupal\salesforce\SalesforceExceptionEvent;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\salesforce\Exception;
-
+use Drupal\salesforce\SalesforceExceptionEventInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Class SalesforceLoggerSubscriber.
@@ -16,8 +18,17 @@ use Drupal\salesforce\Exception;
  */
 class SalesforceLoggerSubscriber implements EventSubscriberInterface {
 
-  public function __construct() {
-    
+  const EXCEPTION_MESSAGE_PLACEHOLDER = '%type: @message in %function (line %line of %file).';
+
+  protected $logger;
+
+  /**
+   * Create a new Salesforce Logger Subscriber.
+   *
+   * @param LoggerChannelFactoryInterface $logger_factory
+   */
+  public function __construct(LoggerInterface $logger) {
+    $this->logger = $logger;
   }
 
   /**
@@ -30,8 +41,15 @@ class SalesforceLoggerSubscriber implements EventSubscriberInterface {
     return $events;
   }
 
-  public function salesforceException(SalesforceExceptionEvent $event) {
-    
+  public function salesforceException(SalesforceExceptionEventInterface $event) {
+    // @TODO configure log levels; only log if configured level >= error level
+    $exception = $event->getExceptionMessage();
+
+    if ($exception) {
+      $this->logger->log($event->getLevel(), self::EXCEPTION_MESSAGE_PLACEHOLDER, Error::decodeException($e));
+    }
+
+    $this->logger->log($event->getLevel(), $event->getMessage(), $event->getContext());
   }
 
 }
