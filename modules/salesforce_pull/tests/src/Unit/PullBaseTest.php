@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
@@ -27,13 +28,12 @@ use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
 
 /**
- * Test Object instantitation
+ * Test Object instantitation.
  *
  * @group salesforce_pull
  */
-
 class PullBaseTest extends UnitTestCase {
-  static $modules = ['salesforce_pull'];
+  public static $modules = ['salesforce_pull'];
 
   /**
    * {@inheritdoc}
