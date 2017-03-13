@@ -4,6 +4,7 @@ namespace Drupal\salesforce_mapping\Form;
 
 use Drupal\Core\Entity\ContentEntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\salesforce\Event\SalesforceNoticeEvent;
 
 /**
  * Provides a form for deleting a salesforce_mapped_oject entity.
@@ -40,16 +41,15 @@ class MappedObjectDeleteForm extends ContentEntityConfirmFormBase {
   /**
    * {@inheritdoc}
    *
-   * Delete the entity and log the event. logger() replaces the watchdog.
+   * Delete the entity and log the event. Event dispatcher service sends
+   * Salesforce notvie level event which logs notice.
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $mapped_object = $this->getEntity();
     $form_state->setRedirect($mapped_object->getMappedEntity()->toUrl('salesforce'));
-    $this
-      ->logger('salesforce_mapped_oject')
-      ->notice('MappedObject @sfid deleted.', [
-        '@sfid' => $mapped_object->salesforce_id->value,
-      ]);
+    $message = 'MappedObject @sfid deleted.';
+    $args = ['@sfid' => $mapped_object->salesforce_id->value];
+    \Drupal::service('event_dispatcher')->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
     $mapped_object->delete();
   }
 

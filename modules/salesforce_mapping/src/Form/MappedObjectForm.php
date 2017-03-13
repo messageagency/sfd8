@@ -5,14 +5,15 @@ namespace Drupal\salesforce_mapping\Form;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Logger\LoggerChannelFactory;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
-use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\salesforce\Event\SalesforceErrorEvent;
+use Drupal\salesforce\Event\SalesforceNoticeEvent;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Salesforce Mapping Form base.
@@ -48,11 +49,11 @@ class MappedObjectForm extends ContentEntityForm {
   protected $mapping_storage;
 
   /**
-   * Logger service.
+   * Event dispatcher service.
    *
-   * @var Logger
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
    */
-  protected $logger;
+  protected $eventDispatcher;
 
   /**
    * Entity manager service.
@@ -78,20 +79,20 @@ class MappedObjectForm extends ContentEntityForm {
   /**
    * Constructs a ContentEntityForm object.
    *
-   * @param EntityManagerInterface        $entity_manager
+   * @param EntityManagerInterface $entity_manager
    *   The entity manager.
-   * @param RestClientInterface           $rest
+   * @param RestClientInterface $rest
    *   The Rest Client.
-   * @param LoggerChannelFactory          $logger_factory
-   *   Logging service factory.
-   * @param RouteMatchInterface           $route_match
+   * @param EventDispatcherInterface $event_dispatcher
+   *   Event dispatcher service.
+   * @param RouteMatchInterface $route_match
    *   Route matching service.
    */
-  public function __construct(EntityManagerInterface $entity_manager, RestClientInterface $rest, LoggerChannelFactory $logger_factory, RouteMatchInterface $route_match) {
+  public function __construct(EntityManagerInterface $entity_manager, RestClientInterface $rest, EventDispatcherInterface $event_dispatcher, RouteMatchInterface $route_match) {
     $this->entityManager = $entity_manager;
     $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->rest = $rest;
-    $this->logger = $logger_factory->get(__CLASS__);
+    $this->evetDispatcher = $event_dispatcher;
     $this->route_match = $route_match;
   }
 
@@ -102,7 +103,7 @@ class MappedObjectForm extends ContentEntityForm {
     return new static(
       $container->get('entity.manager'),
       $container->get('salesforce.client'),
-      $container->get('logger.factory'),
+      $container->get('event_dispatcher'),
       $container->get('current_route_match')
     );
   }
@@ -171,11 +172,7 @@ class MappedObjectForm extends ContentEntityForm {
       $mapped_object->push();
     }
     catch (\Exception $e) {
-      $this->logger(__CLASS__)->log(
-        LogLevel::ERROR,
-        '%type: @message in %function (line %line of %file).',
-        Error::decodeException($e)
-      );
+      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
       drupal_set_message(t('Push failed with an exception: %exception', array('%exception' => $e->getMessage())), 'error');
       return;
     }
@@ -266,4 +263,5 @@ class MappedObjectForm extends ContentEntityForm {
     }
     return $drupal_entity;
   }
+
 }

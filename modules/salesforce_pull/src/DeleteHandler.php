@@ -43,11 +43,15 @@ class DeleteHandler {
    * Chainable instantiation method for class.
    *
    * @param \Drupal\salesforce\Rest\RestClientInterface $sfapi
-   *  RestClient object
-   * @param \Drupal\Core\Entity\EntityTyprManagerInterface $$entity_type_manager
-   *  Entity Manager service
+   *   RestClient object.
+   * @param \Drupal\Core\Entity\EntityTyprManagerInterface $entity_type_manager
+   *   Entity Manager service.
    * @param \Drupal\Core\State\StatInterface $state
-   *  State service
+   *   State service.
+   * @param EventDispatcherInterface $event_dispatcher
+   *   Event dispatcher service.
+   * @param Request $request
+   *   Request service.
    */
   public static function create(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
     return new DeleteHandler($sfapi, $entity_type_manager, $state, $event_dispatcher, $request);
@@ -143,7 +147,7 @@ class DeleteHandler {
     }
     catch (\Exception $e) {
       $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
-      // If mapped entity couldn't be deleted, do not delete the mapped object either.
+      // If mapped entity couldn't be deleted, do not delete the mapped object.
       return;
     }
 
