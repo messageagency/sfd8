@@ -2,12 +2,12 @@
 
 namespace Drupal\salesforce\Rest;
 
-use Symfony\Component\Serializer\Exception\Exception as SymfonyException;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 
 /**
  *
  */
-class RestException extends \RuntimeException implements SymfonyException {
+class RestException extends \RuntimeException implements ExceptionInterface {
 
   protected $response;
 
