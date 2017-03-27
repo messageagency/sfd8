@@ -1,4 +1,6 @@
 rest_api_version:
-  label: "Summer '16"
-  url: "/services/data/v37.0/"
-  version: "37.0"
+  label: ""
+  url: ""
+  version: "39.0"
+use_latest: true
+  

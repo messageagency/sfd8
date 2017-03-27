@@ -403,6 +403,6 @@ interface RestClientInterface {
    * @return string
    * @throws Exception if SFID doesn't match any object type
    */
-  public static function getObjectTypeName(SFID $id);
+  public function getObjectTypeName(SFID $id);
 
 }

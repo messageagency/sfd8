@@ -26,12 +26,12 @@ class RestClient implements RestClientInterface {
   protected $httpClient;
   protected $configFactory;
   protected $url;
-  private $config;
-  private $configEditable;
-  private $state;
+  protected $config;
+  protected $state;
   protected $cache;
 
   const CACHE_LIFETIME = 300;
+  const LONGTERM_CACHE_LIFETIME = 86400;
 
   /**
    * Constructor which initializes the consumer.
@@ -45,7 +45,6 @@ class RestClient implements RestClientInterface {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
     $this->config = $this->configFactory->get('salesforce.settings');
-    $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
     $this->cache = $cache;
   }
@@ -213,20 +212,31 @@ class RestClient implements RestClientInterface {
       elseif (isset($identity['urls'][$api_type])) {
         $url = $identity['urls'][$api_type];
       }
-      $url = str_replace('{version}', $this->config->get('rest_api_version.version'), $url);
+      $url = str_replace('{version}', $this->getApiVersion(), $url);
     }
     return $url;
   }
 
   /**
-   *
+   * Wrapper for config rest_api_version.version
+   */
+  public function getApiVersion() {
+    if ($this->config->get('use_latest')) {
+      $version = end($this->getVersions());
+      return $version['version'];
+    }
+    return $this->config->get('rest_api_version.version');
+  }
+
+  /**
+   * Getter for consumer_key
    */
   public function getConsumerKey() {
     return $this->state->get('salesforce.consumer_key');
   }
 
   /**
-   *
+   * Setter for consumer_key
    */
   public function setConsumerKey($value) {
     return $this->state->set('salesforce.consumer_key', $value);
@@ -398,7 +408,9 @@ class RestClient implements RestClientInterface {
   }
 
   /**
+   * Setter for identity state info.
    *
+   * @return $this
    */
   protected function setIdentity($data) {
     $this->state->set('salesforce.identity', $data);
@@ -448,6 +460,34 @@ class RestClient implements RestClientInterface {
    */
   public function getAuthTokenUrl() {
     return $this->getLoginUrl() . '/services/oauth2/token';
+  }
+
+  /**
+   * Wrapper for "Versions" resource to list information about API releases.
+   *
+   * @param $reset
+   *   Whether to reset cache.
+   *
+   * @return array
+   *   Array of all available Salesforce versions.
+   */
+  public function getVersions($reset = FALSE) {
+    $cache = $this->cache->get('salesforce:versions');
+
+    // Force the recreation of the cache when it is older than 24 hours.
+    if ($cache && $this->getRequestTime() < ($cache->created + self::LONGTERM_CACHE_LIFETIME) && !$reset) {
+      return $cache->data;
+    }
+
+    $versions = [];
+    $id = $this->getIdentity();
+    $url = str_replace('v{version}/', '', $id['urls']['rest']);
+    $response = new RestResponse($this->httpRequest($url));
+    foreach ($response->data as $version) {
+      $versions[$version['version']] = $version;
+    }
+    $this->cache->set('salesforce:versions', $versions, 0, ['salesforce']);
+    return $versions;
   }
 
   /**
@@ -816,7 +856,7 @@ class RestClient implements RestClientInterface {
    * @return string
    * @throws Exception if SFID doesn't match any object type
    */
-  public static function getObjectTypeName(SFID $id) {
+  public function getObjectTypeName(SFID $id) {
     $prefix = substr((string)$id, 0, 3);
     $describe = $this->objects();
     foreach ($describe as $object) {

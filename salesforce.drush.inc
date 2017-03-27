@@ -5,6 +5,9 @@
  * Drush integration for Salesforce.
  */
 
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SelectQuery;
+
 /**
  * Implements hook_drush_command().
  */
@@ -13,10 +16,12 @@ function salesforce_drush_command() {
     'description' => 'Displays information about the current REST API version',
     'aliases' => ['sfrv'],
   ];
+
   $items['sf-list-objects'] = [
     'description' => 'List the objects that are available in your organization and available to the logged-in user.',
     'aliases' => ['sflo'],
   ];
+
   $items['sf-describe-object'] = [
     'description' => 'Retrieve all the metadata for an object, including information about each field, URLs, and child relationships.',
     'aliases' => ['sfdo'],
@@ -24,14 +29,96 @@ function salesforce_drush_command() {
       'object' => 'The object name in Salesforce.',
     ],
     'options' => [
-      'fields' => 'Display information about fields that are part of the object.',
-      'field-data' => 'Display information about a specific field that is part of an object',
+      'output' => "Specify an output type.
+Options are:
+info: (default) Display metadata about an object
+fields: Display information about fields that are part of the object
+field-data FIELDNAME: Display information about a specific field that is part of an object
+raw: Display the complete, raw describe response."
     ],
+    'examples' => [
+      'drush sfdo Contact' => 'Show metadata about Contact SObject type.',
+      'drush sfdo Contact --output=fields' => 'Show addtional metadata about Contact fields.',
+      'drush sfdo Contact --output=field --field=Email' => 'Show full metadata about Contact.Email field.',
+      'drush sfdo Contact --output=raw' => 'Display the full metadata for Contact SObject type.'
+    ]
   ];
+
   $items['sf-list-resources'] = [
     'description' => 'Lists the resources available for the specified API version. It provides the name and URI of each resource.',
     'aliases' => ['sflr'],
   ];
+
+  $items['sf-read-object'] = array(
+    'description' => 'Retrieve all the data for an object with a specific ID.',
+    'aliases' => array('sfro'),
+    'arguments' => array(
+      'id' => 'The object ID in Salesforce.',
+    ),
+    'options' => array(
+      'format' => array(
+        'description' => 'Format to output the object. Use "print_r" for print_r (default), "export" for var_export, and "json" for JSON.',
+        'example-value' => 'export',
+      ),
+    ),
+  );
+
+  $items['sf-create-object'] = array(
+    'description' => 'Create an object with specified data.',
+    'aliases' => array('sfco'),
+    'arguments' => array(
+      'object' => 'The object type name in Salesforce (e.g. Account).',
+      'data' => 'The data to use when creating the object (default is JSON format). Use \'-\' to read the data from STDIN.',
+    ),
+    'options' => array(
+      'format' => array(
+        'description' => 'Format to parse the object. Use  "json" for JSON (default) or "query" for data formatted like a query string, e.g. \'Company=Foo&LastName=Bar\'.',
+        'example-value' => 'json',
+      ),
+    ),
+  );
+  $items['sf-query-object'] = array(
+    'description' => 'Query an object using SOQL with specified conditions.',
+    'aliases' => array('sfqo'),
+    'arguments' => array(
+      'object' => 'The object type name in Salesforce (e.g. Account).',
+    ),
+    'options' => array(
+      'format' => array(
+        'description' => 'Format to output the objects. Use "print_r" for print_r (default), "export" for var_export, and "json" for JSON.',
+        'example-value' => 'export',
+      ),
+      'where' =>array(
+        'description' => 'A WHERE clause to add to the SOQL query',
+        'example-value' => 'isDeleted = TRUE',
+      ),
+      'fields' =>array(
+        'description' => 'A comma-separated list fields to select in the SOQL query. If absent, an API call is used to find all fields',
+        'example-value' => 'Id,LastName',
+      ),
+      'limit' => [
+        'description' => 'Integer limit on the number of results to return for the query.',
+      ],
+      'order' => [
+        'description' => 'Comma-separated fields by which to sort results. Make sure to enclose in quotes for any whitespace.',
+        'example-value' => '"Name, SystemModStamp DESC"',
+      ],
+    ),
+  );
+
+  $items['sf-execute-query'] = array(
+    'description' => 'Execute a SOQL query.',
+    'aliases' => array('sfeq', 'soql'),
+    'arguments' => array(
+      'query' => 'The query to execute.',
+    ),
+  );
+
+  $items['sf-pull'] = [
+    'description' => 'Pull (import) records for from Salesforce, or enqueue them to be pulled.',
+    'aliases' => ['sfpull', 'sfi'],
+  ];
+
   return $items;
 }
 
@@ -41,7 +128,7 @@ function salesforce_drush_command() {
  * This command provides the name and URI of each resource.
  */
 function drush_salesforce_sf_list_resources() {
-  $salesforce = _drush_salesforce_drush_get_api();
+  $salesforce = \Drupal::service('salesforce.client');
   $resources = $salesforce->listResources();
   if ($resources) {
     $items[] = ['Resource', 'URL'];
@@ -71,101 +158,89 @@ function drush_salesforce_sf_describe_object($object_name = NULL) {
   if (!$object_name) {
     return drush_log('Please specify an object as an argument.', 'error');
   }
-  $salesforce = _drush_salesforce_drush_get_api();
+  $salesforce = \Drupal::service('salesforce.client');
 
   $object = $salesforce->objectDescribe($object_name);
 
   // Return if we cannot load any data.
-  if (!is_array($object)) {
-    return drush_log(dt('Could not load data for object !object', ['!object' => $object]), 'error');
-  }
-  // Display only information about fields for an option.
-  if (drush_get_option('fields')) {
-    $rows = [['Name', 'Type', 'Label']];
-    foreach ($object['fields'] as $field) {
-      $rows[] = [$field['name'], $field['type'], $field['label']];
-    }
-    drush_print_r($rows);
-    drush_print_table($rows, TRUE);
-    return;
+  if (!is_object($object)) {
+    return drush_log(dt('Could not load data for object !object', ['!object' => $object_name]), 'error');
   }
 
-  // Display only information about a specific field.
-  if ($fieldname = drush_get_option('field-data')) {
-    $field_data = NULL;
-    foreach ($object['fields'] as $field) {
-      if ($field['name'] === $fieldname) {
-        $field_data = $field;
-        break;
+  $output = drush_get_option('output');
+  switch ($output) {
+    case 'raw':
+      drush_print_r($object->data);
+      return;
+    case 'fields':
+      $rows = [['Name', 'Type', 'Label']];
+      foreach ($object->fields as $field) {
+        $rows[] = [$field['name'], $field['type'], $field['label']];
       }
-    }
-    if (!$field_data) {
-      drush_log(dt('Could not load data for field !field on !object object', [
-        '!field' => $fieldname,
-        '!object' => $object_name,
-      ]), 'error');
-    }
-    else {
-      drush_print_r($field);
-    }
+      drush_print_table($rows, TRUE);
+      return;
+    case 'field':
+      $fieldname = drush_get_option('field');
+      if (empty($fieldname)) {
+        drush_log(dt('Please specify a field name'), 'error');
+        return;
+      }
+      try {
+        $field_data = $object->getField($fieldname);
+      }
+      catch (\Exception $e) {
+        watchdog_exception('salesforce.drush', $e);
+        drush_log(dt('Could not load data for field !field on !object object', [
+          '!field' => $fieldname,
+          '!object' => $object_name,
+        ]), 'error');
+        return;
+      }
+      drush_print_r($field_data);
 
-    return;
+    default:
+      if ($output != 'info') {
+        drush_log(dt('Unkonwn output option !output', ['!output' => $output]), 'error');
+        return;
+      }
+
+      // Display information about the object.
+      $rows = [];
+      $rows[] = ['Name', $object->name];
+      $rows[] = ['Label', $object->label];
+      $rows[] = ['Field count', count($object->getFields())];
+      $rows[] = ['SFID prefix', $object->keyPrefix];
+      $rows[] = [
+        'Child Relationships',
+        isset($object->childRelationships) ? count($object->childRelationships) : 0,
+      ];
+
+      $rows[] = ['Searchable', ($object->searchable == 1) ? 'TRUE' : 'FALSE'];
+      $rows[] = ['Creatable', ($object->createable == 1) ? 'TRUE' : 'FALSE'];
+      $rows[] = ['Deletable', ($object->deletable == 1) ? 'TRUE' : 'FALSE'];
+      $rows[] = ['Mergeable', ($object->mergeable == 1) ? 'TRUE' : 'FALSE'];
+      $rows[] = ['Queryable', ($object->queryable == 1) ? 'TRUE' : 'FALSE'];
+      drush_print_table($rows);
+      return;
   }
-
-  // Display information about the object.
-  // @TODO add remaining field objects?
-  $rows = [];
-  $rows[] = ['Name', $object['name']];
-  $rows[] = [
-    'Fields',
-    isset($object['fields']) ? count($object['fields']) : 0,
-  ];
-  $rows[] = [
-    'Child Relationships',
-    isset($object['childRelationships']) ? count($object['childRelationships']) : 0,
-  ];
-  $rows[] = [
-    'Searchable',
-    ($object['searchable'] == 1) ? 'TRUE' : 'FALSE',
-  ];
-  $rows[] = ['Creatable', ($object['createable'] == 1) ? 'TRUE' : 'FALSE'];
-  $rows[] = ['Deletable', ($object['deletable'] == 1) ? 'TRUE' : 'FALSE'];
-  $rows[] = ['Mergeable', ($object['mergeable'] == 1) ? 'TRUE' : 'FALSE'];
-  $rows[] = ['Queryable', ($object['queryable'] == 1) ? 'TRUE' : 'FALSE'];
-  drush_print_table($rows);
 }
 
 /**
  * Displays information about the REST API version the site is using.
  */
 function drush_salesforce_sf_rest_version() {
-  $salesforce = _drush_salesforce_drush_get_api();
-  if (isset($salesforce->rest_api_version)) {
-    $rows[] = ['Salesforce', 'Value'];
-    foreach ($salesforce->rest_api_version as $key => $value) {
-      $rows[] = [$key, $value];
-    }
-    $rows[] = ['login url', $salesforce->login_url];
-    drush_print_table($rows, TRUE);
-  }
-  else {
-    drush_log('Could not obtain information about the current REST API version!', 'error');
-  }
-}
+  $salesforce = \Drupal::service('salesforce.client');
+  $version_id = $salesforce->getApiVersion();
+  $versions = $salesforce->getVersions();
+  $version = $versions[$version_id];
+  $latest = array_pop($versions);
 
-/**
- * Wrapper around salesforce_get_api().
- *
- * If salesforce_get_api() does not return a connection to Salesforce,
- * this function can prompt the user for username/password to obtain a new
- * token.
- *
- * @TODO implement this function
- */
-function _drush_salesforce_drush_get_api() {
-  if ($salesforce = \Drupal::service('salesforce.client')) {
-    return $salesforce;
+  foreach ($version as $key => $value) {
+    $rows[] = [$key, $value];
   }
+  $rows[] = ['login url', $salesforce->getLoginUrl()];
+  $rows[] = ['latest version', strcmp($version_id, $latest['version']) ? $latest['version'] : 'Yes'];
+  drush_print_table($rows, TRUE);
 }
 
 /**
@@ -175,7 +250,7 @@ function _drush_salesforce_drush_get_api() {
  * and available to the logged-in user.
  */
 function drush_salesforce_sf_list_objects() {
-  $salesforce = _drush_salesforce_drush_get_api();
+  $salesforce = \Drupal::service('salesforce.client');
   if ($objects = $salesforce->objects()) {
     drush_print('The following objects are available in your organization and available to the logged-in user.');
     $rows[] = ['Name', 'Label', 'Label Plural'];
@@ -192,4 +267,142 @@ function drush_salesforce_sf_list_objects() {
     drush_log('Could not load any information about available objects.', 'error');
   }
 
+}
+
+/**
+ * Read a Salesforce object available to the logged-in user.
+ *
+ * @param $name
+ *   The object type name, e.g. Account
+ * @param $id
+ *   The Salesforce ID
+ */
+function drush_salesforce_sf_read_object($id) {
+  $salesforce = \Drupal::service('salesforce.client');
+  try {
+    $name = $salesforce->getObjectTypeName(new SFID($id));
+    if ($object = $salesforce->objectRead($name, $id)) {
+      drush_print(dt('!type with id !id:', ['!type' => $object->type(), '!id' => $object->id()]));
+      drush_print(drush_format($object->fields()));
+    }
+  }
+  catch (SalesforceException $e) {
+    drush_log($e->getMessage(), 'error');
+  }
+}
+
+/**
+ * Create a Salesforce object available to the logged-in user.
+ *
+ * @param $name
+ *   The object type name, e.g. Account
+ * @param $data
+ *   The object data, or '-' to read from stdin
+ */
+function drush_salesforce_sf_create_object($name, $data) {
+
+  if ($data == '-') {
+    $data = stream_get_contents(STDIN);
+  }
+  $format = drush_get_option('format', 'json');
+  $params = array();
+  switch ($format) {
+    case 'query':
+      parse_str($data, $params);
+      break;
+    case 'json':
+      $params = json_decode($data, TRUE);
+      break;
+    default:
+      drush_log(dt('Invalid format'), 'error');
+      return;
+  }
+  $salesforce = \Drupal::service('salesforce.client');
+  try {
+    if ($result = $salesforce->objectCreate($name, $params)) {
+      drush_print_r($result);
+    }
+  }
+  catch (SalesforceException $e) {
+    drush_log($e->getMessage(), 'error');
+  }
+}
+
+/**
+ * Query Salesforce objects available to the logged-in user.
+ *
+ * @param $name
+ *   The object type name, e.g. Account
+ */
+function drush_salesforce_sf_query_object($name) {
+  $salesforce = \Drupal::service('salesforce.client');
+
+  $query = new SelectQuery($name);
+
+  $fields = drush_get_option('fields', '');
+  if (!$fields) {
+    $object = $salesforce->objectDescribe($name);
+    $query->fields = array_keys($object->getFields());
+  }
+  else {
+    $query->fields = explode(',', $fields);
+  }
+
+  $query->limit = drush_get_option('limit', '');
+
+  if ($where = drush_get_option('where', '')) {
+    $query->conditions = [[$where]];
+  }
+
+  if ($order = drush_get_option('order', '')) {
+    $query->order = [];
+    $orders = explode(',', $order);
+    foreach ($orders as $order) {
+      list($field, $dir) = preg_split('/\s+/', $order, 2);
+      $query->order[$field] = $dir;
+    }
+  }
+
+  try {
+    $result = $salesforce->query($query);
+  }
+  catch (SalesforceException $e) {
+    drush_log($e->getMessage(), 'error');
+    return;
+  }
+
+  foreach ($result->records() as $sfid => $record) {
+    drush_print(drush_format([$sfid => $record->fields()]));
+  }
+  $pretty_query = str_replace('+', ' ', (string)$query);
+  if (!$fields) {
+    $fields = implode(',', $query->fields);
+    $pretty_query = str_replace($fields, ' * ', $pretty_query);
+  }
+  drush_print(dt("Showing !size of !total records for query:\n!query", ['!size' => count($result->records()), '!total' => $result->size(), '!query' => $pretty_query]));
+
+}
+
+/**
+ * Execute a SOQL query.
+ *
+ * @param $query
+ *   The query to execute
+ */
+function drush_salesforce_sf_execute_query($query = NULL) {
+  if (!$query) {
+    return drush_log('Please specify a query as an argument.', 'error');
+  }
+  $salesforce = \Drupal::service('salesforce.client');
+  try {
+    $result = $salesforce->apiCall('query?q=' . urlencode($query));
+    drush_print(drush_format($result));
+  }
+  catch (SalesforceException $e) {
+    drush_log($e->getMessage(), 'error');
+  }
+}
+
+function drush_salesforce_sf_pull() {
+  
 }
