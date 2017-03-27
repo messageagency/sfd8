@@ -31,6 +31,7 @@ use Drupal\salesforce_mapping\SalesforcePushParamsEvent;
  *     "storage" = "Drupal\salesforce_mapping\MappedObjectStorage",
  *     "storage_schema" = "Drupal\salesforce_mapping\MappedObjectStorageSchema",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
+*      "views_data" = "Drupal\views\EntityViewsData",
  *     "list_builder" = "Drupal\salesforce_mapping\MappedObjectList",
  *     "form" = {
  *       "default" = "Drupal\salesforce_mapping\Form\MappedObjectForm",
