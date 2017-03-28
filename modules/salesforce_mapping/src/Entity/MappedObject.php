@@ -9,7 +9,6 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Event\SalesforceWarningEvent;
@@ -21,7 +20,6 @@ use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
 use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
-use Psr\Log\LogLevel;
 
 /**
  * Defines a Salesforce Mapped Object entity class.

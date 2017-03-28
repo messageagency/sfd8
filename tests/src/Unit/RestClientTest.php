@@ -4,7 +4,6 @@ namespace Drupal\Tests\salesforce\Unit;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Tests\UnitTestCase;
-use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\Rest\RestResponse;
 use Drupal\salesforce\Rest\RestResponse_Describe;

@@ -5,15 +5,8 @@
  * Manages Salesforce object and Drupal entity mappings.
  */
 
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\EntityInterface;
-use \Drupal\Core\Entity\Display\EntityViewDisplayInterface;
-use Drupal\salesforce\Exception;
 // Not sure if we'll actually need these, since entity API seems to provide everything:
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-use Drupal\salesforce_mapping\Entity\MappedObject;
 
 /**
  * Implements hook_entity_type_alter().

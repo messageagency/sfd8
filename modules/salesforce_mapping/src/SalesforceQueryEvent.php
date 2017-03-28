@@ -2,10 +2,6 @@
 
 namespace Drupal\salesforce_mapping;
 
-use Symfony\Component\EventDispatcher\Event;
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use Drupal\salesforce\Event\SalesforceBaseEvent;
 use Drupal\salesforce_mapping\Event\SalesforceQueryEvent as ParentSalesforceQueryEvent;
 
 /**

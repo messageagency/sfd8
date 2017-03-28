@@ -9,7 +9,6 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
-use Drupal\salesforce\Rest\RestException;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SFID;

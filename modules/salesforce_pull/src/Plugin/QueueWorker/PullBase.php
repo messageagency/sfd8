@@ -3,7 +3,6 @@
 namespace Drupal\salesforce_pull\Plugin\QueueWorker;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\Utility\Error;
@@ -13,13 +12,11 @@ use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\Rest\RestException;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_pull\PullException;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -47,14 +44,14 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   /**
    * Storage handler for SF mappings.
    *
-   * @var SalesforceMappingStorage
+   * @var \Drupal\salesforce_mapping\SalesforceMappingStorage
    */
   protected $mappingStorage;
 
   /**
    * Storage handler for Mapped Objects.
    *
-   * @var MappedObjectStorage
+   * @var \Drupal\salesforce_mapping\Entity\MappedObjectStorage
    */
   protected $mappedObjectStorage;
 

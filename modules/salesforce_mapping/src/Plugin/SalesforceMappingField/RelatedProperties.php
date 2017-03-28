@@ -4,12 +4,10 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Utility\Error;
 use Drupal\field\Field;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
-use Psr\Log\LogLevel;
 
 /**
  * Adapter for entity Reference and fields.

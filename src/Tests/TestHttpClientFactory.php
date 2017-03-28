@@ -4,7 +4,6 @@ namespace Drupal\salesforce\Tests;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Site\Settings;
-use GuzzleHttp\HandlerStack;
 use Drupal\Core\Http\ClientFactory;
 
 /**

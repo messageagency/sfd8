@@ -2,9 +2,6 @@
 
 namespace Drupal\salesforce_mapping;
 
-use Symfony\Component\EventDispatcher\Event;
-use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
-use Drupal\salesforce\Event\SalesforceBaseEvent;
 use Drupal\salesforce_mapping\Event\SalesforcePushEvent as ParentSalesforcePushEvent;
 
 /**

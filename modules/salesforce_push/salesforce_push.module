@@ -13,7 +13,6 @@ use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent;
 use Drupal\salesforce_mapping\MappingConstants;
-use Psr\Log\LogLevel;
 
 /**
  * Implements hook_entity_insert().

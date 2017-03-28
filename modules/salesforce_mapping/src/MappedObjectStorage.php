@@ -3,7 +3,6 @@
 namespace Drupal\salesforce_mapping;
 
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Cache\DatabaseBackendFactory;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;

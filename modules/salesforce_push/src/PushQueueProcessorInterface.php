@@ -3,7 +3,6 @@
 namespace Drupal\salesforce_push;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Interface implemented by Salesforce Push Queue Processors.

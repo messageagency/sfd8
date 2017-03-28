@@ -6,14 +6,9 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Utility\Error;
-use Drupal\salesforce\Exception;
-use Psr\Log\LogLevel;
 use Drupal\salesforce\Rest\RestClientInterface;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
-use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 

@@ -2,8 +2,6 @@
 
 namespace Drupal\salesforce_logger\EventSubscriber;
 
-use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Core\Entity\Entity;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Exception;
