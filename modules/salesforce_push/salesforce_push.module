@@ -6,17 +6,13 @@
  */
 
 use Drupal\Core\Entity\EntityInterface;
-//use Drupal\Core\Form\FormStateInterface;
-//use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
-//use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent;
 use Drupal\salesforce_mapping\MappingConstants;
-//use GuzzleHttp\Exception\RequestException;
 
 /**
  * Implements hook_entity_insert().

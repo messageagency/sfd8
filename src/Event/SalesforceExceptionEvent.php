@@ -2,8 +2,6 @@
 
 namespace Drupal\salesforce\Event;
 
-use Symfony\Component\EventDispatcher\Event;
-use Drupal\Component\Render\FormattableMarkup;
 
 /**
  *

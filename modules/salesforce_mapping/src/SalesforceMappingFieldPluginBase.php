@@ -17,12 +17,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\salesforce\Rest\RestClientInterface;
-use Drupal\salesforce\SFID;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use Drupal\salesforce_mapping\MappedObjectStorage;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -49,14 +44,14 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   /**
    * Storage handler for SF mappings
    *
-   * @var SalesforceMappingStorage
+   * @var \Drupal\salesforce_mapping\Entity\SalesforceMappingStorage
    */
   protected $mapping_storage;
 
   /**
    * Storage handler for Mapped Objects
    *
-   * @var MappedObjectStorage
+   * @var \Drupal\salesforce_mapping\MappedObjectStorage
    */
   protected $mapped_object_storage;
 

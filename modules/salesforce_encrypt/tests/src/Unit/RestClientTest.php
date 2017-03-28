@@ -3,22 +3,21 @@
 namespace Drupal\Tests\salesforce_encrypt\Unit;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\Tests\UnitTestCase;
-use Drupal\salesforce_encrypt\Rest\RestClient;
-use Drupal\Core\Config\ConfigFactory;
-use GuzzleHttp\Client;
-use Drupal\Core\State\State;
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\encrypt\EncryptServiceInterface;
-use Drupal\encrypt\EncryptionProfileManagerInterface;
+use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Lock\LockBackendInterface;
+use Drupal\Core\State\State;
+use Drupal\Tests\UnitTestCase;
+use Drupal\encrypt\EncryptServiceInterface;
 use Drupal\encrypt\EncryptionProfileInterface;
+use Drupal\encrypt\EncryptionProfileManagerInterface;
+use Drupal\salesforce_encrypt\Rest\RestClient;
+use GuzzleHttp\Client;
 
 /**
  * @coversDefaultClass \Drupal\salesforce_encrypt\Rest\RestClient
  * @group salesforce
  */
-
 class RestClientTest extends UnitTestCase {
 
   static $modules = ['key', 'encrypt', 'salesforce', 'salesforce_encrypt'];
@@ -28,9 +27,9 @@ class RestClientTest extends UnitTestCase {
     $this->accessToken = 'foo';
     $this->refreshToken = 'bar';
     $this->identity = array('zee' => 'bang');
-    
+
     $this->httpClient = $this->getMock(Client::CLASS);
-    $this->configFactory = 
+    $this->configFactory =
       $this->getMockBuilder(ConfigFactory::CLASS)
         ->disableOriginalConstructor()
         ->getMock();
@@ -39,6 +38,7 @@ class RestClientTest extends UnitTestCase {
         ->disableOriginalConstructor()
         ->getMock();
     $this->cache = $this->getMock(CacheBackendInterface::CLASS);
+    $this->json = $this->getMock('Drupal\Component\Serialization\Json');
     $this->encryption = $this->getMock(EncryptServiceInterface::CLASS);
     $this->profileManager = $this->getMock(EncryptionProfileManagerInterface::CLASS);
     $this->lock = $this->getMock(LockBackendInterface::CLASS);

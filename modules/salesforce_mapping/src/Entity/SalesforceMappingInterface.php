@@ -3,7 +3,6 @@
 namespace Drupal\salesforce_mapping\Entity;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
 
 /**
  *

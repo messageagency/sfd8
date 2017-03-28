@@ -1,8 +1,6 @@
 <?php
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\encrypt\EncryptionProfileInterface;
-use Drupal\salesforce\EntityNotFoundException;
 
 /**
  * Implements hook_encryption_profile_predelete()

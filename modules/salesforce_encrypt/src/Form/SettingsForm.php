@@ -37,7 +37,7 @@ class SettingsForm extends FormBase {
     return new static(
       $container->get('state'),
       $container->get('encrypt.encryption_profile.manager'),
-      $container->get('salesforce_encrypt.client')
+      $container->get('salesforce.client')
     );
   }
 

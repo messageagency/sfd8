@@ -4,65 +4,95 @@ namespace Drupal\salesforce_pull;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
-use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
+use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Handles pull cron deletion of Drupal entities based onSF mapping settings.
  *
  * @see \Drupal\salesforce_pull\DeleteHandler
  */
-
 class DeleteHandler {
 
+  /**
+   * Rest client service.
+   *
+   * @var \Drupal\salesforce\Rest\RestClientInterface
+   */
   protected $sfapi;
-  protected $mapping_storage;
-  protected $mapped_object_storage;
-  protected $etm;
-  protected $state;
-  protected $eventDispatcher;
-  protected $request;
-
-  private function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
-    $this->sfapi = $sfapi;
-    $this->etm = $entity_type_manager;
-    $this->mapping_storage = $this->etm->getStorage('salesforce_mapping');
-    $this->mapped_object_storage = $this->etm->getStorage('salesforce_mapped_object');
-    $this->state = $state;
-    $this->eventDispatcher = $event_dispatcher;
-    $this->request = $request;
-  }
 
   /**
-   * Chainable instantiation method for class.
+   * Salesforce mapping storage service.
+   *
+   * @var \Drupal\salesforce_mapping\SalesforceMappingStorage
+   */
+  protected $mappingStorage;
+
+  /**
+   * Mapped Object storage service.
+   *
+   * @var \Drupal\salesforce_mapping\MappedObjectStorage
+   */
+  protected $mappedObjectStorage;
+
+  /**
+   * Entity tpye manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $etm;
+
+  /**
+   * State service.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
+   * Request service.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
+  protected $eventDispatcher;
+
+  /**
+   * Constructor.
    *
    * @param \Drupal\salesforce\Rest\RestClientInterface $sfapi
    *   RestClient object.
-   * @param \Drupal\Core\Entity\EntityTyprManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity Manager service.
-   * @param \Drupal\Core\State\StatInterface $state
+   * @param \Drupal\Core\State\StateInterface $state
    *   State service.
-   * @param EventDispatcherInterface $event_dispatcher
-   *   Event dispatcher service.
-   * @param Request $request
-   *   Request service.
    */
-  public static function create(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
-    return new DeleteHandler($sfapi, $entity_type_manager, $state, $event_dispatcher, $request);
+    public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack) {
+    $this->sfapi = $sfapi;
+    $this->etm = $entity_type_manager;
+    $this->mappingStorage = $this->etm->getStorage('salesforce_mapping');
+    $this->mappedObjectStorage = $this->etm->getStorage('salesforce_mapped_object');
+    $this->state = $state;
+    $this->eventDispatcher = $event_dispatcher;
+    $this->request = $request_stack->getCurrentRequest();
   }
 
   /**
    * Process deleted records from salesforce.
+   *
+   * @return bool
+   *   TRUE.
    */
   public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
-    foreach (array_reverse($this->mapping_storage->getMappedSobjectTypes()) as $type) {
+    foreach (array_reverse($this->mappingStorage->getMappedSobjectTypes()) as $type) {
       $last_delete_sync = $this->state->get('salesforce_pull_last_delete_' . $type, strtotime('-29 days'));
       $now = time();
       // getDeleted() restraint: startDate must be at least one minute
@@ -74,15 +104,23 @@ class DeleteHandler {
       $this->handleDeletedRecords($deleted, $type);
       $this->state->set('salesforce_pull_last_delete_' . $type, $now);
     }
-    return true;
+    return TRUE;
   }
 
+  /**
+   * Delete records.
+   *
+   * @param array $deleted
+   *   Array of deleted records.
+   * @param string $type
+   *   Salesforce object type.
+   */
   protected function handleDeletedRecords(array $deleted, $type) {
     if (empty($deleted['deletedRecords'])) {
       return;
     }
 
-    $sf_mappings = $this->mapping_storage->loadByProperties(
+    $sf_mappings = $this->mappingStorage->loadByProperties(
       ['salesforce_object_type' => $type]
     );
     if (empty($sf_mappings)) {
@@ -94,8 +132,16 @@ class DeleteHandler {
     }
   }
 
-  protected function handleDeletedRecord($record, $type) {
-    $mapped_objects = $this->mapped_object_storage->loadBySfid(new SFID($record['id']));
+  /**
+   * Delete single mapped object.
+   *
+   * @param array $record
+   *   Record array.
+   * @param string $type
+   *   Salesforce object type.
+   */
+  protected function handleDeletedRecord(array $record, $type) {
+    $mapped_objects = $this->mappedObjectStorage->loadBySfid(new SFID($record['id']));
     if (empty($mapped_objects)) {
       return;
     }
@@ -114,7 +160,8 @@ class DeleteHandler {
       }
     }
 
-    // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
+    // The mapping entity is an Entity reference field on mapped object, so we
+    // need to get the id value this way.
     $sf_mapping = $mapped_object->getMapping();
     if (!$sf_mapping) {
       $message = 'No mapping exists for mapped object %id with Salesforce Object ID: %sfid';

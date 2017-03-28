@@ -31,19 +31,25 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   /**
    * Construct a new Encrypted Rest Client.
    *
-   * @param ClientInterface $http_client 
-   * @param ConfigFactoryInterface $config_factory 
-   * @param StateInterface $state 
-   * @param CacheBackendInterface $cache 
-   * @param Json $json 
-   * @param EncryptServiceInterface $encryption 
-   * @param EncryptionProfileManagerInterface $encryptionProfileManager 
-   * @param LockBackendInterface $lock 
-   * @author Aaron Bauman
+   * @param \GuzzleHttp\ClientInterface $http_client
+   *   The GuzzleHttp Client.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   The state service.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
+   *   The cache service.
+   * @param \Drupal\Component\Serialization\Json $json
+   *   The JSON serializer service.
+   * @param \Drupal\encrypt\EncryptServiceInterface $encryption
+   *   The encryption service.
+   * @param \Drupal\encrypt\EncryptionProfileManagerInterface $encryptionProfileManager
+   *   The Encryption profile manager service.
+   * @param \Drupal\Core\Lock\LockBackendInterface $lock
+   *   The lock backend service.
    */
   public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
     parent::__construct($http_client, $config_factory, $state, $cache, $json);
-    $this->state = $state;
     $this->encryption = $encryption;
     $this->encryptionProfileId = $state->get('salesforce_encrypt.profile');
     $this->encryptionProfileManager = $encryptionProfileManager;
@@ -101,7 +107,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
     $this->setConsumerKey($consumerKey);
     $this->setConsumerSecret($consumerSecret);
 
-    $this->lock->release('salesforce_encrypt');    
+    $this->lock->release('salesforce_encrypt');
   }
 
   public function getEncryptionProfile() {

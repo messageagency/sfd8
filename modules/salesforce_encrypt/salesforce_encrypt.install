@@ -7,10 +7,9 @@ use Drupal\salesforce\EntityNotFoundException;
  * Implements hook_requirements
  * Throw a runtime error if Salesforce encryption profile is not selected.
  */
-
 function salesforce_encrypt_requirements($phase) {
   if ($phase == 'runtime') {
-    $profile_id = NULL;   
+    $profile_id = NULL;
     try {
       $profile_id = \Drupal::service('salesforce.client')->getEncryptionProfile();
     }
@@ -36,6 +35,9 @@ function salesforce_encrypt_requirements($phase) {
   return $requirements;
 }
 
+/**
+ * Implements hook_uninstall to decrypt and purge our data.
+ */
 function salesforce_encrypt_uninstall() {
   \Drupal::service('salesforce.client')->disableEncryption();
   \Drupal::state()->delete('salesforce_encrypt.profile');

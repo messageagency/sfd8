@@ -23,6 +23,13 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
   public function getMappedEntity();
 
   /**
+   * Return a numeric timestamp for comparing to Salesforce record timestamp.
+   *
+   * @return int
+   */
+  public function getChanged();
+
+  /**
    * @return Link
    */
   public function getSalesforceLink(array $options = []);

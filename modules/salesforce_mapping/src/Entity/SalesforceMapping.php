@@ -2,12 +2,9 @@
 
 namespace Drupal\salesforce_mapping\Entity;
 
-use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce\Exception;
 
 
 /**

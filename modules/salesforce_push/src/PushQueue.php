@@ -4,17 +4,12 @@ namespace Drupal\salesforce_push;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Merge;
-//use Drupal\Core\Database\SchemaObjectExistsException;
-//use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Queue\DatabaseQueue;
 use Drupal\Core\Queue\RequeueException;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\State\State;
-//use Drupal\Core\Utility\Error;
-//use Drupal\salesforce_mapping\MappedObjectStorage;
-//use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
@@ -41,6 +36,7 @@ class PushQueue extends DatabaseQueue {
   protected $limit;
   protected $connection;
   protected $state;
+  protected $logger;
   protected $queueManager;
   protected $max_fails;
   protected $eventDispatcher;
@@ -328,7 +324,6 @@ class PushQueue extends DatabaseQueue {
           // mapping in this case.
           $this->releaseItems($items);
           $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
-
           continue 2;
         }
         catch (\Exception $e) {

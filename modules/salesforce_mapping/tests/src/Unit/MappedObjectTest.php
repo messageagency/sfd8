@@ -2,24 +2,17 @@
 
 namespace Drupal\Tests\salesforce_mapping\Unit;
 
-use Drupal\Core\Config\Entity\ConfigEntityTypeInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Language\LanguageInterface;
-use Drupal\Tests\UnitTestCase;
+use Drupal\Core\Utility\Error;
+use Drupal\salesforce_mapping\Entity\MappedObject;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce_mapping\Entity\MappedObject;
-use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Properties;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
-use Prophecy\Argument;
+use Drupal\Tests\UnitTestCase;
+use Psr\Log\LogLevel;
 
 /**
  * Test Mapped Object instantitation

@@ -2,7 +2,8 @@
 
 namespace Drupal\salesforce_pull;
 
-use Drupal\Core\Queue\QueueInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Queue\QueueDatabaseFactory;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
@@ -14,7 +15,7 @@ use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforceQueryEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Handles pull cron queue set up.
@@ -23,37 +24,57 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class QueueHandler {
 
+  /**
+   * @var \Drupal\salesforce\Rest\RestClientInterface
+   */
   protected $sfapi;
-  protected $queue;
-  protected $mappings;
-  protected $pull_fields;
-  protected $eventDispatcher;
-  protected $state;
-  protected $request;
-
-  public function __construct(RestClientInterface $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
-    $this->sfapi = $sfapi;
-    $this->queue = $queue;
-    $this->state = $state;
-    $this->eventDispatcher = $event_dispatcher;
-    $this->request = $request;
-    $this->mappings = $mappings;
-    $this->pull_fields = [];
-    $this->organizeMappings();
-  }
 
   /**
-   * Chainable instantiation method for class.
-   *
-   * @param object
-   *   RestClient object
-   * @param array
-   *   Arry of SalesforceMapping objects
-   *
-   * @return QueueHandler
+   * @var \Drupal\Core\Queue\QueueInterface
    */
-  public static function create(RestClientInterface $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
-    return new QueueHandler($sfapi, $mappings, $queue, $state, $event_dispatcher, $request);
+  protected $queue;
+
+  /**
+   * @var array of \Drupal\salesforce_mapping\Entity\SalesforceMapping
+   */
+  protected $mappings;
+
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
+  /**
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  protected $pull_fields;
+
+  /**
+   * @param RestClientInterface $sfapi
+   * @param QueueInterface $queue
+   * @param StateInterface $state
+   * @param EventDispatcherInterface $event_dispatcher
+   * @param RequestStack $request_stack
+   */
+
+  public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, QueueDatabaseFactory $queue_factory, StateInterface $state, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack) {
+    $this->sfapi = $sfapi;
+    $this->queue = $queue_factory->get('cron_salesforce_pull');
+    $this->state = $state;
+    $this->eventDispatcher = $event_dispatcher;
+    $this->request = $request_stack->getCurrentRequest();
+    $this->mappings = $entity_type_manager
+      ->getStorage('salesforce_mapping')
+      ->loadMultiple();
+    $this->pull_fields = [];
+    $this->organizeMappings();
   }
 
   /**

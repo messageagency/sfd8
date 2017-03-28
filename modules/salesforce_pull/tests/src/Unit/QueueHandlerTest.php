@@ -2,15 +2,19 @@
 namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Queue\QueueDatabaseFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_pull\QueueHandler;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\ServerBag;
 
 /**
@@ -62,6 +66,21 @@ class QueueHandlerTest extends UnitTestCase {
     $prophecy->numberOfItems()->willReturn(2);
     $this->queue = $prophecy->reveal();
 
+    $prophecy = $this->prophesize(QueueDatabaseFactory::CLASS);
+    $prophecy->get(Argument::any())->willReturn($this->queue);
+    $this->queue_factory = $prophecy->reveal();
+
+    // Mock mapping ConfigEntityStorage object.
+    $prophecy = $this->prophesize(SalesforceMappingStorage::CLASS);
+    $prophecy->loadMultiple(Argument::any())->willReturn([$this->mapping]);
+    $this->mappingStorage = $prophecy->reveal();
+
+    // Mock EntityTypeManagerInterface.
+    $prophecy = $this->prophesize(EntityTypeManagerInterface::CLASS);
+    $prophecy->getStorage('salesforce_mapping')->willReturn($this->mappingStorage);
+    $this->etm = $prophecy->reveal();
+
+
     // mock state
     $prophecy = $this->prophesize(StateInterface::CLASS);
     $prophecy->get('salesforce_pull_last_sync_default', Argument::any())->willReturn('1485787434');
@@ -80,13 +99,17 @@ class QueueHandlerTest extends UnitTestCase {
     $this->server = $prophecy->reveal();
 
     // mock request
-    $prophecy = $this->prophesize(Request::CLASS);
+    $request = $this->prophesize(Request::CLASS);
+
+    // mock request stack
+    $prophecy = $this->prophesize(RequestStack::CLASS);
     $prophecy->server = $this->server;
-    $this->request = $prophecy->reveal();
+    $prophecy->getCurrentRequest()->willReturn($request->reveal());
+    $this->request_stack = $prophecy->reveal();
 
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, [$this->mapping], $this->queue, $this->state, $this->ed, $this->request])
+      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->request_stack])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')
@@ -118,9 +141,13 @@ class QueueHandlerTest extends UnitTestCase {
     $prophecy->numberOfItems()->willReturn(100001);
     $this->queue = $prophecy->reveal();
 
+    $prophecy = $this->prophesize(QueueDatabaseFactory::CLASS);
+    $prophecy->get(Argument::any())->willReturn($this->queue);
+    $this->queue_factory = $prophecy->reveal();
+
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, [$this->mapping], $this->queue, $this->state, $this->ed, $this->request])
+      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->request_stack])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')

@@ -15,7 +15,7 @@ use Drupal\salesforce_pull\DeleteHandler;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\ServerBag;
 
 /**
@@ -23,9 +23,8 @@ use Symfony\Component\HttpFoundation\ServerBag;
  *
  * @group salesforce_pull
  */
-
 class DeleteHandlerTest extends UnitTestCase {
-  static $modules = ['salesforce_pull'];
+  protected static $modules = ['salesforce_pull'];
 
   /**
    * {@inheritdoc}
@@ -34,7 +33,7 @@ class DeleteHandlerTest extends UnitTestCase {
     parent::setUp();
     $result = [
       'totalSize' => 1,
-      'done' => true,
+      'done' => TRUE,
       'deletedRecords' => [
         [
           'id' => '1234567890abcde',
@@ -45,19 +44,17 @@ class DeleteHandlerTest extends UnitTestCase {
     ];
 
     $prophecy = $this->prophesize(RestClientInterface::CLASS);
-    $prophecy->getDeleted(Argument::any(),Argument::any(),Argument::any())
-      ->willReturn($result); // revisit
+    $prophecy->getDeleted(Argument::any(), Argument::any(), Argument::any())
+      ->willReturn($result);
     $this->sfapi = $prophecy->reveal();
 
-    // mock Drupal entity
+    // Mock Drupal entity.
     $prophecy = $this->prophesize(Entity::CLASS);
-    $prophecy->delete()->willReturn(true);
+    $prophecy->delete()->willReturn(TRUE);
     $prophecy->id()->willReturn(1);
     $this->entity = $prophecy->reveal();
 
     $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
-      // ->setMethods(['__get', 'getSalesforceObjectType', 'getPullFieldsArray', 'checkTriggers'])
-      // ->getMock();
     $this->mapping->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('id'))
@@ -75,9 +72,9 @@ class DeleteHandlerTest extends UnitTestCase {
     $this->mapping->expects($this->any())
       ->method('checkTriggers')
       ->with([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE])
-      ->willReturn(true);
+      ->willReturn(TRUE);
 
-    // mock mapped object
+    // Mock mapped object.
     $this->entityTypeId = new \stdClass();
     $this->entityId = new \stdClass();
     $this->entityRef = new \stdClass();
@@ -89,7 +86,7 @@ class DeleteHandlerTest extends UnitTestCase {
     $this->mappedObject
       ->expects($this->any())
       ->method('delete')
-      ->willReturn(true);
+      ->willReturn(TRUE);
     $this->mappedObject
       ->expects($this->any())
       ->method('getMapping')
@@ -97,13 +94,13 @@ class DeleteHandlerTest extends UnitTestCase {
     $this->mappedObject
       ->expects($this->any())
       ->method('getFieldDefinitions')
-      ->willReturn(['entity_type_id','entity_id','salesforce_mapping']);
+      ->willReturn(['entity_type_id', 'entity_id', 'salesforce_mapping']);
     $this->mappedObject
       ->expects($this->any())
       ->method('getMappedEntity')
       ->willReturn($this->entity);
 
-    // mock mapping ConfigEntityStorage object
+    // Mock mapping ConfigEntityStorage object.
     $prophecy = $this->prophesize(SalesforceMappingStorage::CLASS);
     $prophecy->loadByProperties(Argument::any())->willReturn([$this->mapping]);
     $prophecy->load(Argument::any())->willReturn($this->mapping);
@@ -112,7 +109,7 @@ class DeleteHandlerTest extends UnitTestCase {
     ]);
     $this->configStorage = $prophecy->reveal();
 
-    // mock mapped object EntityStorage object
+    // Mock mapped object EntityStorage object.
     $this->entityStorage = $this->getMockBuilder(MappedObjectStorage::CLASS)
       ->disableOriginalConstructor()
       ->getMock();
@@ -120,19 +117,19 @@ class DeleteHandlerTest extends UnitTestCase {
       ->method('loadBySfid')
       ->willReturn([$this->mappedObject]);
 
-    // mock Drupal entity EntityStorage object
+    // Mock Drupal entity EntityStorage object.
     $prophecy = $this->prophesize(EntityStorageBase::CLASS);
     $prophecy->load(Argument::any())->willReturn($this->entity);
     $this->drupalEntityStorage = $prophecy->reveal();
 
-    // mock EntityTypeManagerInterface
+    // Mock EntityTypeManagerInterface.
     $prophecy = $this->prophesize(EntityTypeManagerInterface::CLASS);
     $prophecy->getStorage('salesforce_mapping')->willReturn($this->configStorage);
     $prophecy->getStorage('salesforce_mapped_object')->willReturn($this->entityStorage);
     $prophecy->getStorage('test')->willReturn($this->drupalEntityStorage);
     $this->etm = $prophecy->reveal();
 
-    // mock state
+    // Mock state.
     $prophecy = $this->prophesize(StateInterface::CLASS);
     $prophecy->get('salesforce_pull_last_delete_default', Argument::any())->willReturn('1485787434');
     $prophecy->set('salesforce_pull_last_delete_default', Argument::any())->willReturn(null);
@@ -143,34 +140,42 @@ class DeleteHandlerTest extends UnitTestCase {
     $prophecy->dispatch(Argument::any())->willReturn();
     $this->ed = $prophecy->reveal();
 
-    // mock server
+    // Mock server.
     $prophecy = $this->prophesize(ServerBag::CLASS);
     $prophecy->get(Argument::any())->willReturn('1485787434');
     $this->server = $prophecy->reveal();
 
-    // mock request
-    $prophecy = $this->prophesize(Request::CLASS);
+    // Mock request.
+    $prophecy = $this->prophesize(RequestStack::CLASS);
     $prophecy->server = $this->server;
-    $this->request = $prophecy->reveal();
+    $this->request_stack = $prophecy->reveal();
 
-    $this->dh = DeleteHandler::create(
+    $this->dh = new DeleteHandler(
       $this->sfapi,
       $this->etm,
       $this->state,
       $this->ed,
-      $this->request
+      $this->request_stack
     );
   }
 
   /**
+<<<<<<< HEAD
+   * Test object creation.
+=======
    * Test object instantiation.
+>>>>>>> 8.x-3.x
    */
   public function testObject() {
     $this->assertTrue($this->dh instanceof DeleteHandler);
   }
 
   /**
+<<<<<<< HEAD
+   * Test processDeletedRecords.
+=======
    * Test handler operation, good data.
+>>>>>>> 8.x-3.x
    */
   public function testGetUpdatedRecords() {
     $result = $this->dh->processDeletedRecords();

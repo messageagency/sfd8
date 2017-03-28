@@ -2,7 +2,6 @@
 
 namespace Drupal\salesforce\Tests;
 
-use Psr\Http\Message\RequestInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 

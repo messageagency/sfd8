@@ -7,18 +7,14 @@
 
 namespace Drupal\Tests\salesforce_mapping\Unit;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\ContentEntityBase;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Field\Plugin\Field\FieldType\StringItem;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce_mapping\Tests\TestMappedObjectList;
-use Drupal\entity_test\EntityTestListBuilder;
-use Drupal\salesforce_mapping\MappedObjectList;
 use Prophecy\Argument;
 
 /**
