@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Utility\Error;
 use Drupal\field\Field;
+use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 use Psr\Log\LogLevel;
@@ -51,8 +52,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
   /**
    *
    */
-  public function value(EntityInterface $entity, SalesforceMappingInterface
-$mapping) {
+  public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     list($field_name, $referenced_field_name) = explode(':', $this->config('drupal_field_value'), 2);
     // Since we're not setting hard restrictions around bundles/fields, we may
     // have a field that doesn't exist for the given bundle/entity. In that
@@ -84,11 +84,7 @@ $mapping) {
     }
     catch (\Exception $e) {
       // @TODO something about this exception
-      $this->logger(__CLASS__)->log(
-        LogLevel::ERROR,
-        '%type: @message in %function (line %line of %file).',
-        Error::decodeException($e)
-      );
+      \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
       return;
     }
 

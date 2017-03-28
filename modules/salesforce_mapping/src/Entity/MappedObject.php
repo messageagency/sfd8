@@ -10,15 +10,17 @@ use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Utility\Error;
+use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce\Event\SalesforceNoticeEvent;
+use Drupal\salesforce\Event\SalesforceWarningEvent;
 use Drupal\salesforce\Exception as SalesforceException;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce_mapping\Event\SalesforcePullEntityValueEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
-use Drupal\salesforce_mapping\SalesforcePullEntityValueEvent;
-use Drupal\salesforce_mapping\SalesforcePullEvent;
-use Drupal\salesforce_mapping\SalesforcePushParamsEvent;
 use Psr\Log\LogLevel;
 
 /**
@@ -35,6 +37,7 @@ use Psr\Log\LogLevel;
  *     "storage" = "Drupal\salesforce_mapping\MappedObjectStorage",
  *     "storage_schema" = "Drupal\salesforce_mapping\MappedObjectStorageSchema",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
+*      "views_data" = "Drupal\views\EntityViewsData",
  *     "list_builder" = "Drupal\salesforce_mapping\MappedObjectList",
  *     "form" = {
  *       "default" = "Drupal\salesforce_mapping\Form\MappedObjectForm",
@@ -236,6 +239,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getChanged() {
+    return $this->get('entity_updated');
+  }
+
+  /**
    * Get the attached mapping entity.
    *
    * @return SalesforceMappingInterface
@@ -291,13 +301,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public function eventDispatcher() {
     return \Drupal::service('event_dispatcher');
-  }
-
-  /**
-   * Wrapper for Drupal core logger service.
-   */
-  public function logger($log) {
-    return \Drupal::service('logger.factory')->get($log);
   }
 
   /**
@@ -488,6 +491,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       }
       catch (\Exception $e) {
         // Field missing from SObject? Skip it.
+        $message = 'Field @sobj.@sffield not found on @sfid';
+        $args = [
+          '@sfobj' => $mapping->getSalesforceObjectType(),
+          '@sffield' => $sf_field,
+          '@sfid' => $this->sfid(),
+        ];
+        $this->eventDispatcher()->dispatch(new SalesforceNoticeEvent($e, $message, $args));
         continue;
       }
 
@@ -502,22 +512,17 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         $this->drupal_entity->set($drupal_field, $value);
       }
       catch (\Exception $e) {
-        $message = "";
-        $this->logger('Salesforce Pull')->notice('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
-          '@sfobj' => $mapping->getSalesforceObjectType(),
-          '@sffield' => $sf_field,
-          '@sfid' => $this->sfid(),
-          '@dobj' => $this->entity_type_id->value,
-          '@dprop' => $drupal_field,
-          '@did' => $this->entity_id->value,
-          '@v' => $value,
-          '@e' => $e->getMessage(),
-        ]);
-        $this->logger(__CLASS__)->log(
-          LogLevel::ERROR,
-          '%type: @message in %function (line %line of %file).',
-          Error::decodeException($e)
-        );
+        $message = 'Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v';
+        $args = [
+            '@sfobj' => $mapping->getSalesforceObjectType(),
+            '@sffield' => $sf_field,
+            '@sfid' => $this->sfid(),
+            '@dobj' => $this->entity_type_id->value,
+            '@dprop' => $drupal_field,
+            '@did' => $this->entity_id->value,
+            '@v' => $value,
+          ];
+        $this->eventDispatcher()->dispatch(new SalesforceWarningEvent($e, $message, $args));
         continue;
       }
     }

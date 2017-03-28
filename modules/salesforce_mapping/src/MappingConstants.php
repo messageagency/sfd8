@@ -5,7 +5,7 @@ namespace Drupal\salesforce_mapping;
 /**
  * Defines events for Salesforce.
  *
- * @see \Drupal\salesforce\SalesforceEvent
+ * @see \Drupal\salesforce\Event\SalesforceEvent
  */
 final class MappingConstants {
   /**

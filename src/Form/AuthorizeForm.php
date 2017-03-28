@@ -8,18 +8,29 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactory;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\State\StateInterface;
-use Drupal\Core\Utility\Error;
-use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestClientInterface;
 use GuzzleHttp\Exception\RequestException;
-use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Creates authorization form for Salesforce.
  */
 class AuthorizeForm extends ConfigFormBase {
 
-  protected $sfClient;
+  /**
+   * The Salesforce REST client.
+   *
+   * @var \Drupal\salesforce\Rest\RestClientInterface
+   */
+  protected $sf_client;
+
+  /**
+   * The sevent dispatcher service..
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $eventDispatcher;
 
   /**
    * The state keyvalue collection.
@@ -42,11 +53,11 @@ class AuthorizeForm extends ConfigFormBase {
    * @param \Drupal\Core\Logger\LoggerChannelFactory $logger_factory
    *   The logger factory service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, RestClient $salesforce_client, StateInterface $state, LoggerChannelFactory $logger_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, RestClientInterface $salesforce_client, StateInterface $state, EventDispatcherInterface $event_dispatcher) {
     parent::__construct($config_factory);
     $this->sf_client = $salesforce_client;
     $this->state = $state;
-    $this->logger = $logger_factory->get(__CLASS__);
+    $this->eventDispatcher = $event_dispatcher;
   }
 
   /**
@@ -57,7 +68,7 @@ class AuthorizeForm extends ConfigFormBase {
       $container->get('config.factory'),
       $container->get('salesforce.client'),
       $container->get('state'),
-      $container->get('logger.factory')
+      $container->get('event_dispatcher')
     );
   }
 
@@ -131,11 +142,7 @@ class AuthorizeForm extends ConfigFormBase {
       }
       catch (RequestException $e) {
         drupal_set_message($e->getMessage(), 'warning');
-        $this->logger(__CLASS__)->log(
-          LogLevel::ERROR,
-          '%type: @message in %function (line %line of %file).',
-          Error::decodeException($e)
-        );
+        $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
       }
     }
     else {
@@ -171,12 +178,8 @@ class AuthorizeForm extends ConfigFormBase {
       $form_state->setResponse(new TrustedRedirectResponse($path . '?' . http_build_query($query), 302));
     }
     catch (RequestException $e) {
-      drupal_set_message(t("Error during authorization: %message", $e->getMessage()), 'error');
-      $this->logger->log(
-        LogLevel::ERROR,
-        '%type: @message in %function (line %line of %file).',
-        Error::decodeException($e)
-      );
+      drupal_set_message(t("Error during authorization: %message", ['%message' => $e->getMessage()]), 'error');
+      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
     }
   }
 

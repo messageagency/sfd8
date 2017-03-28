@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Tests\UnitTestCase;
@@ -7,13 +8,12 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_pull\PullQueueItem;
 
 /**
- * Test Object instantitation
+ * Test Object instantitation.
  *
  * @group salesforce_pull
  */
-
 class PullQueueItemTest extends UnitTestCase {
-  static $modules = ['salesforce_pull'];
+  public static $modules = ['salesforce_pull'];
 
   /**
    * {@inheritdoc}
@@ -23,7 +23,7 @@ class PullQueueItemTest extends UnitTestCase {
   }
 
   /**
-   * Test object instantiation
+   * Test object instantiation.
    */
   public function testObject() {
     $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'dummy',]]);
@@ -37,4 +37,5 @@ class PullQueueItemTest extends UnitTestCase {
     $this->assertTrue($item instanceof PullQueueItem);
     $this->assertEquals(1, $item->mapping_id);
   }
+
 }

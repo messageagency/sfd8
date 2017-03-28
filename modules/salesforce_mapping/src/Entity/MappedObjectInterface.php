@@ -23,6 +23,13 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
   public function getMappedEntity();
 
   /**
+   * Return a numeric timestamp for comparing to Salesforce record timestamp.
+   *
+   * @return int
+   */
+  public function getChanged();
+
+  /**
    * @return Link
    */
   public function getSalesforceLink(array $options = []);
@@ -36,12 +43,6 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
    * Wrapper for Drupal core event_dispatcher service.
    */
   public function eventDispatcher();
-
-  /**
-   * Wrapper for Drupal core logger service.
-   * @param string $log the log name
-   */
-  public function logger($log);
 
   /**
    * @return string

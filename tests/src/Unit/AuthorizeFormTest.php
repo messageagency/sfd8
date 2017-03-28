@@ -37,6 +37,9 @@ class AuthorizeFormTest extends UnitTestCase {
     $this->obpath = $this->prophesize(OutboundPathProcessorInterface::class);
     $this->logger = $this->prophesize(LoggerChannelFactory::class);
     $this->unrouted_url_assembler = new UnroutedUrlAssembler($this->request_stack->reveal(), $this->obpath->reveal());
+    $this->event_dispatcher = $this->getMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
+
+    
 
     $this->client->getAuthCallbackUrl()->willReturn($this->example_url);
     $this->client->getAuthEndpointUrl()->willReturn($this->example_url);
@@ -51,6 +54,7 @@ class AuthorizeFormTest extends UnitTestCase {
     $container->set('state', $this->state->reveal());
     $container->set('unrouted_url_assembler', $this->unrouted_url_assembler);
     $container->set('logger.factory', $this->logger->reveal());
+    $container->set('event_dispatcher', $this->event_dispatcher);
     \Drupal::setContainer($container);
   }
 

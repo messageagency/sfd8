@@ -29,7 +29,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   protected $encryptionProfileId;
 
   /**
-   * Constructor which initializes the consumer.
+   * Construct a new Encrypted Rest Client.
    *
    * @param \GuzzleHttp\ClientInterface $http_client
    *   The GuzzleHttp Client.

@@ -1,6 +1,7 @@
 <?php
 namespace Drupal\Tests\salesforce_pull\Unit;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Entity\Entity;
 use Drupal\Core\Entity\EntityStorageBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -14,7 +15,6 @@ use Drupal\salesforce_pull\DeleteHandler;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\ServerBag;
 
@@ -135,10 +135,10 @@ class DeleteHandlerTest extends UnitTestCase {
     $prophecy->set('salesforce_pull_last_delete_default', Argument::any())->willReturn(null);
     $this->state = $prophecy->reveal();
 
-    // Mock logger.
-    $prophecy = $this->prophesize(LoggerInterface::CLASS);
-    $prophecy->log(Argument::any(), Argument::any(), Argument::any())->willReturn(NULL);
-    $this->logger = $prophecy->reveal();
+   // mock event dispatcher
+    $prophecy = $this->prophesize(ContainerAwareEventDispatcher::CLASS);
+    $prophecy->dispatch(Argument::any())->willReturn();
+    $this->ed = $prophecy->reveal();
 
     // Mock server.
     $prophecy = $this->prophesize(ServerBag::CLASS);
@@ -154,20 +154,28 @@ class DeleteHandlerTest extends UnitTestCase {
       $this->sfapi,
       $this->etm,
       $this->state,
-      $this->logger,
+      $this->ed,
       $this->request
     );
   }
 
   /**
+<<<<<<< HEAD
    * Test object creation.
+=======
+   * Test object instantiation.
+>>>>>>> 8.x-3.x
    */
   public function testObject() {
     $this->assertTrue($this->dh instanceof DeleteHandler);
   }
 
   /**
+<<<<<<< HEAD
    * Test processDeletedRecords.
+=======
+   * Test handler operation, good data.
+>>>>>>> 8.x-3.x
    */
   public function testGetUpdatedRecords() {
     $result = $this->dh->processDeletedRecords();

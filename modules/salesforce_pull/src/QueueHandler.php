@@ -5,16 +5,14 @@ namespace Drupal\salesforce_pull;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Utility\Error;
-use Drupal\salesforce\Exception;
+use Drupal\salesforce\Event\SalesforceErrorEvent;
+use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
-use Drupal\salesforce\SalesforceEvents;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use Drupal\salesforce_mapping\SalesforceQueryEvent;
-use Psr\Log\LogLevel;
-use Psr\Log\LoggerInterface;
+use Drupal\salesforce_mapping\Event\SalesforceQueryEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -41,24 +39,21 @@ class QueueHandler {
   protected $mappings;
 
   /**
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $event_dispatcher;
-
-  /**
    * @var \Drupal\Core\State\StateInterface
    */
   protected $state;
 
   /**
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
-
-  /**
    * @var \Symfony\Component\HttpFoundation\Request
    */
   protected $request;
+
+  /**
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  protected $pull_fields;
 
   /**
    * @param RestClientInterface               $sfapi
@@ -69,12 +64,12 @@ class QueueHandler {
    * @param EventDispatcherInterface $event_dispatcher
    * @param Request                  $request
    */
-  public function __construct(RestClientInterface $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
+
+  public function __construct(RestClientInterface $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
     $this->sfapi = $sfapi;
     $this->queue = $queue;
     $this->state = $state;
-    $this->logger = $logger;
-    $this->event_dispatcher = $event_dispatcher;
+    $this->eventDispatcher = $event_dispatcher;
     $this->request = $request;
     $this->mappings = $mappings;
     $this->pull_fields = [];
@@ -82,7 +77,7 @@ class QueueHandler {
   }
 
   /**
-   * Chainable instantiation method for class
+   * Chainable instantiation method for class.
    *
    * @param  RestClientInterface               $sfapi
    * @param  array                    $mappings
@@ -94,8 +89,8 @@ class QueueHandler {
    *
    * @return QueueHandler
    */
-  public static function create(RestClientInterface $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, LoggerInterface $logger, EventDispatcherInterface $event_dispatcher, Request $request) {
-    return new QueueHandler($sfapi, $mappings, $queue, $state, $logger, $event_dispatcher, $request);
+  public static function create(RestClientInterface $sfapi, array $mappings, QueueInterface $queue, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
+    return new QueueHandler($sfapi, $mappings, $queue, $state, $event_dispatcher, $request);
   }
 
   /**
@@ -104,21 +99,20 @@ class QueueHandler {
    * Executes a SOQL query based on defined mappings, loops through the results,
    * and places each updated SF object into the queue for later processing.
    *
-   * @return boolean
+   * @return bool
+   *   TRUE if there was room to add items, FALSE otherwise.
    */
   public function getUpdatedRecords() {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
     if ($this->queue->numberOfItems() > $this->state->get('salesforce_pull_max_queue_size', 100000)) {
-      $this->logger->log(
-        LogLevel::ALERT,
-        'Pull Queue contains %noi items, exceeding the max size of %max items. Pull processing will be blocked until the number of items in the queue is reduced to below the max size.',
-        [
-          '%noi' => $this->queue->numberOfItems(),
-          '%max' => $this->state->get('salesforce_pull_max_queue_size', 100000),
-        ]
-      );
-      return false;
+      $message = 'Pull Queue contains %noi items, exceeding the max size of %max items. Pull processing will be blocked until the number of items in the queue is reduced to below the max size.';
+      $args = [
+        '%noi' => $this->queue->numberOfItems(),
+        '%max' => $this->state->get('salesforce_pull_max_queue_size', 100000),
+      ];
+      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
+      return FALSE;
     }
 
     // Iterate over each field mapping to determine our query parameters.
@@ -135,15 +129,15 @@ class QueueHandler {
         );
       }
     }
-    return true;
+    return TRUE;
   }
 
   /**
-   * Iterates over the mappings and mergeds the pull fields array with object's
+   * Iterates over the mappings and merges the pull fields array with object's
    * array of pull fields to form a set of unique fields to pull.
    */
   protected function organizeMappings() {
-    foreach($this->mappings as $mapping) {
+    foreach ($this->mappings as $mapping) {
       $this->pull_fields[$mapping->getSalesforceObjectType()] =
         (!empty($this->pull_fields[$mapping->getSalesforceObjectType()])) ?
           $this->pull_fields[$mapping->getSalesforceObjectType()] + $mapping->getPullFieldsArray() :
@@ -152,7 +146,7 @@ class QueueHandler {
   }
 
   /**
-   * Perform the SFO Query on each SF Object type with concolidated array of fields
+   * Perform the SFO Query on each SF Object type with concolidated array of fields.
    *
    * @param SalesforceMappingInterface
    *   Mapping for which to execute pull
@@ -189,11 +183,9 @@ class QueueHandler {
       return $this->sfapi->query($soql);
     }
     catch (\Exception $e) {
-      $this->logger->log(
-        LogLevel::ERROR,
-        '%type: @message in %function (line %line of %file).',
-        Error::decodeException($e)
-      );
+      $message = '%type: @message in %function (line %line of %file).';
+      $args = Error::decodeException($e);
+      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e, $message, $args));
     }
   }
 
@@ -206,22 +198,20 @@ class QueueHandler {
    *   Results, which includes batched records fetch URL
    */
   protected function handleLargeRequests(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
-   if ($results->nextRecordsUrl() != null) {
-     $version_path = $this->parseUrl();
-     try {
-       $new_result = $this->sfapi->apiCall(
-         str_replace($version_path, '', $results->nextRecordsUrl()));
-       $this->insertIntoQueue($mapping, $new_result->records());
-       $this->handleLargeRequests($mapping, $new_result);
-     }
-     catch (\Exception $e) {
-       $this->logger->log(
-         LogLevel::ERROR,
-         '%type: @message in %function (line %line of %file).',
-         Error::decodeException($e)
-       );
-     }
-   }
+    if ($results->nextRecordsUrl() != NULL) {
+      $version_path = $this->parseUrl();
+      try {
+        $new_result = $this->sfapi->apiCall(
+          str_replace($version_path, '', $results->nextRecordsUrl()));
+        $this->insertIntoQueue($mapping, $new_result->records());
+        $this->handleLargeRequests($mapping, $new_result);
+      }
+      catch (\Exception $e) {
+        $message = '%type: @message in %function (line %line of %file).';
+        $args = Error::decodeException($e);
+        $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e, $message, $args));
+      }
+    }
   }
 
   /**
@@ -240,11 +230,9 @@ class QueueHandler {
       }
     }
     catch (\Exception $e) {
-      $this->logger->log(
-        LogLevel::ERROR,
-        '%type: @message in %function (line %line of %file).',
-        Error::decodeException($e)
-      );
+      $message = '%type: @message in %function (line %line of %file).';
+      $args = Error::decodeException($e);
+      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e, $message, $args));
     }
   }
 
@@ -254,4 +242,5 @@ class QueueHandler {
   protected function parseUrl() {
     parse_url($this->sfapi->getApiEndPoint(), PHP_URL_PATH);
   }
+
 }

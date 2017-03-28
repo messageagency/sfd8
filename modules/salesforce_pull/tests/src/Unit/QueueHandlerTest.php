@@ -8,10 +8,8 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_pull\QueueHandler;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SelectQueryResult;
-use Drupal\salesforce\SObject;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\ServerBag;
 
@@ -71,13 +69,9 @@ class QueueHandlerTest extends UnitTestCase {
     $prophecy->set('salesforce_pull_last_sync_default', Argument::any())->willReturn(null);
     $this->state = $prophecy->reveal();
 
-    // mock logger
-    $prophecy = $this->prophesize(LoggerInterface::CLASS);
-    $prophecy->log(Argument::any(), Argument::any(), Argument::any())->willReturn(null);
-    $this->logger = $prophecy->reveal();
-
     // mock event dispatcher
     $prophecy = $this->prophesize(ContainerAwareEventDispatcher::CLASS);
+    $prophecy->dispatch(Argument::any())->willReturn();
     $this->ed = $prophecy->reveal();
 
     // mock server
@@ -92,7 +86,7 @@ class QueueHandlerTest extends UnitTestCase {
 
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, [$this->mapping], $this->queue, $this->state, $this->logger, $this->ed, $this->request])
+      ->setConstructorArgs([$this->sfapi, [$this->mapping], $this->queue, $this->state, $this->ed, $this->request])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')
@@ -126,7 +120,7 @@ class QueueHandlerTest extends UnitTestCase {
 
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, [$this->mapping], $this->queue, $this->state, $this->logger, $this->ed, $this->request])
+      ->setConstructorArgs([$this->sfapi, [$this->mapping], $this->queue, $this->state, $this->ed, $this->request])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')

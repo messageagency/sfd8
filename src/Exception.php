@@ -2,11 +2,11 @@
 
 namespace Drupal\salesforce;
 
-use Symfony\Component\Serializer\Exception\Exception as SymfonyException;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 
 /**
  *
  */
-class Exception extends \RuntimeException implements SymfonyException {
+class Exception extends \RuntimeException implements ExceptionInterface {
 
 }
