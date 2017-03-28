@@ -138,7 +138,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     try {
       $entity = $this->getMappedEntity($mapped_object);
       if (!$entity) {
-        $this->eventDispatcher->dispatch(new SalesforceErrorEvent(NULL, 'Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist.', ['%sfobjectid' => (string) $sf_object->id()]));
+        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent(NULL, 'Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist.', ['%sfobjectid' => (string) $sf_object->id()]));
         return;
       }
 
@@ -178,11 +178,8 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       }
 
       $this->eventDispatcher->dispatch(
-
         SalesforceEvents::PULL_PREPULL,
-
         new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
-
       );
 
       // By default $mapped_object->forceUpdate() is FALSE. To force true, call
@@ -190,12 +187,12 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       if ($sf_record_updated > $entity_updated || $mapped_object->forceUpdate()) {
         // Set fields values on the Drupal entity.
         $mapped_object->pull();
-        $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, 'Updated entity %label associated with Salesforce Object ID: %sfid', ['%label' => $entity->label(), '%sfid' => (string) $sf_object->id()]));
+        $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, 'Updated entity %label associated with Salesforce Object ID: %sfid', ['%label' => $entity->label(), '%sfid' => (string) $sf_object->id()]));
         return MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE;
       }
     }
     catch (\Exception $e) {
-      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e, 'Failed to update entity %label from Salesforce object %sfobjectid.', ['%label' => (isset($entity)) ? $entity->label() : "Unknown", '%sfobjectid' => (string) $sf_object->id()]));
+      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e, 'Failed to update entity %label from Salesforce object %sfobjectid.', ['%label' => (isset($entity)) ? $entity->label() : "Unknown", '%sfobjectid' => (string) $sf_object->id()]));
 
       if ($e instanceof PullException) {
         // Throwing a new exception to keep current item in queue in Cron.
@@ -273,12 +270,12 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         }
       }
 
-      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, 'Created entity %id %label associated with Salesforce Object ID: %sfid', ['%id' => $entity->id(), '%label' => $entity->label(), '%sfid' => (string) $sf_object->id()]));
+      $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, 'Created entity %id %label associated with Salesforce Object ID: %sfid', ['%id' => $entity->id(), '%label' => $entity->label(), '%sfid' => (string) $sf_object->id()]));
 
       return MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE;
     }
     catch (\Exception $e) {
-      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent($e, 'Pull-create failed for Salesforce Object ID: %sfobjectid', ['%sfobjectid' => (string) $sf_object->id()]));
+      $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent($e, 'Pull-create failed for Salesforce Object ID: %sfobjectid', ['%sfobjectid' => (string) $sf_object->id()]));
       if ($e instanceof PullException) {
         // Throwing a new exception to keep current item in queue in Cron.
         throw $e;

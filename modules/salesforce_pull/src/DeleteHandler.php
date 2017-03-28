@@ -11,7 +11,7 @@ use Drupal\salesforce\SFID;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Handles pull cron deletion of Drupal entities based onSF mapping settings.
@@ -73,35 +73,15 @@ class DeleteHandler {
    *   Entity Manager service.
    * @param \Drupal\Core\State\StateInterface $state
    *   State service.
-   * @param Psr\Log\LoggerInterface $logger
-   *   Logging service.
    */
-  private function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
+    public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack) {
     $this->sfapi = $sfapi;
     $this->etm = $entity_type_manager;
     $this->mappingStorage = $this->etm->getStorage('salesforce_mapping');
     $this->mappedObjectStorage = $this->etm->getStorage('salesforce_mapped_object');
     $this->state = $state;
     $this->eventDispatcher = $event_dispatcher;
-    $this->request = $request;
-  }
-
-  /**
-   * Chainable instantiation method for class.
-   *
-   * @param \Drupal\salesforce\Rest\RestClientInterface $sfapi
-   *   RestClient object.
-   * @param \Drupal\Core\Entity\EntityTyprManagerInterface $entity_type_manager
-   *   Entity Manager service.
-   * @param \Drupal\Core\State\StatInterface $state
-   *   State service.
-   * @param EventDispatcherInterface $event_dispatcher
-   *   Event dispatcher service.
-   * @param Request $request
-   *   Request service.
-   */
-  public static function create(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
-    return new DeleteHandler($sfapi, $entity_type_manager, $state, $event_dispatcher, $request);
+    $this->request = $request_stack->getCurrentRequest();
   }
 
   /**
@@ -174,7 +154,7 @@ class DeleteHandler {
           '%id' => $mapped_object->entity_id->value,
           '%sfid' => $record['id'],
         ];
-        $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
+        $this->eventDispatcher->dispatch((NULL, $message, $args));
         $mapped_object->delete();
         return;
       }
@@ -189,7 +169,7 @@ class DeleteHandler {
         '%id' => $mapped_object->id(),
         '%sfid' => $record['id'],
       ];
-      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
+      $this->eventDispatcher->dispatch((NULL, $message, $args));
       // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
       // $mapped_object->delete();
       return;
@@ -210,10 +190,10 @@ class DeleteHandler {
         '%id' => $mapped_object->entity_id,
         '%sfid' => $record['id'],
       ];
-      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
+      $this->eventDispatcher->dispatch((NULL, $message, $args));
     }
     catch (\Exception $e) {
-      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
+      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       // If mapped entity couldn't be deleted, do not delete the mapped object.
       return;
     }

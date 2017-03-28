@@ -82,7 +82,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     }
     catch (\Exception $e) {
       // @TODO something about this exception
-      \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
+      \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       return;
     }
 

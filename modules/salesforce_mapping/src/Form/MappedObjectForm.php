@@ -169,7 +169,7 @@ class MappedObjectForm extends ContentEntityForm {
       $mapped_object->push();
     }
     catch (\Exception $e) {
-      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
+      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       drupal_set_message(t('Push failed with an exception: %exception', array('%exception' => $e->getMessage())), 'error');
       return;
     }
