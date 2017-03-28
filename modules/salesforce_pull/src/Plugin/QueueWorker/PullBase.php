@@ -10,7 +10,6 @@ namespace Drupal\salesforce_pull\Plugin\QueueWorker;
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\Utility\Error;
@@ -65,13 +64,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    */
   protected $mapped_object_storage;
 
-  /**
-   * Logger service
-   *
-   * @var LoggerInterface
-   */
-  protected $logger;
-
   protected $eventDispatcher;
 
   /**
@@ -80,10 +72,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClientInterface $client, LoggerChannelFactoryInterface $logger_factory, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClientInterface $client, EventDispatcherInterface $event_dispatcher) {
     $this->etm = $entity_type_manager;
     $this->client = $client;
-    $this->logger = $logger_factory->get('Salesforce Pull');
     $this->event_dispatcher = $event_dispatcher;
     $this->mapping_storage = $this->etm->getStorage('salesforce_mapping');
     $this->mapped_object_storage = $this->etm->getStorage('salesforce_mapped_object');
@@ -97,7 +88,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     return new static(
       $container->get('entity_type.manager'),
       $container->get('salesforce.client'),
-      $container->get('logger.factory'),
       $container->get('event_dispatcher')
     );
   }
@@ -147,14 +137,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $entity = $this->etm->getStorage($mapped_object->entity_type_id->value)
         ->load($mapped_object->entity_id->value);
       if (!$entity) {
-        $this->logger->log(
-          LogLevel::ERROR,
-          'Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist. Error: %msg',
-          [
-            '%sfobjectid' => (string) $sf_object->id(),
-            '%msg' => $e->getMessage(),
-          ]
-        );
+        $this->eventDispatcher()->dispatch(new SalesforceErrorEvent(NULL, 'Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist.', ['%sfobjectid' => (string) $sf_object->id()]));
         return;
       }
 
@@ -184,34 +167,12 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       if ($sf_record_updated > $entity_updated) {
         // Set fields values on the Drupal entity.
         $mapped_object->pull();
-        $this->logger->log(
-          LogLevel::NOTICE,
-          'Updated entity %label associated with Salesforce Object ID: %sfid',
-          [
-            '%label' => $entity->label(),
-            '%sfid' => (string) $sf_object->id(),
-          ]
-        );
+        $this->eventDispatcher()->dispatch(new SalesforceNoticeEvent(NULL, 'Updated entity %label associated with Salesforce Object ID: %sfid', ['%label' => $entity->label(), '%sfid' => (string) $sf_object->id()]));
         return MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE;
       }
     }
     catch (\Exception $e) {
-      var_dump(Error::decodeException($e));
-      $this->logger->log(
-        LogLevel::ERROR,
-        'Failed to update entity %label from Salesforce object %sfobjectid. Error: %msg',
-        [
-          '%label' => (isset($entity)) ? $entity->label() : "Unknown",
-          '%sfobjectid' => (string) $sf_object->id(),
-          '%msg' => $e->getMessage(),
-        ]
-      );
-
-      $this->logger->log(
-        LogLevel::ERROR,
-        '%type: @message in %function (line %line of %file).',
-        Error::decodeException($e)
-      );
+      $this->eventDispatcher()->dispatch(new SalesforceErrorEvent($e, 'Failed to update entity %label from Salesforce object %sfobjectid.', ['%label' => (isset($entity)) ? $entity->label() : "Unknown", '%sfobjectid' => (string) $sf_object->id()]));
     }
   }
 
@@ -271,31 +232,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         $mapped_object->sfid(),
         $params->getParams()
       );
-      $this->logger->log(
-        LogLevel::NOTICE,
-        'Created entity %id %label associated with Salesforce Object ID: %sfid',
-        [
-          '%id' => $entity->id(),
-          '%label' => $entity->label(),
-          '%sfid' => (string) $sf_object->id(),
-        ]
-      );
+      $this->eventDispatcher()->dispatch(new SalesforceNoticeEvent(NULL, 'Created entity %id %label associated with Salesforce Object ID: %sfid', ['%id' => $entity->id(), '%label' => $entity->label(), '%sfid' => (string) $sf_object->id()]));
       return MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE;
     }
     catch (\Exception $e) {
-      $this->logger->log(
-        LogLevel::ERROR,
-        '%msg Pull-create failed for Salesforce Object ID: %sfobjectid',
-        [
-          '%msg' => $e->getMessage(),
-          '%sfobjectid' => (string) $sf_object->id(),
-        ]
-      );
-      $this->logger->log(
-        LogLevel::ERROR,
-        '%type: @message in %function (line %line of %file).',
-        Error::decodeException($e)
-      );
+      $this->eventDispatcher()->dispatch(new SalesforceNoticeEvent($e, 'Pull-create failed for Salesforce Object ID: %sfobjectid', ['%sfobjectid' => (string) $sf_object->id()]));
     }
   }
 
