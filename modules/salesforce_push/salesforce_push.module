@@ -5,16 +5,14 @@
  * Push updates to Salesforce when a Drupal entity is updated.
  */
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\salesforce\Event\SalesforceErrorEvent;
+use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use GuzzleHttp\Exception\RequestException;
+use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent;
 use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\SalesforcePushOpEvent;
 
 /**
  * Implements hook_entity_insert().
@@ -63,8 +61,8 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
     ? []
     : ["drupal_entity_type" => $entity->getEntityTypeId()];
   $mappings = \Drupal::service('entity.manager')
-      ->getStorage('salesforce_mapping')
-      ->loadByProperties($properties);
+    ->getStorage('salesforce_mapping')
+    ->loadByProperties($properties);
   if (empty($mappings)) {
     return;
   }
@@ -75,7 +73,7 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
     }
     catch (\Exception $e) {
       // Do not allow any exception to prevent entity CRUD.
-      watchdog_exception('Salesforce Push', $e);
+      \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
     }
   }
 }
@@ -90,7 +88,7 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
  */
 function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
   $mapped_objects = [];
-  $mapped_object = null;
+  $mapped_object = NULL;
 
   // Look for existing mapped object or create a new one (except for deletes).
   $props = [
@@ -132,7 +130,7 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
     }
     catch (\Exception $e) {
-      watchdog_exception('Salesforce Push', $e);
+      \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
     }
     return;
   }
@@ -166,12 +164,12 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       new SalesforcePushOpEvent($mapped_object, $op)
     );
 
-    watchdog_exception('Salesforce Push', $e);
+    \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
     try {
       salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
     }
     catch (\Exception $e) {
-      watchdog_exception('Salesforce Push', $e);
+      \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
     }
 
     $mapped_object
@@ -216,6 +214,6 @@ function salesforce_push_cron() {
     $queue->processQueues();
   }
   catch (\Exception $e) {
-    watchdog_exception('Salesforce Push', $e);
+    \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
   }
 }

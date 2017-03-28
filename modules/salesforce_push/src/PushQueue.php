@@ -4,18 +4,16 @@ namespace Drupal\salesforce_push;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Merge;
-use Drupal\Core\Database\SchemaObjectExistsException;
-use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Queue\DatabaseQueue;
 use Drupal\Core\Queue\RequeueException;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\State\State;
-use Drupal\salesforce_mapping\MappedObjectStorage;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce\EntityNotFoundException;
+use Drupal\salesforce\Event\SalesforceErrorEvent;
+use Drupal\salesforce\Event\SalesforceNoticeEvent;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Salesforce push queue.
@@ -38,8 +36,10 @@ class PushQueue extends DatabaseQueue {
   protected $limit;
   protected $connection;
   protected $state;
+  protected $logger;
   protected $queueManager;
   protected $max_fails;
+  protected $eventDispatcher;
 
   /**
    * Storage handler for SF mappings
@@ -61,14 +61,14 @@ class PushQueue extends DatabaseQueue {
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
    */
-  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager, EntityManagerInterface $entity_manager, LoggerChannelFactoryInterface $logger_factory) {
+  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager, EntityManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher) {
     $this->connection = $connection;
     $this->state = $state;
     $this->queueManager = $queue_manager;
     $this->entity_manager = $entity_manager;
     $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
-    $this->logger = $logger_factory->get('Salesforce Push');
+    $this->eventDispatcher = $event_dispatcher;
 
     $this->limit = $state->get('salesforce.push_limit', static::DEFAULT_CRON_PUSH_LIMIT);
 
@@ -76,6 +76,8 @@ class PushQueue extends DatabaseQueue {
   }
 
   /**
+   * Set queue name property.
+   *
    * Parent class DatabaseQueue relies heavily on $this->name, so it's best to
    * just set the value appropriately.
    *
@@ -98,7 +100,8 @@ class PushQueue extends DatabaseQueue {
    *   * 'op': the operation which triggered this push.
    *
    * @return
-   *   On success, Drupal\Core\Database\Query\Merge::STATUS_INSERT or Drupal\Core\Database\Query\Merge::STATUS_UPDATE
+   *   On success, Drupal\Core\Database\Query\Merge::STATUS_INSERT or
+   *   Drupal\Core\Database\Query\Merge::STATUS_UPDATE.
    *
    * @throws Exception if the required indexes are not provided.
    *
@@ -129,7 +132,7 @@ class PushQueue extends DatabaseQueue {
       ->key(array('name' => $this->name, 'entity_id' => $data['entity_id']))
       ->fields($fields);
 
-    // Return Merge::STATUS_INSERT or Merge::STATUS_UPDATE
+    // Return Merge::STATUS_INSERT or Merge::STATUS_UPDATE.
     $ret = $query->execute();
 
     // Drupal still doesn't support now() https://www.drupal.org/node/215821
@@ -145,9 +148,12 @@ class PushQueue extends DatabaseQueue {
 
   /**
    * Claim up to $n items from the current queue.
+   *
    * If queue is empty, return an empty array.
+   *
    * @see DatabaseQueue::claimItem
-   * @return array $items
+   *
+   * @return array
    *   Zero to $n Items indexed by item_id
    */
   public function claimItems($n, $lease_time = 300) {
@@ -190,6 +196,7 @@ class PushQueue extends DatabaseQueue {
 
   /**
    * DO NOT USE THIS FUNCTION.
+   *
    * Use claimItems() instead.
    */
   public function claimItem($lease_time = NULL) {
@@ -273,7 +280,7 @@ class PushQueue extends DatabaseQueue {
   }
 
   /**
-   * Process Salesforce queues
+   * Process Salesforce queues.
    */
   public function processQueues() {
     $mappings = $this
@@ -309,22 +316,21 @@ class PushQueue extends DatabaseQueue {
           // Getting a Requeue here is weird for a group of items, but we'll
           // deal with it.
           $this->releaseItems($items);
-          watchdog_exception('Salesforce Push', $e);
+          $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
         }
         catch (SuspendQueueException $e) {
           // Getting a SuspendQueue is more likely, e.g. because of a network
           // or authorization error. Release items and move on to the next
           // mapping in this case.
           $this->releaseItems($items);
-          watchdog_exception('Salesforce Push', $e);
-
+          $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
           continue 2;
         }
         catch (\Exception $e) {
           // In case of any other kind of exception, log it and leave the item
           // in the queue to be processed again later.
           // @TODO: this is how Cron.php queue works, but I don't really understand why it doesn't get re-queued.
-          watchdog_exception('Salesforce Push', $e);
+          $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
         }
         finally {
           // If we've reached our limit, we're done. Otherwise, continue to next items.
@@ -339,6 +345,8 @@ class PushQueue extends DatabaseQueue {
   }
 
   /**
+   * Failed item handler.
+   *
    * Exception handler so that Queue Processors don't have to worry about what
    * happens when a queue item fails.
    *
@@ -349,15 +357,15 @@ class PushQueue extends DatabaseQueue {
     $mapping = $this->mapping_storage->load($item->name);
 
     if ($e instanceof EntityNotFoundException) {
-      // If there was an exception loading any entities, we assume that this queue item is no longer relevant.
-      $this->logger->error($e->getMessage() .
-        ' Exception while loading entity %type %id for salesforce mapping %mapping. Queue item deleted.',
-        [
-          '%type' => $mapping->get('drupal_entity_type'),
-          '%id' => $item->entity_id,
-          '%mapping' => $mapping->id(),
-        ]
-      );
+      // If there was an exception loading any entities,
+      // we assume that this queue item is no longer relevant.
+      $message = 'Exception while loading entity %type %id for salesforce mapping %mapping. Queue item deleted.';
+      $args = [
+        '%type' => $mapping->get('drupal_entity_type'),
+        '%id' => $item->entity_id,
+        '%mapping' => $mapping->id(),
+      ];
+      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
       $this->deleteItem($item);
       return;
     }
@@ -371,16 +379,14 @@ class PushQueue extends DatabaseQueue {
     else {
       $message = 'Queue item %item failed %fail times. Exception while pushing entity %type %id for salesforce mapping %mapping. ' . $message;
     }
-
-    $this->logger->error($message,
-      [
-        '%type' => $mapping->get('drupal_entity_type'),
-        '%id' => $item->entity_id,
-        '%mapping' => $mapping->id(),
-        '%item' => $item->item_id,
-        '%fail' => $item->failures,
-      ]
-    );
+    $args = [
+      '%type' => $mapping->get('drupal_entity_type'),
+      '%id' => $item->entity_id,
+      '%mapping' => $mapping->id(),
+      '%item' => $item->item_id,
+      '%fail' => $item->failures,
+    ];
+    $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
 
     // Failed items will remain in queue, but not be released. They'll be
     // retried only when the current lease expires.
@@ -389,7 +395,8 @@ class PushQueue extends DatabaseQueue {
   }
 
   /**
-   * same as releaseItem, but for multiple items
+   * Same as releaseItem, but for multiple items.
+   *
    * @param array $items
    *   Indexes must be item ids. Values are ignored. Return from claimItems()
    *   is acceptable.
@@ -404,7 +411,7 @@ class PushQueue extends DatabaseQueue {
       return $update->execute();
     }
     catch (\Exception $e) {
-      watchdog_exception('Salesforce Push', $e);
+      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
       $this->catchException($e);
       // If the table doesn't exist we should consider the item released.
       return TRUE;

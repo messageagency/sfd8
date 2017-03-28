@@ -2,22 +2,7 @@
 
 namespace Drupal\salesforce\Tests;
 
-use Drupal\salesforce\Rest\RestClientInterface;
-use Drupal\Component\Serialization\Json;
-use Drupal\Component\Utility\Unicode;
-use Drupal\Component\Utility\UrlHelper;
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\State\StateInterface;
-use Drupal\Core\Url;
-use Drupal\salesforce\SFID;
-use Drupal\salesforce\SObject;
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce\SelectQueryResult;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\salesforce\Rest\RestClient;
 
 /**

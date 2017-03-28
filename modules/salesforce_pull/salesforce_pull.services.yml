@@ -1,0 +1,10 @@
+services:
+  salesforce_pull.queue_handler:
+    class: Drupal\salesforce_pull\QueueHandler
+    arguments: ['@salesforce.client', '@entity.manager', '@queue.database', '@state', '@event_dispatcher', '@request_stack']
+
+  salesforce_pull.delete_handler:
+    class: Drupal\salesforce_pull\DeleteHandler
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: event_subscriber }

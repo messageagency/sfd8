@@ -9,19 +9,23 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce\Event\SalesforceNoticeEvent;
+use Drupal\salesforce\Event\SalesforceWarningEvent;
 use Drupal\salesforce\Exception as SalesforceException;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce\SalesforceEvents;
+use Drupal\salesforce_mapping\Event\SalesforcePullEntityValueEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
-use Drupal\salesforce_mapping\SalesforcePullEntityValueEvent;
-use Drupal\salesforce_mapping\SalesforcePullEvent;
-use Drupal\salesforce_mapping\SalesforcePushParamsEvent;
 
 /**
- * Defines a Salesforce Mapped Object entity class. Mapped Objects are content
- * entities, since they're defined by references to other content entities.
+ * Defines a Salesforce Mapped Object entity class.
+ *
+ * Mapped Objects are content entities, since they're defined by references
+ * to other content entities.
  *
  * @ContentEntityType(
  *   id = "salesforce_mapped_object",
@@ -56,15 +60,36 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
   use EntityChangedTrait;
 
+  /**
+   * Salesforce Object.
+   *
+   * @var SObject
+   */
   protected $sf_object = NULL;
+
+  /**
+   * Drupal Entity.
+   *
+   * @var \Drupal\Core\Entity\EntityInterface
+   */
   protected $drupal_entity = NULL;
+
+  /**
+   * Force update of mapped entity Flag.
+   *
+   * @var bool
+   */
+  protected $force_update = FALSE;
 
   /**
    * Overrides ContentEntityBase::__construct().
    */
   public function __construct(array $values) {
     // @TODO: Revisit this language stuff
-    // Drupal adds a layer of abstraction for translation purposes, even though we're talking about numeric identifiers that aren't language-dependent in any way, so we have to build our own constructor in order to allow callers to ignore this layer.
+    // Drupal adds a layer of abstraction for translation purposes, even though
+    // we're talking about numeric identifiers that aren't language-dependent
+    // in any way, so we have to build our own constructor in order to allow
+    // callers to ignore this layer.
     foreach ($values as &$value) {
       if (!is_array($value)) {
         $value = [LanguageInterface::LANGCODE_DEFAULT => $value];
@@ -89,7 +114,9 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $i = 0;
-    // We can't use an entity reference, which requires a single entity type. We need to accommodate a reference to any entity type, as specified by entity_type_id.
+    // We can't use an entity reference, which requires a single entity type.
+    // We need to accommodate a reference to any entity type, as specified by
+    // entity_type_id.
     $fields['entity_id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Entity ID'))
       ->setDescription(t('Reference to the mapped Drupal entity.'))
@@ -210,19 +237,32 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
-   * @return return SalesforceMappingInterface
+   * {@inheritdoc}
+   */
+  public function getChanged() {
+    return $this->get('entity_updated');
+  }
+
+  /**
+   * Get the attached mapping entity.
+   *
+   * @return SalesforceMappingInterface
+   *   The mapping entity.
    */
   public function getMapping() {
     return $this->salesforce_mapping->entity;
   }
 
   /**
+   * Get the mapped Drupal entity.
+   *
    * @return EntityInterface
+   *   The mapped Drupal entity.
    */
   public function getMappedEntity() {
     $entity_id = $this->entity_id->value;
-    if(!$entity_id) {
-      // this is a new entity...
+    if (!$entity_id) {
+      // This is a new entity...
       return $this->drupal_entity;
     }
     else {
@@ -245,7 +285,10 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
-   * Wrapper for salesforce.client Drupal\salesforce\Rest\RestClient service
+   * Wrapper for salesforce.client.
+   *
+   * @return Drupal\salesforce\Rest\RestClient service
+   *   Salesforce REST client service.
    */
   public function client() {
     return \Drupal::service('salesforce.client');
@@ -256,13 +299,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public function eventDispatcher() {
     return \Drupal::service('event_dispatcher');
-  }
-
-  /**
-   * Wrapper for Drupal core logger service.
-   */
-  public function logger($log) {
-    return \Drupal::logger($log);
   }
 
   /**
@@ -339,7 +375,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // @TODO: catch EntityStorageException ? Others ?
     if ($result instanceof SFID) {
-      $this->set('salesforce_id', (string)$result);
+      $this->set('salesforce_id', (string) $result);
     }
 
     // @TODO setNewRevision not chainable, per https://www.drupal.org/node/2839075
@@ -360,6 +396,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
+   * Delete the mapped SF object in Salesforce.
+   *
    * @return $this
    */
   public function pushDelete() {
@@ -373,7 +411,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
-
+  /**
+   * Attach a Drupal entity to the mapped object.
+   *
+   * @param EntityInterface $entity
+   *   The entity to be attached.
+   *
+   * @return $this
+   */
   public function setDrupalEntity(EntityInterface $entity = NULL) {
     if ($entity->id() != $this->entity_id->value) {
       throw new SalesforceException('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
@@ -382,16 +427,27 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
+  /**
+   * @param SObject $sf_object
+   *
+   * @return $this
+   */
   public function setSalesforceRecord(SObject $sf_object) {
     $this->sf_object = $sf_object;
     return $this;
   }
 
+  /**
+   * Get the mapped Salesforce record.
+   * @return SObject
+   */
   public function getSalesforceRecord() {
     return $this->sf_object;
   }
 
   /**
+   * Push the mapped SF object to Salesforce.
+   *
    * @return $this
    */
   public function pull() {
@@ -415,7 +471,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
           $mapping->getKeyField(),
           $mapping->getKeyValue($this->drupal_entity)
         );
-        $this->set('salesforce_id', (string)$sf_object->id());
+        $this->set('salesforce_id', (string) $sf_object->id());
       }
     }
 
@@ -433,6 +489,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       }
       catch (\Exception $e) {
         // Field missing from SObject? Skip it.
+        $message = 'Field @sobj.@sffield not found on @sfid';
+        $args = [
+          '@sfobj' => $mapping->getSalesforceObjectType(),
+          '@sffield' => $sf_field,
+          '@sfid' => $this->sfid(),
+        ];
+        $this->eventDispatcher()->dispatch(new SalesforceNoticeEvent($e, $message, $args));
         continue;
       }
 
@@ -447,18 +510,17 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         $this->drupal_entity->set($drupal_field, $value);
       }
       catch (\Exception $e) {
-        $message = t();
-        $this->logger('Salesforce Pull')->notice('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', [
-          '@sfobj' => $mapping->getSalesforceObjectType(),
-          '@sffield' => $sf_field,
-          '@sfid' => $this->sfid(),
-          '@dobj' => $this->entity_type_id->value,
-          '@dprop' => $drupal_field,
-          '@did' => $this->entity_id->value,
-          '@v' => $value,
-          '@e' => $e->getMessage(),
-        ]);
-        watchdog_exception(__CLASS__, $e);
+        $message = 'Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v';
+        $args = [
+            '@sfobj' => $mapping->getSalesforceObjectType(),
+            '@sffield' => $sf_field,
+            '@sfid' => $this->sfid(),
+            '@dobj' => $this->entity_type_id->value,
+            '@dprop' => $drupal_field,
+            '@did' => $this->entity_id->value,
+            '@v' => $value,
+          ];
+        $this->eventDispatcher()->dispatch(new SalesforceWarningEvent($e, $message, $args));
         continue;
       }
     }
@@ -485,8 +547,37 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
+  /**
+   * Testable func to return the request time server variable.
+   *
+   * @return string REQUEST_TIME
+   *   The request time contanct.
+   */
   protected function getRequestTime() {
+    // @TODO Replace this with a better implementation when available.
+    // see https://www.drupal.org/node/2820345,
+    // https://www.drupal.org/node/2785211
     return defined('REQUEST_TIME') ? REQUEST_TIME : (int) $_SERVER['REQUEST_TIME'];
+  }
+
+  /**
+   * Set the force entity update flag to desired state.
+   *
+   * @param bool $state
+   *   TRUE or FALSE.
+   */
+  public function setForceUpdate(bool $state) {
+    $this->force_update = $state;
+  }
+
+  /**
+   * Return the state of the force update flag.
+   *
+   * @return bool
+   *   TRUE or FALSE.
+   */
+  public function forceUpdate() {
+    return $this->force_update;
   }
 
 }

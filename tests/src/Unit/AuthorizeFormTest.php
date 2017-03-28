@@ -7,22 +7,24 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\State\StateInterface;
-use Drupal\Core\Url;
 use Drupal\Core\Utility\UnroutedUrlAssembler;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Form\AuthorizeForm;
-use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce\Rest\RestClient;
 use Prophecy\Argument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\Core\Logger\LoggerChannelFactory;
 
 /**
  * @coversDefaultClass \Drupal\salesforce\Form\AuthorizeForm
  * @group salesforce
  */
-
 class AuthorizeFormTest extends UnitTestCase {
 
+  /**
+   * Set up for each test.
+   */
   public function setUp() {
     parent::setUp();
 
@@ -30,10 +32,14 @@ class AuthorizeFormTest extends UnitTestCase {
 
     $this->config_factory = $this->prophesize(ConfigFactoryInterface::class);
     $this->state = $this->prophesize(StateInterface::class);
-    $this->client = $this->prophesize(RestClientInterface::class);
+    $this->client = $this->prophesize(RestClient::class);
     $this->request_stack = $this->prophesize(RequestStack::class);
     $this->obpath = $this->prophesize(OutboundPathProcessorInterface::class);
+    $this->logger = $this->prophesize(LoggerChannelFactory::class);
     $this->unrouted_url_assembler = new UnroutedUrlAssembler($this->request_stack->reveal(), $this->obpath->reveal());
+    $this->event_dispatcher = $this->getMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
+
+    
 
     $this->client->getAuthCallbackUrl()->willReturn($this->example_url);
     $this->client->getAuthEndpointUrl()->willReturn($this->example_url);
@@ -47,6 +53,8 @@ class AuthorizeFormTest extends UnitTestCase {
     $container->set('salesforce.client', $this->client->reveal());
     $container->set('state', $this->state->reveal());
     $container->set('unrouted_url_assembler', $this->unrouted_url_assembler);
+    $container->set('logger.factory', $this->logger->reveal());
+    $container->set('event_dispatcher', $this->event_dispatcher);
     \Drupal::setContainer($container);
   }
 
@@ -60,7 +68,7 @@ class AuthorizeFormTest extends UnitTestCase {
       'consumer_secret' => $this->randomMachineName(),
       'login_url' => $this->example_url,
     ]);
-    
+
     $form = AuthorizeForm::create(\Drupal::getContainer());
     $form_array = [];
     $form->submitForm($form_array, $form_state);

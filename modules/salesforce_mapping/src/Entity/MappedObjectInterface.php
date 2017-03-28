@@ -5,8 +5,8 @@ namespace Drupal\salesforce_mapping\Entity;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\salesforce\SObject;  
-  
+use Drupal\salesforce\SObject;
+
 /**
  *
  */
@@ -23,6 +23,13 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
   public function getMappedEntity();
 
   /**
+   * Return a numeric timestamp for comparing to Salesforce record timestamp.
+   *
+   * @return int
+   */
+  public function getChanged();
+
+  /**
    * @return Link
    */
   public function getSalesforceLink(array $options = []);
@@ -36,12 +43,6 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
    * Wrapper for Drupal core event_dispatcher service.
    */
   public function eventDispatcher();
-
-  /**
-   * Wrapper for Drupal core logger service.
-   * @param string $log the log name
-   */
-  public function logger($log);
 
   /**
    * @return string
@@ -65,8 +66,14 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
    */
   public function pushDelete();
 
+  /**
+   * @return $this
+   */
   public function setDrupalEntity(EntityInterface $entity = NULL);
 
+  /**
+   * @return $this
+   */
   public function setSalesforceRecord(SObject $sf_object);
 
   /**

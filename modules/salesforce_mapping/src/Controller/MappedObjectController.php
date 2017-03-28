@@ -4,7 +4,6 @@ namespace Drupal\salesforce_mapping\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 

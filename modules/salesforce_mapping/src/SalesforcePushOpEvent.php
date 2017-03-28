@@ -2,42 +2,19 @@
 
 namespace Drupal\salesforce_mapping;
 
-use Symfony\Component\EventDispatcher\Event;
-use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
+use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent as ParentSalesforcePushOpEvent;
 
 /**
+ * @deprecated Will be removed before Salesforce 8.x-3.0
  *
+ * Use the parent class.
  */
-class SalesforcePushOpEvent extends SalesforcePushEvent {
+class SalesforcePushOpEvent extends ParentSalesforcePushOpEvent {
 
-  protected $params;
-  protected $mapping;
-  protected $mapped_object;
-  protected $entity;
-  protected $op;
-
-  /**
-   * {@inheritdoc}
-   *
-   * SalesforcePushOpEvent is fired when PushParams are not available, for
-   * example on SalesforceEvents::PUSH_ALLOWED, before any entities have been
-   * loaded.
-   *
-   * @param MappedObjectInterface $mapped_object
-   * @param string $op
-   *   One of
-   *     Drupal\salesforce_mapping\MappingConstants::
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
-   */
-  public function __construct(MappedObjectInterface $mapped_object, $op) {
-    parent::__construct($mapped_object);
-    $this->op = $op;
-  }
-
-  public function getOp() {
-    return $this->op;
+  public function __construct() {
+    @trigger_error(__CLASS__ . ' is deprecated. Use the parent class in the Drupal\salesforce_mapping\Event namespace.', E_USER_DEPRECATED);
+    $args = func_get_args();
+    call_user_func_array('parent::__construct', $args);
   }
 
 }

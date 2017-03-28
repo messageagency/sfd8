@@ -7,20 +7,29 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\State\StateInterface;
-use Drupal\Core\Utility\Error;
-use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClientInterface;
-use Drupal\salesforce\SalesforceClient;
 use GuzzleHttp\Exception\RequestException;
-use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-  
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+
 /**
  * Creates authorization form for Salesforce.
  */
 class AuthorizeForm extends ConfigFormBase {
 
+  /**
+   * The Salesforce REST client.
+   *
+   * @var \Drupal\salesforce\Rest\RestClientInterface
+   */
   protected $sf_client;
+
+  /**
+   * The sevent dispatcher service..
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $eventDispatcher;
 
   /**
    * The state keyvalue collection.
@@ -29,22 +38,25 @@ class AuthorizeForm extends ConfigFormBase {
    */
   protected $state;
 
+  protected $logger;
+
   /**
    * Constructs a \Drupal\system\ConfigFormBase object.
    *
-   * @param \Drupal\Core\Config\ConfigFactory $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
-   * @param \Drupal\Core\Config\Context\ContextInterface $context
-   *   The configuration context to use.
-   * @param \Drupal\salesforce\SalesforceClient $sf_client
+   * @param \Drupal\salesforce\RestClient $salesforce_client
    *   The factory for configuration objects.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
+   * @param \Drupal\Core\Logger\LoggerChannelFactory $logger_factory
+   *   The logger factory service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, RestClientInterface $salesforce_client, StateInterface $state) {
+  public function __construct(ConfigFactoryInterface $config_factory, RestClientInterface $salesforce_client, StateInterface $state, EventDispatcherInterface $event_dispatcher) {
     parent::__construct($config_factory);
     $this->sf_client = $salesforce_client;
     $this->state = $state;
+    $this->eventDispatcher = $event_dispatcher;
   }
 
   /**
@@ -54,14 +66,15 @@ class AuthorizeForm extends ConfigFormBase {
     return new static(
       $container->get('config.factory'),
       $container->get('salesforce.client'),
-      $container->get('state')
+      $container->get('state'),
+      $container->get('event_dispatcher')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFormID() {
+  public function getFormId() {
     return 'salesforce_oauth';
   }
 
@@ -128,11 +141,7 @@ class AuthorizeForm extends ConfigFormBase {
       }
       catch (RequestException $e) {
         drupal_set_message($e->getMessage(), 'warning');
-        $this->logger(__CLASS__)->log(
-          LogLevel::ERROR,
-          '%type: @message in %function (line %line of %file).',
-          Error::decodeException($e)
-        );
+        $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
       }
     }
     else {
@@ -162,18 +171,15 @@ class AuthorizeForm extends ConfigFormBase {
         'client_id' => $values['consumer_key'],
       ];
 
-      // Send the user along to the Salesforce OAuth login form. If successful, the user will be redirected to {redirect_uri} to complete the OAuth handshake.
+      // Send the user along to the Salesforce OAuth login form. If successful,
+      // the user will be redirected to {redirect_uri} to complete the OAuth
+      // handshake.
       $form_state->setResponse(new TrustedRedirectResponse($path . '?' . http_build_query($query), 302));
     }
     catch (RequestException $e) {
       drupal_set_message(t("Error during authorization: %message", ['%message' => $e->getMessage()]), 'error');
-      $this->logger(__CLASS__)->log(
-        LogLevel::ERROR,
-        '%type: @message in %function (line %line of %file).',
-        Error::decodeException($e)
-      );
+      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
     }
   }
-
 
 }

@@ -2,12 +2,9 @@
 
 namespace Drupal\salesforce_mapping\Entity;
 
-use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce\Exception;
 
 
 /**
@@ -189,12 +186,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Given a Salesforce object, return an array of Drupal entity key-value pairs.
-   *
-   * @return array
-   *   Array of SalesforceMappingFieldPluginInterface objects
-   *
-   * @see salesforce_pull_map_field (from d7)
+   * {@inheritdoc}
    */
   public function getPullFields() {
     // @TODO This should probably be delegated to a field plugin bag?
@@ -210,31 +202,28 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Build array of pulled fields for given mapping
-   *
-   * @return array
-   *   Array of Salesforce field names for building SOQL query
+   * {@inheritdoc}
    */
   public function getPullFieldsArray() {
     return array_column($this->field_mappings, 'salesforce_field', 'salesforce_field');
   }
 
   /**
-   * Get the name of the salesforce key field, or NULL if no key is set.
+   * {@inheritdoc}
    */
   public function getKeyField() {
     return $this->key ? $this->key : FALSE;
   }
 
   /**
-   * @return bool
+   * {@inheritdoc}
    */
   public function hasKey() {
     return $this->key ? TRUE : FALSE;
   }
 
   /**
-   * @return mixed
+   * {@inheritdoc}
    */
   public function getKeyValue(EntityInterface $entity) {
     if (!$this->hasKey()) {
@@ -251,28 +240,28 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * @return string
+   * {@inheritdoc}
    */
   public function getSalesforceObjectType() {
     return $this->salesforce_object_type;
   }
 
   /**
-   * @return string
+   * {@inheritdoc}
    */
   public function getDrupalEntityType() {
     return $this->drupal_entity_type;
   }
 
   /**
-   * @return string
+   * {@inheritdoc}
    */
   public function getDrupalBundle() {
     return $this->drupal_bundle;
   }
 
   /**
-   * @return array
+   * {@inheritdoc}
    */
   public function getFieldMappings() {
     // @TODO #fieldMappingField
@@ -287,7 +276,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * @return SalesforceMappingFieldPluginInterface
+   * {@inheritdoc}
    */
   public function getFieldMapping(array $field) {
     return $this->fieldManager()->createInstance(
@@ -297,12 +286,15 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * @return string
+   * {@inheritdoc}
    */
   public function getPullTriggerDate() {
     return $this->pull_trigger_date;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function doesPush() {
     return $this->checkTriggers([
       MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
@@ -311,6 +303,9 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     ]);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function doesPull() {
     return $this->checkTriggers([
       MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE,
@@ -320,8 +315,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * @return bool
-   *   TRUE if this mapping uses any of the given $triggers, otherwise FALSE.
+   * {@inheritdoc}
    */
   public function checkTriggers(array $triggers) {
     foreach ($triggers as $trigger) {
@@ -332,13 +326,18 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     return FALSE;
   }
 
+  /**
+   * Salesforce Mappind Field Manager service
+   *
+   * @return \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager
+   */
   public function fieldManager() {
     return \Drupal::service('plugin.manager.salesforce_mapping_field');
   }
 
   /**
    * Returns the name of this configuration object.
-   * from ConfiBase...
+   * from ConfigBase...
    *
    * @return string
    *   The name of the configuration object.

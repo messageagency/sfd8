@@ -2,21 +2,9 @@
 
 namespace Drupal\salesforce\Rest;
 
-use Drupal\Component\Serialization\Json;
-use Drupal\Component\Utility\Unicode;
-use Drupal\Component\Utility\UrlHelper;
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\State\StateInterface;
-use Drupal\Core\Url;
 use Drupal\salesforce\SFID;
-use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce\SelectQueryResult;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
@@ -45,6 +33,7 @@ interface RestClientInterface {
    *   Defaults to FALSE for backwards compatibility.
    *
    * @return mixed
+   *   Reponce object or response data.
    *
    * @throws GuzzleHttp\Exception\RequestException
    */
@@ -345,7 +334,7 @@ interface RestClientInterface {
    *   Object type name, E.g., Contact, Account.
    *
    * @param int $start
-   *   unix timestamp for older timeframe for updates.
+   *   Unix timestamp for older timeframe for updates.
    *   Defaults to "-29 days" if empty.
    *
    * @param int $end

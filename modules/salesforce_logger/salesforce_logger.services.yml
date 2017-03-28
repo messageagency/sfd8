@@ -1,0 +1,10 @@
+services:
+  logger.channel.salesforce:
+    parent: logger.channel_base
+    arguments: ['salesforce']
+  salesforce_logger.event_subscriber:
+    class: Drupal\salesforce_logger\EventSubscriber\SalesforceLoggerSubscriber
+    arguments: ['@logger.channel.salesforce']
+    tags:
+      - { name: event_subscriber }
+    

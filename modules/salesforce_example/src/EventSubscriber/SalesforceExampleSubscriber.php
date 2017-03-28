@@ -2,10 +2,9 @@
 
 namespace Drupal\salesforce_example\EventSubscriber;
 
-use Drupal\Core\Entity\Entity;
-use Drupal\salesforce\SalesforceEvents;
-use Drupal\salesforce_mapping\SalesforcePushOpEvent;
-use Drupal\salesforce_mapping\SalesforcePushParamsEvent;
+use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\salesforce\Exception;
 
@@ -20,7 +19,7 @@ use Drupal\salesforce\Exception;
 class SalesforceExampleSubscriber implements EventSubscriberInterface {
 
   public function pushAllowed(SalesforcePushOpEvent $event) {
-    /** @var Entity $entity */
+    /** @var \Drupal\Core\Entity\Entity $entity */
     $entity = $event->getEntity();
     if ($entity && $entity->getEntityTypeId() == 'unpushable_entity') {
       throw new Exception('Prevent push of Unpushable Entity');
@@ -32,7 +31,7 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
     $mapped_object = $event->getMappedObject();
     $params = $event->getParams();
 
-    /** @var Entity $entity */
+    /** @var \Drupal\Core\Entity\Entity $entity */
     $entity = $event->getEntity();
     if ($entity->getEntityTypeId() != 'user') {
       return;

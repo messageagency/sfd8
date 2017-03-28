@@ -7,7 +7,6 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\salesforce\Exception;
 
 /**
  * Salesforce Mapping Form base.

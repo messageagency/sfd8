@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\salesforce\Unit;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Tests\UnitTestCase;
-use Drupal\salesforce\Exception;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\Rest\RestResponse;
 use Drupal\salesforce\Rest\RestResponse_Describe;
@@ -20,11 +20,13 @@ use GuzzleHttp\Exception\RequestException;
  * @coversDefaultClass \Drupal\salesforce\Rest\RestClient
  * @group salesforce
  */
-
 class RestClientTest extends UnitTestCase {
 
-  static $modules = ['salesforce'];
+  protected static $modules = ['salesforce'];
 
+  /**
+   * Set up for each test.
+   */
   public function setUp() {
     parent::setUp();
     $this->salesforce_id = '1234567890abcde';
@@ -37,9 +39,9 @@ class RestClientTest extends UnitTestCase {
       'getApiEndPoint',
       'httpRequest',
     ];
-    
+
     $this->httpClient = $this->getMock('\GuzzleHttp\Client');
-    $this->configFactory = 
+    $this->configFactory =
       $this->getMockBuilder('\Drupal\Core\Config\ConfigFactory')
         ->disableOriginalConstructor()
         ->getMock();
@@ -48,14 +50,18 @@ class RestClientTest extends UnitTestCase {
         ->disableOriginalConstructor()
         ->getMock();
     $this->cache = $this->getMock('\Drupal\Core\Cache\CacheBackendInterface');
+    $this->json = $this->getMock(Json::CLASS);
   }
 
+  /**
+   * @covers ::__construct
+   */
   private function initClient($methods = NULL) {
     if (empty($methods)) {
       $methods = $this->methods;
     }
 
-    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache];
+    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json];
 
     $this->client = $this->getMock(RestClient::CLASS, $methods, $args);
 
@@ -85,7 +91,7 @@ class RestClientTest extends UnitTestCase {
     $this->client->expects($this->at(2))
       ->method('getRefreshToken')
       ->willReturn($this->randomMachineName());
-    
+
     $this->assertTrue($this->client->isAuthorized());
 
     // Next one will fail because mocks only return for specific invocations.
@@ -97,7 +103,7 @@ class RestClientTest extends UnitTestCase {
    */
   public function testSimpleApiCall() {
     $this->initClient();
-    
+
     // Test that an apiCall returns a json-decoded value.
     $body = array('foo' => 'bar');
     $response = new GuzzleResponse(200, [], json_encode($body));
@@ -116,8 +122,8 @@ class RestClientTest extends UnitTestCase {
    */
   public function testExceptionApiCall() {
     $this->initClient();
-    
-    // Test that SF client throws an exception for non-200 response 
+
+    // Test that SF client throws an exception for non-200 response
     $response = new GuzzleResponse(456);
 
     $this->client->expects($this->any())
@@ -132,7 +138,7 @@ class RestClientTest extends UnitTestCase {
    */
   public function testReauthApiCall() {
     $this->initClient();
-    
+
     // Test that apiCall does auto-re-auth after 401 response
     $response_401 = new GuzzleResponse(401);
     $response_200 = new GuzzleResponse(200);
@@ -149,7 +155,7 @@ class RestClientTest extends UnitTestCase {
     $result = $this->client->apiCall('');
   }
 
-  
+
   /**
    * @covers ::objects
    */
@@ -165,7 +171,7 @@ class RestClientTest extends UnitTestCase {
         ]
       ],
     ];
-    $cache = (object)[
+    $cache = (object) [
       'created' => time(),
       'data' => $objects,
     ];
@@ -183,7 +189,7 @@ class RestClientTest extends UnitTestCase {
 
     // First call, from cache:
     $this->assertEquals($cache->data['sobjects'], $this->client->objects());
-    
+
     // Second call, from apiCall()
     $this->assertEquals($cache->data['sobjects'], $this->client->objects());
   }
@@ -303,9 +309,8 @@ class RestClientTest extends UnitTestCase {
     ]));
     $createResponse = new RestResponse(
       new GuzzleResponse('200', [], json_encode([
-        'id' => $this->salesforce_id
-        ]))
-      );
+        'id' => $this->salesforce_id,
+      ])));
 
     $updateResponse = new RestResponse(new GuzzleResponse('204', [], ''));
 
@@ -324,7 +329,7 @@ class RestClientTest extends UnitTestCase {
 
     $this->client->expects($this->once())
       ->method('objectReadbyExternalId')
-      ->willReturn($sobject);    
+      ->willReturn($sobject);
 
     // Ensure both upsert-create and upsert-update return the same value.
     $this->assertEquals($sfid, $this->client->objectUpsert('', '', '', []));
@@ -412,7 +417,7 @@ class RestClientTest extends UnitTestCase {
     $this->client->expects($this->at(2))
       ->method('apiCall')
       ->will($this->throwException($exceptionOther));
-    
+
     $this->assertNull($this->client->objectDelete('', ''));
     $this->assertNull($this->client->objectDelete('', ''));
     $this->client->objectDelete('', '');
@@ -444,7 +449,7 @@ class RestClientTest extends UnitTestCase {
     $this->initClient(array_merge($this->methods, ['query']));
     $SobjectType = $this->randomMachineName();
     $DeveloperName = $this->randomMachineName();
-    
+
     $rawQueryResult = [
       'totalSize' => 1,
       'done' => true,
@@ -462,7 +467,7 @@ class RestClientTest extends UnitTestCase {
     ];
     $recordTypes = [
       $SobjectType => [
-        $DeveloperName => 
+        $DeveloperName =>
           new SObject($rawQueryResult['records'][0])
       ],
     ];

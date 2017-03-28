@@ -5,7 +5,6 @@
  * API and module for Salesforce integration.
  */
 
-use \Drupal\salesforce\SalesforceClient;
 use Drupal\Core\Routing\RouteMatchInterface;
 use \Drupal\Core\Url;
 

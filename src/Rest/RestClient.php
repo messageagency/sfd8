@@ -9,10 +9,10 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
-use Drupal\salesforce\SFID;
-use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
@@ -22,13 +22,61 @@ use GuzzleHttp\Psr7\Response;
  */
 class RestClient implements RestClientInterface {
 
+  /**
+   * Reponse object.
+   *
+   * @var \GuzzleHttp\Psr7\Response
+   */
   public $response;
+
+  /**
+   * GuzzleHttp client.
+   *
+   * @var \GuzzleHttp\ClientInterface
+   */
   protected $httpClient;
+
+  /**
+   * Config factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
   protected $configFactory;
+
+  /**
+   * Salesforce API URL.
+   *
+   * @var Drupal\Core\Url
+   */
   protected $url;
+
+  /**
+   * Salesforce config entity.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
   protected $config;
+
+  /**
+   * The state service.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
   protected $state;
+
+  /**
+   * The cache service.
+   *
+   * @var Drupal\Core\Cache\CacheBackendInterface
+   */
   protected $cache;
+
+  /**
+   * The JSON serializer service.
+   *
+   * @var \Drupal\Component\Serialization\Json
+   */
+  protected $json;
 
   const CACHE_LIFETIME = 300;
   const LONGTERM_CACHE_LIFETIME = 86400;
@@ -36,17 +84,25 @@ class RestClient implements RestClientInterface {
   /**
    * Constructor which initializes the consumer.
    *
-   * @param \Drupal\Core\Http\Client $http_client
-   *   The config factory.
-   * @param \Guzzle\Http\ClientInterface $http_client
-   *   The config factory.
+   * @param \GuzzleHttp\ClientInterface $http_client
+   *   The GuzzleHttp Client.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   The state service.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
+   *   The cache service.
+   * @param \Drupal\Component\Serialization\Json $json
+   *   The JSON serializer service.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
     $this->config = $this->configFactory->get('salesforce.settings');
     $this->state = $state;
     $this->cache = $cache;
+    $this->json = $json;
+    return $this;
   }
 
   /**
@@ -59,22 +115,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Make a call to the Salesforce REST API.
-   *
-   * @param string $path
-   *   Path to resource.
-   * @param array $params
-   *   Parameters to provide.
-   * @param string $method
-   *   Method to initiate the call, such as GET or POST.  Defaults to GET.
-   * @param bool $returnObject
-   *   If true, return a Drupal\salesforce\Rest\RestResponse;
-   *   Otherwise, return json-decoded response body only.
-   *   Defaults to FALSE for backwards compatibility.
-   *
-   * @return mixed
-   *
-   * @throws GuzzleHttp\Exception\RequestException
+   * {@inheritdoc}
    */
   public function apiCall($path, array $params = [], $method = 'GET', $returnObject = FALSE) {
     if (!$this->getAccessToken()) {
@@ -90,7 +131,7 @@ class RestClient implements RestClientInterface {
 
       // Any exceptions besides 401 get bubbled up.
       if (!$this->response || $this->response->getStatusCode() != 401) {
-        throw $e;
+        throw new RestException($this->response, $e->getMessage());
       }
     }
 
@@ -104,13 +145,13 @@ class RestClient implements RestClientInterface {
       }
       catch (RequestException $e) {
         $this->response = $e->getResponse();
-        throw $e;
+        throw new RestException($this->response, $e->getMessage());
       }
     }
 
     if (empty($this->response)
-    || ((int)floor($this->response->getStatusCode() / 100)) != 2) {
-      throw new \Exception('Unknown error occurred during API call');
+    || ((int) floor($this->response->getStatusCode() / 100)) != 2) {
+      throw new RestException($this->response, 'Unknown error occurred during API call');
     }
 
     if ($returnObject) {
@@ -132,6 +173,7 @@ class RestClient implements RestClientInterface {
    *   Method to initiate the call, such as GET or POST.  Defaults to GET.
    *
    * @return GuzzleHttp\Psr7\Response
+   *   Response object.
    */
   protected function apiHttpRequest($path, array $params, $method) {
     if (!$this->getAccessToken()) {
@@ -145,8 +187,7 @@ class RestClient implements RestClientInterface {
     ];
     $data = NULL;
     if (!empty($params)) {
-      // @TODO: convert this into Dependency Injection
-      $data = Json::encode($params);
+      $data = $this->json->encode($params);
     }
     return $this->httpRequest($url, $data, $headers, $method);
   }
@@ -164,18 +205,22 @@ class RestClient implements RestClientInterface {
    *   Method to initiate the call, such as GET or POST.  Defaults to GET.
    *
    * @throws RequestException
+   *   Request exxception.
    *
    * @return GuzzleHttp\Psr7\Response
+   *   Response object.
    */
-  protected function httpRequest($url, $data = NULL, array $headers = [], $method = 'GET') {
+  protected function httpRequest($url, array $data = NULL, array $headers = [], $method = 'GET') {
     // Build the request, including path and headers. Internal use.
     return $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
   }
 
   /**
-   * Extract normalized error information from a RequestException
+   * Extract normalized error information from a RequestException.
    *
    * @param RequestException $e
+   *   Exception object.
+   *
    * @return array
    *   Error array with keys:
    *   * message
@@ -185,13 +230,12 @@ class RestClient implements RestClientInterface {
   protected function getErrorData(RequestException $e) {
     $response = $e->getResponse();
     $response_body = $response->getBody()->getContents();
-    $data = Json::decode($response_body);
+    $data = $this->json->decode($response_body);
     if (!empty($data[0])) {
       $data = $data[0];
     }
     return $data;
   }
-
 
   /**
    * Get the API end point for a given type of the API.
@@ -540,6 +584,7 @@ class RestClient implements RestClientInterface {
    *   The constructed SOQL query.
    *
    * @return SelectQueryResult
+   *   Query result object.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -558,6 +603,7 @@ class RestClient implements RestClientInterface {
    *   Whether to reset the cache and retrieve a fresh version from Salesforce.
    *
    * @return RestResponse_Describe
+   *   Salesforce object description object.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -587,6 +633,7 @@ class RestClient implements RestClientInterface {
    *   Values of the fields to set for the object.
    *
    * @return Drupal\salesforce\SFID
+   *   Salesforce ID object.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -612,7 +659,8 @@ class RestClient implements RestClientInterface {
    * @param array $params
    *   Values of the fields to set for the object.
    *
-   * @return Drupal\salesforce\SFID or NULL
+   * @return mixed
+   *   Drupal\salesforce\SFID or NULL.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -640,15 +688,14 @@ class RestClient implements RestClientInterface {
   /**
    * Update an existing object.
    *
+   * Update() doesn't return any data. Examine HTTP response or Exception.
+   *
    * @param string $name
    *   Object type name, E.g., Contact, Account.
    * @param string $id
    *   Salesforce id of the object.
    * @param array $params
    *   Values of the fields to set for the object.
-   *
-   * @return null
-   *   Update() doesn't return any data. Examine HTTP response or Exception.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -693,21 +740,21 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Delete a Salesforce object. Note: if Object with given $id doesn't exist,
+   * Delete a Salesforce object.
+   *
+   * Note: if Object with given $id doesn't exist,
    * objectDelete() will assume success unless $throw_exception is given.
+   * Delete() doesn't return any data. Examine HTTP response or Exception.
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account.
    * @param string $id
    *   Salesforce id of the object.
-   * @pararm bool $throw_exception
+   * @param bool $throw_exception
    *   (optional) If TRUE, 404 response code will cause RequestException to be
    *   thrown. Otherwise, hide those errors. Default is FALSE.
    *
    * @addtogroup salesforce_apicalls
-   *
-   * @return null
-   *   Delete() doesn't return any data. Examine HTTP response or Exception.
    */
   public function objectDelete($name, $id, $throw_exception = FALSE) {
     try {
@@ -753,14 +800,12 @@ class RestClient implements RestClientInterface {
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account.
-   *
    * @param int $start
-   *   unix timestamp for older timeframe for updates.
+   *   Unix timestamp for older timeframe for updates.
    *   Defaults to "-29 days" if empty.
-   *
    * @param int $end
-   *   unix timestamp for end of timeframe for updates.
-   *   Defaults to now if empty
+   *   Unix timestamp for end of timeframe for updates.
+   *   Defaults to now if empty.
    *
    * @return array
    *   return array has 2 indexes:
@@ -773,7 +818,7 @@ class RestClient implements RestClientInterface {
    *
    * @addtogroup salesforce_apicalls
    */
-  public function getUpdated($name, $start = null, $end = null) {
+  public function getUpdated($name, $start = NULL, $end = NULL) {
     if (empty($start)) {
       $start = strtotime('-29 days');
     }
@@ -832,10 +877,8 @@ class RestClient implements RestClientInterface {
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account.
-   *
    * @param string $devname
    *   RecordType DeveloperName, e.g. Donation, Membership, etc.
-   *
    * @return SFID
    *   The Salesforce ID of the given Record Type, or null.
    *
@@ -850,11 +893,16 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Utility function to determine object type for given SFID
+   * Utility function to determine object type for given SFID.
    *
    * @param SFID $id
+   *   Salesforce object ID.
+   *
    * @return string
-   * @throws Exception if SFID doesn't match any object type
+   *   Object type's name.
+   *
+   * @throws Exception
+   *   If SFID doesn't match any object type.
    */
   public function getObjectTypeName(SFID $id) {
     $prefix = substr((string)$id, 0, 3);
@@ -867,6 +915,12 @@ class RestClient implements RestClientInterface {
     throw new \Exception('No matching object type');
   }
 
+  /**
+   * Returns REQUEST_TIME.
+   *
+   * @return string
+   *   The REQUEST_TIME server variable.
+   */
   protected function getRequestTime() {
     return defined('REQUEST_TIME') ? REQUEST_TIME : (int) $_SERVER['REQUEST_TIME'];
   }
