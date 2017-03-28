@@ -15,7 +15,7 @@ use Drupal\salesforce_pull\DeleteHandler;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\ServerBag;
 
 /**
@@ -146,16 +146,16 @@ class DeleteHandlerTest extends UnitTestCase {
     $this->server = $prophecy->reveal();
 
     // Mock request.
-    $prophecy = $this->prophesize(Request::CLASS);
+    $prophecy = $this->prophesize(RequestStack::CLASS);
     $prophecy->server = $this->server;
-    $this->request = $prophecy->reveal();
+    $this->request_stack = $prophecy->reveal();
 
-    $this->dh = DeleteHandler::create(
+    $this->dh = new DeleteHandler(
       $this->sfapi,
       $this->etm,
       $this->state,
       $this->ed,
-      $this->request
+      $this->request_stack
     );
   }
 

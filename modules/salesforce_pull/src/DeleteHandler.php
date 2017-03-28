@@ -11,7 +11,7 @@ use Drupal\salesforce\SFID;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Handles pull cron deletion of Drupal entities based onSF mapping settings.
@@ -73,35 +73,15 @@ class DeleteHandler {
    *   Entity Manager service.
    * @param \Drupal\Core\State\StateInterface $state
    *   State service.
-   * @param Psr\Log\LoggerInterface $logger
-   *   Logging service.
    */
-  private function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
+    public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack) {
     $this->sfapi = $sfapi;
     $this->etm = $entity_type_manager;
     $this->mappingStorage = $this->etm->getStorage('salesforce_mapping');
     $this->mappedObjectStorage = $this->etm->getStorage('salesforce_mapped_object');
     $this->state = $state;
     $this->eventDispatcher = $event_dispatcher;
-    $this->request = $request;
-  }
-
-  /**
-   * Chainable instantiation method for class.
-   *
-   * @param \Drupal\salesforce\Rest\RestClientInterface $sfapi
-   *   RestClient object.
-   * @param \Drupal\Core\Entity\EntityTyprManagerInterface $entity_type_manager
-   *   Entity Manager service.
-   * @param \Drupal\Core\State\StatInterface $state
-   *   State service.
-   * @param EventDispatcherInterface $event_dispatcher
-   *   Event dispatcher service.
-   * @param Request $request
-   *   Request service.
-   */
-  public static function create(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
-    return new DeleteHandler($sfapi, $entity_type_manager, $state, $event_dispatcher, $request);
+    $this->request = $request_stack->getCurrentRequest();
   }
 
   /**

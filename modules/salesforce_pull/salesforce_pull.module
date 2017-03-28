@@ -5,8 +5,6 @@
  * Pull updates from Salesforce when a Salesforce object is updated.
  */
 
-use Drupal\salesforce_pull\QueueHandler;
-use Drupal\salesforce_pull\DeleteHandler;
 
 /**
  * Implements hook_cron().
@@ -14,22 +12,7 @@ use Drupal\salesforce_pull\DeleteHandler;
 function salesforce_pull_cron() {
   $sfapi = \Drupal::service('salesforce.client');
   if ($sfapi->isAuthorized()) {
-    QueueHandler::create(
-      $sfapi,
-      \Drupal::service('entity.manager')
-        ->getStorage('salesforce_mapping')
-        ->loadMultiple(),
-      \Drupal::queue('cron_salesforce_pull'),
-      \Drupal::state(),
-      \Drupal::service('event_dispatcher'),
-      \Drupal::request()
-    )->getUpdatedRecords();
-    DeleteHandler::create(
-      $sfapi,
-      \Drupal::service('entity_type.manager'),
-      \Drupal::state(),
-      \Drupal::service('event_dispatcher'),
-      \Drupal::request()
-    )->processDeletedRecords();
+    \Drupal::service('salesforce_pull.queue_handler')->getUpdatedRecords();
+    \Drupal::service('salesforce_pull.delete_handler')->processDeletedRecords();
   }
 }
