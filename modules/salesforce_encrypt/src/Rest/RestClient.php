@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_encrypt\Rest;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -28,15 +29,20 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   protected $encryptionProfileId;
 
   /**
-   * Constructor which initializes the consumer.
+   * Construct a new Encrypted Rest Client.
    *
-   * @param \Drupal\Core\Http\Client $http_client
-   *   The config factory.
-   * @param \Guzzle\Http\ClientInterface $http_client
-   *   The config factory.
+   * @param ClientInterface $http_client 
+   * @param ConfigFactoryInterface $config_factory 
+   * @param StateInterface $state 
+   * @param CacheBackendInterface $cache 
+   * @param Json $json 
+   * @param EncryptServiceInterface $encryption 
+   * @param EncryptionProfileManagerInterface $encryptionProfileManager 
+   * @param LockBackendInterface $lock 
+   * @author Aaron Bauman
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
-    parent::__construct($http_client, $config_factory, $state, $cache);
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
+    parent::__construct($http_client, $config_factory, $state, $cache, $json);
     $this->state = $state;
     $this->encryption = $encryption;
     $this->encryptionProfileId = $state->get('salesforce_encrypt.profile');

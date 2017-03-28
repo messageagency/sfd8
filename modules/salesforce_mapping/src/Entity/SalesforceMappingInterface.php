@@ -12,30 +12,91 @@ interface SalesforceMappingInterface {
   // Placeholder interface.
   // @TODO figure out what to abstract out of SalesforceMapping
 
+  /**
+   * @param array $values
+   * @param string $entity_type
+   */
   public function __construct(array $values = [], $entity_type);
 
+  /**
+   * @param  string $key
+   * @return mixed
+   */
   public function __get($key);
 
+  /**
+   * @param  string $property_name
+   * @return mixed
+   */
   public function get($property_name);
 
+  /**
+   * @return array fieldmappings
+   */
   public function getFieldMappings();
 
+  /**
+   * @param  array  $field
+   * @return SalesforceMappingFieldPluginInterface
+   */
   public function getFieldMapping(array $field);
 
+  /**
+   * @return string
+   */
   public function getSalesforceObjectType();
 
+  /**
+   * @return string
+   */
   public function getDrupalEntityType();
 
+  /**
+   * @return string
+   */
   public function getDrupalBundle();
 
+  /**
+  * Given a Salesforce object, return an array of Drupal entity key-value pairs.
+  *
+  * @return array
+  *   Array of SalesforceMappingFieldPluginInterface objects
+  *
+  * @see salesforce_pull_map_field (from d7)
+  */
   public function getPullFields();
 
+  /**
+   * @return array
+   */
   public function getPullFieldsArray();
 
+  /**
+   * @return string
+   */
   public function getPullTriggerDate();
 
+  /**
+   * Checks mappings for any push operation positive
+   *
+   * @return boolean
+   */
   public function doesPush();
 
+  /**
+   * Checks mappings for any pull operation positive
+   *
+   * @return boolean
+   */
+  public function doesPull();
+
+  /**
+   * Checks if mapping has any of the given triggers
+   *
+   * @param array $triggers
+   * @return boolean
+   *   TRUE if this mapping uses any of the given $triggers, otherwise FALSE.
+   */
   public function checkTriggers(array $triggers);
 
   /**
@@ -55,7 +116,7 @@ interface SalesforceMappingInterface {
   /**
    * Return value for the field upon which to be upserted.
    *
-   * @return string
+   * @return mixed
    */
   public function getKeyValue(EntityInterface $entity);
 

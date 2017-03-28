@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
@@ -9,13 +10,12 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\Plugin\Field\FieldType\StringItem;
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\StringTranslation\Translator\TranslationInterface;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce_mapping\SalesforcePullEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
 use Drupal\salesforce_pull\Plugin\QueueWorker\PullBase;
 use Drupal\salesforce_pull\PullQueueItem;
 use Drupal\salesforce\Rest\RestClient;
@@ -24,16 +24,14 @@ use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
-use Psr\Log\LoggerInterface;
 
 /**
- * Test Object instantitation
+ * Test Object instantitation.
  *
  * @group salesforce_pull
  */
-
 class PullBaseTest extends UnitTestCase {
-  static $modules = ['salesforce_pull'];
+  public static $modules = ['salesforce_pull'];
 
   /**
    * {@inheritdoc}
@@ -230,21 +228,11 @@ class PullBaseTest extends UnitTestCase {
       ->willReturn($this->sfid);
     $this->sfapi = $prophecy->reveal();
 
-    // mock logger
-    $prophecy = $this->prophesize(LoggerInterface::CLASS);
-    $prophecy->log(Argument::any(),Argument::any(),Argument::any())->willReturn(null);
-    $this->logger = $prophecy->reveal();
-
-    // mock logger factory
-    $prophecy = $this->prophesize(LoggerChannelFactoryInterface::CLASS);
-    $prophecy->get(Argument::any())->willReturn($this->logger);
-    $this->lf = $prophecy->reveal();
-
     // mock event dispatcher
     $this->ed = $this->getMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
 
     $this->pullWorker = $this->getMockBuilder(PullBase::CLASS)
-      ->setConstructorArgs([$this->etm, $this->sfapi, $this->lf, $this->ed])
+      ->setConstructorArgs([$this->etm, $this->sfapi, $this->ed])
       ->setMethods(['salesforcePullEvent'])
       ->getMockForAbstractClass();
     $this->pullWorker->method('salesforcePullEvent')
@@ -303,7 +291,7 @@ class PullBaseTest extends UnitTestCase {
     $this->etm = $prophecy->reveal();
 
     $this->pullWorker = $this->getMockBuilder(PullBase::CLASS)
-      ->setConstructorArgs([$this->etm, $this->sfapi, $this->lf, $this->ed])
+      ->setConstructorArgs([$this->etm, $this->sfapi, $this->ed])
       ->setMethods(['salesforcePullEvent'])
       ->getMockForAbstractClass();
     $this->pullWorker->method('salesforcePullEvent')

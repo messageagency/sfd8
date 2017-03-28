@@ -12,4 +12,5 @@ class PullQueueItem {
     $this->sobject = $sobject;
     $this->mapping_id = $mapping->id;
   }
+
 }

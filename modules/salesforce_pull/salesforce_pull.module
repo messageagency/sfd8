@@ -21,7 +21,6 @@ function salesforce_pull_cron() {
         ->loadMultiple(),
       \Drupal::queue('cron_salesforce_pull'),
       \Drupal::state(),
-      \Drupal::logger('Salesforce Pull'),
       \Drupal::service('event_dispatcher'),
       \Drupal::request()
     )->getUpdatedRecords();
@@ -29,7 +28,7 @@ function salesforce_pull_cron() {
       $sfapi,
       \Drupal::service('entity_type.manager'),
       \Drupal::state(),
-      \Drupal::logger('Salesforce Pull'),
+      \Drupal::service('event_dispatcher'),
       \Drupal::request()
     )->processDeletedRecords();
   }

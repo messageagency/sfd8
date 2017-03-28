@@ -4,36 +4,20 @@ namespace Drupal\salesforce_mapping;
 
 use Symfony\Component\EventDispatcher\Event;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
+use Drupal\salesforce_mapping\PushParams;
+use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent as ParentSalesforcePushParamsEvent;
 
 /**
+ * @deprecated Will be removed before Salesforce 8.x-3.0
  *
+ * Use the parent class.
  */
-class SalesforcePushParamsEvent extends SalesforcePushEvent {
+class SalesforcePushParamsEvent extends ParentSalesforcePushParamsEvent {
 
-  protected $params;
-  protected $mapping;
-  protected $mapped_object;
-  protected $entity;
-  protected $op;
-
-  /**
-   * {@inheritdoc}
-   *
-   * @param MappedObjectInterface $mapped_object
-   * @param PushParams $params
-   */
-  public function __construct(MappedObjectInterface $mapped_object, PushParams $params) {
-    parent::__construct($mapped_object);
-    $this->params = $params;
-    $this->entity = ($params) ? $params->getDrupalEntity() : null;
-    $this->mapping = ($params) ? $params->getMapping() : null;
-  }
-
-  /**
-   * @return PushParams
-   */
-  public function getParams() {
-    return $this->params;
+  public function __construct() {
+    @trigger_error(__CLASS__ . ' is deprecated. Use the parent class in the Drupal\salesforce_mapping\Event namespace.', E_USER_DEPRECATED);
+    $args = func_get_args();
+    call_user_func_array('parent::__construct', $args);
   }
 
 }

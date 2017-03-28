@@ -5,16 +5,12 @@ namespace Drupal\salesforce_pull;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Utility\Error;
-use Drupal\salesforce\Exception;
+use Drupal\salesforce\Event\SalesforceErrorEvent;
+use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
-use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
-use Psr\Log\LogLevel;
-use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -30,33 +26,35 @@ class DeleteHandler {
   protected $mapped_object_storage;
   protected $etm;
   protected $state;
-  protected $logger;
+  protected $eventDispatcher;
   protected $request;
 
-  private function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
+  private function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
     $this->sfapi = $sfapi;
     $this->etm = $entity_type_manager;
     $this->mapping_storage = $this->etm->getStorage('salesforce_mapping');
     $this->mapped_object_storage = $this->etm->getStorage('salesforce_mapped_object');
     $this->state = $state;
-    $this->logger = $logger;
+    $this->eventDispatcher = $event_dispatcher;
     $this->request = $request;
   }
 
   /**
-   * Chainable instantiation method for class
+   * Chainable instantiation method for class.
    *
    * @param \Drupal\salesforce\Rest\RestClientInterface $sfapi
-   *  RestClient object
-   * @param \Drupal\Core\Entity\EntityTyprManagerInterface $$entity_type_manager
-   *  Entity Manager service
+   *   RestClient object.
+   * @param \Drupal\Core\Entity\EntityTyprManagerInterface $entity_type_manager
+   *   Entity Manager service.
    * @param \Drupal\Core\State\StatInterface $state
-   *  State service
-   * @param Psr\Log\LoggerInterface $logger
-   *  Logging service
+   *   State service.
+   * @param EventDispatcherInterface $event_dispatcher
+   *   Event dispatcher service.
+   * @param Request $request
+   *   Request service.
    */
-  public static function create(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, LoggerInterface $logger, Request $request) {
-    return new DeleteHandler($sfapi, $entity_type_manager, $state, $logger, $request);
+  public static function create(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, Request $request) {
+    return new DeleteHandler($sfapi, $entity_type_manager, $state, $event_dispatcher, $request);
   }
 
   /**
@@ -105,14 +103,12 @@ class DeleteHandler {
     foreach ($mapped_objects as $mapped_object) {
       $entity = $mapped_object->getMappedEntity();
       if (!$entity) {
-        $this->logger->log(
-          LogLevel::NOTICE,
-          'No entity found for ID %id associated with Salesforce Object ID: %sfid ',
-          [
-            '%id' => $mapped_object->entity_id->value,
-            '%sfid' => $record['id'],
-          ]
-        );
+        $message = 'No entity found for ID %id associated with Salesforce Object ID: %sfid ';
+        $args = [
+          '%id' => $mapped_object->entity_id->value,
+          '%sfid' => $record['id'],
+        ];
+        $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
         $mapped_object->delete();
         return;
       }
@@ -121,14 +117,12 @@ class DeleteHandler {
     // The mapping entity is an Entity reference field on mapped object, so we need to get the id value this way.
     $sf_mapping = $mapped_object->getMapping();
     if (!$sf_mapping) {
-      $this->logger->log(
-        LogLevel::NOTICE,
-        'No mapping exists for mapped object %id with Salesforce Object ID: %sfid',
-        [
-          '%id' => $mapped_object->id(),
-          '%sfid' => $record['id'],
-        ]
-      );
+      $message = 'No mapping exists for mapped object %id with Salesforce Object ID: %sfid';
+      $args = [
+        '%id' => $mapped_object->id(),
+        '%sfid' => $record['id'],
+      ];
+      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
       // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
       // $mapped_object->delete();
       return;
@@ -140,29 +134,24 @@ class DeleteHandler {
 
     try {
       // Flag this entity to avoid duplicate processing.
-      $entity->salesforce_pull = TRUE;      
+      $entity->salesforce_pull = TRUE;
 
       $entity->delete();
-      $this->logger->log(
-        LogLevel::NOTICE,
-        'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid',
-        [
-          '%label' => $entity->label(),
-          '%id' => $mapped_object->entity_id,
-          '%sfid' => $record['id'],
-        ]
-      );
+      $message = 'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid';
+      $args = [
+        '%label' => $entity->label(),
+        '%id' => $mapped_object->entity_id,
+        '%sfid' => $record['id'],
+      ];
+      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
     }
     catch (\Exception $e) {
-      $this->logger->log(
-        LogLevel::ERROR,
-        '%type: @message in %function (line %line of %file).',
-        Error::decodeException($e)
-      );
-      // If mapped entity couldn't be deleted, do not delete the mapped object either.
+      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
+      // If mapped entity couldn't be deleted, do not delete the mapped object.
       return;
     }
 
     $mapped_object->delete();
   }
+
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\salesforce_encrypt\Unit;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce_encrypt\Rest\RestClient;
 use Drupal\Core\Config\ConfigFactory;
@@ -42,8 +43,8 @@ class RestClientTest extends UnitTestCase {
     $this->profileManager = $this->getMock(EncryptionProfileManagerInterface::CLASS);
     $this->lock = $this->getMock(LockBackendInterface::CLASS);
     $this->encryptionProfile = $this->getMock(EncryptionProfileInterface::CLASS);
-
-    $this->client = $this->getMock(RestClient::CLASS, ['getEncryptionProfile'], [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->encryption, $this->profileManager, $this->lock]);
+    $this->json = $this->getMock(Json::CLASS);
+    $this->client = $this->getMock(RestClient::CLASS, ['getEncryptionProfile'], [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->encryption, $this->profileManager, $this->lock]);
   }
 
   /**

@@ -5,38 +5,20 @@ namespace Drupal\salesforce_mapping;
 use Symfony\Component\EventDispatcher\Event;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce\Event\SalesforceBaseEvent;
+use Drupal\salesforce_mapping\Event\SalesforceQueryEvent as ParentSalesforceQueryEvent;
 
 /**
+ * @deprecated Will be removed before Salesforce 8.x-3.0
  *
+ * Use the parent class.
  */
-class SalesforceQueryEvent extends Event {
+class SalesforceQueryEvent extends ParentSalesforceQueryEvent {
 
-  protected $query;
-  protected $mapping;
-
-  /**
-   * {@inheritdoc}
-   *
-   * @param MappedObjectInterface $mapped_object
-
-   */
-  public function __construct(SalesforceMappingInterface $mapping, SelectQuery $query) {
-    $this->mapping = $mapping;
-    $this->query = $query;
-  }
-
-  /**
-   * @return EntityInterface (from PushParams)
-   */
-  public function getQuery() {
-    return $this->query;
-  }
-
-  /**
-   * @return SalesforceMappingInterface (from PushParams)
-   */
-  public function getMapping() {
-    return $this->mapping;
+  public function __construct() {
+    @trigger_error(__CLASS__ . ' is deprecated. Use the parent class in the Drupal\salesforce_mapping\Event namespace.', E_USER_DEPRECATED);
+    $args = func_get_args();
+    call_user_func_array('parent::__construct', $args);
   }
 
 }

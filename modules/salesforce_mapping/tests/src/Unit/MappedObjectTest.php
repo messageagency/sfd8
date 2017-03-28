@@ -93,8 +93,6 @@ class MappedObjectTest extends UnitTestCase {
       ->with('salesforce_mapped_object')
       ->will($this->returnValue($this->mappedObjectEntityType));
 
-    $this->logger_factory = $this->getMock('\Drupal\Core\Logger\LoggerChannelFactoryInterface');
-
     $this->event_dispatcher = $this->getMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
 
     $this->client = $this->getMock(RestClientInterface::CLASS);
@@ -117,7 +115,6 @@ class MappedObjectTest extends UnitTestCase {
     $container->set('entity.manager', $this->entityManager);
     $container->set('salesforce.client', $this->client);
     $container->set('event_dispatcher', $this->event_dispatcher);
-    $container->set('logger.factory', $this->logger_factory);
     $container->set('plugin.manager.field.field_type', $this->fieldTypePluginManager);
     \Drupal::setContainer($container);
 
@@ -126,7 +123,7 @@ class MappedObjectTest extends UnitTestCase {
       ->expects($this->any())
       ->method('id')
       ->willReturn($this->entity_id);
-  
+
     $this->entity
       ->expects($this->any())
       ->method('isTranslatable')
@@ -211,7 +208,7 @@ class MappedObjectTest extends UnitTestCase {
       ->willReturn(NULL);
     $this->assertNull($this->mapped_object->push());
   }
-  
+
   /**
    * @covers ::push
    */
@@ -320,7 +317,11 @@ class MappedObjectTest extends UnitTestCase {
             '@v' => $value,
             '@e' => $e->getMessage(),
           ]);
-          watchdog_exception(__CLASS__, $e);
+          \Drupal::logger(__CLASS__)->log(
+            LogLevel::ERROR,
+            '%type: @message in %function (line %line of %file).',
+            Error::decodeException($e)
+          );
           continue;
         }
       }
@@ -345,7 +346,7 @@ class MappedObjectTest extends UnitTestCase {
         ->save();
 
       return $this;
-    
+
   }
 
 }

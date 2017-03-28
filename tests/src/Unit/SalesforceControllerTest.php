@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\salesforce\Unit;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Render\MetadataBubblingUrlGenerator;
 use Drupal\Core\Url;
 use Drupal\salesforce\Controller\SalesforceController;
@@ -39,8 +40,9 @@ class SalesforceControllerTest extends UnitTestCase {
         ->disableOriginalConstructor()
         ->getMock();
     $this->cache = $this->getMock('\Drupal\Core\Cache\CacheBackendInterface');
+    $this->json = $this->getMock(Json::CLASS);
 
-    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache];
+    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json];
 
     $this->client = $this->getMock(RestClient::class, ['getConsumerKey', 'getConsumerSecret', 'getAuthCallbackUrl', 'getAuthTokenUrl', 'handleAuthResponse'], $args);
     $this->client->expects($this->once())

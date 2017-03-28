@@ -22,32 +22,83 @@ use GuzzleHttp\Psr7\Response;
  */
 class RestClient implements RestClientInterface {
 
+  /**
+   * Reponse object.
+   *
+   * @var \GuzzleHttp\Psr7\Response
+   */
   public $response;
+
+  /**
+   * GuzzleHttp client.
+   *
+   * @var \GuzzleHttp\ClientInterface
+   */
   protected $httpClient;
+
+  /**
+   * Config factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
   protected $configFactory;
+
+  /**
+   * Salesforce API URL.
+   *
+   * @var Drupal\Core\Url
+   */
   protected $url;
+
+  /**
+   * Salesforce config entity.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
   private $config;
+
+  /**
+   * editable version of config entity.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
   private $configEditable;
+
+  /**
+   * The state service.
+   *
+   * @var \Drupal\Core\State\StateInterface $state
+   */
   private $state;
+
+  /**
+   * The cache service.
+   *
+   * @var Drupal\Core\Cache\CacheBackendInterface cache
+   */
   protected $cache;
+
+  /**
+   * The JSON serializer service.
+   *
+   * @var \Drupal\Component\Serialization\Json $json
+   */
+  protected $json;
 
   const CACHE_LIFETIME = 300;
 
   /**
-   * Constructor which initializes the consumer.
-   *
-   * @param \Drupal\Core\Http\Client $http_client
-   *   The config factory.
-   * @param \Guzzle\Http\ClientInterface $http_client
-   *   The config factory.
+   * {@inheritdoc}
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
     $this->config = $this->configFactory->get('salesforce.settings');
     $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
     $this->cache = $cache;
+    $this->json = $json;
+    return $this;
   }
 
   /**
@@ -60,22 +111,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Make a call to the Salesforce REST API.
-   *
-   * @param string $path
-   *   Path to resource.
-   * @param array $params
-   *   Parameters to provide.
-   * @param string $method
-   *   Method to initiate the call, such as GET or POST.  Defaults to GET.
-   * @param bool $returnObject
-   *   If true, return a Drupal\salesforce\Rest\RestResponse;
-   *   Otherwise, return json-decoded response body only.
-   *   Defaults to FALSE for backwards compatibility.
-   *
-   * @return mixed
-   *
-   * @throws GuzzleHttp\Exception\RequestException
+   * {@inheritdoc}
    */
   public function apiCall($path, array $params = [], $method = 'GET', $returnObject = FALSE) {
     if (!$this->getAccessToken()) {
@@ -146,8 +182,7 @@ class RestClient implements RestClientInterface {
     ];
     $data = NULL;
     if (!empty($params)) {
-      // @TODO: convert this into Dependency Injection
-      $data = Json::encode($params);
+      $data = $this->json->encode($params);
     }
     return $this->httpRequest($url, $data, $headers, $method);
   }
@@ -186,7 +221,7 @@ class RestClient implements RestClientInterface {
   protected function getErrorData(RequestException $e) {
     $response = $e->getResponse();
     $response_body = $response->getBody()->getContents();
-    $data = Json::decode($response_body);
+    $data = $this->json->decode($response_body);
     if (!empty($data[0])) {
       $data = $data[0];
     }
