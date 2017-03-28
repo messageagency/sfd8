@@ -132,16 +132,6 @@ final class SalesforceEvents {
   const PULL_PRESAVE = 'salesforce.pull_presave';
 
   /**
-   * Dispatched when Salesforce catches a loggable, non-fatal exception.
-   *
-   * Subscribers receive a Drupal\salesforce\SalesforceExceptionEvent instance.
-   * @Event
-   *
-   * @var string
-   */
-  const EXCEPTION = 'salesforce.exception';
-
-  /**
    * Dispatched when Salesforce encounters a loggable, non-fatal error.
    *
    * Subscribers receive a Drupal\salesforce\SalesforceErrorEvent instance.
@@ -150,5 +140,25 @@ final class SalesforceEvents {
    * @var string
    */
   const ERROR = 'salesforce.error';
+
+  /**
+   * Dispatched when Salesforce encounters a concerning, but non-error event.
+   *
+   * Subscribers receive a Drupal\salesforce\SalesforceWarningEvent instance.
+   * @Event
+   *
+   * @var string
+   */
+  const WARNING = 'salesforce.warning';
+
+  /**
+   * Dispatched when Salesforce encounters a basic loggable event.
+   *
+   * Subscribers receive a Drupal\salesforce\SalesforceNoticeEvent instance.
+   * @Event
+   *
+   * @var string
+   */
+  const NOTICE = 'salesforce.error';
 
 }

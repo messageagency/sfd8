@@ -316,21 +316,21 @@ class PushQueue extends DatabaseQueue {
           // Getting a Requeue here is weird for a group of items, but we'll
           // deal with it.
           $this->releaseItems($items);
-          $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
+          $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
         }
         catch (SuspendQueueException $e) {
           // Getting a SuspendQueue is more likely, e.g. because of a network
           // or authorization error. Release items and move on to the next
           // mapping in this case.
           $this->releaseItems($items);
-          $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
+          $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
           continue 2;
         }
         catch (\Exception $e) {
           // In case of any other kind of exception, log it and leave the item
           // in the queue to be processed again later.
           // @TODO: this is how Cron.php queue works, but I don't really understand why it doesn't get re-queued.
-          $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
+          $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
         }
         finally {
           // If we've reached our limit, we're done. Otherwise, continue to next items.
@@ -365,7 +365,7 @@ class PushQueue extends DatabaseQueue {
         '%id' => $item->entity_id,
         '%mapping' => $mapping->id(),
       ];
-      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
+      $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
       $this->deleteItem($item);
       return;
     }
@@ -386,7 +386,7 @@ class PushQueue extends DatabaseQueue {
       '%item' => $item->item_id,
       '%fail' => $item->failures,
     ];
-    $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
+    $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
 
     // Failed items will remain in queue, but not be released. They'll be
     // retried only when the current lease expires.
@@ -411,7 +411,7 @@ class PushQueue extends DatabaseQueue {
       return $update->execute();
     }
     catch (\Exception $e) {
-      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
+      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       $this->catchException($e);
       // If the table doesn't exist we should consider the item released.
       return TRUE;

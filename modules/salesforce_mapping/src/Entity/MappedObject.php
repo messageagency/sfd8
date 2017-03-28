@@ -495,7 +495,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
           '@sffield' => $sf_field,
           '@sfid' => $this->sfid(),
         ];
-        $this->eventDispatcher()->dispatch(new SalesforceNoticeEvent($e, $message, $args));
+        $this->eventDispatcher()->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent($e, $message, $args));
         continue;
       }
 
@@ -520,7 +520,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
             '@did' => $this->entity_id->value,
             '@v' => $value,
           ];
-        $this->eventDispatcher()->dispatch(new SalesforceWarningEvent($e, $message, $args));
+        $this->eventDispatcher()->dispatch(SalesforceEvents::WARNING, new SalesforceWarningEvent($e, $message, $args));
         continue;
       }
     }

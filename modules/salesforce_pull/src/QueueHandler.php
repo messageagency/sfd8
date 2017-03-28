@@ -95,7 +95,7 @@ class QueueHandler {
         '%noi' => $this->queue->numberOfItems(),
         '%max' => $this->state->get('salesforce_pull_max_queue_size', 100000),
       ];
-      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
+      $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
       return FALSE;
     }
 
@@ -169,7 +169,7 @@ class QueueHandler {
     catch (\Exception $e) {
       $message = '%type: @message in %function (line %line of %file).';
       $args = Error::decodeException($e);
-      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e, $message, $args));
+      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e, $message, $args));
     }
   }
 
@@ -193,7 +193,7 @@ class QueueHandler {
       catch (\Exception $e) {
         $message = '%type: @message in %function (line %line of %file).';
         $args = Error::decodeException($e);
-        $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e, $message, $args));
+        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e, $message, $args));
       }
     }
   }
@@ -216,7 +216,7 @@ class QueueHandler {
     catch (\Exception $e) {
       $message = '%type: @message in %function (line %line of %file).';
       $args = Error::decodeException($e);
-      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e, $message, $args));
+      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e, $message, $args));
     }
   }
 

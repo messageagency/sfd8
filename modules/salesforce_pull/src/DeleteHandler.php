@@ -154,7 +154,7 @@ class DeleteHandler {
           '%id' => $mapped_object->entity_id->value,
           '%sfid' => $record['id'],
         ];
-        $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
+        $this->eventDispatcher->dispatch((NULL, $message, $args));
         $mapped_object->delete();
         return;
       }
@@ -169,7 +169,7 @@ class DeleteHandler {
         '%id' => $mapped_object->id(),
         '%sfid' => $record['id'],
       ];
-      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
+      $this->eventDispatcher->dispatch((NULL, $message, $args));
       // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
       // $mapped_object->delete();
       return;
@@ -190,10 +190,10 @@ class DeleteHandler {
         '%id' => $mapped_object->entity_id,
         '%sfid' => $record['id'],
       ];
-      $this->eventDispatcher->dispatch(new SalesforceNoticeEvent(NULL, $message, $args));
+      $this->eventDispatcher->dispatch((NULL, $message, $args));
     }
     catch (\Exception $e) {
-      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
+      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       // If mapped entity couldn't be deleted, do not delete the mapped object.
       return;
     }

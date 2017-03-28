@@ -141,7 +141,7 @@ class AuthorizeForm extends ConfigFormBase {
       }
       catch (RequestException $e) {
         drupal_set_message($e->getMessage(), 'warning');
-        $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
+        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       }
     }
     else {
@@ -178,7 +178,7 @@ class AuthorizeForm extends ConfigFormBase {
     }
     catch (RequestException $e) {
       drupal_set_message(t("Error during authorization: %message", ['%message' => $e->getMessage()]), 'error');
-      $this->eventDispatcher->dispatch(new SalesforceErrorEvent($e));
+      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     }
   }
 

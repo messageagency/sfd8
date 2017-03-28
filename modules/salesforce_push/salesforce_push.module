@@ -73,7 +73,7 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
     }
     catch (\Exception $e) {
       // Do not allow any exception to prevent entity CRUD.
-      \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
+      \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     }
   }
 }
@@ -130,7 +130,7 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
     }
     catch (\Exception $e) {
-      \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
+      \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     }
     return;
   }
@@ -164,12 +164,12 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       new SalesforcePushOpEvent($mapped_object, $op)
     );
 
-    \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
+    \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     try {
       salesforce_push_enqueue_async($entity, $mapping, $mapped_object, $op);
     }
     catch (\Exception $e) {
-      \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
+      \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     }
 
     $mapped_object
@@ -214,6 +214,6 @@ function salesforce_push_cron() {
     $queue->processQueues();
   }
   catch (\Exception $e) {
-    \Drupal::service('event_dispatcher')->dispatch(new SalesforceErrorEvent($e));
+    \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
   }
 }
