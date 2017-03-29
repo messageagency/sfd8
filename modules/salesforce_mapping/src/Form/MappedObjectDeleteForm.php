@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Form;
 use Drupal\Core\Entity\ContentEntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
+use Drupal\salesforce\Event\SalesforceEvents;
 
 /**
  * Provides a form for deleting a salesforce_mapped_oject entity.

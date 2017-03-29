@@ -52,6 +52,7 @@ class DeleteHandlerTest extends UnitTestCase {
     $prophecy = $this->prophesize(Entity::CLASS);
     $prophecy->delete()->willReturn(TRUE);
     $prophecy->id()->willReturn(1);
+    $prophecy->label()->willReturn('foo');
     $this->entity = $prophecy->reveal();
 
     $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
@@ -137,7 +138,7 @@ class DeleteHandlerTest extends UnitTestCase {
 
    // mock event dispatcher
     $prophecy = $this->prophesize(ContainerAwareEventDispatcher::CLASS);
-    $prophecy->dispatch(Argument::any())->willReturn();
+    $prophecy->dispatch(Argument::any(), Argument::any())->willReturn();
     $this->ed = $prophecy->reveal();
 
     // Mock server.
@@ -160,22 +161,14 @@ class DeleteHandlerTest extends UnitTestCase {
   }
 
   /**
-<<<<<<< HEAD
    * Test object creation.
-=======
-   * Test object instantiation.
->>>>>>> 8.x-3.x
    */
   public function testObject() {
     $this->assertTrue($this->dh instanceof DeleteHandler);
   }
 
   /**
-<<<<<<< HEAD
    * Test processDeletedRecords.
-=======
-   * Test handler operation, good data.
->>>>>>> 8.x-3.x
    */
   public function testGetUpdatedRecords() {
     $result = $this->dh->processDeletedRecords();

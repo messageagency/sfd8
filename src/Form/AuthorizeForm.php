@@ -11,6 +11,8 @@ use Drupal\salesforce\Rest\RestClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce\Event\SalesforceErrorEvent;
 
 /**
  * Creates authorization form for Salesforce.

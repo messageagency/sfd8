@@ -4,6 +4,8 @@ namespace Drupal\salesforce_pull;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce\Event\SalesforceWarningEvent;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
@@ -154,7 +156,7 @@ class DeleteHandler {
           '%id' => $mapped_object->entity_id->value,
           '%sfid' => $record['id'],
         ];
-        $this->eventDispatcher->dispatch((NULL, $message, $args));
+        $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
         $mapped_object->delete();
         return;
       }
@@ -169,7 +171,7 @@ class DeleteHandler {
         '%id' => $mapped_object->id(),
         '%sfid' => $record['id'],
       ];
-      $this->eventDispatcher->dispatch((NULL, $message, $args));
+      $this->eventDispatcher->dispatch(SalesforceEvents::WARNING, new SalesforceWarningEvent(NULL, $message, $args));
       // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
       // $mapped_object->delete();
       return;
@@ -190,7 +192,7 @@ class DeleteHandler {
         '%id' => $mapped_object->entity_id,
         '%sfid' => $record['id'],
       ];
-      $this->eventDispatcher->dispatch((NULL, $message, $args));
+      $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
     }
     catch (\Exception $e) {
       $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
