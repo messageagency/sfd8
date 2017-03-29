@@ -533,6 +533,9 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         : MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
     );
 
+    // Set a flag here to indicate that a pull is happening, to avoid
+    // triggering a push.
+    $this->drupal_entity->salesforce_pull = TRUE;
     $this->drupal_entity->save();
 
     // Update mapping object.

@@ -19,7 +19,7 @@ class RestResponse_Describe extends RestResponse {
   protected $name;
 
   /**
-   * Flattened fields mapping field name => field label 
+   * Flattened fields mapping field name => field label
    *
    * @var array
    */
@@ -28,13 +28,13 @@ class RestResponse_Describe extends RestResponse {
   /**
    * See https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_sobject_describe.htm
    *
-   * @param RestResponse $response 
+   * @param RestResponse $response
    */
   public function __construct(RestResponse $response) {
     parent::__construct($response->response);
 
     $this->name = $response->data['name'];
-
+    $this->fields = [];
     // Index fields by machine name, so we don't have to search every time.
     foreach ($response->data['fields'] as $field) {
       $this->fields[$field['name']] = $field;
@@ -46,6 +46,7 @@ class RestResponse_Describe extends RestResponse {
       }
       $this->$key = $value;
     }
+    $this->data = $response->data;
   }
 
   /**

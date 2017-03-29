@@ -368,9 +368,6 @@ class RestClientTest extends UnitTestCase {
 
   /**
    * @covers ::objectReadbyExternalId
-   *
-   * @return void
-   * @author Aaron Bauman
    */
   public function testObjectReadbyExternalId() {
     $this->initClient(array_merge($this->methods, [

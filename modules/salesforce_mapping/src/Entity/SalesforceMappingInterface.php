@@ -119,4 +119,32 @@ interface SalesforceMappingInterface {
    */
   public function getKeyValue(EntityInterface $entity);
 
+  /**
+   * We keep track of when this mapping was last pulled with a state value.
+   * Fetch the value.
+   *
+   * @return mixed
+   *   integer timestamp of last sync, or NULL.
+   */
+  public function getLastSyncTime();
+
+  /**
+   * Set this mapping as having been last pulled at $time.
+   *
+   * @param int $time 
+   * @return $this
+   */
+  public function setLastSyncTime($time);
+
+  /**
+   * Generate a select query to pull records from Salesforce for this mapping.
+   *
+   * @param array $mapped_fields
+   *   Fetch only these fields, if given, otherwise fetch all fields.
+   *
+   * @return \Drupal\salesforce\SelectQuery
+   */
+  public function getPullQuery(array $mapped_fields = []);
+  
+
 }

@@ -58,13 +58,6 @@ class RestClient implements RestClientInterface {
   protected $config;
 
   /**
-   * Editable version of config entity.
-   *
-   * @var \Drupal\Core\Config\Config
-   */
-  protected$configEditable;
-
-  /**
    * The state service.
    *
    * @var \Drupal\Core\State\StateInterface
@@ -86,6 +79,7 @@ class RestClient implements RestClientInterface {
   protected $json;
 
   const CACHE_LIFETIME = 300;
+  const LONGTERM_CACHE_LIFETIME = 86400;
 
   /**
    * Constructor which initializes the consumer.
@@ -105,7 +99,6 @@ class RestClient implements RestClientInterface {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
     $this->config = $this->configFactory->get('salesforce.settings');
-    $this->configEditable = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
     $this->cache = $cache;
     $this->json = $json;
@@ -204,7 +197,7 @@ class RestClient implements RestClientInterface {
    *
    * @param string $url
    *   Path to make request from.
-   * @param array $data
+   * @param string $data
    *   The request body.
    * @param array $headers
    *   Request headers to send as name => value.
@@ -217,7 +210,7 @@ class RestClient implements RestClientInterface {
    * @return GuzzleHttp\Psr7\Response
    *   Response object.
    */
-  protected function httpRequest($url, array $data = NULL, array $headers = [], $method = 'GET') {
+  protected function httpRequest($url, $data = NULL, array $headers = [], $method = 'GET') {
     // Build the request, including path and headers. Internal use.
     return $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
   }
@@ -263,20 +256,32 @@ class RestClient implements RestClientInterface {
       elseif (isset($identity['urls'][$api_type])) {
         $url = $identity['urls'][$api_type];
       }
-      $url = str_replace('{version}', $this->config->get('rest_api_version.version'), $url);
+      $url = str_replace('{version}', $this->getApiVersion(), $url);
     }
     return $url;
   }
 
   /**
-   *
+   * Wrapper for config rest_api_version.version
+   */
+  public function getApiVersion() {
+    if ($this->config->get('use_latest')) {
+      $versions = $this->getVersions();
+      $version = end($versions);
+      return $version['version'];
+    }
+    return $this->config->get('rest_api_version.version');
+  }
+
+  /**
+   * Getter for consumer_key
    */
   public function getConsumerKey() {
     return $this->state->get('salesforce.consumer_key');
   }
 
   /**
-   *
+   * Setter for consumer_key
    */
   public function setConsumerKey($value) {
     return $this->state->set('salesforce.consumer_key', $value);
@@ -448,7 +453,9 @@ class RestClient implements RestClientInterface {
   }
 
   /**
+   * Setter for identity state info.
    *
+   * @return $this
    */
   protected function setIdentity($data) {
     $this->state->set('salesforce.identity', $data);
@@ -498,6 +505,34 @@ class RestClient implements RestClientInterface {
    */
   public function getAuthTokenUrl() {
     return $this->getLoginUrl() . '/services/oauth2/token';
+  }
+
+  /**
+   * Wrapper for "Versions" resource to list information about API releases.
+   *
+   * @param $reset
+   *   Whether to reset cache.
+   *
+   * @return array
+   *   Array of all available Salesforce versions.
+   */
+  public function getVersions($reset = FALSE) {
+    $cache = $this->cache->get('salesforce:versions');
+
+    // Force the recreation of the cache when it is older than 24 hours.
+    if ($cache && $this->getRequestTime() < ($cache->created + self::LONGTERM_CACHE_LIFETIME) && !$reset) {
+      return $cache->data;
+    }
+
+    $versions = [];
+    $id = $this->getIdentity();
+    $url = str_replace('v{version}/', '', $id['urls']['rest']);
+    $response = new RestResponse($this->httpRequest($url));
+    foreach ($response->data as $version) {
+      $versions[$version['version']] = $version;
+    }
+    $this->cache->set('salesforce:versions', $versions, 0, ['salesforce']);
+    return $versions;
   }
 
   /**
@@ -558,6 +593,27 @@ class RestClient implements RestClientInterface {
     // $this->moduleHandler->alter('salesforce_query', $query);
     // Casting $query as a string calls SelectQuery::__toString().
     return new SelectQueryResult($this->apiCall('query?q=' . (string) $query));
+  }
+
+  /**
+   * Given a select query result, fetch the next results set, if it exists.
+   *
+   * @param SelectQueryResult $results
+   *   The query result which potentially has more records
+   * @return SelectQueryResult
+   *   If there are no more results, $results->records will be empty.
+   */
+  public function queryMore(SelectQueryResult $results) {
+    if ($results->done()) {
+      return new SelectQueryResult([
+        'totalSize' => $results->size(),
+        'done' => TRUE,
+        'records' => [],
+      ]);
+    }
+    $version_path = parse_url($sfapi->getApiEndPoint(), PHP_URL_PATH);
+    $next_records_url = str_replace($version_path, '', $results->nextRecordsUrl());
+    return new SelectQueryResult($this->apiCall($next_records_url));
   }
 
   /**
@@ -870,7 +926,7 @@ class RestClient implements RestClientInterface {
    * @throws Exception
    *   If SFID doesn't match any object type.
    */
-  public static function getObjectTypeName(SFID $id) {
+  public function getObjectTypeName(SFID $id) {
     $prefix = substr((string)$id, 0, 3);
     $describe = $this->objects();
     foreach ($describe as $object) {

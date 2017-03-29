@@ -9,7 +9,7 @@ class SFID {
   
   public function __construct($id) {
     if (strlen($id) != 15 && strlen($id) != self::MAX_LENGTH) {
-      throw new \Exception('Invalid sfid');
+      throw new \Exception('Invalid sfid ' . strlen($id));
     }
     $this->id = $id;
     if (strlen($this->id) == 15) {

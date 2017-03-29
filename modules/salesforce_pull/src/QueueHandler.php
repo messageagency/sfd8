@@ -10,6 +10,7 @@ use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
@@ -54,8 +55,6 @@ class QueueHandler {
    */
   protected $eventDispatcher;
 
-  protected $pull_fields;
-
   /**
    * @param RestClientInterface $sfapi
    * @param QueueInterface $queue
@@ -73,8 +72,6 @@ class QueueHandler {
     $this->mappings = $entity_type_manager
       ->getStorage('salesforce_mapping')
       ->loadMultiple();
-    $this->pull_fields = [];
-    $this->organizeMappings();
   }
 
   /**
@@ -103,30 +100,13 @@ class QueueHandler {
     foreach ($this->mappings as $mapping) {
       $results = $this->doSfoQuery($mapping);
       if ($results) {
-        $this->insertIntoQueue($mapping, $results->records());
-        $this->handleLargeRequests($mapping, $results);
-        $this->state->set(
-          'salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(),
-          // @TODO Replace this with a better implementation when available,
-          // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
-          $this->request->server->get('REQUEST_TIME')
-        );
+        $this->enqueueAllResults($mapping, $results);
+        // @TODO Replace this with a better implementation when available,
+        // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
+        $mapping->setLastSyncTime($this->request->server->get('REQUEST_TIME'));
       }
     }
     return TRUE;
-  }
-
-  /**
-   * Iterates over the mappings and merges the pull fields array with object's
-   * array of pull fields to form a set of unique fields to pull.
-   */
-  protected function organizeMappings() {
-    foreach ($this->mappings as $mapping) {
-      $this->pull_fields[$mapping->getSalesforceObjectType()] =
-        (!empty($this->pull_fields[$mapping->getSalesforceObjectType()])) ?
-          $this->pull_fields[$mapping->getSalesforceObjectType()] + $mapping->getPullFieldsArray() :
-          $mapping->getPullFieldsArray();
-    }
   }
 
   /**
@@ -140,24 +120,7 @@ class QueueHandler {
    */
   protected function doSfoQuery(SalesforceMappingInterface $mapping) {
     // @TODO figure out the new way to build the query.
-    $soql = new SelectQuery($mapping->getSalesforceObjectType());
-
-    // Convert field mappings to SOQL.
-    $soql->fields = ['Id', $mapping->getPullTriggerDate()];
-    $mapped_fields = $this->pull_fields[$mapping->getSalesforceObjectType()];
-    foreach ($mapped_fields as $field) {
-      $soql->fields[] = $field;
-    }
-
-    // If no lastupdate, get all records, else get records since last pull.
-    $sf_last_sync = $this->state->get('salesforce_pull_last_sync_' . $mapping->getSalesforceObjectType(), NULL);
-    if ($sf_last_sync) {
-      $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
-      $soql->addCondition($mapping->getPullTriggerDate(), $last_sync, '>');
-    }
-
-    $soql->fields = array_unique($soql->fields);
-
+    $soql = $mapping->getPullQuery();
     // Execute query.
     try {
       $this->event_dispatcher->dispatch(
@@ -174,44 +137,36 @@ class QueueHandler {
   }
 
   /**
-   * Handle requests larger than the batch limit (usually 2000) recursively.
+   * Iterates over an entire result set, calling nextRecordsUrl when necessary,
+   * and inserts the records into pull queue.
    *
-   * @param SalesforceMappingInterface
-   *   Mapping object currently being processed
-   * @param SelectQueryResult
-   *   Results, which includes batched records fetch URL
+   * @param SalesforceMappingInterface $mapping
+   * @param SelectQueryResult $results
    */
-  protected function handleLargeRequests(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
-    if ($results->nextRecordsUrl() != NULL) {
-      $version_path = $this->parseUrl();
-      try {
-        $new_result = $this->sfapi->apiCall(
-          str_replace($version_path, '', $results->nextRecordsUrl()));
-        $this->insertIntoQueue($mapping, $new_result->records());
-        $this->handleLargeRequests($mapping, $new_result);
-      }
-      catch (\Exception $e) {
-        $message = '%type: @message in %function (line %line of %file).';
-        $args = Error::decodeException($e);
-        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e, $message, $args));
-      }
+  public function enqueueAllResults(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
+    while (!$this->enqueueResultSet($mapping, $results)) {
+      $results = $this->sfapi->queryMore($results);
     }
   }
 
   /**
-   * Inserts results into queue
+   * Enqueue a set of results into pull queue.
    *
    * @param SalesforceMappingInterface
    *   Mapping object currently being processed
    * @param array
    *   Result record set
+   * @return bool
+   *   Returns results->done(): TRUE if there are no more results, or FALSE if
+   *   there are additional records to be queried.
    */
-  protected function insertIntoQueue(SalesforceMappingInterface $mapping, array $records) {
+  public function enqueueResultSet(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
     try {
-      foreach ($records as $record) {
+      foreach ($results->records() as $record) {
         // @TDOD? Pull Queue Enqueue Event
-        $this->queue->createItem(new PullQueueItem($record, $mapping));
+        $this->enqueueRecord($mapping, $record);
       }
+      return $results->done();
     }
     catch (\Exception $e) {
       $message = '%type: @message in %function (line %line of %file).';
@@ -221,10 +176,13 @@ class QueueHandler {
   }
 
   /**
-   * Wrapper for parse_url()
+   * Enqueue a single record for pull.
+   *
+   * @param SalesforceMappingInterface $mapping 
+   * @param SObject $record 
    */
-  protected function parseUrl() {
-    parse_url($this->sfapi->getApiEndPoint(), PHP_URL_PATH);
+  public function enqueueRecord(SalesforceMappingInterface $mapping, SObject $record) {
+    $this->queue->createItem(new PullQueueItem($record, $mapping));
   }
 
 }
