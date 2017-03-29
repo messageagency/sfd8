@@ -8,6 +8,7 @@ use Drupal\field\Field;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
+use Drupal\salesforce\Event\SalesforceEvents;
 
 /**
  * Adapter for entity Reference and fields.

@@ -14,6 +14,7 @@ use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Drupal\salesforce\Event\SalesforceEvents;
 
 /**
  * Salesforce push queue.

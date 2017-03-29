@@ -90,7 +90,7 @@ class QueueHandlerTest extends UnitTestCase {
 
     // mock event dispatcher
     $prophecy = $this->prophesize(ContainerAwareEventDispatcher::CLASS);
-    $prophecy->dispatch(Argument::any())->willReturn();
+    $prophecy->dispatch(Argument::any(), Argument::any())->willReturn();
     $this->ed = $prophecy->reveal();
 
     // mock server

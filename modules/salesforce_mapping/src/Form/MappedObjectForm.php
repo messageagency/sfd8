@@ -9,8 +9,8 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
+use Drupal\salesforce\Event\SalesforceEvents;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-
 
 /**
  * Salesforce Mapping Form base.
