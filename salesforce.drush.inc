@@ -7,6 +7,12 @@
 
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce_pull\QueueHandler;
+use Drupal\salesforce_pull\PullQueueItem;
+use Drupal\salesforce_pull\Plugin\QueueWorker\CronPull;
+use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce_mapping\Event\SalesforceQueryEvent;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
 /**
  * Implements hook_drush_command().
@@ -77,6 +83,7 @@ raw: Display the complete, raw describe response."
       ),
     ),
   );
+
   $items['sf-query-object'] = array(
     'description' => 'Query an object using SOQL with specified conditions.',
     'aliases' => array('sfqo'),
@@ -90,18 +97,15 @@ raw: Display the complete, raw describe response."
       ),
       'where' =>array(
         'description' => 'A WHERE clause to add to the SOQL query',
-        'example-value' => 'isDeleted = TRUE',
       ),
       'fields' =>array(
         'description' => 'A comma-separated list fields to select in the SOQL query. If absent, an API call is used to find all fields',
-        'example-value' => 'Id,LastName',
       ),
       'limit' => [
         'description' => 'Integer limit on the number of results to return for the query.',
       ],
       'order' => [
         'description' => 'Comma-separated fields by which to sort results. Make sure to enclose in quotes for any whitespace.',
-        'example-value' => '"Name, SystemModStamp DESC"',
       ],
     ),
   );
@@ -114,9 +118,31 @@ raw: Display the complete, raw describe response."
     ),
   );
 
-  $items['sf-pull'] = [
-    'description' => 'Pull (import) records for from Salesforce, or enqueue them to be pulled.',
-    'aliases' => ['sfpull', 'sfi'],
+  $items['sf-pull-query'] = [
+    'description' => 'Given a mapping, enqueue records for pull from Salesforce, ignoring modification timestamp. This command is useful, for example, when seeding content for a Drupal site prior to deployment.',
+    'aliases' => ['sfpq', 'sfiq'],
+    'arguments' => [
+      'name' => 'Machine name of the Salesforce Mapping for which to queue pull records.',
+    ],
+    'options' => [
+      'where' => [
+        'description' => 'A WHERE clause to add to the SOQL pull query. Default behavior is to query and pull all records.',
+      ],
+    ],
+    'examples' => [
+      'drush sfpq' => 'Interactively select a mapping for which to queue records.',
+      'drush sfpq user' => 'Query and queue all records for "user" Salesforce mapping.',
+      'drush sfpq user --where="Email like \'%foo%\' AND (LastName = \'bar\' OR FirstName = \'bar\')"' => 'Query and queue all records for "user" Salesforce mapping with Email field containing the string "foo" and First or Last name equal to "bar"',
+    ],
+  ];
+
+  $items['sf-pull-file'] = [
+    'description' => 'Given a mapping, enqueue a list of object IDs to be pulled from a CSV file, e.g. a Salesforce report. The first column of the CSV file must be SFIDs. Additional columns will be ignored.',
+    'aliases' => ['sfpf', 'sfif'],
+    'arguments' => [
+      'file' => 'CSV file name of 15- or 18-character Salesforce ids to be pulled. ',
+      'name' => 'Machine name of the Salesforce Mapping for which to queue pull records.',
+    ],
   ];
 
   return $items;
@@ -141,7 +167,6 @@ function drush_salesforce_sf_list_resources() {
   else {
     drush_log('Could not obtain a list of resources!', 'error');
   }
-
 }
 
 /**
@@ -282,7 +307,10 @@ function drush_salesforce_sf_read_object($id) {
   try {
     $name = $salesforce->getObjectTypeName(new SFID($id));
     if ($object = $salesforce->objectRead($name, $id)) {
-      drush_print(dt('!type with id !id:', ['!type' => $object->type(), '!id' => $object->id()]));
+      drush_print(dt('!type with id !id:', [
+        '!type' => $object->type(),
+        '!id' => $object->id()
+      ]));
       drush_print(drush_format($object->fields()));
     }
   }
@@ -379,7 +407,11 @@ function drush_salesforce_sf_query_object($name) {
     $fields = implode(',', $query->fields);
     $pretty_query = str_replace($fields, ' * ', $pretty_query);
   }
-  drush_print(dt("Showing !size of !total records for query:\n!query", ['!size' => count($result->records()), '!total' => $result->size(), '!query' => $pretty_query]));
+  drush_print(dt("Showing !size of !total records for query:\n!query", [
+    '!size' => count($result->records()),
+    '!total' => $result->size(),
+    '!query' => $pretty_query
+  ]));
 
 }
 
@@ -403,6 +435,192 @@ function drush_salesforce_sf_execute_query($query = NULL) {
   }
 }
 
-function drush_salesforce_sf_pull() {
-  
+/**
+ * Queues records for pull from salesforce for the given mapping.
+ *
+ * @param string $name
+ */
+function drush_salesforce_sf_pull_query($name = NULL) {
+  if (!($mapping = _salesforce_drush_get_mapping($name))) {
+    return;
+  }
+  if (!($soql = _salesforce_drush_get_pull_query($mapping))) {
+    drush_log(dt('Unable to generate pull query for !name. Does this mapping have any Salesforce Action Triggers enabled?'), 'error');
+  }
+
+  if ($where = drush_get_option('where')) {
+    $soql->conditions[] = [$where];
+  }
+
+  \Drupal::service('event_dispatcher')->dispatch(
+    SalesforceEvents::PULL_QUERY,
+    new SalesforceQueryEvent($mapping, $soql)
+  );
+
+  drush_log(dt('Issuing pull query: !query', ['!query' => (string)$soql]));
+  $results = \Drupal::service('salesforce.client')->query($soql);
+
+  if (empty($results)) {
+    drush_print('No records found to pull.');
+    return;
+  }
+
+  \Drupal::service('salesforce_pull.queue_handler')
+    ->enqueueAllResults($mapping, $results);
+  drush_print(dt('Queued !count items for pull.', ['!count' => $results->size()]));
+}
+
+/**
+ * Queues records for pull from Salesforce from the given file and mapping.
+ *
+ * @param string $file
+ * @param string $name
+ */
+function drush_salesforce_sf_pull_file($file, $name = NULL) {
+  if (empty($file)) {
+    drush_log("File argument is required.", 'error');
+    drush_log("usage:\n  drush sf-pull-file file_name [mapping_id]", 'error');
+    return;
+  }
+  if (!file_exists($file)) {
+    drush_log('File not found.', 'error');
+    return;
+  }
+
+  if (!($mapping = _salesforce_drush_get_mapping($name))) {
+    return;
+  }
+
+  // Fetch the base query to make sure we can pull using this mapping.
+  $soql = _salesforce_drush_get_pull_query($mapping);
+  if (empty($soql)) {
+    drush_log(dt('Unable to generate pull query for !name. Does this mapping have any Salesforce Action Triggers enabled?'), 'error');
+    return;
+  }
+
+  $sf = \Drupal::service('salesforce.client');
+
+  $rows = array_map('str_getcsv', file($file));
+
+  // Track IDs to avoid duplicates.
+  $seen = [];
+
+  // Max length for SOQL query is 20,000 characters. Chunk the IDs into smaller
+  // units to avoid this limit. 1000 IDs per query * 18 chars per ID = up to
+  // 18000 characters per query, plus up to 2000 for fields, where condition,
+  // etc.
+  $queries = [];
+  foreach (array_chunk($rows, 1000) as $i => $chunk) {
+    $base = $i * 1000;
+    // Reset our base query:
+    $soql = _salesforce_drush_get_pull_query($mapping);
+
+    // Now add all the IDs to it
+    $sfids = [];
+    foreach ($chunk as $j => $row) {
+      if (empty($row) || empty($row[0])) {
+        drush_log(dt('Skipping row !n, no SFID found.', ['!n' => $base + $j + 1]), 'warning');
+        continue;
+      }
+      try {
+        $sfid = new SFID($row[0]);
+        // Sanity check to make sure the key-prefix is correct. 
+        // If so, this is probably a good SFID.
+        // If not, it is definitely not a good SFID.
+        if ($mapping->getSalesforceObjectType() != $sf->getObjectTypeName($sfid)) {
+          throw new \Exception();
+        }
+      }
+      catch (\Exception $e) {
+        drush_log(dt('Skipping row !n, no SFID found.', ['!n' => $base + $j + 1]), 'warning');
+        continue;
+      }
+      $sfid = (string)$sfid;
+      if (empty($sfids[$sfid])) {
+        $sfids[] = $sfid;
+        $seen[$sfid] = $sfid;
+      }
+    }
+    $soql->addCondition('Id', $sfids, 'IN');
+    $queries[] = $soql;
+  }
+  if (empty($seen)) {
+    drush_log(dt('No SFIDs found in the given file.'), 'error');
+    return;
+  }
+  if (!drush_confirm(dt('Ready to enqueue !count records for pull?', ['!count' => count($seen)]))) {
+    return;
+  }
+
+  foreach ($queries as $soql) {
+    \Drupal::service('event_dispatcher')->dispatch(
+      SalesforceEvents::PULL_QUERY,
+      new SalesforceQueryEvent($mapping, $soql)
+    );
+
+    drush_log(dt('Issuing pull query: !query', ['!query' => (string)$soql]));
+
+    $results = \Drupal::service('salesforce.client')->query($soql);
+
+    if (empty($results)) {
+      drush_lo('No records found to pull.');
+      continue;
+    }
+
+    \Drupal::service('salesforce_pull.queue_handler')
+      ->enqueueAllResults($mapping, $results);
+    drush_print(dt('Queued !count items for pull.', ['!count' => $results->size()]));
+  }
+
+}
+
+/**
+ * Helper method to get a mapping from the given name, or from user input if 
+ * name is empty.
+ *
+ * @param string $name
+ * @return SalesforceMappingInterface
+ */
+function _salesforce_drush_get_mapping($name = NULL) {
+  $mapping_storage = \Drupal::service('entity_type.manager')
+    ->getStorage('salesforce_mapping');
+
+  if (empty($name)) {
+    $choices = array_keys($mapping_storage->loadMultiple());
+    if (empty($choices)) {
+      drush_log(dt('No mappings found.'), 'error');
+      return;
+    }
+    ksort($choices);
+    $choice = drush_choice($choices, dt('Enter a number to choose which mapping to use.'));
+    if ($choice === FALSE) {
+      return;
+    }
+    $name = $choices[$choice];
+  }
+  $mapping = $mapping_storage->load($name);
+  if (empty($mapping)) {
+    drush_log(dt('Mapping !name not found.', ['!name' => $name]), 'error');
+  }
+  return $mapping;
+}
+
+/**
+ * Helper method to generate a stub pull query for the given mapping.
+ *
+ * @param SalesforceMappingInterface $mapping 
+ * @return SelectQuery
+ */
+function _salesforce_drush_get_pull_query(SalesforceMappingInterface $mapping) {
+  $soql = $mapping->getPullQuery();
+
+  // Ditch the timestamp field condition, so that we're fetching ALL records.
+  $new_conditions = [];
+  foreach ($soql->conditions as $condition) {
+    if ($condition['field'] != $mapping->getPullTriggerDate()) {
+      $new_conditions[] = $condition;
+    }
+  }
+  $soql->conditions = $new_conditions;
+  return $soql;
 }

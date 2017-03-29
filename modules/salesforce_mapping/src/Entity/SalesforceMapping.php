@@ -5,7 +5,8 @@ namespace Drupal\salesforce_mapping\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce_mapping\MappingConstants;
-
+use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\Exception;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -327,15 +328,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Salesforce Mappind Field Manager service
-   *
-   * @return \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager
-   */
-  public function fieldManager() {
-    return \Drupal::service('plugin.manager.salesforce_mapping_field');
-  }
-
-  /**
    * Returns the name of this configuration object.
    * from ConfigBase...
    *
@@ -344,6 +336,76 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   public function getName() {
     return $this->name;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastSyncTime() {
+    return $this->state()->get('salesforce_pull_last_sync_' . $this->getSalesforceObjectType(), NULL);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastSyncTime($time) {
+    $this->state()->set('salesforce_pull_last_sync_' . $this->getSalesforceObjectType(), $time);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPullQuery(array $mapped_fields = []) {
+    if (!$this->doesPull()) {
+      throw new Exception('Mapping does not pull.');
+    }
+    $object_type = $this->getSalesforceObjectType();
+    $soql = new SelectQuery($object_type);
+
+    // Convert field mappings to SOQL.
+    if (empty($mapped_fields)) {
+      $describe = $this->client()->objectDescribe($object_type);
+      $mapped_fields = array_keys($describe->getFields());
+    }
+    $soql->fields = $mapped_fields;
+    $soql->fields[] = 'Id';
+    $soql->fields[] = $this->getPullTriggerDate();
+
+    // If no lastupdate, get all records, else get records since last pull.
+    $sf_last_sync = $this->getLastSyncTime();
+    if ($sf_last_sync) {
+      $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
+      $soql->addCondition($this->getPullTriggerDate(), $last_sync, '>');
+    }
+    return $soql;
+  }
+
+  /**
+   * Salesforce Mapping Field Manager service
+   *
+   * @return \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager
+   */
+  protected function fieldManager() {
+    return \Drupal::service('plugin.manager.salesforce_mapping_field');
+  }
+
+  /**
+   * Salesforce API client service
+   *
+   * @return \Drupal\salesforce\Rest\RestClient
+   */
+  protected function client() {
+    return \Drupal::service('salesforce.client');
+  }
+
+  /**
+   * State service
+   *
+   * @return \Drupal\Core\State\StateInterface
+   */
+  protected function state() {
+    return \Drupal::state();
   }
 
 }

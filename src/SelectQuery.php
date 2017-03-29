@@ -64,13 +64,13 @@ class SelectQuery {
   public function __toString() {
 
     $query = 'SELECT+';
-    $query .= implode(',', $this->fields);
+    $query .= implode(',', array_unique($this->fields));
     $query .= "+FROM+" . $this->objectType;
 
     if (count($this->conditions) > 0) {
       $where = [];
       foreach ($this->conditions as $condition) {
-        $where[] = implode('', $condition);
+        $where[] = implode('+', $condition);
       }
       $query .= '+WHERE+' . implode('+AND+', $where);
     }

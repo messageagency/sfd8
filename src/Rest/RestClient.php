@@ -197,7 +197,7 @@ class RestClient implements RestClientInterface {
    *
    * @param string $url
    *   Path to make request from.
-   * @param array $data
+   * @param string $data
    *   The request body.
    * @param array $headers
    *   Request headers to send as name => value.
@@ -210,7 +210,7 @@ class RestClient implements RestClientInterface {
    * @return GuzzleHttp\Psr7\Response
    *   Response object.
    */
-  protected function httpRequest($url, array $data = NULL, array $headers = [], $method = 'GET') {
+  protected function httpRequest($url, $data = NULL, array $headers = [], $method = 'GET') {
     // Build the request, including path and headers. Internal use.
     return $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
   }
@@ -266,7 +266,8 @@ class RestClient implements RestClientInterface {
    */
   public function getApiVersion() {
     if ($this->config->get('use_latest')) {
-      $version = end($this->getVersions());
+      $versions = $this->getVersions();
+      $version = end($versions);
       return $version['version'];
     }
     return $this->config->get('rest_api_version.version');
@@ -592,6 +593,27 @@ class RestClient implements RestClientInterface {
     // $this->moduleHandler->alter('salesforce_query', $query);
     // Casting $query as a string calls SelectQuery::__toString().
     return new SelectQueryResult($this->apiCall('query?q=' . (string) $query));
+  }
+
+  /**
+   * Given a select query result, fetch the next results set, if it exists.
+   *
+   * @param SelectQueryResult $results
+   *   The query result which potentially has more records
+   * @return SelectQueryResult
+   *   If there are no more results, $results->records will be empty.
+   */
+  public function queryMore(SelectQueryResult $results) {
+    if ($results->done()) {
+      return new SelectQueryResult([
+        'totalSize' => $results->size(),
+        'done' => TRUE,
+        'records' => [],
+      ]);
+    }
+    $version_path = parse_url($sfapi->getApiEndPoint(), PHP_URL_PATH);
+    $next_records_url = str_replace($version_path, '', $results->nextRecordsUrl());
+    return new SelectQueryResult($this->apiCall($next_records_url));
   }
 
   /**
