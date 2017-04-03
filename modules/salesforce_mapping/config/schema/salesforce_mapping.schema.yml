@@ -31,6 +31,18 @@ salesforce_mapping.salesforce_mapping.*:
     pull_trigger_date:
       type: string
       label: 'Pull Trigger Date Field'
+    pull_frequency:
+      type: integer
+      label: 'Pull Frequency'
+    push_frequency:
+      type: integer
+      label: 'Push Frequency'
+    push_limit:
+      type: integer
+      label: 'Push Time Limit'
+    push_retries:
+      type: integer
+      label: 'Push Retries'
     sync_triggers:
       type: mapping
       label: 'Sync triggers'

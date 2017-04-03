@@ -73,7 +73,7 @@ class AuthorizeForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'salesforce_oauth';
+    return 'salesforce_settings';
   }
 
   /**
@@ -93,58 +93,34 @@ class AuthorizeForm extends ConfigFormBase {
     // something that makes sense.
     $config = $this->config('salesforce.settings');
 
-    $form['creds'] = [
-      '#title' => $this->t('API / OAuth Connection Settings'),
-      '#type' => 'details',
-      '#open' => TRUE,
-      '#description' => $this->t('Authorize this website to communicate with Salesforce by entering the consumer key and secret from a remote application. Submitting the form will redirect you to Salesforce where you will be asked to grant access.'),
+    $form['use_latest'] = [
+      '#title' => $this->t('Use Latest Rest API version (recommended)'),
+      '#type' => 'checkbox',
+      '#description' => $this->t('Always use the latest Rest API version when connecting to Salesforce. In general, Rest API is backwards-compatible for many years. Unless you have a very specific reason, you should probably just use the latest version.'),
     ];
-    $form['creds']['consumer_key'] = [
-      '#title' => $this->t('Salesforce consumer key'),
-      '#type' => 'textfield',
-      '#description' => $this->t('Consumer key of the Salesforce remote application you want to grant access to'),
-      '#required' => TRUE,
-    ];
-    $form['creds']['consumer_secret'] = [
-      '#title' => $this->t('Salesforce consumer secret'),
-      '#type' => 'password',
-      '#description' => $this->t('Consumer secret of the Salesforce remote application you want to grant access to'),
-      '#required' => TRUE,
-    ];
-    $form['creds']['login_url'] = [
-      '#title' => $this->t('Login URL'),
-      '#type' => 'textfield',
-      '#default_value' => $this->sf_client->getLoginUrl(),
-      '#required' => TRUE,
+    $versions = [];
+    $form['rest_api_version']['version'] = [
+      '#title' => $this->t('Select a specific Rest API version (advanced)'),
+      '#type' => 'select',
+      '#options' => $versions,
+      '#tree' => TRUE,
     ];
 
-    // If fully configured, attempt to connect to Salesforce and return a list
-    // of resources.
-    if ($this->sf_client->isAuthorized()) {
-      $form['creds']['#open'] = FALSE;
-      $form['creds']['#description'] = $this->t('Your Salesforce salesforce instance is currently authorized. Enter credentials here only to change credentials.');
-      unset($_SESSION['messages']['salesforce_oauth_error error']);
-      try {
-        $resources = $this->sf_client->listResources();
-        foreach ($resources->resources as $key => $path) {
-          $items[] = $key . ': ' . $path;
-        }
-        if (!empty($items)) {
-          $form['resources'] = [
-            '#title' => $this->t('Your Salesforce instance is authorized and has access to the following resources:'),
-            '#items' => $items,
-            '#theme' => 'item_list',
-          ];
-        }
-      }
-      catch (RequestException $e) {
-        drupal_set_message($e->getMessage(), 'warning');
-        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-      }
-    }
-    else {
-      drupal_set_message(t('Salesforce needs to be authorized to connect to this website.'), 'salesforce_oauth_error error');
-    }
+    $form['push_limit'] = [
+      '#title' => $this->t('Global push limit'),
+      '#type' => 'number',
+      '#description' => $this->t('Set the maximum number of records to be processed during each push queue process. Enter 0 for no limit.'),
+      '#required' => TRUE,
+      '#min' => 0,
+    ];
+
+    $form['pull_max_queue_size'] = [
+      '#title' => $this->t('Pull queue max size'),
+      '#type' => 'password',
+      '#description' => $this->t('Set the maximum number of items which can be enqueued for pull at any given time. Note this setting is not exactly analogous to the push queue limit, since Drupal Cron API does not offer such granularity. Enter 0 for no limit.'),
+      '#required' => TRUE,
+      '#min' => 0,
+    ];
 
     $form = parent::buildForm($form, $form_state);
     $form['creds']['actions'] = $form['actions'];

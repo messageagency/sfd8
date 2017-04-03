@@ -1,7 +1,7 @@
 <?php
 namespace Drupal\Tests\salesforce_pull\Unit;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Queue\QueueDatabaseFactory;
 use Drupal\Core\Queue\QueueInterface;
@@ -60,6 +60,9 @@ class QueueHandlerTest extends UnitTestCase {
     $this->mapping->expects($this->any())
       ->method('getPullFieldsArray')
       ->willReturn(['Name' => 'Name', 'Account Number' => 'Account Number']);
+    $this->mapping->expects($this->any())
+      ->method('getNextPullTime')
+      ->willReturn(0);
 
     $prophecy = $this->prophesize(QueueInterface::CLASS);
     $prophecy->createItem()->willReturn(1);
@@ -83,13 +86,13 @@ class QueueHandlerTest extends UnitTestCase {
 
     // mock state
     $prophecy = $this->prophesize(StateInterface::CLASS);
-    $prophecy->get('salesforce_pull_last_sync_default', Argument::any())->willReturn('1485787434');
-    $prophecy->get('salesforce_pull_max_queue_size', Argument::any())->willReturn('100000');
-    $prophecy->set('salesforce_pull_last_sync_default', Argument::any())->willReturn(null);
+    $prophecy->get('salesforce.sobject_pull_info', Argument::any())->willReturn(['default' => ['last_pull_timestamp' => '0']]);
+    $prophecy->get('salesforce.pull_max_queue_size', Argument::any())->willReturn(QueueHandler::PULL_MAX_QUEUE_SIZE);
+    $prophecy->set('salesforce.sobject_pull_info', Argument::any())->willReturn(null);
     $this->state = $prophecy->reveal();
 
     // mock event dispatcher
-    $prophecy = $this->prophesize(ContainerAwareEventDispatcher::CLASS);
+    $prophecy = $this->prophesize(EventDispatcherInterface::CLASS);
     $prophecy->dispatch(Argument::any(), Argument::any())->willReturn();
     $this->ed = $prophecy->reveal();
 
@@ -100,10 +103,10 @@ class QueueHandlerTest extends UnitTestCase {
 
     // mock request
     $request = $this->prophesize(Request::CLASS);
+    $request->server = $this->server;
 
     // mock request stack
     $prophecy = $this->prophesize(RequestStack::CLASS);
-    $prophecy->server = $this->server;
     $prophecy->getCurrentRequest()->willReturn($request->reveal());
     $this->request_stack = $prophecy->reveal();
 
@@ -138,7 +141,7 @@ class QueueHandlerTest extends UnitTestCase {
     // initialize with queue size > 100000 (default)
     $prophecy = $this->prophesize(QueueInterface::CLASS);
     $prophecy->createItem()->willReturn(1);
-    $prophecy->numberOfItems()->willReturn(100001);
+    $prophecy->numberOfItems()->willReturn(QueueHandler::PULL_MAX_QUEUE_SIZE + 1);
     $this->queue = $prophecy->reveal();
 
     $prophecy = $this->prophesize(QueueDatabaseFactory::CLASS);

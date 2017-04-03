@@ -1,14 +1,17 @@
 <?php
 namespace Drupal\Tests\salesforce_mapping\Unit;
 
-use Drupal\Tests\UnitTestCase;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\Core\Config\Entity\ConfigEntityTypeInterface;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\State\StateInterface;
+use Drupal\Tests\UnitTestCase;
+use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Properties;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
 use Prophecy\Argument;
+
 
 /**
  * Test Object instantitation
@@ -41,6 +44,9 @@ class SalesforceMappingTest extends UnitTestCase {
       'key' => 'Drupal_id__c',
       'async' => 1,
       'pull_trigger_date' => 'LastModifiedDate',
+      'push_limit' => 0,
+      'push_frequency' => 0,
+      'pull_frequency' => 0,
       'sync_triggers' => [
         MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => 1,
         MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => 1,
@@ -91,6 +97,20 @@ class SalesforceMappingTest extends UnitTestCase {
     $prophecy = $this->prophesize(SalesforceMappingFieldPluginManager::CLASS);
     $prophecy->createInstance(Argument::any(), Argument::any())->willReturn($sf_mapping_field);
     $field_manager = $prophecy->reveal();
+
+
+    // mock state
+    $prophecy = $this->prophesize(StateInterface::CLASS);
+    $prophecy->get('salesforce.sobject_pull_info', Argument::any())->willReturn([]);
+    $prophecy->get('salesforce.mapping_push_info', Argument::any())->willReturn([$this->id => [
+      'last_timestamp' => 0,
+    ]]);
+    $prophecy->set('salesforce.mapping_push_info', Argument::any())->willReturn(null);
+    $this->state = $prophecy->reveal();
+
+    $container = new ContainerBuilder();
+    $container->set('state', $this->state);
+    \Drupal::setContainer($container);
 
     $this->mapping = $this->getMockBuilder(SalesforceMapping::CLASS)
       ->setMethods(['fieldManager'])

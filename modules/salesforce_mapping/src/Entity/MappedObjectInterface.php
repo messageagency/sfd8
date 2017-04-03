@@ -10,7 +10,7 @@ use Drupal\salesforce\SObject;
 /**
  *
  */
-interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInterface {
+interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInterface, EntityInterface {
 
   /**
    * @return return SalesforceMappingInterface

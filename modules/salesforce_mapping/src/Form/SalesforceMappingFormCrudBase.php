@@ -6,6 +6,7 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\Core\Url;
 
 /**
  * Salesforce Mapping Form base.
@@ -20,16 +21,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   protected $storageController;
 
   /**
-   * The mapping field plgin controller.
-   * Note used currently
-   * @var [type]
-   */
-  //protected $mappingFieldPluginManager;
-
-  // not currently used (1 use commented out)
-  //protected $pushPluginManager;
-
-  /**
    * {@inheritdoc}
    *
    * @TODO this function is almost 200 lines. Look into leveraging core Entity
@@ -37,6 +28,15 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    *   into smaller chunks.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    // Perform our salesforce queries first, so that if we can't connect we don't waste time on the rest of the form.
+    try {
+      $object_type_options = $this->get_salesforce_object_type_options();
+    }
+    catch (\Exception $e) {
+      $href = new Url('salesforce.authorize');
+      drupal_set_message($this->t('Error when connecting to Salesforce. Please <a href="@href">check your credentials</a> and try again: %message', ['@href' => $href->toString(), '%message' => $e->getMessage()]), 'error');
+      return $form;
+    }
     $form = parent::buildForm($form, $form_state);
 
     $mapping = $this->entity;
@@ -134,7 +134,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#type' => 'select',
       '#description' => $this->t('Select a Salesforce object to map.'),
       '#default_value' => $salesforce_object_type,
-      '#options' => $this->get_salesforce_object_type_options(),
+      '#options' => $object_type_options,
       '#required' => TRUE,
       '#empty_option' => $this->t('- Select -'),
     ];
@@ -186,6 +186,37 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#type' => 'checkbox',
       '#description' => t('When real-time push is disabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD, and only enqueue failures for async push.'),
       '#default_value' => $mapping->async,
+    ];
+
+    $form['queue']['push_frequency'] = [
+      '#title' => t('Push Frequency'),
+      '#type' => 'number',
+      '#default_value' => $mapping->push_frequency,
+      '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to push data to Salesforce. Enter 0 to push as often as possible. FYI: 1 hour = 3600; 1 day = 86400.'),
+      '#min' => 0,
+    ];
+
+    $form['queue']['push_limit'] = [
+      '#title' => t('Push Limit'),
+      '#type' => 'number',
+      '#default_value' => $mapping->push_limit,
+      '#description' => t('Enter the maximum number of records to be pushed to Salesforce during a single queue batch. Enter 0 to process as many records as possible, subject to the global push queue limit.'),
+      '#min' => 0,
+    ];
+
+    $form['queue']['push_retries'] = [
+      '#title' => t('Push Retries'),
+      '#type' => 'number',
+      '#default_value' => $mapping->push_retries,
+      '#description' => t('Enter the maximum number of attempts to push a record to Salesforce before it\'s considered failed. Enter 0 for no limit.'),
+      '#min' => 0,
+    ];
+
+    $form['queue']['pull_frequency'] = [
+      '#title' => t('Pull Frequency'),
+      '#type' => 'number',
+      '#default_value' => $mapping->pull_frequency,
+      '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to pull data to Drupal. Enter 0 to pull as often as possible. FYI: 1 hour = 3600; 1 day = 86400. <em>NOTE: pull frequency is shared per-Salesforce Object. The setting is exposed here for convenience.</em>'),
     ];
 
     $form['queue']['weight'] = [

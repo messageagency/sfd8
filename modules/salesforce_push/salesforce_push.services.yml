@@ -5,4 +5,4 @@ services:
 
   queue.salesforce_push:
     class: Drupal\salesforce_push\PushQueue
-    arguments: ['@database', '@state', '@plugin.manager.salesforce_push_queue_processor', '@entity.manager', '@event_dispatcher']
+    arguments: ['@database', '@state', '@plugin.manager.salesforce_push_queue_processor', '@entity.manager', '@event_dispatcher', '@request_stack']

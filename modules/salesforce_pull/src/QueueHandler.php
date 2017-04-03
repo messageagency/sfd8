@@ -25,6 +25,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class QueueHandler {
 
+  const PULL_MAX_QUEUE_SIZE = 100000;
+
   /**
    * @var \Drupal\salesforce\Rest\RestClientInterface
    */
@@ -86,11 +88,11 @@ class QueueHandler {
   public function getUpdatedRecords() {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
-    if ($this->queue->numberOfItems() > $this->state->get('salesforce_pull_max_queue_size', 100000)) {
+    if ($this->queue->numberOfItems() > $this->state->get('salesforce.pull_max_queue_size', self::PULL_MAX_QUEUE_SIZE)) {
       $message = 'Pull Queue contains %noi items, exceeding the max size of %max items. Pull processing will be blocked until the number of items in the queue is reduced to below the max size.';
       $args = [
         '%noi' => $this->queue->numberOfItems(),
-        '%max' => $this->state->get('salesforce_pull_max_queue_size', 100000),
+        '%max' => $this->state->get('salesforce.pull_max_queue_size', self::PULL_MAX_QUEUE_SIZE),
       ];
       $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
       return FALSE;
@@ -98,12 +100,16 @@ class QueueHandler {
 
     // Iterate over each field mapping to determine our query parameters.
     foreach ($this->mappings as $mapping) {
+      if ($mapping->getNextPullTime() > $this->request->server->get('REQUEST_TIME')) {
+        // Skip this mapping, based on pull frequency.
+        continue;
+      }
       $results = $this->doSfoQuery($mapping);
       if ($results) {
         $this->enqueueAllResults($mapping, $results);
         // @TODO Replace this with a better implementation when available,
         // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
-        $mapping->setLastSyncTime($this->request->server->get('REQUEST_TIME'));
+        $mapping->setLastPullTime($this->request->server->get('REQUEST_TIME'));
       }
     }
     return TRUE;
