@@ -11,6 +11,6 @@ use Drupal\salesforce\Event\SalesforceEvents as ParentSalesforceEvents;
  * directory). Implementations should use the same class name with the new 
  * namespace.
  */
-final class SalesforceEvents extends ParentSalesforceEvents {
+class SalesforceEvents extends ParentSalesforceEvents {
 
 }

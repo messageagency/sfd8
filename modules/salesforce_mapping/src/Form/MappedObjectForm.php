@@ -89,7 +89,7 @@ class MappedObjectForm extends ContentEntityForm {
     $this->entityManager = $entity_manager;
     $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->rest = $rest;
-    $this->evetDispatcher = $event_dispatcher;
+    $this->eventDispatcher = $event_dispatcher;
     $this->route_match = $route_match;
   }
 

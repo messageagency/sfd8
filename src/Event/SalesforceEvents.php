@@ -7,7 +7,7 @@ namespace Drupal\salesforce\Event;
  *
  * @see \Drupal\salesforce\Event\SalesforceEvents
  */
-final class SalesforceEvents {
+class SalesforceEvents {
 
   /**
    * Previously hook_salesforce_push_mapping_object_alter

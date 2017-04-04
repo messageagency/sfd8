@@ -18,6 +18,7 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
