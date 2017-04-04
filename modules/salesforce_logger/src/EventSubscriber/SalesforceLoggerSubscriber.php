@@ -5,7 +5,7 @@ namespace Drupal\salesforce_logger\EventSubscriber;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Exception;
-use Drupal\salesforce\SalesforceExceptionEventInterface;
+use Drupal\salesforce\Event\SalesforceExceptionEventInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -34,17 +34,19 @@ class SalesforceLoggerSubscriber implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents() {
     $events = [
-      SalesforceEvents::EXCEPTION => 'salesforceException',
+      SalesforceEvents::ERROR => 'salesforceException',
+      SalesforceEvents::WARNING => 'salesforceException',
+      SalesforceEvents::NOTICE => 'salesforceException',
     ];
     return $events;
   }
 
   public function salesforceException(SalesforceExceptionEventInterface $event) {
     // @TODO configure log levels; only log if configured level >= error level
-    $exception = $event->getExceptionMessage();
+    $exception = $event->getException();
 
     if ($exception) {
-      $this->logger->log($event->getLevel(), self::EXCEPTION_MESSAGE_PLACEHOLDER, Error::decodeException($e));
+      $this->logger->log($event->getLevel(), self::EXCEPTION_MESSAGE_PLACEHOLDER, Error::decodeException($exception));
     }
 
     $this->logger->log($event->getLevel(), $event->getMessage(), $event->getContext());
