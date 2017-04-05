@@ -5,17 +5,18 @@ namespace Drupal\salesforce_push;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Merge;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Queue\DatabaseQueue;
 use Drupal\Core\Queue\RequeueException;
 use Drupal\Core\Queue\SuspendQueueException;
-use Drupal\Core\State\State;
+use Drupal\Core\State\StateInterface;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Salesforce push queue.
@@ -71,7 +72,7 @@ class PushQueue extends DatabaseQueue {
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
    */
-  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager, EntityManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack) {
+  public function __construct(Connection $connection, StateInterface $state, PushQueueProcessorPluginManager $queue_manager, EntityTypeManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack) {
     $this->connection = $connection;
     $this->state = $state;
     $this->queueManager = $queue_manager;
@@ -83,6 +84,17 @@ class PushQueue extends DatabaseQueue {
 
     $this->global_limit = $state->get('salesforce.global_push_limit', static::GLOBAL_CRON_PUSH_LIMIT);
     $this->max_fails = $state->get('salesforce.push_queue_max_fails', static::DEFAULT_MAX_FAILS);
+  }
+
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('database'),
+      $container->get('state'),
+      $container->get('plugin.manager.salesforce_push_queue_processor'),
+      $container->get('entity_type.manager'),
+      $container->get('event_dispatcher'),
+      $container->get('request_stack')      
+    );
   }
 
   /**
