@@ -108,12 +108,14 @@ class AuthorizeForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#description' => $this->t('Consumer key of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
+      '#default_value' => $this->sf_client->getConsumerKey(),
     ];
     $form['creds']['consumer_secret'] = [
       '#title' => $this->t('Salesforce consumer secret'),
-      '#type' => 'password',
+      '#type' => 'textfield',
       '#description' => $this->t('Consumer secret of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
+      '#default_value' => $this->sf_client->getConsumerSecret(),
     ];
     $form['creds']['login_url'] = [
       '#title' => $this->t('Login URL'),
