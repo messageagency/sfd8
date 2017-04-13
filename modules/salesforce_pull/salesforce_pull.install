@@ -17,10 +17,11 @@ function salesforce_pull_install() {
  */
 function salesforce_pull_uninstall() {
   $delete = ['salesforce.pull_max_queue_size'];
-  $objects = \Drupal::service('salesforce.client')->objects();
-  foreach ($objects as $type) {
-    $delete[] = 'salesforce_pull_last_delete_' . $type['name'];
-    $delete[] = 'salesforce_pull_last_sync_' . $type['name'];
+  $keyValues = \Drupal::state()->getAll();
+  foreach ($keyValues as $key => $value) {
+    if (strpos($key, 'salesforce_pull') === 0) {
+      $delete[] = $key;
+    }
   }
   \Drupal::state()->deleteMultiple($delete);
 }
