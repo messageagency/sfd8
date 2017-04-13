@@ -58,8 +58,63 @@ class RestResponse_Describe extends RestResponse {
 
   /**
    * Return a field definition for the given field name.
+   * A single Salesforce field may contain the following keys:
+   *    aggregatable
+   *    autoNumber
+   *    byteLength
+   *    calculated
+   *    calculatedFormula
+   *    cascadeDelete
+   *    caseSensitive
+   *    controllerName
+   *    createable
+   *    custom
+   *    defaultValue
+   *    defaultValueFormula
+   *    defaultedOnCreate
+   *    dependentPicklist
+   *    deprecatedAndHidden
+   *    digits
+   *    displayLocationInDecimal
+   *    encrypted
+   *    externalId
+   *    extraTypeInfo
+   *    filterable
+   *    filteredLookupInfo
+   *    groupable
+   *    highScaleNumber
+   *    htmlFormatted
+   *    idLookup
+   *    inlineHelpText
+   *    label
+   *    length
+   *    mask
+   *    maskType
+   *    name
+   *    nameField
+   *    namePointing
+   *    nillable
+   *    permissionable
+   *    picklistValues
+   *    precision
+   *    queryByDistance
+   *    referenceTargetField
+   *    referenceTo
+   *    relationshipName
+   *    relationshipOrder
+   *    restrictedDelete
+   *    restrictedPicklist
+   *    scale
+   *    soapType
+   *    sortable
+   *    type
+   *    unique
+   *    updateable
+   *    writeRequiresMasterRead
    *
-   * @param string $field_name 
+   * for more information @see https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_methods_system_fields_describe.htm
+   *
+   * @param string $field_name
    * @return array field definition
    * @throws Exception if field_name is not defined for this SObject type
    */

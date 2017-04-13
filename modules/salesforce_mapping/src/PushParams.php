@@ -33,7 +33,7 @@ class PushParams {
       if (!$field_plugin->push()) {
         continue;
       }
-      $this->params[$field_plugin->config('salesforce_field')] = $field_plugin->value($entity, $mapping);
+      $this->params[$field_plugin->config('salesforce_field')] = $field_plugin->pushValue($entity, $mapping);
     }
   }
 

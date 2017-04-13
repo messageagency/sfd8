@@ -617,7 +617,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Retreieve all the metadata for an object.
+   * Retrieve all the metadata for an object.
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account, etc.
