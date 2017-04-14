@@ -29,6 +29,7 @@ function salesforce_encrypt_requirements($phase) {
     else {
       $requirements['salesforce_encrypt'] += array(
         'severity' => REQUIREMENT_OK,
+        'description' => t('Profile id: %profile', ['%profile' => $profile_id]),
       );
     }
   }
