@@ -95,7 +95,8 @@ class DeleteHandler {
   public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
     foreach (array_reverse($this->mappingStorage->getMappedSobjectTypes()) as $type) {
-      $last_delete_sync = $this->state->get('salesforce_pull_last_delete_' . $type, strtotime('-29 days'));
+      $last_delete = $this->state->get('salesforce_pull_last_delete', []);
+      $last_delete_sync = !empty($last_delete[$type]) ? $last_delete[$type] : strtotime('-29 days');
       $now = time();
       // getDeleted() restraint: startDate must be at least one minute
       // greater than endDate.
@@ -104,7 +105,8 @@ class DeleteHandler {
       $now_sf = gmdate('Y-m-d\TH:i:s\Z', $now);
       $deleted = $this->sfapi->getDeleted($type, $last_delete_sync_sf, $now_sf);
       $this->handleDeletedRecords($deleted, $type);
-      $this->state->set('salesforce_pull_last_delete_' . $type, $now);
+      $last_delete[$type] = $now;
+      $this->state->set('salesforce_pull_last_delete', $last_delete);
     }
     return TRUE;
   }

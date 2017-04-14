@@ -132,8 +132,8 @@ class DeleteHandlerTest extends UnitTestCase {
 
     // Mock state.
     $prophecy = $this->prophesize(StateInterface::CLASS);
-    $prophecy->get('salesforce_pull_last_delete_default', Argument::any())->willReturn('1485787434');
-    $prophecy->set('salesforce_pull_last_delete_default', Argument::any())->willReturn(null);
+    $prophecy->get('salesforce_pull_last_delete', Argument::any())->willReturn(['default' => '1485787434']);
+    $prophecy->set('salesforce_pull_last_delete', Argument::any())->willReturn(['default' => null]);
     $this->state = $prophecy->reveal();
 
    // mock event dispatcher
