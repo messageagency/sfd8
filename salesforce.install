@@ -40,8 +40,8 @@ function salesforce_requirements($phase) {
   }
 
   $requirements['salesforce'] = [
-    'title' => 'Salesforce',
-    'value' => 'TLS 1.1+ Support',
+    'title' => t('Salesforce'),
+    'value' => t('TLS 1.1+ Support'),
   ];
   // If we didn't get a good response, throw a warning.
   if (empty($response) || empty($response['tls_version'])) {
