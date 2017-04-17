@@ -1,0 +1,22 @@
+{
+  "name": "drupal/salesforce",
+  "description": "Provides Drupal modules to integrate with Salesforce.",
+  "type": "drupal-module",
+  "homepage": "https://drupal.org/project/salesforce",
+  "authors": [
+    {
+      "name": "Aaron Bauman (aaronbauman)",
+      "homepage": "https://www.drupal.org/u/aaronbauman",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Alexander Rhodes (ironsizide)",
+      "homepage": "https://www.drupal.org/u/ironsizide",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "https://drupal.org/project/issues/salesforce",
+    "source": "http://cgit.drupalcode.org/salesforce"
+  }
+}
