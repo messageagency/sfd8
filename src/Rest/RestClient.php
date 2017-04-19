@@ -611,7 +611,7 @@ class RestClient implements RestClientInterface {
         'records' => [],
       ]);
     }
-    $version_path = parse_url($sfapi->getApiEndPoint(), PHP_URL_PATH);
+    $version_path = parse_url($this->getApiEndPoint(), PHP_URL_PATH);
     $next_records_url = str_replace($version_path, '', $results->nextRecordsUrl());
     return new SelectQueryResult($this->apiCall($next_records_url));
   }
