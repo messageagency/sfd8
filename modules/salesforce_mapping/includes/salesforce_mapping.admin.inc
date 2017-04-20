@@ -686,6 +686,7 @@ function salesforce_mapping_form_submit($form, &$form_state) {
   $mappings = array();
   if (isset($values['key'])) {
     $key_delta = isset($values['key']) ? $values['key'] : FALSE;
+    $dedupe_key = FALSE;
     $sfobject = _salesforce_mapping_get_salesforce_object($values['salesforce_object_type'], $form_state);
     $sf_fields = isset($sfobject['fields']) ? $sfobject['fields'] : array();
     foreach ($values['salesforce_field_mappings'] as $key => $mapping) {
@@ -710,6 +711,9 @@ function salesforce_mapping_form_submit($form, &$form_state) {
           && ($key === (int) $key_delta),
           'direction' => $mapping['direction'],
         );
+        if ($key_delta !== FALSE && $key_delta != "" && ($key === (int) $key_delta)) {
+          $dedupe_key = $sf_field['name'];
+        }
       }
     }
   }
@@ -744,6 +748,10 @@ function salesforce_mapping_form_submit($form, &$form_state) {
   else {
     $params['name'] = $values['name'];
     $mapping = entity_create('salesforce_mapping', $params);
+  }
+
+  if (!empty($dedupe_key)) {
+    $mapping->dedupe_key = $dedupe_key;
   }
 
   $mapping->save();
