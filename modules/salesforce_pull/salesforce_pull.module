@@ -568,7 +568,10 @@ function salesforce_pull_get_deleted_records() {
   }
 
   // Before we delete any records, we must check for merged records.
-  $merged_results = salesforce_pull_check_merged_records();
+  $merge_record_type = variable_get(SALESFORCE_MERGE_RECORD, FALSE);
+  if (!empty($merge_record_type)) {
+    $merged_results = salesforce_pull_check_merged_records($merge_record_type);
+  }
 
   // Load all unique SF record types that we have mappings for.
   foreach (array_reverse(salesforce_mapping_get_mapped_objects()) as $type) {
@@ -612,12 +615,14 @@ function salesforce_pull_get_deleted_records() {
         'merged_entity' => 'Contact__c',
       );
 
-      drupal_alter('salesforce_pull_entity_merge_fields', $merge_fields);
-      foreach ($results->deletedRecords as $result) {
-        foreach ($merged_results['records'] as $merged_result) {
-          if ($result->id == $merged_result[$merge_fields['old_contact']]) {
-            $queue_item = array('merge' => $merged_result);
-            $queue->createItem($queue_item);
+      if (!empty($merge_record_type)) {
+        drupal_alter('salesforce_pull_entity_merge_fields', $merge_fields);
+        foreach ($results->deletedRecords as $result) {
+          foreach ($merged_results['records'] as $merged_result) {
+            if ($result->id == $merged_result[$merge_fields['old_contact']]) {
+              $queue_item = array('merge' => $merged_result);
+              $queue->createItem($queue_item);
+            }
           }
         }
       }
@@ -640,11 +645,13 @@ function salesforce_pull_get_deleted_records() {
       while ($next_records_url) {
         $new_result = $sfapi->apiCall($next_records_url);
         if (!isset($new_result['errorCode'])) {
-          foreach ($results->deletedRecords as $result) {
-            foreach ($merged_results['records'] as $merged_result) {
-              if ($result->id == $merged_result[$merge_fields['old_contact']]) {
-                $queue_item = array('merge' => $merged_result);
-                $queue->createItem($queue_item);
+          if (!empty($merge_record_type)) {
+            foreach ($results->deletedRecords as $result) {
+              foreach ($merged_results['records'] as $merged_result) {
+                if ($result->id == $merged_result[$merge_fields['old_contact']]) {
+                  $queue_item = array('merge' => $merged_result);
+                  $queue->createItem($queue_item);
+                }
               }
             }
           }
@@ -761,15 +768,15 @@ function salesforce_pull_process_deleted_records($sf_object) {
 
 /**
  * Get all the merged records since the last delete.
+ *
+ * @param string $merge_record_type
+ *   The Salesforce record type containing the merge history.
  */
-function salesforce_pull_check_merged_records() {
-  if (!variable_get('salesforce_pull_merge_enabled', FALSE)) {
-    return array('records' => array());
-  }
+function salesforce_pull_check_merged_records($merge_record_type) {
   $sfapi = salesforce_get_api();
 
   $merge_fields = array(
-    'type' => 'Merged_Contact__c',
+    'type' => $merge_record_type,
     'merged_contact' => 'Contact__c',
     'old_contact' => 'Old_Contact__c',
     'modified_date' => 'LastModifiedDate',
@@ -825,6 +832,10 @@ function salesforce_pull_check_merged_records() {
     }
 
     return $merged_records;
+  }
+  else {
+    // Return a properly structure null result:
+    return array('records' => array());
   }
 }
 
