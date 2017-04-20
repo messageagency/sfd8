@@ -19,7 +19,6 @@ use Drupal\salesforce\Event\SalesforceErrorEvent;
  */
 class AuthorizeForm extends ConfigFormBase {
 
-  const CONSUMER_SECRET_LENGTH = 19;
   const CONSUMER_KEY_LENGTH = 85;
 
   /**
@@ -179,7 +178,7 @@ class AuthorizeForm extends ConfigFormBase {
       $form_state->setErrorByName('login_url', t('Please enter a valid Salesforce login URL.'));
     }
 
-    if (!is_numeric($form_state->getValue('consumer_secret')) || strlen($form_state->getValue('consumer_secret')) != self::CONSUMER_SECRET_LENGTH) {
+    if (!is_numeric($form_state->getValue('consumer_secret'))) {
       $form_state->setErrorByName('consumer_secret', t('Please enter a valid consumer secret.'));
     }
 
