@@ -9,6 +9,7 @@
  * Define pull queue name.
  */
 define('SALESFORCE_PULL_QUEUE', 'salesforce_pull');
+define('SALESFORCE_MERGE_RECORD', 'salesforce_contact_merge_record');
 
 /**
  * Implements hook_menu().
@@ -151,6 +152,23 @@ function salesforce_pull_form_salesforce_settings_form_alter(&$form, &$form_stat
       ),
     ),
     '#element_validate' => array('salesforce_pull_webhook_key_validate'),
+  );
+  module_load_include('inc', 'salesforce_mapping', 'includes/salesforce_mapping.admin');
+  $form[SALESFORCE_MERGE_RECORD] = array(
+    '#type' => 'select',
+    '#title' => t('Salesforce Contact Merge Object'),
+    '#options' => _salesforce_mapping_get_salesforce_object_type_options($form_state),
+    '#default_value' => variable_get(SALESFORCE_MERGE_RECORD, NULL),
+    '#weight' => 4,
+    '#description' => t(
+      'Select a Salesforce object that describes merged Salesforce Contacts to automate merging. Not seeing an object? !settings_link',
+      array(
+        '!settings_link' => l(t(
+          'Check your Salesforce object filters settings.'),
+          'admin/config/salesforce/settings',
+          array('fragment' => 'sf_object_filters_anchor')),
+      )
+    ),
   );
 }
 
