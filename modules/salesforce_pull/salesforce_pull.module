@@ -681,11 +681,11 @@ function salesforce_pull_process_merged_records($sf_object) {
         '%id' => $entity_to_delete->entity_id,
         '%sfid' => $sf_object[$merge_fields['old_contact_key']],
         '%newid' => $merged_entity->entity_id,
-        '%newsfid' => $sf_object[$merge_fields['merged_contact_key']]
       )
     );
   }
 }
+
 /**
  * Process deleted records from salesforce.
  */
@@ -809,6 +809,7 @@ function salesforce_pull_check_merged_records() {
     return $merged_records;
   }
 }
+
 /**
  * Map field values.
  *
