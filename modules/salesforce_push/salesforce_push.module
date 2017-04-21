@@ -532,11 +532,6 @@ function salesforce_push_map_params($mapping, $entity_wrapper, $use_soap = FALSE
     $params[$fieldmap['salesforce_field']['name']] = $value;
   }
 
-  if (!empty($mapping->dedupe_key) && !$use_soap) {
-    // If key is set, remove from $params to avoid UPSERT errors.
-    unset($params[$mapping->dedupe_key]);
-  }
-
   drupal_alter('salesforce_push_params', $params, $mapping, $entity_wrapper);
 
   return $params;
