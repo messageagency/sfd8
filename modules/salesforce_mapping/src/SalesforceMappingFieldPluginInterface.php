@@ -50,6 +50,17 @@ interface SalesforceMappingFieldPluginInterface {
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping);
 
   /**
+   * An extension of ::value, ::pushValue does some basic type-checking and
+   * validation against Salesforce field types to protect against basic data
+   * errors.
+   *
+   * @param EntityInterface $entity 
+   * @param SalesforceMappingInterface $mapping 
+   * @return mixed
+   */
+  public function pushValue(EntityInterface $entity, SalesforceMappingInterface $mapping);
+
+  /**
    * Given a SF Mapping, return TRUE or FALSE whether this field plugin can be
    * added via UI. Not used for validation or any other constraints.
    *

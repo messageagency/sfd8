@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\Component\Serialization\Json;
 
 /**
  * Purge Salesforce module state variables
@@ -15,6 +16,60 @@ function salesforce_uninstall() {
     'salesforce.identity',
   ];
   \Drupal::state()->deleteMultiple($delete);
+}
+
+function salesforce_requirements($phase) {
+  if ($phase != 'runtime') {
+    return;
+  }
+
+  $response = FALSE;
+  try {
+    // Ping the howsmyssl web service to check TLS version support for this client.
+    $raw_response = \Drupal::service('http_client')->get('https://www.howsmyssl.com/a/check', ['json' => TRUE, 'timeout' => 5]);
+    $body = $raw_response->getBody();
+    if (!empty($body)) {
+      $body = $body->getContents();
+      if (!empty($body)) {
+        $response = Json::decode($body);
+      }
+    }
+  }
+  catch (Exception $e) {
+    // noop
+  }
+
+  $requirements['salesforce'] = [
+    'title' => t('Salesforce'),
+    'value' => t('TLS 1.1+ Support'),
+  ];
+  // If we didn't get a good response, throw a warning.
+  if (empty($response) || empty($response['tls_version'])) {
+    $requirements['salesforce'] += [
+      'severity' => REQUIREMENT_WARNING,
+      'description' => t('Drupal failed to connect to https://www.howsmyssl.com/a/check service to check TLS 1.1+ support for this client. Please ensure your OpenSSL client supports TLS 1.1+ before using Salesforce module.'),
+    ];
+    return $requirements;
+  }
+  // If we got a good response, and this client doesn't support TLS1.1+, throw an error.
+  switch ($response['tls_version']) {
+    case 'TLS 1.1':
+    case 'TLS 1.2':
+    case 'TLS 1.3':
+      $requirements['salesforce'] += [
+        'severity' => REQUIREMENT_OK,
+        'description' => t('OK: %version', ['%version' => $response['tls_version']]),
+      ];
+      break;
+
+    default:
+      $requirements['salesforce'] += [
+        'severity' => REQUIREMENT_ERROR,
+        'description' => t('Unsupported: %version -- Salesforce API requires TLS 1.1+. Please upgrade your OpenSSL version before using Salesforce module.', ['%version' => $response['tls_version']]),
+      ];
+      break;
+  }
+  return $requirements;  
 }
 
 /**

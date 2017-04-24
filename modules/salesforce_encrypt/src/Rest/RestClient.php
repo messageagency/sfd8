@@ -110,6 +110,9 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
     $this->lock->release('salesforce_encrypt');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getEncryptionProfile() {
     if (empty($this->encryptionProfileId)) {
       return NULL;

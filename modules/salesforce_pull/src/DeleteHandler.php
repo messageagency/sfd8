@@ -99,7 +99,6 @@ class DeleteHandler {
       $last_delete_sync = !empty($pull_info[$type]['last_delete_timestamp'])
         ? $pull_info[$type]['last_delete_timestamp']
         : strtotime('-29 days');
-
       $now = time();
       // getDeleted() restraint: startDate must be at least one minute
       // greater than endDate.

@@ -19,6 +19,8 @@ use Drupal\salesforce\Event\SalesforceErrorEvent;
  */
 class AuthorizeForm extends ConfigFormBase {
 
+  const CONSUMER_KEY_LENGTH = 85;
+
   /**
    * The Salesforce REST client.
    *
@@ -104,17 +106,20 @@ class AuthorizeForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#description' => $this->t('Consumer key of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
+      '#default_value' => $this->sf_client->getConsumerKey(),
     ];
     $form['creds']['consumer_secret'] = [
       '#title' => $this->t('Salesforce consumer secret'),
-      '#type' => 'password',
+      '#type' => 'textfield',
       '#description' => $this->t('Consumer secret of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
+      '#default_value' => $this->sf_client->getConsumerSecret(),
     ];
     $form['creds']['login_url'] = [
       '#title' => $this->t('Login URL'),
       '#type' => 'textfield',
       '#default_value' => $this->sf_client->getLoginUrl(),
+      '#description' => $this->t('Enter a login URL, either https://login.salesforce.com or https://test.salesforce.com.'),
       '#required' => TRUE,
     ];
 
@@ -150,6 +155,32 @@ class AuthorizeForm extends ConfigFormBase {
     $form['creds']['actions'] = $form['actions'];
     unset($form['actions']);
     return $form;
+  }
+
+  /**
+   * Return an array of valid Salesforce endpoint URLs.
+   *
+   * @return array
+   */
+  public static function validEndpoints() {
+    return [
+      'https://login.salesforce.com',
+      'https://test.salesforce.com',
+    ];
+  }
+
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    if (!in_array($form_state->getValue('login_url'), self::validEndpoints())) {
+      $form_state->setErrorByName('login_url', t('Please enter a valid Salesforce login URL.'));
+    }
+
+    if (!is_numeric($form_state->getValue('consumer_secret'))) {
+      $form_state->setErrorByName('consumer_secret', t('Please enter a valid consumer secret.'));
+    }
+
+    if (strlen($form_state->getValue('consumer_key')) != self::CONSUMER_KEY_LENGTH) {
+      $form_state->setErrorByName('consumer_key', t('Please enter a valid consumer key.'));
+    }
   }
 
   /**

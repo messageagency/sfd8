@@ -47,3 +47,26 @@ function salesforce_pull_update_1() {
   \Drupal::state()->set('salesforce.sobject_pull_info', $pull_info);
   \Drupal::state()->deleteMultiple($delete);
 }
+
+/**
+ * Convert salesforce_pull_last* timestamps key-values into arrays
+ */
+function salesforce_pull_update_8001() {
+  $kv = db_query("SELECT name, value FROM key_value WHERE name like 'salesforce_pull_last%'")->fetchAllKeyed();
+  $sync = [];
+  $delete = [];
+  foreach ($kv as $key => $value) {
+    $value = unserialize($value);
+    if (strpos($key, 'delete')) {
+      $salesforce_type = str_replace('salesforce_pull_last_delete_', '', $key);
+      $delete[$salesforce_type] = $value;
+    }
+    elseif (strpos($key, 'sync')) {
+      $salesforce_type = str_replace('salesforce_pull_last_sync_', '', $key);
+      $sync[$salesforce_type] = $value;
+    }
+  }
+  \Drupal::state()->set('salesforce_pull_last_delete', $delete);
+  \Drupal::state()->set('salesforce_pull_last_sync', $sync);
+  \Drupal::state()->deleteMultiple(array_keys($kv));
+}

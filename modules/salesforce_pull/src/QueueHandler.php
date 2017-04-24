@@ -129,7 +129,7 @@ class QueueHandler {
     $soql = $mapping->getPullQuery();
     // Execute query.
     try {
-      $this->event_dispatcher->dispatch(
+      $this->eventDispatcher->dispatch(
         SalesforceEvents::PULL_QUERY,
         new SalesforceQueryEvent($mapping, $soql)
       );
