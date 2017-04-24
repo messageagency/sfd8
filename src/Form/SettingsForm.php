@@ -17,7 +17,7 @@ use Drupal\salesforce\Event\SalesforceErrorEvent;
 /**
  * Creates authorization form for Salesforce.
  */
-class AuthorizeForm extends ConfigFormBase {
+class SettingsForm extends ConfigFormBase {
 
   /**
    * The Salesforce REST client.
