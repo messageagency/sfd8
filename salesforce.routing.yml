@@ -14,6 +14,15 @@ salesforce.authorize:
   requirements:
     _permission: 'authorize salesforce'
 
+salesforce.global_settings:
+  path: '/admin/config/salesforce/settings'
+  defaults:
+    _form: '\Drupal\salesforce\Form\SettingsForm'
+    _title: 'Salesforce'
+    _description: 'Manage global settings for Salesforce Suite.'
+  requirements:
+    _permission: 'administer salesforce'
+
 salesforce.admin_config_salesforce:
   path: '/admin/config/salesforce'
   defaults:

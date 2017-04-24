@@ -308,13 +308,16 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $sfobject_options = [];
 
     // Note that we're filtering SF object types to a reasonable subset.
-    $sfobjects = $this->client->objects([
+    $config = $this->config('salesforce.settings');
+    $filter = $config->get('show_all_objects') ? [] : [
       'updateable' => TRUE,
       'triggerable' => TRUE,
-    ]);
+    ];
+    $sfobjects = $this->client->objects($filter);
     foreach ($sfobjects as $object) {
-      $sfobject_options[$object['name']] = $object['label'];
+      $sfobject_options[$object['name']] = $object['label'] . ' (' . $object['name'] . ')';
     }
+    asort($sfobject_options);
     return $sfobject_options;
   }
 
