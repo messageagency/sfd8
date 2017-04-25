@@ -71,7 +71,7 @@ class QueueHandler {
     $this->request = $request_stack->getCurrentRequest();
     $this->mappings = $entity_type_manager
       ->getStorage('salesforce_mapping')
-      ->loadMultiple();
+      ->loadPullMappings();
   }
 
   /**

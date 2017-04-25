@@ -101,6 +101,32 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
   }
 
   /**
+   * Return an array of SalesforceMapping entities who are pull-enabled.
+   *
+   * @param string $entity_type_id
+   *
+   * @return array
+   */
+  public function loadPullMappings($entity_type_id = NULL) {
+    $pull_mappings = [];
+    $properties = empty($entity_type_id)
+      ? []
+      : ["drupal_entity_type" => $entity_type_id];
+    $mappings = $this->loadByProperties($properties);
+
+    foreach ($mappings as $key => $mapping) {
+      if (!$mapping->doesPull()) {
+        continue;
+      }
+      $pull_mappings[$key] = $mapping;
+    }
+    if (empty($pull_mappings)) {
+      return [];
+    }
+    return $pull_mappings;
+  }
+
+  /**
    * Return a unique list of mapped Salesforce object types.
    * @see loadMultipleMapping()
    */

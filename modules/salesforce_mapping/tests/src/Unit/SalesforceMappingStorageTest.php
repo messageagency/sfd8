@@ -148,6 +148,36 @@ class SalesforceMappingStorageTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::loadPullMappings
+   **/
+  public function testLoadPullMappings() {
+    $foo_config_object = $this->prophesize(SalesforceMapping::class);
+    $foo_config_object->id()->willReturn('foo');
+    $foo_config_object->doesPull()->willReturn(TRUE);
+
+    $bar_config_object = $this->prophesize(SalesforceMapping::class);
+    $bar_config_object->id()->willReturn('bar');
+    $bar_config_object->doesPull()->willReturn(TRUE);
+
+    $zee_config_object = $this->prophesize(SalesforceMapping::class);
+    $zee_config_object->id()->willReturn('zee');
+    // Zee does NOT push; make sure it's excluded from our load helper.
+    $zee_config_object->doesPull()->willReturn(FALSE);
+
+    $this->salesforceMappingStorage = $this->getMock(SalesforceMappingStorage::class, ['loadByProperties'], [$this->entityTypeId, $this->configFactory->reveal(), $this->uuidService->reveal(), $this->languageManager->reveal(), $this->entity_manager->reveal()]);
+
+    $this->salesforceMappingStorage
+      ->expects($this->once())
+      ->method('loadByProperties')
+      ->willReturn(['foo' => $foo_config_object->reveal(), 'bar' => $bar_config_object->reveal(), 'zee' => $zee_config_object->reveal()]);
+
+    $entities = $this->salesforceMappingStorage->loadPullMappings($this->entityTypeId);
+    $expected = ['foo' => $foo_config_object->reveal(), 'bar' => $bar_config_object->reveal()];
+    $this->assertContainsOnlyInstancesOf(EntityInterface::class, $entities);
+    $this->assertEquals($expected, $entities);
+  }
+
+  /**
    * @covers ::getMappedSobjectTypes
    **/
   public function testGetMappedSobjectTypes() {
