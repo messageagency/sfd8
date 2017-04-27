@@ -31,6 +31,9 @@ salesforce_mapping.salesforce_mapping.*:
     pull_trigger_date:
       type: string
       label: 'Pull Trigger Date Field'
+    pull_where_clause:
+      type: string
+      label: 'Pull query SOQL "WHERE" clause'
     sync_triggers:
       type: mapping
       label: 'Sync triggers'
