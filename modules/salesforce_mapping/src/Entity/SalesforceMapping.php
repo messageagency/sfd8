@@ -48,6 +48,7 @@ use Drupal\salesforce\Exception;
  *    "key",
  *    "async",
  *    "pull_trigger_date",
+ *    "pull_where_clause",
  *    "sync_triggers",
  *    "salesforce_object_type",
  *    "drupal_entity_type",
@@ -130,6 +131,13 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * @var string
    */
   protected $pull_trigger_date = 'LastModifiedDate';
+
+  /**
+   * Additional "where" logic to append to pull-polling query.
+   *
+   * @var string
+   */
+  protected $pull_where_clause = '';
 
   /**
    * The drupal entity type to which this mapping points.
@@ -380,6 +388,9 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     if ($sf_last_sync) {
       $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
       $soql->addCondition($this->getPullTriggerDate(), $last_sync, '>');
+    }
+    if (!empty($this->pull_where_clause)) {
+      $soql->conditions[] = [$this->pull_where_clause];
     }
     return $soql;
   }
