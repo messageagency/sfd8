@@ -6,6 +6,8 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce\Event\SalesforceErrorEvent;
 
 /**
  * Salesforce Mapping Form base.
@@ -257,6 +259,16 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $element = &$form['drupal_entity']['drupal_bundle'][$entity_type];
       // @TODO replace with Dependency Injection
       $form_state->setError($element, $this->t('%name field is required.', ['%name' => $element['#title']]));
+    }
+    // dpm($form_state->getValues());
+    if ($this->entity->doesPull()) {
+      try {
+        $testQuery = $this->client->query($this->entity->getPullQuery());
+      }
+      catch (\Exception $e) {
+        $form_state->setError($form['pull']['pull_where_clause'], $this->t('Test pull query returned an error. Please check logs for error details.'));
+        \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
+      }
     }
   }
 
