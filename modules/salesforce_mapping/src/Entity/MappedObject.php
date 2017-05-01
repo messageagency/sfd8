@@ -491,8 +491,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         // Field missing from SObject? Skip it.
         $message = 'Field @sobj.@sffield not found on @sfid';
         $args = [
-          '@sfobj' => $mapping->getSalesforceObjectType(),
-          '@sffield' => $sf_field,
+          '@sobj' => $mapping->getSalesforceObjectType(),
+          '@sffield' => $sf_field->config('salesforce_field'),
           '@sfid' => $this->sfid(),
         ];
         $this->eventDispatcher()->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent($e, $message, $args));

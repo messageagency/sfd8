@@ -29,6 +29,7 @@ class SObject {
     foreach ($data as $key => $value) {
       $this->fields[$key] = $value;
     }
+    $this->fields['Id'] = (string)$this->id;
   }
 
   public function id() {
