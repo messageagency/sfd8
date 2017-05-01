@@ -257,11 +257,21 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    *   The newly saved version of the entity.
    */
   public function save() {
-    $this->updated = REQUEST_TIME;
+    $this->updated = $this->getRequestTime();
     if (isset($this->is_new) && $this->is_new) {
-      $this->created = REQUEST_TIME;
+      $this->created = $this->getRequestTime();
     }
     return parent::save();
+  }
+
+  /**
+   * Testable func to return the request time server variable.
+   *
+   * @return int REQUEST_TIME
+   *   The request time.
+   */
+  protected function getRequestTime() {
+    return \Drupal::time()->getRequestTime();
   }
 
   /**

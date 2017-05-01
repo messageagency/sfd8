@@ -13,6 +13,7 @@ use Drupal\encrypt\EncryptionProfileInterface;
 use Drupal\encrypt\EncryptionProfileManagerInterface;
 use Drupal\salesforce_encrypt\Rest\RestClient;
 use GuzzleHttp\Client;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * @coversDefaultClass \Drupal\salesforce_encrypt\Rest\RestClient
@@ -44,7 +45,8 @@ class RestClientTest extends UnitTestCase {
     $this->lock = $this->getMock(LockBackendInterface::CLASS);
     $this->encryptionProfile = $this->getMock(EncryptionProfileInterface::CLASS);
     $this->json = $this->getMock(Json::CLASS);
-    $this->client = $this->getMock(RestClient::CLASS, ['getEncryptionProfile'], [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->encryption, $this->profileManager, $this->lock]);
+    $this->time = $this->getMock(TimeInterface::CLASS);
+    $this->client = $this->getMock(RestClient::CLASS, ['getEncryptionProfile'], [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->time, $this->encryption, $this->profileManager, $this->lock]);
   }
 
   /**

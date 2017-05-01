@@ -15,7 +15,7 @@ use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
-use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\Component\Datetime\TimeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -30,7 +30,7 @@ class PushQueue extends DatabaseQueue {
    */
   const TABLE_NAME = 'salesforce_push_queue';
 
-  const GLOBAL_CRON_PUSH_LIMIT = 10000;
+  const DEFAULT_GLOBAL_LIMIT = 10000;
 
   const DEFAULT_QUEUE_PROCESSOR = 'rest';
 
@@ -62,9 +62,9 @@ class PushQueue extends DatabaseQueue {
   protected $mapped_object_storage;
 
   /**
-   * @var \Symfony\Component\HttpFoundation\Request
+   * @var \Drupal\Component\Datetime\TimeInterface
    */
-  protected $request;
+  protected $time;
 
   /**
    * Constructs a \Drupal\Core\Queue\DatabaseQueue object.
@@ -72,7 +72,7 @@ class PushQueue extends DatabaseQueue {
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
    */
-  public function __construct(Connection $connection, StateInterface $state, PushQueueProcessorPluginManager $queue_manager, EntityTypeManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack) {
+  public function __construct(Connection $connection, StateInterface $state, PushQueueProcessorPluginManager $queue_manager, EntityTypeManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher, TimeInterface $time) {
     $this->connection = $connection;
     $this->state = $state;
     $this->queueManager = $queue_manager;
@@ -80,9 +80,9 @@ class PushQueue extends DatabaseQueue {
     $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
     $this->eventDispatcher = $event_dispatcher;
-    $this->request = $request_stack->getCurrentRequest();
+    $this->time = $time;
 
-    $this->global_limit = $state->get('salesforce.global_push_limit', static::GLOBAL_CRON_PUSH_LIMIT);
+    $this->global_limit = $state->get('salesforce.global_push_limit', static::DEFAULT_GLOBAL_LIMIT);
     $this->max_fails = $state->get('salesforce.push_queue_max_fails', static::DEFAULT_MAX_FAILS);
   }
 
@@ -93,7 +93,7 @@ class PushQueue extends DatabaseQueue {
       $container->get('plugin.manager.salesforce_push_queue_processor'),
       $container->get('entity_type.manager'),
       $container->get('event_dispatcher'),
-      $container->get('request_stack')      
+      $container->get('datetime.time')
     );
   }
 
@@ -136,7 +136,7 @@ class PushQueue extends DatabaseQueue {
       throw new \Exception('Salesforce push queue data values are required for "name", "entity_id" and "op"');
     }
     $this->name = $data['name'];
-    $time = $this->request->server->get('REQUEST_TIME');
+    $time = $this->time->getRequestTime();
     $fields = [
       'name' => $this->name,
       'entity_id' => $data['entity_id'],
@@ -193,7 +193,7 @@ class PushQueue extends DatabaseQueue {
         // should really expire.
         $update = $this->connection->update(static::TABLE_NAME)
           ->fields(array(
-            'expire' => $this->request->server->get('REQUEST_TIME') + $lease_time,
+            'expire' => $this->time->getRequestTime() + $lease_time,
           ))
           ->condition('item_id', array_keys($items), 'IN')
           ->condition('expire', 0);
@@ -312,7 +312,7 @@ class PushQueue extends DatabaseQueue {
     foreach ($mappings as $mapping) {
       $j = 0;
       // Check mapping frequency before proceeding.
-      if ($mapping->getNextPushTime() > $this->request->server->get('REQUEST_TIME')) {
+      if ($mapping->getNextPushTime() > $this->time->getRequestTime()) {
         continue;
       }
 
@@ -326,7 +326,7 @@ class PushQueue extends DatabaseQueue {
         // Claim as many items as we can from this queue and advance our counter. If this queue is empty, move to the next mapping.
         $items = $this->claimItems($mapping->push_limit, $mapping->push_retries);
         if (empty($items)) {
-          $mapping->setLastPushTime($this->request->server->get('REQUEST_TIME'));
+          $mapping->setLastPushTime($this->time->getRequestTime());
           continue 2;
         }
 

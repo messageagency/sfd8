@@ -16,11 +16,9 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\salesforce_push\PushQueueProcessorPluginManager;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\Database\Query\Update;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\ServerBag;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_push\PushQueueProcessorInterface;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Test Object instantitation.
@@ -52,21 +50,7 @@ class PushQueueTest extends UnitTestCase {
       ->method('dispatch')
       ->willReturn(NULL);
     $this->string_translation = $this->getMock(TranslationInterface::class);
-    $this->request_stack = $this->getMock(RequestStack::class);
-
-    // Mock server.
-    $this->server = $this->getMock(ServerBag::class);
-    $this->server->expects($this->any())
-      ->method('get')
-      ->willReturn('1485787434');
-
-    // Mock request.
-    $this->request = $this->getMock(Request::CLASS);
-    $this->request->server = $this->server;
-
-    $this->request_stack->expects($this->any())
-      ->method('getCurrentRequest')
-      ->willReturn($this->request);
+    $this->time = $this->getMock(TimeInterface::class);
 
     $this->mapping_storage = $this->getMockBuilder(SalesforceMappingStorage::CLASS)
       ->disableOriginalConstructor()
@@ -94,7 +78,7 @@ class PushQueueTest extends UnitTestCase {
     $container->set('string_translation', $this->string_translation);
     $container->set('entity.manager', $this->entity_manager);
     $container->set('plugin.manager.salesforce_push_queue_processor', $this->push_queue_processor_plugin_manager);
-    $container->set('request_stack', $this->request_stack);
+    $container->set('datetime.time', $this->time);
     \Drupal::setContainer($container);
   }
 
@@ -171,7 +155,7 @@ class PushQueueTest extends UnitTestCase {
       ->method('createInstance')
       ->willReturn($this->worker);
 
-    $this->queue = $this->getMock(PushQueue::class, ['claimItems', 'setName'], [$this->database, $this->state, $this->push_queue_processor_plugin_manager, $this->entityTypeManager, $this->eventDispatcher, $this->request_stack]);
+    $this->queue = $this->getMock(PushQueue::class, ['claimItems', 'setName'], [$this->database, $this->state, $this->push_queue_processor_plugin_manager, $this->entityTypeManager, $this->eventDispatcher, $this->time]);
     $this->queue->expects($this->once())
       ->method('claimItems')
       ->willReturn($items);

@@ -16,6 +16,7 @@ use Drupal\salesforce\SObject;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
@@ -95,13 +96,14 @@ class RestClient implements RestClientInterface {
    * @param \Drupal\Component\Serialization\Json $json
    *   The JSON serializer service.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
     $this->config = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
     $this->cache = $cache;
     $this->json = $json;
+    $this->time = $time;
     return $this;
   }
 
@@ -965,7 +967,7 @@ class RestClient implements RestClientInterface {
    *   The REQUEST_TIME server variable.
    */
   protected function getRequestTime() {
-    return defined('REQUEST_TIME') ? REQUEST_TIME : (int) $_SERVER['REQUEST_TIME'];
+    return $this->time->getRequestTime();
   }
 
 }

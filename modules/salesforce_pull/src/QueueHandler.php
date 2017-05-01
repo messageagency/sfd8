@@ -16,7 +16,7 @@ use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforceQueryEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Handles pull cron queue set up.
@@ -62,15 +62,14 @@ class QueueHandler {
    * @param QueueInterface $queue
    * @param StateInterface $state
    * @param EventDispatcherInterface $event_dispatcher
-   * @param RequestStack $request_stack
    */
 
-  public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, QueueDatabaseFactory $queue_factory, StateInterface $state, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack) {
+  public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, QueueDatabaseFactory $queue_factory, StateInterface $state, EventDispatcherInterface $event_dispatcher, TimeInterface $time) {
     $this->sfapi = $sfapi;
     $this->queue = $queue_factory->get('cron_salesforce_pull');
     $this->state = $state;
     $this->eventDispatcher = $event_dispatcher;
-    $this->request = $request_stack->getCurrentRequest();
+    $this->time = $time;
     $this->mappings = $entity_type_manager
       ->getStorage('salesforce_mapping')
       ->loadPullMappings();
@@ -100,7 +99,7 @@ class QueueHandler {
 
     // Iterate over each field mapping to determine our query parameters.
     foreach ($this->mappings as $mapping) {
-      if ($mapping->getNextPullTime() > $this->request->server->get('REQUEST_TIME')) {
+      if ($mapping->getNextPullTime() > $this->time->getRequestTime()) {
         // Skip this mapping, based on pull frequency.
         continue;
       }
@@ -109,7 +108,7 @@ class QueueHandler {
         $this->enqueueAllResults($mapping, $results);
         // @TODO Replace this with a better implementation when available,
         // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
-        $mapping->setLastPullTime($this->request->server->get('REQUEST_TIME'));
+        $mapping->setLastPullTime($this->time->getRequestTime());
       }
     }
     return TRUE;

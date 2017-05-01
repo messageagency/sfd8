@@ -13,9 +13,7 @@ use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\ServerBag;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Test Object instantitation
@@ -96,23 +94,11 @@ class QueueHandlerTest extends UnitTestCase {
     $prophecy->dispatch(Argument::any(), Argument::any())->willReturn();
     $this->ed = $prophecy->reveal();
 
-    // mock server
-    $prophecy = $this->prophesize(ServerBag::CLASS);
-    $prophecy->get(Argument::any())->willReturn('1485787434');
-    $this->server = $prophecy->reveal();
-
-    // mock request
-    $request = $this->prophesize(Request::CLASS);
-    $request->server = $this->server;
-
-    // mock request stack
-    $prophecy = $this->prophesize(RequestStack::CLASS);
-    $prophecy->getCurrentRequest()->willReturn($request->reveal());
-    $this->request_stack = $prophecy->reveal();
+    $this->time = $this->getMock(TimeInterface::CLASS);
 
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->request_stack])
+      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->time])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')
@@ -150,7 +136,7 @@ class QueueHandlerTest extends UnitTestCase {
 
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->request_stack])
+      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->time])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')

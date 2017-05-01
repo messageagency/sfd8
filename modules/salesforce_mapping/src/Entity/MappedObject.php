@@ -102,9 +102,9 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * {@inheritdoc}
    */
   public function save() {
-    $this->changed = REQUEST_TIME;
+    $this->changed = $this->getRequestTime();
     if ($this->isNew()) {
-      $this->created = REQUEST_TIME;
+      $this->created = $this->getRequestTime();
     }
     return parent::save();
   }
@@ -553,14 +553,11 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   /**
    * Testable func to return the request time server variable.
    *
-   * @return string REQUEST_TIME
-   *   The request time contanct.
+   * @return int REQUEST_TIME
+   *   The request time.
    */
   protected function getRequestTime() {
-    // @TODO Replace this with a better implementation when available.
-    // see https://www.drupal.org/node/2820345,
-    // https://www.drupal.org/node/2785211
-    return defined('REQUEST_TIME') ? REQUEST_TIME : (int) $_SERVER['REQUEST_TIME'];
+    return \Drupal::time()->getRequestTime();
   }
 
   /**

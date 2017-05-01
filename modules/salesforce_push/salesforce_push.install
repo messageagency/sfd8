@@ -7,7 +7,7 @@ use Drupal\salesforce_push\PushQueue;
  */
 function salesforce_push_install() {
   \Drupal::state()->set('salesforce.mapping_push_limit', PushQueue::MAPPING_CRON_PUSH_LIMIT);
-  \Drupal::state()->set('salesforce.global_push_limit', PushQueue::GLOBAL_CRON_PUSH_LIMIT);
+  \Drupal::state()->set('salesforce.global_push_limit', PushQueue::DEFAULT_GLOBAL_LIMIT);
   \Drupal::state()->set('salesforce.push_queue_processor', PushQueue::DEFAULT_QUEUE_PROCESSOR);
   \Drupal::state()->set('salesforce.push_queue_max_fails', PushQueue::DEFAULT_MAX_FAILS);
 }
@@ -41,7 +41,7 @@ function salesforce_push_update_1() {
  * Create new variables for more granualar push limits.
  */
 function salesforce_push_update_2() {
-  \Drupal::state()->set('salesforce.global_push_limit', PushQueue::GLOBAL_CRON_PUSH_LIMIT);
+  \Drupal::state()->set('salesforce.global_push_limit', PushQueue::DEFAULT_GLOBAL_LIMIT);
 
   \Drupal::state()->delete('salesforce.push_limit');
 }
