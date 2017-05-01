@@ -10,6 +10,12 @@ salesforce.admin_config_salesforce:
   title: Salesforce
   description: 'Manage settings for Salesforce Suite.'
 
+salesforce.global_settings:
+  route_name: salesforce.global_settings
+  parent: salesforce.admin_config_salesforce
+  title: Salesforce Settings
+  description: 'Manage global settings for Salesforce Suite.'
+
 salesforce.authorize:
   route_name: salesforce.authorize
   parent: salesforce.admin_config_salesforce
