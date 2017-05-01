@@ -97,13 +97,20 @@ class SettingsForm extends ConfigFormBase {
       '#title' => $this->t('Use Latest Rest API version (recommended)'),
       '#type' => 'checkbox',
       '#description' => $this->t('Always use the latest Rest API version when connecting to Salesforce. In general, Rest API is backwards-compatible for many years. Unless you have a very specific reason, you should probably just use the latest version.'),
+      '#default_value' => $config->get('use_latest'),
     ];
-    $versions = [];
-    $form['rest_api_version']['version'] = [
-      '#title' => $this->t('Select a specific Rest API version (advanced)'),
+    $versions = $this->getVersionOptions();
+    $form['rest_api_version'] = [
+      '#title' => $this->t('Select a specific Rest API version'),
       '#type' => 'select',
       '#options' => $versions,
       '#tree' => TRUE,
+      '#default_value' => $config->get('rest_api_version')['version'],
+      '#states' => [
+        'visible' => [
+          ':input[name="use_latest"]' => ['checked' => FALSE],
+        ]
+      ],
     ];
 
     $form['push_limit'] = [
@@ -122,9 +129,17 @@ class SettingsForm extends ConfigFormBase {
       '#min' => 0,
     ];
 
+    $form['show_all_objects'] = [
+      '#title' => $this->t('Show all objects'),
+      '#description' => $this->t('Check this box to expose all Salesforce objects to the Mapping interface. By default, Salesforce objects like custom settings, read-only objects, non-triggerable objects, etc. are hidden from the Salesforce Mapping interface to improve usability.'),
+      '#type' => 'checkbox',
+      '#default_value' => $config->get('show_all_objects'),
+    ];
+
     $form = parent::buildForm($form, $form_state);
     $form['creds']['actions'] = $form['actions'];
     unset($form['actions']);
+
     return $form;
   }
 
@@ -154,6 +169,32 @@ class SettingsForm extends ConfigFormBase {
       drupal_set_message(t("Error during authorization: %message", ['%message' => $e->getMessage()]), 'error');
       $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     }
+
+    $config = $this->config('salesforce.settings');
+    $config->set('show_all_objects', $form_state->getValue('show_all_objects'));
+    $use_latest = $form_state->getValue('use_latest');
+    $config->set('use_latest', $use_latest);
+    if (!$use_latest) {
+      $versions = $this->sf_client->getVersions();
+      $version = $versions[$form_state->getValue('rest_api_version')];
+      $config->set('rest_api_version', $version);
+    }
+    $config->save();
+    parent::submitForm($form, $form_state);
+
+
+  }
+
+
+  /**
+   * Helper method to generate Salesforce option list for select element.
+   *
+   * @return array
+   */
+  protected function getVersionOptions() {
+    $versions = $this->sf_client->getVersions();
+    array_walk($versions, function(&$item, $key) { $item = $item['label'];} );
+    return $versions;
   }
 
 }

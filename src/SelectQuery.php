@@ -50,6 +50,7 @@ class SelectQuery {
       'operator' => $operator,
       'value' => $value,
     ];
+    return $this;
   }
 
   /**

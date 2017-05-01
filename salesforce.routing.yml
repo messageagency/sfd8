@@ -17,7 +17,7 @@ salesforce.authorize:
 salesforce.global_settings:
   path: '/admin/config/salesforce/settings'
   defaults:
-    _controller: '\Drupal\salesforce\Form\SettingsForm'
+    _form: '\Drupal\salesforce\Form\SettingsForm'
     _title: 'Salesforce'
     _description: 'Manage global settings for Salesforce Suite.'
   requirements:

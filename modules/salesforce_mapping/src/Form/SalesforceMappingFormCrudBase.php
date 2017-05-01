@@ -7,6 +7,8 @@ use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\Core\Url;
+use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce\Event\SalesforceErrorEvent;
 
 /**
  * Salesforce Mapping Form base.
@@ -139,19 +141,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#empty_option' => $this->t('- Select -'),
     ];
 
-    if (!$mapping->isNew()) {
-      // This doesn't work until after mapping gets saved.
-      // @TODO figure out best way to alert admins about this, or AJAX-ify it.
-      $form['salesforce_object']['pull_trigger_date'] = [
-        '#type' => 'select',
-        '#title' => t('Date field to trigger pull'),
-        '#description' => t('Select a date field to base pull triggers on. (Default of "Last Modified Date" is usually appropriate).'),
-        '#required' => $mapping->salesforce_object_type,
-        '#default_value' => $mapping->pull_trigger_date,
-        '#options' => $this->get_pull_trigger_options($salesforce_object_type),
-      ];
-    }
-
     // @TODO either change sync_triggers to human readable values, or make them work as hex flags again.
     $trigger_options = $this->get_sync_trigger_options();
     $form['sync_triggers'] = [
@@ -173,22 +162,68 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       ];
     }
 
-    $form['queue'] = [
-      '#title' => t('Queue Settings'),
+    // @TODO should push and pull settings get moved into push and pull modules?
+    $form['pull'] = [
+      '#title' => t('Pull Settings'),
+      '#type' => 'details',
+      '#description' => t(''),
+      '#open' => TRUE,
+      '#tree' => FALSE,
+      '#states' => [
+        'visible' => [
+          ':input[name^="sync_triggers[pull"]' => array('checked' => TRUE),
+        ]
+      ]
+    ];
+
+    if (!$mapping->isNew()) {
+      // This doesn't work until after mapping gets saved.
+      // @TODO figure out best way to alert admins about this, or AJAX-ify it.
+      $form['pull']['pull_trigger_date'] = [
+        '#type' => 'select',
+        '#title' => t('Date field to trigger pull'),
+        '#description' => t('Poll Salesforce for updated records based on the given date field. Defaults to "Last Modified Date".'),
+        '#required' => $mapping->salesforce_object_type,
+        '#default_value' => $mapping->pull_trigger_date,
+        '#options' => $this->get_pull_trigger_options($salesforce_object_type),
+      ];
+    }
+
+    $form['pull']['pull_where_clause'] = [
+      '#title' => t('Pull query SOQL "Where" clause'),
+      '#type' => 'textarea',
+      '#description' => t('Add a "where" SOQL condition clause to limit records pulled from Salesforce. e.g. Email != \'\' AND RecordType.DevelopName = \'ExampleRecordType\''),
+      '#default_value' => $mapping->pull_where_clause,
+    ];
+
+    $form['pull']['pull_frequency'] = [
+      '#title' => t('Pull Frequency'),
+      '#type' => 'number',
+      '#default_value' => $mapping->pull_frequency,
+      '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to pull data to Drupal. Enter 0 to pull as often as possible. FYI: 1 hour = 3600; 1 day = 86400. <em>NOTE: pull frequency is shared per-Salesforce Object. The setting is exposed here for convenience.</em>'),
+    ];
+
+    $form['push'] = [
+      '#title' => t('Push Settings'),
       '#type' => 'details',
       '#description' => t('The asynchronous push queue is always enabled in Drupal 8: real-time push fails are queued for async push. Alternatively, you can choose to disable real-time push and use async-only.'),
       '#open' => TRUE,
       '#tree' => FALSE,
+      '#states' => [
+        'visible' => [
+          ':input[name^="sync_triggers[push"]' => array('checked' => TRUE),
+        ]
+      ]
     ];
 
-    $form['queue']['async'] = [
+    $form['push']['async'] = [
       '#title' => t('Disable real-time push'),
       '#type' => 'checkbox',
       '#description' => t('When real-time push is disabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD, and only enqueue failures for async push.'),
       '#default_value' => $mapping->async,
     ];
 
-    $form['queue']['push_frequency'] = [
+    $form['push']['push_frequency'] = [
       '#title' => t('Push Frequency'),
       '#type' => 'number',
       '#default_value' => $mapping->push_frequency,
@@ -196,7 +231,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#min' => 0,
     ];
 
-    $form['queue']['push_limit'] = [
+    $form['push']['push_limit'] = [
       '#title' => t('Push Limit'),
       '#type' => 'number',
       '#default_value' => $mapping->push_limit,
@@ -204,7 +239,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#min' => 0,
     ];
 
-    $form['queue']['push_retries'] = [
+    $form['push']['push_retries'] = [
       '#title' => t('Push Retries'),
       '#type' => 'number',
       '#default_value' => $mapping->push_retries,
@@ -212,14 +247,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#min' => 0,
     ];
 
-    $form['queue']['pull_frequency'] = [
-      '#title' => t('Pull Frequency'),
-      '#type' => 'number',
-      '#default_value' => $mapping->pull_frequency,
-      '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to pull data to Drupal. Enter 0 to pull as often as possible. FYI: 1 hour = 3600; 1 day = 86400. <em>NOTE: pull frequency is shared per-Salesforce Object. The setting is exposed here for convenience.</em>'),
-    ];
-
-    $form['queue']['weight'] = [
+    $form['push']['weight'] = [
       '#title' => t('Weight'),
       '#type' => 'select',
       '#options' => array_combine(range(-50,50), range(-50,50)),
@@ -262,6 +290,16 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $element = &$form['drupal_entity']['drupal_bundle'][$entity_type];
       // @TODO replace with Dependency Injection
       $form_state->setError($element, $this->t('%name field is required.', ['%name' => $element['#title']]));
+    }
+    // dpm($form_state->getValues());
+    if ($this->entity->doesPull()) {
+      try {
+        $testQuery = $this->client->query($this->entity->getPullQuery());
+      }
+      catch (\Exception $e) {
+        $form_state->setError($form['pull']['pull_where_clause'], $this->t('Test pull query returned an error. Please check logs for error details.'));
+        \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
+      }
     }
   }
 
@@ -339,13 +377,16 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $sfobject_options = [];
 
     // Note that we're filtering SF object types to a reasonable subset.
-    $sfobjects = $this->client->objects([
+    $config = $this->config('salesforce.settings');
+    $filter = $config->get('show_all_objects') ? [] : [
       'updateable' => TRUE,
       'triggerable' => TRUE,
-    ]);
+    ];
+    $sfobjects = $this->client->objects($filter);
     foreach ($sfobjects as $object) {
-      $sfobject_options[$object['name']] = $object['label'];
+      $sfobject_options[$object['name']] = $object['label'] . ' (' . $object['name'] . ')';
     }
+    asort($sfobject_options);
     return $sfobject_options;
   }
 
@@ -358,12 +399,12 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected function get_sync_trigger_options() {
     return [
-      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => t('Drupal entity create'),
-      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => t('Drupal entity update'),
-      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE => t('Drupal entity delete'),
-      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE => t('Salesforce object create'),
-      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE => t('Salesforce object update'),
-      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE => t('Salesforce object delete'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => t('Drupal entity create (push)'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => t('Drupal entity update (push)'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE => t('Drupal entity delete (push)'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE => t('Salesforce object create (pull)'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE => t('Salesforce object update (pull)'),
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE => t('Salesforce object delete (pull)'),
     ];
   }
 

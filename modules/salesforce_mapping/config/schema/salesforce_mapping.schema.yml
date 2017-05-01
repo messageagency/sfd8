@@ -43,6 +43,9 @@ salesforce_mapping.salesforce_mapping.*:
     push_retries:
       type: integer
       label: 'Push Retries'
+    pull_where_clause:
+      type: string
+      label: 'Pull query SOQL "WHERE" clause'
     sync_triggers:
       type: mapping
       label: 'Sync triggers'
