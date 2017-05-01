@@ -170,19 +170,13 @@ class SettingsForm extends ConfigFormBase {
       $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     }
 
+    $this->sf_client->setApiVersion($form_state->getValue('use_latest'), $form_state->getValue('rest_api_version'));
+
     $config = $this->config('salesforce.settings');
     $config->set('show_all_objects', $form_state->getValue('show_all_objects'));
-    $use_latest = $form_state->getValue('use_latest');
-    $config->set('use_latest', $use_latest);
-    if (!$use_latest) {
-      $versions = $this->sf_client->getVersions();
-      $version = $versions[$form_state->getValue('rest_api_version')];
-      $config->set('rest_api_version', $version);
-    }
     $config->save();
+
     parent::submitForm($form, $form_state);
-
-
   }
 
 

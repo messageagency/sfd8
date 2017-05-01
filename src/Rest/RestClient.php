@@ -98,7 +98,7 @@ class RestClient implements RestClientInterface {
   public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
-    $this->config = $this->configFactory->get('salesforce.settings');
+    $this->config = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
     $this->cache = $cache;
     $this->json = $json;
@@ -271,6 +271,27 @@ class RestClient implements RestClientInterface {
       return $version['version'];
     }
     return $this->config->get('rest_api_version.version');
+  }
+
+  /**
+   * Setter for config salesforce.settings rest_api_version and use_latest
+   *
+   * @param bool $use_latest
+   * @param int $version
+   */
+  public function setApiVersion($use_latest = TRUE, $version = NULL) {
+    if ($use_latest) {
+      $this->config->set('use_latest', $use_latest);
+    }
+    else {
+      $versions = $this->getVersions();
+      if (empty($versions[$version])) {
+        throw new Exception("Version $version is not available.");
+      }
+      $version = $versions[$version];
+      $this->config->set('rest_api_version', $version);
+    }
+    $this->config->save();
   }
 
   /**
