@@ -123,7 +123,7 @@ class SettingsForm extends ConfigFormBase {
 
     $form['pull_max_queue_size'] = [
       '#title' => $this->t('Pull queue max size'),
-      '#type' => 'password',
+      '#type' => 'number',
       '#description' => $this->t('Set the maximum number of items which can be enqueued for pull at any given time. Note this setting is not exactly analogous to the push queue limit, since Drupal Cron API does not offer such granularity. Enter 0 for no limit.'),
       '#required' => TRUE,
       '#min' => 0,
