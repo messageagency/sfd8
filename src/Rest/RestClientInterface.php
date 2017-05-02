@@ -23,6 +23,14 @@ interface RestClientInterface {
    *
    * @param string $path
    *   Path to resource.
+   *
+   *   If $path begins with a slash, the resource will be considered absolute,
+   *   and only the instance URL will be pre-pended. This can be used, for
+   *   example, to issue an API call to a custom Apex Rest endpoint.
+   *
+   *   If $path does not begin with a slash, the resource will be considered
+   *   relative and the Rest API Endpoint will be pre-pended.
+   *
    * @param array $params
    *   Parameters to provide.
    * @param string $method

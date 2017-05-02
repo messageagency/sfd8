@@ -107,8 +107,6 @@ class RestClient implements RestClientInterface {
 
   /**
    * Determine if this SF instance is fully configured.
-   *
-   * @TODO: Consider making a test API call.
    */
   public function isAuthorized() {
     return $this->getConsumerKey() && $this->getConsumerSecret() && $this->getRefreshToken();
@@ -122,8 +120,15 @@ class RestClient implements RestClientInterface {
       $this->refreshToken();
     }
 
+    if (strpos($path, '/') === 0) {
+      $url = $this->getInstanceUrl() . $path;
+    }
+    else {
+      $url = $this->getApiEndPoint() . $path;
+    }
+
     try {
-      $this->response = new RestResponse($this->apiHttpRequest($path, $params, $method));
+      $this->response = new RestResponse($this->apiHttpRequest($url, $params, $method));
     }
     catch (RequestException $e) {
       // RequestException gets thrown for any response status but 2XX.
@@ -141,7 +146,7 @@ class RestClient implements RestClientInterface {
       // throws anything but a RequestException, let it bubble up.
       $this->refreshToken();
       try {
-        $this->response = new RestResponse($this->apiHttpRequest($path, $params, $method));
+        $this->response = new RestResponse($this->apiHttpRequest($url, $params, $method));
       }
       catch (RequestException $e) {
         $this->response = $e->getResponse();
@@ -165,8 +170,9 @@ class RestClient implements RestClientInterface {
   /**
    * Private helper to issue an SF API request.
    *
-   * @param string $path
-   *   Path to resource.
+   * @param string $url
+   *   Fully-qualified URL to resource.
+   *
    * @param array $params
    *   Parameters to provide.
    * @param string $method
@@ -175,11 +181,10 @@ class RestClient implements RestClientInterface {
    * @return GuzzleHttp\Psr7\Response
    *   Response object.
    */
-  protected function apiHttpRequest($path, array $params, $method) {
+  protected function apiHttpRequest($url, array $params, $method) {
     if (!$this->getAccessToken()) {
       throw new \Exception('Missing OAuth Token');
     }
-    $url = $this->getApiEndPoint() . $path;
 
     $headers = [
       'Authorization' => 'OAuth ' . $this->getAccessToken(),
@@ -376,7 +381,7 @@ class RestClient implements RestClientInterface {
    *
    * @throws Exception
    */
-  protected function refreshToken() {
+  public function refreshToken() {
     $refresh_token = $this->getRefreshToken();
     if (empty($refresh_token)) {
       throw new \Exception(t('There is no refresh token.'));
