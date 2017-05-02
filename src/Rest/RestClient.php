@@ -377,9 +377,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Refresh access token based on the refresh token.
-   *
-   * @throws Exception
+   * {@inheritdoc}
    */
   public function refreshToken() {
     $refresh_token = $this->getRefreshToken();

@@ -107,6 +107,13 @@ interface RestClientInterface {
   public function setAccessToken($token);
 
   /**
+   * Refresh access token based on the refresh token.
+   *
+   * @throws Exception
+   */
+  public function refreshToken();
+
+  /**
    * Helper callback for OAuth handshake, and refreshToken()
    *
    * @param GuzzleHttp\Psr7\Response $response
