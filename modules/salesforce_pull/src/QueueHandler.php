@@ -98,6 +98,9 @@ class QueueHandler {
 
     // Iterate over each field mapping to determine our query parameters.
     foreach ($this->mappings as $mapping) {
+      if (!$mapping->doesPull()) {
+        continue;
+      }
       $results = $this->doSfoQuery($mapping);
       if ($results) {
         $this->enqueueAllResults($mapping, $results);
@@ -120,9 +123,9 @@ class QueueHandler {
    */
   protected function doSfoQuery(SalesforceMappingInterface $mapping) {
     // @TODO figure out the new way to build the query.
-    $soql = $mapping->getPullQuery();
     // Execute query.
     try {
+      $soql = $mapping->getPullQuery();
       $this->eventDispatcher->dispatch(
         SalesforceEvents::PULL_QUERY,
         new SalesforceQueryEvent($mapping, $soql)
@@ -145,7 +148,14 @@ class QueueHandler {
    */
   public function enqueueAllResults(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
     while (!$this->enqueueResultSet($mapping, $results)) {
-      $results = $this->sfapi->queryMore($results);
+      try {
+        $results = $this->sfapi->queryMore($results);
+      }
+      catch (\Exception $e) {
+        $message = '%type: @message in %function (line %line of %file).';
+        $args = Error::decodeException($e);
+        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e, $message, $args));
+      }
     }
   }
 
