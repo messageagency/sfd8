@@ -125,9 +125,10 @@ class QueueHandler {
    */
   protected function doSfoQuery(SalesforceMappingInterface $mapping) {
     // @TODO figure out the new way to build the query.
-    $soql = $mapping->getPullQuery();
+
     // Execute query.
     try {
+      $soql = $mapping->getPullQuery();
       $this->eventDispatcher->dispatch(
         SalesforceEvents::PULL_QUERY,
         new SalesforceQueryEvent($mapping, $soql)
@@ -183,8 +184,8 @@ class QueueHandler {
   /**
    * Enqueue a single record for pull.
    *
-   * @param SalesforceMappingInterface $mapping 
-   * @param SObject $record 
+   * @param SalesforceMappingInterface $mapping
+   * @param SObject $record
    */
   public function enqueueRecord(SalesforceMappingInterface $mapping, SObject $record) {
     $this->queue->createItem(new PullQueueItem($record, $mapping));

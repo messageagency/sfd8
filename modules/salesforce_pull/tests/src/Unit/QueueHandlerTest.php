@@ -1,19 +1,20 @@
 <?php
 namespace Drupal\Tests\salesforce_pull\Unit;
 
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Queue\QueueDatabaseFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Tests\UnitTestCase;
+use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_pull\QueueHandler;
-use Drupal\salesforce\Rest\RestClientInterface;
-use Drupal\salesforce\SelectQueryResult;
-use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
-use Drupal\Component\Datetime\TimeInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Test Object instantitation
@@ -31,20 +32,29 @@ class QueueHandlerTest extends UnitTestCase {
     parent::setUp();
     $result = [
       'totalSize' => 1,
-      'done' => true,
-      'records' => [
-        [
-          'Id' => '1234567890abcde',
-          'attributes' => ['type' => 'dummy',],
-          'name' => 'Example',
-        ],
-      ]
+      'done' => TRUE,
+      'records' => [],
+    ];
+    $this->sqrDone = new SelectQueryResult($result);
+
+    $result['records'] = [
+      [
+        'Id' => '1234567890abcde',
+        'attributes' => ['type' => 'dummy'],
+        'name' => 'Example',
+      ],
     ];
     $this->sqr = new SelectQueryResult($result);
+
+    $soql = new SelectQuery('dummy');
+    $soql->fields = ['Id'];
+    $soql->addCondition('LastModifiedDate', '1970-1-1T00:00:00Z', '>');
 
     $prophecy = $this->prophesize(RestClientInterface::CLASS);
     $prophecy->query(Argument::any())
       ->willReturn($this->sqr);
+    $prophecy->queryMore(Argument::any())
+      ->willReturn($this->sqrDone);
     $this->sfapi = $prophecy->reveal();
 
     $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
@@ -61,6 +71,8 @@ class QueueHandlerTest extends UnitTestCase {
     $this->mapping->expects($this->any())
       ->method('getNextPullTime')
       ->willReturn(0);
+    $this->mapping->method('getPullQuery')
+      ->willReturn($soql);
 
     $prophecy = $this->prophesize(QueueInterface::CLASS);
     $prophecy->createItem()->willReturn(1);
