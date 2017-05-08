@@ -2,6 +2,12 @@ salesforce.settings:
   type: config_object
   label: 'Salesforce Settings'
   mapping:
+    standalone:
+      type: boolean
+      label: 'Provide standalone push queue processing endpoint.'
+    show_all_objects:
+      type: boolean
+      label: 'Show all Salesforce objects in mapping UI, including system and non-writeable tables'
     use_latest:
       type: boolean
       label: 'Use latest REST API Version by default'

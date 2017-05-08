@@ -210,8 +210,16 @@ function salesforce_push_enqueue_async(EntityInterface $entity, SalesforceMappin
 function salesforce_push_cron() {
   $queue = \Drupal::service('queue.salesforce_push');
   $queue->garbageCollection();
+  if (\Drupal::config('salesforce.settings')->get('standalone')) {
+    // If global standalone processing is enabled, stop here.
+    return;
+  }
   try {
-    $queue->processQueues();
+    // Process mappings only for those which are not marked standalone.
+    $mappings = \Drupal::service('entity.manager')
+      ->getStorage('salesforce_mapping')
+      ->loadCronPushMappings();
+    $queue->processQueues($mappings);
   }
   catch (\Exception $e) {
     \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));

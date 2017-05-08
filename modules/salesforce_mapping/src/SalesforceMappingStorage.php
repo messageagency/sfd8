@@ -82,12 +82,26 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
    * @return array
    */
   public function loadPushMappings($entity_type_id = NULL) {
-    $push_mappings = [];
     $properties = empty($entity_type_id)
       ? []
       : ["drupal_entity_type" => $entity_type_id];
-    $mappings = $this->loadByProperties($properties);
+    return $this->loadPushMappingsByProperties($properties);
+  }
 
+  /**
+   * Return an array of SalesforceMapping entities who are push-enabled.
+   *
+   * @param string $entity_type_id
+   *
+   * @return array
+   */
+  public function loadCronPushMappings() {
+    $properties["push_standalone"] = TRUE;
+    return $this->loadPushMappingsByProperties($properties);
+  }
+
+  protected function loadPushMappingsByProperties($properties) {
+    $mappings = $this->loadByProperties($properties);
     foreach ($mappings as $key => $mapping) {
       if (!$mapping->doesPush()) {
         continue;
@@ -97,7 +111,7 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
     if (empty($push_mappings)) {
       return [];
     }
-    return $push_mappings;
+    return $push_mappings;    
   }
 
   /**

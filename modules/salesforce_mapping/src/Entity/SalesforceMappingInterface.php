@@ -76,6 +76,12 @@ interface SalesforceMappingInterface {
   public function getPullTriggerDate();
 
   /**
+   * Return TRUE if this mapping is set to process push queue via a standalone
+   * endpoint instead of during cron.
+   */
+  public function doesPushStandalone();
+
+  /**
    * Checks mappings for any push operation positive
    *
    * @return boolean
