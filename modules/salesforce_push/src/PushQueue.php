@@ -293,10 +293,6 @@ class PushQueue extends DatabaseQueue {
     if (empty($mappings)) {
       return $this;
     }
-    // @TODO push queue processor could be set globally, or per-mapping. Exposing some UI setting would probably be better than this:
-    $plugin_name = $this->state->get('salesforce.push_queue_processor', static::DEFAULT_QUEUE_PROCESSOR);
-
-    $queue_processor = $this->queueManager->createInstance($plugin_name);
 
     foreach ($mappings as $mapping) {
       $this->processQueue($mapping);
@@ -314,6 +310,14 @@ class PushQueue extends DatabaseQueue {
    *   dispatches a SalesforceEvents::ERROR event.
    */
   public function processQueue(SalesforceMappingInterface $mapping) {
+    static $queue_processor = FALSE;
+    if (!$queue_processor) {
+      // @TODO push queue processor could be set globally, or per-mapping. Exposing some UI setting would probably be better than this:
+      $plugin_name = $this->state->get('salesforce.push_queue_processor', static::DEFAULT_QUEUE_PROCESSOR);
+
+      $queue_processor = $this->queueManager->createInstance($plugin_name);
+    }
+
     // Set the queue name, which is the mapping id.
     $this->setName($mapping->id());
 
