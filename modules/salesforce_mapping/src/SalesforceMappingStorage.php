@@ -96,7 +96,7 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
    * @return array
    */
   public function loadCronPushMappings() {
-    $properties["push_standalone"] = TRUE;
+    $properties["push_standalone"] = FALSE;
     return $this->loadPushMappingsByProperties($properties);
   }
 

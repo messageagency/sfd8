@@ -219,6 +219,9 @@ function salesforce_push_cron() {
     $mappings = \Drupal::service('entity.manager')
       ->getStorage('salesforce_mapping')
       ->loadCronPushMappings();
+    if (empty($mappings)) {
+      return;
+    }
     $queue->processQueues($mappings);
   }
   catch (\Exception $e) {
