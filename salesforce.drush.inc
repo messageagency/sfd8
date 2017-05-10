@@ -145,6 +145,20 @@ raw: Display the complete, raw describe response."
     ],
   ];
 
+  $items['sf-push-queue'] = [
+    'description' => 'Process push queues (as though during cron) for one or all Salesforce Mappings.',
+    'aliases' => ['sfpushq', 'sfpm'],
+    'arguments' => [
+      'name' => [
+        'description' => 'Machine name of the Salesforce Mapping for which to process push queue. If omitted, process all queues.',
+      ],
+    ],
+    'examples' => [
+      'drush sfpushq' => 'Process all push queue items',
+      'drush sfpushq foo' => 'Process push queue items for mapping "foo"',
+    ],
+  ];
+
   return $items;
 }
 
@@ -623,4 +637,19 @@ function _salesforce_drush_get_pull_query(SalesforceMappingInterface $mapping) {
   }
   $soql->conditions = $new_conditions;
   return $soql;
+}
+
+function drush_salesforce_sf_push_queue($name = NULL) {
+  $queue = \Drupal::service('queue.salesforce_push');
+  if ($name !== NULL) {
+    if (!($mapping = _salesforce_drush_get_mapping($name))) {
+      return;
+    }
+    // Process one mapping queue
+    $queue->processQueue($mapping);
+  }
+  else {
+    // Process all queues
+    $queue->processQueues();
+  }
 }

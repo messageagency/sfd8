@@ -153,6 +153,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         salesforce_push and salesforce_pull modules.'
       ),
     ];
+    if (empty($trigger_options)) {
+      $form['sync_triggers']['#description'] += ' ' . t('<em>No trigger options are available when Salesforce Push and Pull modules are disabled. Enable one or both modules to allow Push or Pull processing.');
+    }
 
     foreach ($trigger_options as $option => $label) {
       $form['sync_triggers'][$option] = [
@@ -162,30 +165,39 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       ];
     }
 
-    // @TODO should push and pull settings get moved into push and pull modules?
-    $form['pull'] = [
-      '#title' => t('Pull Settings'),
-      '#type' => 'details',
-      '#description' => t(''),
-      '#open' => TRUE,
-      '#tree' => FALSE,
-      '#states' => [
-        'visible' => [
-          ':input[name^="sync_triggers[pull"]' => array('checked' => TRUE),
+    if ($this->moduleHandler->moduleExists('salesforce_pull')) {
+      // @TODO should push and pull settings get moved into push and pull modules?
+      $form['pull'] = [
+        '#title' => t('Pull Settings'),
+        '#type' => 'details',
+        '#description' => t(''),
+        '#open' => TRUE,
+        '#tree' => FALSE,
+        '#states' => [
+          'visible' => [
+            ':input[name^="sync_triggers[pull"]' => array('checked' => TRUE),
+          ]
         ]
-      ]
-    ];
+      ];
 
-    if (!$mapping->isNew()) {
-      // This doesn't work until after mapping gets saved.
-      // @TODO figure out best way to alert admins about this, or AJAX-ify it.
-      $form['pull']['pull_trigger_date'] = [
-        '#type' => 'select',
-        '#title' => t('Date field to trigger pull'),
-        '#description' => t('Poll Salesforce for updated records based on the given date field. Defaults to "Last Modified Date".'),
-        '#required' => $mapping->salesforce_object_type,
-        '#default_value' => $mapping->pull_trigger_date,
-        '#options' => $this->get_pull_trigger_options($salesforce_object_type),
+      if (!$mapping->isNew()) {
+        // This doesn't work until after mapping gets saved.
+        // @TODO figure out best way to alert admins about this, or AJAX-ify it.
+        $form['pull']['pull_trigger_date'] = [
+          '#type' => 'select',
+          '#title' => t('Date field to trigger pull'),
+          '#description' => t('Poll Salesforce for updated records based on the given date field. Defaults to "Last Modified Date".'),
+          '#required' => $mapping->salesforce_object_type,
+          '#default_value' => $mapping->pull_trigger_date,
+          '#options' => $this->get_pull_trigger_options($salesforce_object_type),
+        ];
+      }
+
+      $form['pull']['pull_where_clause'] = [
+        '#title' => t('Pull query SOQL "Where" clause'),
+        '#type' => 'textarea',
+        '#description' => t('Add a "where" SOQL condition clause to limit records pulled from Salesforce. e.g. Email != \'\' AND RecordType.DevelopName = \'ExampleRecordType\''),
+        '#default_value' => $mapping->pull_where_clause,
       ];
     }
 
@@ -203,57 +215,92 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to pull data to Drupal. Enter 0 to pull as often as possible. FYI: 1 hour = 3600; 1 day = 86400. <em>NOTE: pull frequency is shared per-Salesforce Object. The setting is exposed here for convenience.</em>'),
     ];
 
-    $form['push'] = [
-      '#title' => t('Push Settings'),
-      '#type' => 'details',
-      '#description' => t('The asynchronous push queue is always enabled in Drupal 8: real-time push fails are queued for async push. Alternatively, you can choose to disable real-time push and use async-only.'),
-      '#open' => TRUE,
-      '#tree' => FALSE,
-      '#states' => [
-        'visible' => [
-          ':input[name^="sync_triggers[push"]' => array('checked' => TRUE),
+    if ($this->moduleHandler->moduleExists('salesforce_push')) {
+      $form['push'] = [
+        '#title' => t('Push Settings'),
+        '#type' => 'details',
+        '#description' => t('The asynchronous push queue is always enabled in Drupal 8: real-time push fails are queued for async push. Alternatively, you can choose to disable real-time push and use async-only.'),
+        '#open' => TRUE,
+        '#tree' => FALSE,
+        '#states' => [
+          'visible' => [
+            ':input[name^="sync_triggers[push"]' => array('checked' => TRUE),
+          ]
         ]
-      ]
-    ];
+      ];
 
-    $form['push']['async'] = [
-      '#title' => t('Disable real-time push'),
-      '#type' => 'checkbox',
-      '#description' => t('When real-time push is disabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD, and only enqueue failures for async push.'),
-      '#default_value' => $mapping->async,
-    ];
+      $form['push']['async'] = [
+        '#title' => t('Disable real-time push'),
+        '#type' => 'checkbox',
+        '#description' => t('When real-time push is disabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD, and only enqueue failures for async push.'),
+        '#default_value' => $mapping->async,
+      ];
 
-    $form['push']['push_frequency'] = [
-      '#title' => t('Push Frequency'),
-      '#type' => 'number',
-      '#default_value' => $mapping->push_frequency,
-      '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to push data to Salesforce. Enter 0 to push as often as possible. FYI: 1 hour = 3600; 1 day = 86400.'),
-      '#min' => 0,
-    ];
+      $form['push']['push_frequency'] = [
+        '#title' => t('Push Frequency'),
+        '#type' => 'number',
+        '#default_value' => $mapping->push_frequency,
+        '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to push data to Salesforce. Enter 0 to push as often as possible. FYI: 1 hour = 3600; 1 day = 86400.'),
+        '#min' => 0,
+      ];
 
-    $form['push']['push_limit'] = [
-      '#title' => t('Push Limit'),
-      '#type' => 'number',
-      '#default_value' => $mapping->push_limit,
-      '#description' => t('Enter the maximum number of records to be pushed to Salesforce during a single queue batch. Enter 0 to process as many records as possible, subject to the global push queue limit.'),
-      '#min' => 0,
-    ];
+      $form['push']['push_limit'] = [
+        '#title' => t('Push Limit'),
+        '#type' => 'number',
+        '#default_value' => $mapping->push_limit,
+        '#description' => t('Enter the maximum number of records to be pushed to Salesforce during a single queue batch. Enter 0 to process as many records as possible, subject to the global push queue limit.'),
+        '#min' => 0,
+      ];
 
-    $form['push']['push_retries'] = [
-      '#title' => t('Push Retries'),
-      '#type' => 'number',
-      '#default_value' => $mapping->push_retries,
-      '#description' => t('Enter the maximum number of attempts to push a record to Salesforce before it\'s considered failed. Enter 0 for no limit.'),
-      '#min' => 0,
-    ];
+      $form['push']['push_retries'] = [
+        '#title' => t('Push Retries'),
+        '#type' => 'number',
+        '#default_value' => $mapping->push_retries,
+        '#description' => t('Enter the maximum number of attempts to push a record to Salesforce before it\'s considered failed. Enter 0 for no limit.'),
+        '#min' => 0,
+      ];
 
-    $form['push']['weight'] = [
-      '#title' => t('Weight'),
-      '#type' => 'select',
-      '#options' => array_combine(range(-50,50), range(-50,50)),
-      '#description' => t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
-      '#default_value' => $mapping->weight,
-    ];
+      $form['push']['weight'] = [
+        '#title' => t('Weight'),
+        '#type' => 'select',
+        '#options' => array_combine(range(-50,50), range(-50,50)),
+        '#description' => t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
+        '#default_value' => $mapping->weight,
+      ];
+
+      $standalone_url = Url::fromRoute(
+          'salesforce_push.endpoint.salesforce_mapping',
+          [
+            'salesforce_mapping' => $mapping->id(),
+            'key' => \Drupal::state()->get('system.cron_key')
+          ],
+          ['absolute' => TRUE])
+        ->toString();
+
+      $form['push']['push_standalone'] = [
+        '#title' => t('Enable standalone push queue processing'),
+        '#type' => 'checkbox',
+        '#description' => t('Check this box to disable cron push processing for this mapping, and allow standalone processing via this URL: <a href="@url">@url</a>', ['@url' => $standalone_url]),
+        '#default_value' => $mapping->push_standalone,
+      ];
+
+      // If global standalone is enabled, then we force this mapping's
+      // standalone property to true.
+      if ($this->config('salesforce.settings')->get('standalone')) {
+        $settings_url = Url::fromRoute('salesforce.global_settings');
+        $form['push']['push_standalone']['#default_value'] = TRUE;
+        $form['push']['push_standalone']['#disabled'] = TRUE;
+        $form['push']['push_standalone']['#description'] .= ' ' . t('See also <a href="@url">global standalone processing settings</a>.', ['@url' => $settings_url]);
+      }
+
+      $form['push']['weight'] = [
+        '#title' => t('Weight'),
+        '#type' => 'select',
+        '#options' => array_combine(range(-50,50), range(-50,50)),
+        '#description' => t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
+        '#default_value' => $mapping->weight,
+      ];
+    }
 
     $form['meta'] = [
       '#type' => 'details',
@@ -398,14 +445,22 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    *   label as the value.
    */
   protected function get_sync_trigger_options() {
-    return [
-      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => t('Drupal entity create (push)'),
-      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => t('Drupal entity update (push)'),
-      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE => t('Drupal entity delete (push)'),
-      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE => t('Salesforce object create (pull)'),
-      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE => t('Salesforce object update (pull)'),
-      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE => t('Salesforce object delete (pull)'),
-    ];
+    $options = [];
+    if ($this->moduleHandler->moduleExists('salesforce_push')) {
+      $options += [
+        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => t('Drupal entity create (push)'),
+        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => t('Drupal entity update (push)'),
+        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE => t('Drupal entity delete (push)'),
+      ];
+    }
+    if ($this->moduleHandler->moduleExists('salesforce_pull')) {
+      $options += [
+        MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE => t('Salesforce object create (pull)'),
+        MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE => t('Salesforce object update (pull)'),
+        MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE => t('Salesforce object delete (pull)'),
+      ];
+    }
+    return $options;
   }
 
   /**

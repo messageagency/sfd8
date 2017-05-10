@@ -13,6 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
+use Drupal\Core\Url;
 
 /**
  * Creates authorization form for Salesforce.
@@ -136,6 +137,28 @@ class SettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('show_all_objects'),
     ];
 
+    $form['standalone'] = [
+      '#title' => $this->t('Standalone Push Processing'),
+      '#description' => $this->t('Enable standalone push processing, and do not process push mappings during cron. Note: when enabled, you must set up your own service to query this endpoint.'),
+      '#type' => 'checkbox',
+      '#default_value' => $config->get('standalone'),
+    ];
+
+    $standalone_url = Url::fromRoute(
+        'salesforce_push.endpoint',
+        ['key' => \Drupal::state()->get('system.cron_key')],
+        ['absolute' => TRUE]);
+    $form['standalone_url'] = [
+      '#type' => 'item',
+      '#title' => $this->t('Standalone URL'),
+      '#markup' => $this->t('<a href="@url">@url</a>', ['@url' => $standalone_url->toString()]),
+      '#states' => [
+        'visible' => [
+          ':input#edit-standalone' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
     $form = parent::buildForm($form, $form_state);
     $form['creds']['actions'] = $form['actions'];
     unset($form['actions']);
@@ -147,35 +170,17 @@ class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $values = $form_state->getValues();
-    $this->sf_client->setConsumerKey($values['consumer_key']);
-    $this->sf_client->setConsumerSecret($values['consumer_secret']);
-    $this->sf_client->setLoginUrl($values['login_url']);
-
-    try {
-      $path = $this->sf_client->getAuthEndpointUrl();
-      $query = [
-        'redirect_uri' => $this->sf_client->getAuthCallbackUrl(),
-        'response_type' => 'code',
-        'client_id' => $values['consumer_key'],
-      ];
-
-      // Send the user along to the Salesforce OAuth login form. If successful,
-      // the user will be redirected to {redirect_uri} to complete the OAuth
-      // handshake.
-      $form_state->setResponse(new TrustedRedirectResponse($path . '?' . http_build_query($query), 302));
-    }
-    catch (RequestException $e) {
-      drupal_set_message(t("Error during authorization: %message", ['%message' => $e->getMessage()]), 'error');
-      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-    }
-
-    $this->sf_client->setApiVersion($form_state->getValue('use_latest'), $form_state->getValue('rest_api_version'));
-
     $config = $this->config('salesforce.settings');
     $config->set('show_all_objects', $form_state->getValue('show_all_objects'));
+    $config->set('standalone', $form_state->getValue('standalone'));
+    $use_latest = $form_state->getValue('use_latest');
+    $config->set('use_latest', $use_latest);
+    if (!$use_latest) {
+      $versions = $this->sf_client->getVersions();
+      $version = $versions[$form_state->getValue('rest_api_version')];
+      $config->set('rest_api_version', $version);
+    }
     $config->save();
-
     parent::submitForm($form, $form_state);
   }
 

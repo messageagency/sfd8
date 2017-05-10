@@ -48,6 +48,7 @@ use Drupal\salesforce_mapping\MappingConstants;
  *    "type",
  *    "key",
  *    "async",
+ *    "push_standalone",
  *    "pull_trigger_date",
  *    "pull_where_clause",
  *    "sync_triggers",
@@ -129,6 +130,13 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * @var bool
    */
   protected $async = FALSE;
+
+  /**
+   * Whether a standalone push endpoint is enabled for this mapping.
+   *
+   * @var bool
+   */
+  protected $push_standalone = FALSE;
 
   /**
    * The Salesforce field to use for determining whether or not to pull.
@@ -396,6 +404,13 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   public function getPullTriggerDate() {
     return $this->pull_trigger_date;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function doesPushStandalone() {
+    return $this->push_standalone;
   }
 
   /**

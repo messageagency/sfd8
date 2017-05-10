@@ -99,10 +99,14 @@ class QueueHandler {
 
     // Iterate over each field mapping to determine our query parameters.
     foreach ($this->mappings as $mapping) {
+      if (!$mapping->doesPull()) {
+        continue;
+      }
       if ($mapping->getNextPullTime() > $this->time->getRequestTime()) {
         // Skip this mapping, based on pull frequency.
         continue;
       }
+
       $results = $this->doSfoQuery($mapping);
       if ($results) {
         $this->enqueueAllResults($mapping, $results);
@@ -125,7 +129,6 @@ class QueueHandler {
    */
   protected function doSfoQuery(SalesforceMappingInterface $mapping) {
     // @TODO figure out the new way to build the query.
-
     // Execute query.
     try {
       $soql = $mapping->getPullQuery();
@@ -151,7 +154,16 @@ class QueueHandler {
    */
   public function enqueueAllResults(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
     while (!$this->enqueueResultSet($mapping, $results)) {
-      $results = $this->sfapi->queryMore($results);
+      try {
+        $results = $this->sfapi->queryMore($results);
+      }
+      catch (\Exception $e) {
+        $message = '%type: @message in %function (line %line of %file).';
+        $args = Error::decodeException($e);
+        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e, $message, $args));
+        // @TODO do we really want to eat this exception here?
+        return;
+      }
     }
   }
 
