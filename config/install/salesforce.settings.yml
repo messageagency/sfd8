@@ -4,3 +4,4 @@ rest_api_version:
   version: "39.0"
 use_latest: true
 show_all_objects: false
+standalone: false

@@ -1,0 +1,17 @@
+salesforce_push.endpoint:
+  path: '/salesforce_push/endpoint/{key}'
+  defaults:
+    _controller: '\Drupal\salesforce_push\PushController::endpoint'
+  options:
+    no_cache: TRUE
+  requirements:
+    _access_system_cron: 'TRUE'
+
+salesforce_push.endpoint.salesforce_mapping:
+  path: '/salesforce_push/{salesforce_mapping}/endpoint/{key}'
+  defaults:
+    _controller: '\Drupal\salesforce_push\PushController::mappingEndpoint'
+  options:
+    no_cache: TRUE
+  requirements:
+    _access_system_cron: 'TRUE'

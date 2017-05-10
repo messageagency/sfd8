@@ -15,6 +15,7 @@ use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
 /**
  * Salesforce push queue.
@@ -283,66 +284,87 @@ class PushQueue extends DatabaseQueue {
   /**
    * Process Salesforce queues.
    */
-  public function processQueues() {
-    $mappings = $this
-      ->mapping_storage
-      ->loadPushMappings();
+  public function processQueues($mappings = []) {
+    if (empty($mappings)) {
+      $mappings = $this
+        ->mapping_storage
+        ->loadPushMappings();
+    }
     if (empty($mappings)) {
       return $this;
     }
-    $i = 0;
-
-    // @TODO push queue processor could be set globally, or per-mapping. Exposing some UI setting would probably be better than this:
-    $plugin_name = $this->state->get('salesforce.push_queue_processor', static::DEFAULT_QUEUE_PROCESSOR);
-
-    $queue_processor = $this->queueManager->createInstance($plugin_name);
 
     foreach ($mappings as $mapping) {
-      // Set the queue name, which is the mapping id.
-      $this->setName($mapping->id());
+      $this->processQueue($mapping);
+    }
+    return $this;
+  }
 
-      // Iterate through items in this queue until we run out or hit the limit.
-      while (TRUE) {
-        // Claim as many items as we can from this queue and advance our counter. If this queue is empty, move to the next mapping.
-        $items = $this->claimItems($this->limit);
-        if (empty($items)) {
-          continue 2;
-        }
+  /**
+   * Given a salesforce mapping, process all its push queue entries.
+   *
+   * @param SalesforceMapping $mapping 
+   *
+   * @return int
+   *   The number of items procesed, or -1 if there was any error, And also
+   *   dispatches a SalesforceEvents::ERROR event.
+   */
+  public function processQueue(SalesforceMappingInterface $mapping) {
+    static $queue_processor = FALSE;
+    if (!$queue_processor) {
+      // @TODO push queue processor could be set globally, or per-mapping. Exposing some UI setting would probably be better than this:
+      $plugin_name = $this->state->get('salesforce.push_queue_processor', static::DEFAULT_QUEUE_PROCESSOR);
 
-        // Hand them to the queue processor.
-        try {
-          $queue_processor->process($items);
-        }
-        catch (RequeueException $e) {
-          // Getting a Requeue here is weird for a group of items, but we'll
-          // deal with it.
-          $this->releaseItems($items);
-          $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-        }
-        catch (SuspendQueueException $e) {
-          // Getting a SuspendQueue is more likely, e.g. because of a network
-          // or authorization error. Release items and move on to the next
-          // mapping in this case.
-          $this->releaseItems($items);
-          $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-          continue 2;
-        }
-        catch (\Exception $e) {
-          // In case of any other kind of exception, log it and leave the item
-          // in the queue to be processed again later.
-          // @TODO: this is how Cron.php queue works, but I don't really understand why it doesn't get re-queued.
-          $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-        }
-        finally {
-          // If we've reached our limit, we're done. Otherwise, continue to next items.
-          $i += count($items);
-          if ($i >= $this->limit) {
-            return $this;
-          }
+      $queue_processor = $this->queueManager->createInstance($plugin_name);
+    }
+
+    // Set the queue name, which is the mapping id.
+    $this->setName($mapping->id());
+
+    $i = 0;
+
+    // Iterate through items in this queue until we run out or hit the limit.
+    while (TRUE) {
+      // Claim as many items as we can from this queue and advance our counter. If this queue is empty, move to the next mapping.
+      $items = $this->claimItems($this->limit);
+      if (empty($items)) {
+        return 0;
+      }
+
+      // Hand them to the queue processor.
+      try {
+        $queue_processor->process($items);
+      }
+      catch (RequeueException $e) {
+        // Getting a Requeue here is weird for a group of items, but we'll
+        // deal with it and continue to next set of items.
+        $this->releaseItems($items);
+        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
+        continue;
+      }
+      catch (SuspendQueueException $e) {
+        // Getting a SuspendQueue is more likely, e.g. because of a network
+        // or authorization error. Release items and move on to the next
+        // mapping in this case.
+        $this->releaseItems($items);
+        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
+        return $i;
+      }
+      catch (\Exception $e) {
+        // In case of any other kind of exception, log it and leave the item
+        // in the queue to be processed again later.
+        // @TODO: this is how Cron.php queue works, but I don't really understand why it doesn't get released and re-queued.
+        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
+      }
+      finally {
+        // If we've reached our limit, we're done. Otherwise, continue to next items.
+        $i += count($items);
+        if ($i >= $this->limit) {
+          return $i;
         }
       }
     }
-    return $this;
+    return $i;
   }
 
   /**
