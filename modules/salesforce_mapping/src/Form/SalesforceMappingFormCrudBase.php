@@ -199,21 +199,21 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         '#description' => t('Add a "where" SOQL condition clause to limit records pulled from Salesforce. e.g. Email != \'\' AND RecordType.DevelopName = \'ExampleRecordType\''),
         '#default_value' => $mapping->pull_where_clause,
       ];
+
+      $form['pull']['pull_where_clause'] = [
+        '#title' => t('Pull query SOQL "Where" clause'),
+        '#type' => 'textarea',
+        '#description' => t('Add a "where" SOQL condition clause to limit records pulled from Salesforce. e.g. Email != \'\' AND RecordType.DevelopName = \'ExampleRecordType\''),
+        '#default_value' => $mapping->pull_where_clause,
+      ];
+
+      $form['pull']['pull_frequency'] = [
+        '#title' => t('Pull Frequency'),
+        '#type' => 'number',
+        '#default_value' => $mapping->pull_frequency,
+        '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to pull data to Drupal. Enter 0 to pull as often as possible. FYI: 1 hour = 3600; 1 day = 86400. <em>NOTE: pull frequency is shared per-Salesforce Object. The setting is exposed here for convenience.</em>'),
+      ];
     }
-
-    $form['pull']['pull_where_clause'] = [
-      '#title' => t('Pull query SOQL "Where" clause'),
-      '#type' => 'textarea',
-      '#description' => t('Add a "where" SOQL condition clause to limit records pulled from Salesforce. e.g. Email != \'\' AND RecordType.DevelopName = \'ExampleRecordType\''),
-      '#default_value' => $mapping->pull_where_clause,
-    ];
-
-    $form['pull']['pull_frequency'] = [
-      '#title' => t('Pull Frequency'),
-      '#type' => 'number',
-      '#default_value' => $mapping->pull_frequency,
-      '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to pull data to Drupal. Enter 0 to pull as often as possible. FYI: 1 hour = 3600; 1 day = 86400. <em>NOTE: pull frequency is shared per-Salesforce Object. The setting is exposed here for convenience.</em>'),
-    ];
 
     if ($this->moduleHandler->moduleExists('salesforce_push')) {
       $form['push'] = [
