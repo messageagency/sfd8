@@ -136,7 +136,7 @@ class RestClient implements RestClientInterface {
 
       // Any exceptions besides 401 get bubbled up.
       if (!$this->response || $this->response->getStatusCode() != 401) {
-        throw new RestException($this->response, $e->getMessage());
+        throw new RestException($this->response, $e->getMessage(), $e->getCode(), $e);
       }
     }
 
@@ -150,7 +150,7 @@ class RestClient implements RestClientInterface {
       }
       catch (RequestException $e) {
         $this->response = $e->getResponse();
-        throw new RestException($this->response, $e->getMessage());
+        throw new RestException($this->response, $e->getMessage(), $e->getCode(), $e);
       }
     }
 
