@@ -366,7 +366,9 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   public function getLastSyncTime() {
     $last_sync = $this->state()->get('salesforce_pull_last_sync', []);
-    return $last_sync[$this->getSalesforceObjectType()];
+    return empty($last_sync[$this->getSalesforceObjectType()])
+      ? 0
+      : $last_sync[$this->getSalesforceObjectType()];
   }
 
   /**

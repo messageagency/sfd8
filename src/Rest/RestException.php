@@ -15,7 +15,7 @@ class RestException extends \RuntimeException implements ExceptionInterface {
   /**
    *
    */
-  public function __construct(ResponseInterface $response = NULL, $message = "", $code = 0, Throwable $previous = NULL) {
+  public function __construct(ResponseInterface $response = NULL, $message = "", $code = 0, \Throwable $previous = NULL) {
     $this->response = $response;
     $message .= $this->getResponseBody();
     parent::__construct($message, $code, $previous);
