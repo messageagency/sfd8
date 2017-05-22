@@ -286,6 +286,11 @@ function salesforce_pull_get_pull_query($type) {
 
   // Iterate over each field mapping to determine our query parameters.
   foreach (salesforce_mapping_load_multiple(array('salesforce_object_type' => $type)) as $mapping) {
+    // Check the sync settings for create or update trigger.
+    if (!($mapping->sync_triggers & (SALESFORCE_MAPPING_SYNC_SF_CREATE | SALESFORCE_MAPPING_SYNC_SF_UPDATE))) {
+      // Skip this mapping.
+      continue;
+    }
     $mapped_fields = array_merge($mapped_fields, $mapping->getMappedFields(array(SALESFORCE_MAPPING_DIRECTION_SYNC, SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL)));
 
     // If Record Type is specified, restrict query.
