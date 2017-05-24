@@ -100,7 +100,19 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
     return $this->loadPushMappingsByProperties($properties);
   }
 
-  protected function loadPushMappingsByProperties($properties) {
+  /**
+   * Return an array of SalesforceMapping entities whose push-triggers are
+   * enabled.
+   *
+   * @param array $properties
+   *   Properties array for storage handler.
+   *
+   * @return array
+   *   array of SalesforceMapping entities
+   *
+   * @see ::loadByProperties()
+   */
+  public function loadPushMappingsByProperties($properties) {
     $mappings = $this->loadByProperties($properties);
     foreach ($mappings as $key => $mapping) {
       if (!$mapping->doesPush()) {
