@@ -653,7 +653,7 @@ function salesforce_mapping_form_validate($form, &$form_state) {
           call_user_func($field_map['validation_callback'], $drupal_field, $sf_field, $mapping['direction'], $key);
         }
         // Ensure valid SF external ID field.
-        if ($key_delta !== FALSE && $key === (int) $key_delta && !$sf_field['externalId']) {
+        if ($key_delta !== FALSE && $key === (int) $key_delta && !($sf_field['externalId'] || $sf_field['idLookup'])) {
           form_set_error('salesforce_field_mappings][' . $key . '][salesforce_field', t('Salesforce field %name is not configured as an external id.',
             array(
               '%name' => $mapping['salesforce_field'],
