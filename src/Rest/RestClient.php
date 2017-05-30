@@ -159,6 +159,8 @@ class RestClient implements RestClientInterface {
       throw new RestException($this->response, 'Unknown error occurred during API call');
     }
 
+    $this->updateApiUsage($this->response);
+
     if ($returnObject) {
       return $this->response;
     }
@@ -536,6 +538,28 @@ class RestClient implements RestClientInterface {
     }
     $this->cache->set('salesforce:versions', $versions, 0, ['salesforce']);
     return $versions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiUsage() {
+    return $this->state->get('salesforce.usage');
+  }
+
+  /**
+   * Helper method to extract API Usage info from response header and write to 
+   * stateful variable.
+   *
+   * @param RestResponse $response 
+   */
+  protected function updateApiUsage(RestResponse $response) {
+    if ($limit_info = $response->getHeader('Sforce-Limit-Info')) {
+      if (is_array($limit_info)) {
+        $limit_info = reset($limit_info);
+      }
+      $this->state->set('salesforce.usage', $limit_info);
+    }
   }
 
   /**

@@ -59,6 +59,15 @@ interface RestClientInterface {
   public function getApiEndPoint($api_type = 'rest');
 
   /**
+   * Get the api usage, as returned in the most recent API request header.
+   *
+   * @return string
+   *   Returns the complete Sforce-Limit-Info header from a recent API request.
+   *   e.g. "api-usage=123/45678"
+   */
+  public function getApiUsage();
+
+  /**
    *
    */
   public function getConsumerKey();
