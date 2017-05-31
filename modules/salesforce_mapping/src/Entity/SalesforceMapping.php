@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\Exception;
+use \Drupal\Component\Utility\NestedArray;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -200,6 +201,27 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
       $this->created = REQUEST_TIME;
     }
     return parent::save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    // Include config dependencies on all mapped Drupal fields.
+    foreach ($this->getFieldMappings() as $field) {
+      foreach ($field->getDependencies($this) as $type => $deps) {
+        foreach ($deps as $dep) {
+          $this->addDependency($type, $dep);
+        }
+      }
+    }
+    if ($this->doesPull()) {
+      $this->addDependency('module', 'salesforce_pull');
+    }
+    if ($this->doesPush()) {
+      $this->addDependency('module', 'salesforce_push');
+    }
+    return $this;
   }
 
   /**

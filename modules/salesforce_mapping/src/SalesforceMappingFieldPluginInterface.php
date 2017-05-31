@@ -94,4 +94,11 @@ interface SalesforceMappingFieldPluginInterface {
    */
   public function pull();
 
+  /**
+   * Return an array of dependencies, compatible with \Drupal\Component\Plugin\DependentPluginInterface::calculateDependencies
+   *
+   * @return array
+   * @see \Drupal\Component\Plugin\DependentPluginInterface::calculateDependencies
+   */
+  public function getDependencies(SalesforceMappingInterface $mapping);
 }
