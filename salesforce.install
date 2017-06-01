@@ -91,7 +91,7 @@ function salesforce_requirements($phase) {
   }
   else {
     $usage = str_replace('api-usage=', '', $usage);
-    dpm($usage);
+
     list($usage, $limit) = explode('/', $usage, 2);
     $pct = 'N/A';
     if ($limit > 0) {
