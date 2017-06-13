@@ -47,6 +47,47 @@ interface RestClientInterface {
    */
   public function apiCall($path, array $params = [], $method = 'GET', $returnObject = FALSE);
 
+
+  /**
+   * Set options for Guzzle HTTP client.
+   * @see http://docs.guzzlephp.org/en/latest/request-options.html
+   *
+   * @param array $options
+   * @return $this
+   */
+  public function setHttpClientOptions(array $options);
+
+  /**
+   * Set a single Guzzle HTTP client option.
+   * @see setHttpClientOptions
+   *
+   * @param string $option_name 
+   * @param mixed $option_value 
+   * @return $this
+   */
+  public function setHttpClientOption($option_name, $option_value) {
+    $this->httpClientOptions[$option_name] = $option_value;
+  }
+
+  /**
+   * Getter for HTTP client options
+   *
+   * @return mixed
+   */
+  public function getHttpClientOptions() {
+    return $this->httpClientOptions;
+  }
+
+  /**
+   * Getter for a single, named HTTP client option
+   *
+   * @param string $option_name
+   * @return mixed
+   */
+  public function getHttpClientOption($option_name) {
+    return $this->httpClientOptions[$option_name];
+  }
+
   /**
    * Get the API end point for a given type of the API.
    *

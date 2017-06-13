@@ -3,16 +3,17 @@
 namespace Drupal\salesforce\Rest;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
+use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\SelectQueryResult;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
@@ -78,6 +79,8 @@ class RestClient implements RestClientInterface {
    */
   protected $json;
 
+  protected $httpClientOptions;
+
   const CACHE_LIFETIME = 300;
   const LONGTERM_CACHE_LIFETIME = 86400;
 
@@ -102,6 +105,7 @@ class RestClient implements RestClientInterface {
     $this->state = $state;
     $this->cache = $cache;
     $this->json = $json;
+    $this->httpClientOptions = [];
     return $this;
   }
 
@@ -219,7 +223,37 @@ class RestClient implements RestClientInterface {
    */
   protected function httpRequest($url, $data = NULL, array $headers = [], $method = 'GET') {
     // Build the request, including path and headers. Internal use.
-    return $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
+    return $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data], $this->httpClientOptions);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setHttpClientOptions(array $options) {
+    $this->httpClientOptions = NestedArray::mergeDeep($this->httpClientOptions, $options);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setHttpClientOption($option_name, $option_value) {
+    $this->httpClientOptions[$option_name] = $option_value;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHttpClientOptions() {
+    return $this->httpClientOptions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHttpClientOption($option_name) {
+    return $this->httpClientOptions[$option_name];
   }
 
   /**
