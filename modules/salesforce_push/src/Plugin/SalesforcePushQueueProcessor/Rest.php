@@ -2,8 +2,9 @@
 
 namespace Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\salesforce\EntityNotFoundException;
@@ -44,7 +45,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   protected $event_dispatcher;
   protected $etm;
 
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClientInterface $client,  EntityTypeManager $etm, ContainerAwareEventDispatcher $event_dispatcher) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClientInterface $client,  EntityTypeManagerInterface $etm, EventDispatcherInterface $event_dispatcher) {
     $this->queue = $queue;
     $this->client = $client;
     $this->etm = $etm;

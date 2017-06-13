@@ -9,7 +9,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Queue\DatabaseQueue;
 use Drupal\Core\Queue\RequeueException;
 use Drupal\Core\Queue\SuspendQueueException;
-use Drupal\Core\State\State;
+use Drupal\Core\State\StateInterface;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
@@ -63,7 +63,7 @@ class PushQueue extends DatabaseQueue {
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
    */
-  public function __construct(Connection $connection, State $state, PushQueueProcessorPluginManager $queue_manager, EntityManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(Connection $connection, StateInterface $state, PushQueueProcessorPluginManager $queue_manager, EntityManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher) {
     $this->connection = $connection;
     $this->state = $state;
     $this->queueManager = $queue_manager;
@@ -303,7 +303,7 @@ class PushQueue extends DatabaseQueue {
   /**
    * Given a salesforce mapping, process all its push queue entries.
    *
-   * @param SalesforceMapping $mapping 
+   * @param SalesforceMapping $mapping
    *
    * @return int
    *   The number of items procesed, or -1 if there was any error, And also
