@@ -65,18 +65,14 @@ interface RestClientInterface {
    * @param mixed $option_value 
    * @return $this
    */
-  public function setHttpClientOption($option_name, $option_value) {
-    $this->httpClientOptions[$option_name] = $option_value;
-  }
+  public function setHttpClientOption($option_name, $option_value);
 
   /**
    * Getter for HTTP client options
    *
    * @return mixed
    */
-  public function getHttpClientOptions() {
-    return $this->httpClientOptions;
-  }
+  public function getHttpClientOptions();
 
   /**
    * Getter for a single, named HTTP client option
@@ -84,9 +80,7 @@ interface RestClientInterface {
    * @param string $option_name
    * @return mixed
    */
-  public function getHttpClientOption($option_name) {
-    return $this->httpClientOptions[$option_name];
-  }
+  public function getHttpClientOption($option_name);
 
   /**
    * Get the API end point for a given type of the API.
