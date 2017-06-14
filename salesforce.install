@@ -14,7 +14,9 @@ function salesforce_uninstall() {
     'salesforce.access_token',
     'salesforce.refresh_token',
     'salesforce.identity',
+    'salesforce.last_requirements_check',
     'salesforce.usage',
+    'salesforce.tls_status',
   ];
   \Drupal::state()->deleteMultiple($delete);
 }
@@ -24,9 +26,25 @@ function salesforce_requirements($phase) {
     return;
   }
 
+  // Check requirements once per 24 hours
+  $last = \Drupal::state()->get('salesforce.last_requirements_check', 0);
+
+  $requirements['salesforce_usage'] = salesforce_get_usage_requirements();
+
+  $requirements['salesforce_tls'] = salesforce_get_tls_requirements();
+  if ($last < REQUEST_TIME - (60 * 60 * 24) || empty($requirements['salesforce_tls'])) {
+    salesforce_fetch_new_tls();
+    $requirements['salesforce_tls'] = salesforce_get_tls_requirements();
+  }
+
+  return $requirements;
+}
+
+function salesforce_fetch_new_tls() {
   $response = FALSE;
   try {
     // Ping the howsmyssl web service to check TLS version support for this client.
+    \Drupal::state()->set('salesforce.last_requirements_check', REQUEST_TIME);
     $raw_response = \Drupal::service('http_client')->get('https://www.howsmyssl.com/a/check', ['json' => TRUE, 'timeout' => 5]);
     $body = $raw_response->getBody();
     if (!empty($body)) {
@@ -39,42 +57,54 @@ function salesforce_requirements($phase) {
   catch (Exception $e) {
     // noop
   }
+  \Drupal::state()->set('salesforce.tls_status', $response);
+  return $response;
+}
 
-  $requirements['salesforce_tls'] = [
+function salesforce_get_tls_requirements() {
+  $response = \Drupal::state()->get('salesforce.tls_status', FALSE);
+  $last = \Drupal::state()->get('salesforce.last_requirements_check', 0);
+  $last = \Drupal::service('date.formatter')->format($last);
+  $requirements = [
     'title' => t('Salesforce TLS'),
-    'value' => t('TLS 1.1+ Support'),
+    'value' => t('TLS 1.1+ Support last checked %time', ['%time' => $last]),
   ];
   // If we didn't get a good response, throw a warning.
   if (empty($response) || empty($response['tls_version'])) {
-    $requirements['salesforce_tls'] += [
+    $requirements += [
       'severity' => REQUIREMENT_WARNING,
       'description' => t('Drupal failed to connect to https://www.howsmyssl.com/a/check service to check TLS 1.1+ support for this client. Please ensure your OpenSSL client supports TLS 1.1+ before using Salesforce module.'),
     ];
-    return $requirements;
   }
-  // If we got a good response, and this client doesn't support TLS1.1+, throw an error.
-  switch ($response['tls_version']) {
-    case 'TLS 1.1':
-    case 'TLS 1.2':
-    case 'TLS 1.3':
-      $requirements['salesforce_tls'] += [
-        'severity' => REQUIREMENT_OK,
-        'description' => t('OK: %version', ['%version' => $response['tls_version']]),
-      ];
-      break;
+  else {
+    // If we got a good response, and this client doesn't support TLS1.1+, throw an error.
+    switch ($response['tls_version']) {
+      case 'TLS 1.1':
+      case 'TLS 1.2':
+      case 'TLS 1.3':
+        $requirements += [
+          'severity' => REQUIREMENT_OK,
+          'description' => t('OK: %version', ['%version' => $response['tls_version']]),
+        ];
+        break;
 
-    default:
-      $requirements['salesforce_tls'] += [
-        'severity' => REQUIREMENT_ERROR,
-        'description' => t('Unsupported: %version -- Salesforce API requires TLS 1.1+. Please upgrade your OpenSSL version before using Salesforce module.', ['%version' => $response['tls_version']]),
-      ];
-      break;
+      default:
+        $requirements += [
+          'severity' => REQUIREMENT_ERROR,
+          'description' => t('Unsupported: %version -- Salesforce API requires TLS 1.1+. Please upgrade your OpenSSL version before using Salesforce module.', ['%version' => $response['tls_version']]),
+        ];
+        break;
+    }
   }
+  return $requirements;
+}
 
-  $requirements['salesforce_usage'] = [
+function salesforce_get_usage_requirements() {
+  $requirements = [
     'title' => t('Salesforce usage'),
     'value' => t('API Limit Info'),
   ];
+
   $usage = FALSE;
   try {
     $usage = \Drupal::service('salesforce.client')->getApiUsage();
@@ -84,7 +114,7 @@ function salesforce_requirements($phase) {
   }
 
   if (empty($usage)) {
-    $requirements['salesforce_usage'] += [
+    $requirements += [
       'severity' => REQUIREMENT_OK,
       'description' => t('Usage information unavailable'),
     ];
@@ -102,7 +132,7 @@ function salesforce_requirements($phase) {
       '%limit' => number_format($limit),
       '%pct' => number_format($pct, 2) . '%'
     ];
-    $requirements['salesforce_usage'] += [
+    $requirements += [
       'description' => t('Usage: %usage requests of %limit limit (%pct) in the past 24 hours.', $args),
       'severity' => $pct >= 100 ? REQUIREMENT_WARNING : REQUIREMENT_OK,
     ];
@@ -110,6 +140,8 @@ function salesforce_requirements($phase) {
 
   return $requirements;
 }
+
+
 
 /**
  * Install new "Use Latest API version" boolean; defaults to TRUE.
