@@ -216,14 +216,15 @@ class RestClient implements RestClientInterface {
    *   Method to initiate the call, such as GET or POST.  Defaults to GET.
    *
    * @throws RequestException
-   *   Request exxception.
+   *   Request exception.
    *
    * @return GuzzleHttp\Psr7\Response
    *   Response object.
    */
   protected function httpRequest($url, $data = NULL, array $headers = [], $method = 'GET') {
     // Build the request, including path and headers. Internal use.
-    return $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data], $this->httpClientOptions);
+    $args = NestedArray::mergeDeep($this->httpClientOptions, ['headers' => $headers, 'body' => $data]);
+    return $this->httpClient->$method($url, $args);
   }
 
   /**
