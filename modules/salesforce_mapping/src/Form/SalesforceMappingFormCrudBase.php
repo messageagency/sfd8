@@ -181,6 +181,36 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       ];
 
       if (!$mapping->isNew()) {
+        $form['pull']['last_pull_date'] = [
+          '#type' => 'item',
+          '#title' => t('Last Pull Date: %last_pull', ['%last_pull' => $mapping->getLastPullTime() ? \Drupal::service('date.formatter')->format($mapping->getLastPullTime()) : 'never']),
+          '#markup' => t('Resetting last pull date will cause salesforce pull module to query for updated records without respect for the pull trigger date. This is useful, for example, to re-pull all records after a purge.'),
+        ];
+        $form['pull']['last_pull_reset'] = [
+          '#type' => 'button',
+          '#value' => t('Reset Last Pull Date'),
+          '#disabled' => $mapping->getLastPullTime() == NULL,
+          '#limit_validation_errors' => [],
+          '#validate' => ['::lastPullReset'],
+        ];
+
+        $form['pull']['last_delete_date'] = [
+          '#type' => 'item',
+          '#title' => t('Last Delete Date: %last_pull', ['%last_pull' => $mapping->getLastDeleteTime() ? \Drupal::service('date.formatter')->format($mapping->getLastDeleteTime()) : 'never']),
+          '#markup' => t('Resetting last delete date will cause salesforce pull module to query for deleted record without respect for the pull trigger date.'),
+        ];
+        $form['pull']['last_delete_reset'] = [
+          '#type' => 'button',
+          '#value' => t('Reset Last Delete Date'),
+          '#disabled' => $mapping->getLastDeleteTime() == NULL,
+          '#limit_validation_errors' => [],
+          '#validate' => ['::lastDeleteReset'],
+        ];
+
+
+          // ' ; Last delete date/time: %last_delete',  '%last_delete' => $mapping->getLastDeleteTime() ? date('Y-m-d h:ia', $mapping->getLastDeleteTime()) : 'never'])
+        // ];
+
         // This doesn't work until after mapping gets saved.
         // @TODO figure out best way to alert admins about this, or AJAX-ify it.
         $form['pull']['pull_trigger_date'] = [
@@ -296,14 +326,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         $form['push']['push_standalone']['#disabled'] = TRUE;
         $form['push']['push_standalone']['#description'] .= ' ' . t('See also <a href="@url">global standalone processing settings</a>.', ['@url' => $settings_url]);
       }
-
-      $form['push']['weight'] = [
-        '#title' => t('Weight'),
-        '#type' => 'select',
-        '#options' => array_combine(range(-50,50), range(-50,50)),
-        '#description' => t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
-        '#default_value' => $mapping->weight,
-      ];
     }
 
     $form['meta'] = [
@@ -311,6 +333,14 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#open' => TRUE,
       '#tree' => FALSE,
       '#title' => t('Additional properties'),
+    ];
+
+    $form['meta']['weight'] = [
+      '#title' => t('Weight'),
+      '#type' => 'select',
+      '#options' => array_combine(range(-50,50), range(-50,50)),
+      '#description' => t('Not yet in use.'),
+      '#default_value' => $mapping->weight,
     ];
 
     $form['meta']['status'] = [
@@ -334,12 +364,17 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    $button = $form_state->getTriggeringElement();
+    if ($button['#id'] != $form['actions']['submit']['#id']) {
+      // Skip validation unless we hit the "save" button
+      return;
+    }
+
     parent::validateForm($form, $form_state);
 
     $entity_type = $form_state->getValue('drupal_entity_type');
     if (!empty($entity_type) && empty($form_state->getValue('drupal_bundle')[$entity_type])) {
       $element = &$form['drupal_entity']['drupal_bundle'][$entity_type];
-      // @TODO replace with Dependency Injection
       $form_state->setError($element, $this->t('%name field is required.', ['%name' => $element['#title']]));
     }
     // dpm($form_state->getValues());
@@ -352,6 +387,20 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       }
     }
+  }
+
+  /**
+   * Submit handler for "reset pull timestamp" button
+   */
+  public function lastPullReset(array $form, FormStateInterface $form_state) {
+    $mapping = $this->entity->setLastPullTime(NULL);
+  }
+
+  /**
+   * Submit handler for "reset delete timestamp" button
+   */
+  public function lastDeleteReset(array $form, FormStateInterface $form_state) {
+    $mapping = $this->entity->setLastDeleteTime(NULL);
   }
 
   /**

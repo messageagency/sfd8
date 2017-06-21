@@ -483,8 +483,22 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   /**
    * {@inheritdoc}
    */
+  public function getLastDeleteTime() {
+    return $this->pull_info['last_delete_timestamp'] ? $this->pull_info['last_delete_timestamp'] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastDeleteTime($time) {
+    return $this->setPullInfo('last_delete_timestamp', $time);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getLastPullTime() {
-    return $this->pull_info['last_pull_timestamp'];
+    return $this->pull_info['last_pull_timestamp'] ? $this->pull_info['last_pull_timestamp'] : NULL;
   }
 
   /**
@@ -492,6 +506,21 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   public function setLastPullTime($time) {
     return $this->setPullInfo('last_pull_timestamp', $time);
+  }
+
+  /**
+   * Setter for pull info
+   *
+   * @param string $key 
+   * @param mixed $value 
+   * @return $this
+   */
+  protected function setPullInfo($key, $value) {
+    $this->pull_info[$key] = $value;
+    $pull_info = $this->state()->get('salesforce.sobject_pull_info');
+    $pull_info[$this->getSalesforceObjectType()] = $this->pull_info;
+    $this->state()->set('salesforce.sobject_pull_info', $pull_info);
+    return $this;
   }
 
   /**
@@ -516,11 +545,27 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
+   * Setter for pull info
+   *
+   * @param string $key 
+   * @param mixed $value 
+   * @return $this
+   */
+  protected function setPushInfo($key, $value) {
+    $this->push_info[$key] = $value;
+    $push_info = $this->state()->get('salesforce.mapping_push_info');
+    $push_info[$this->id()] = $this->push_info;
+    $this->state()->set('salesforce.mapping_push_info', $push_info);
+    return $this;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getNextPushTime() {
     return $this->push_info['last_timestamp'] + $this->push_frequency;
   }
+
 
   /**
    * {@inheritdoc}

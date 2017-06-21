@@ -127,11 +127,28 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
   public function getKeyValue(EntityInterface $entity);
 
   /**
+   * Return the timestamp for the date of most recent delete processing for
+   * this mapping, or NULL if it has never been processed.
+   *
+   * @return mixed
+   *   integer timestamp of last delete, or NULL.
+   */
+  public function getLastDeleteTime();
+
+  /**
+   * Set this mapping as having been last processed for deletes at $time
+   *
+   * @param int $time
+   * @return $this
+   */
+  public function setLastDeleteTime($time);
+
+  /**
    * We keep track of when this mapping was last pulled with a state value.
    * Fetch the value.
    *
    * @return mixed
-   *   integer timestamp of last sync, or NULL.
+   *   integer timestamp of last pull, or NULL.
    */
   public function getLastPullTime();
 
