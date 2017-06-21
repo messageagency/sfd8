@@ -17,7 +17,6 @@ use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_push\PushQueueInterface;
 use Drupal\salesforce_push\PushQueueProcessorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Rest queue processor plugin.
