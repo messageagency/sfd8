@@ -2,6 +2,8 @@
 
 namespace Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Queue\SuspendQueueException;

@@ -392,4 +392,11 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
     return $options[$sfobject_name];
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDependencies(SalesforceMappingInterface $mapping) {
+    return [];
+  }
+
 }

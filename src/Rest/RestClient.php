@@ -3,16 +3,17 @@
 namespace Drupal\salesforce\Rest;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
+use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\SelectQueryResult;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
@@ -79,6 +80,8 @@ class RestClient implements RestClientInterface {
    */
   protected $json;
 
+  protected $httpClientOptions;
+
   const CACHE_LIFETIME = 300;
   const LONGTERM_CACHE_LIFETIME = 86400;
 
@@ -104,6 +107,7 @@ class RestClient implements RestClientInterface {
     $this->cache = $cache;
     $this->json = $json;
     $this->time = $time;
+    $this->httpClientOptions = [];
     return $this;
   }
 
@@ -138,7 +142,7 @@ class RestClient implements RestClientInterface {
 
       // Any exceptions besides 401 get bubbled up.
       if (!$this->response || $this->response->getStatusCode() != 401) {
-        throw new RestException($this->response, $e->getMessage());
+        throw new RestException($this->response, $e->getMessage(), $e->getCode(), $e);
       }
     }
 
@@ -152,7 +156,7 @@ class RestClient implements RestClientInterface {
       }
       catch (RequestException $e) {
         $this->response = $e->getResponse();
-        throw new RestException($this->response, $e->getMessage());
+        throw new RestException($this->response, $e->getMessage(), $e->getCode(), $e);
       }
     }
 
@@ -160,6 +164,8 @@ class RestClient implements RestClientInterface {
     || ((int) floor($this->response->getStatusCode() / 100)) != 2) {
       throw new RestException($this->response, 'Unknown error occurred during API call');
     }
+
+    $this->updateApiUsage($this->response);
 
     if ($returnObject) {
       return $this->response;
@@ -212,14 +218,45 @@ class RestClient implements RestClientInterface {
    *   Method to initiate the call, such as GET or POST.  Defaults to GET.
    *
    * @throws RequestException
-   *   Request exxception.
+   *   Request exception.
    *
    * @return GuzzleHttp\Psr7\Response
    *   Response object.
    */
   protected function httpRequest($url, $data = NULL, array $headers = [], $method = 'GET') {
     // Build the request, including path and headers. Internal use.
-    return $this->httpClient->$method($url, ['headers' => $headers, 'body' => $data]);
+    $args = NestedArray::mergeDeep($this->httpClientOptions, ['headers' => $headers, 'body' => $data]);
+    return $this->httpClient->$method($url, $args);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setHttpClientOptions(array $options) {
+    $this->httpClientOptions = NestedArray::mergeDeep($this->httpClientOptions, $options);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setHttpClientOption($option_name, $option_value) {
+    $this->httpClientOptions[$option_name] = $option_value;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHttpClientOptions() {
+    return $this->httpClientOptions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHttpClientOption($option_name) {
+    return $this->httpClientOptions[$option_name];
   }
 
   /**
@@ -559,6 +596,28 @@ class RestClient implements RestClientInterface {
     }
     $this->cache->set('salesforce:versions', $versions, 0, ['salesforce']);
     return $versions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiUsage() {
+    return $this->state->get('salesforce.usage');
+  }
+
+  /**
+   * Helper method to extract API Usage info from response header and write to 
+   * stateful variable.
+   *
+   * @param RestResponse $response 
+   */
+  protected function updateApiUsage(RestResponse $response) {
+    if ($limit_info = $response->getHeader('Sforce-Limit-Info')) {
+      if (is_array($limit_info)) {
+        $limit_info = reset($limit_info);
+      }
+      $this->state->set('salesforce.usage', $limit_info);
+    }
   }
 
   /**

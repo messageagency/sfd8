@@ -319,7 +319,7 @@ class PushQueue extends DatabaseQueue {
   /**
    * Given a salesforce mapping, process all its push queue entries.
    *
-   * @param SalesforceMapping $mapping 
+   * @param SalesforceMapping $mapping
    *
    * @return int
    *   The number of items procesed, or -1 if there was any error, And also

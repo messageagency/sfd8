@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\field\Entity\FieldConfig;
 
 /**
  * Adapter for entity properties and fields.
@@ -71,7 +72,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
   /**
    *
    */
-  private function getConfigurationOptions($mapping) {
+  private function getConfigurationOptions(SalesforceMappingInterface $mapping) {
     $properties = $this->entityFieldManager->getFieldDefinitions(
       $mapping->get('drupal_entity_type'),
       $mapping->get('drupal_bundle')
@@ -88,6 +89,22 @@ class Properties extends SalesforceMappingFieldPluginBase {
     }
     asort($options);
     return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @return array
+   *   Field config upon which this mapping depends
+   */
+  public function getDependencies(SalesforceMappingInterface $mapping) {
+    $field_config = FieldConfig::loadByName($mapping->get('drupal_entity_type'), $mapping->get('drupal_bundle'), $this->config('drupal_field_value'));
+    if (empty($field_config)) {
+      return [];
+    }
+    return [
+      'config' => array($field_config->getConfigDependencyName()),
+    ];
   }
 
 }

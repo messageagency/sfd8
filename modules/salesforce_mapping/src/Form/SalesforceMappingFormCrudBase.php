@@ -268,19 +268,23 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         '#default_value' => $mapping->weight,
       ];
 
-      $standalone_url = Url::fromRoute(
-          'salesforce_push.endpoint.salesforce_mapping',
-          [
-            'salesforce_mapping' => $mapping->id(),
-            'key' => \Drupal::state()->get('system.cron_key')
-          ],
-          ['absolute' => TRUE])
-        ->toString();
+      $description = t('Check this box to disable cron push processing for this mapping, and allow standalone processing. A URL will be generated after saving the mapping.');
+      if ($mapping->id()) {
+        $standalone_url = Url::fromRoute(
+            'salesforce_push.endpoint.salesforce_mapping',
+            [
+              'salesforce_mapping' => $mapping->id(),
+              'key' => \Drupal::state()->get('system.cron_key')
+            ],
+            ['absolute' => TRUE])
+          ->toString();
+        $description = t('Check this box to disable cron push processing for this mapping, and allow standalone processing via this URL: <a href=":url">:url</a>', [':url' => $standalone_url]);
+      }
 
       $form['push']['push_standalone'] = [
         '#title' => t('Enable standalone push queue processing'),
         '#type' => 'checkbox',
-        '#description' => t('Check this box to disable cron push processing for this mapping, and allow standalone processing via this URL: <a href="@url">@url</a>', ['@url' => $standalone_url]),
+        '#description' => $description,
         '#default_value' => $mapping->push_standalone,
       ];
 

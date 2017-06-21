@@ -169,7 +169,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     }
 
     foreach ($describe->fields as $field) {
-      if ($field['externalId']) {
+      if ($field['externalId'] || $field['idLookup']) {
         $options[$field['name']] = $field['label'];
       }
     }

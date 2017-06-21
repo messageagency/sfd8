@@ -96,4 +96,20 @@ $mapping) {
     return $options;
   }
 
+  /**
+   * {@inheritdoc}
+   *
+   * @return array
+   *   Field config upon which this mapping depends
+   */
+  public function getDependencies(SalesforceMappingInterface $mapping) {
+    $field_config = FieldConfig::loadByName($mapping->get('drupal_entity_type'), $mapping->get('drupal_bundle'), $this->config('drupal_field_value'));
+    if (empty($field_config)) {
+      return [];
+    }
+    return [
+      'config' => array($field_config->getConfigDependencyName()),
+    ];
+  }
+
 }
