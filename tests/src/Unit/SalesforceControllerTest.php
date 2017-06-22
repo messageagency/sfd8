@@ -13,6 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * @coversDefaultClass \Drupal\salesforce\Controller\SalesforceController
@@ -42,8 +43,9 @@ class SalesforceControllerTest extends UnitTestCase {
         ->getMock();
     $this->cache = $this->getMock('\Drupal\Core\Cache\CacheBackendInterface');
     $this->json = $this->getMock(Json::CLASS);
+    $this->time = $this->getMock(TimeInterface::CLASS);
 
-    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json];
+    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->time];
 
     $this->client = $this->getMock(RestClient::class, ['getConsumerKey', 'getConsumerSecret', 'getAuthCallbackUrl', 'getAuthTokenUrl', 'handleAuthResponse'], $args);
     $this->client->expects($this->once())
@@ -83,6 +85,7 @@ class SalesforceControllerTest extends UnitTestCase {
     $container->set('http_client', $this->httpClient);
     $container->set('request_stack', $this->request_stack);
     $container->set('url.generator', $this->url_generator->reveal());
+    $container->set('datetime.time', $this->time);
     \Drupal::setContainer($container);
 
   }

@@ -93,6 +93,7 @@ class SettingsForm extends ConfigFormBase {
     // We're not actually doing anything with this, but may figure out
     // something that makes sense.
     $config = $this->config('salesforce.settings');
+
     $form['use_latest'] = [
       '#title' => $this->t('Use Latest Rest API version (recommended)'),
       '#type' => 'checkbox',
@@ -111,6 +112,22 @@ class SettingsForm extends ConfigFormBase {
           ':input[name="use_latest"]' => ['checked' => FALSE],
         ]
       ],
+    ];
+
+    $form['push_limit'] = [
+      '#title' => $this->t('Global push limit'),
+      '#type' => 'number',
+      '#description' => $this->t('Set the maximum number of records to be processed during each push queue process. Enter 0 for no limit.'),
+      '#required' => TRUE,
+      '#min' => 0,
+    ];
+
+    $form['pull_max_queue_size'] = [
+      '#title' => $this->t('Pull queue max size'),
+      '#type' => 'number',
+      '#description' => $this->t('Set the maximum number of items which can be enqueued for pull at any given time. Note this setting is not exactly analogous to the push queue limit, since Drupal Cron API does not offer such granularity. Enter 0 for no limit.'),
+      '#required' => TRUE,
+      '#min' => 0,
     ];
 
     $form['show_all_objects'] = [
@@ -143,18 +160,10 @@ class SettingsForm extends ConfigFormBase {
     ];
 
     $form = parent::buildForm($form, $form_state);
-    return $form;
-  }
+    $form['creds']['actions'] = $form['actions'];
+    unset($form['actions']);
 
-  /**
-   * Helper method to generate Salesforce option list for select element.
-   *
-   * @return array
-   */
-  protected function getVersionOptions() {
-    $versions = $this->sf_client->getVersions();
-    array_walk($versions, function(&$item, $key) { $item = $item['label'];} );
-    return $versions;
+    return $form;
   }
 
   /**
@@ -173,6 +182,18 @@ class SettingsForm extends ConfigFormBase {
     }
     $config->save();
     parent::submitForm($form, $form_state);
+  }
+
+
+  /**
+   * Helper method to generate Salesforce option list for select element.
+   *
+   * @return array
+   */
+  protected function getVersionOptions() {
+    $versions = $this->sf_client->getVersions();
+    array_walk($versions, function(&$item, $key) { $item = $item['label'];} );
+    return $versions;
   }
 
 }

@@ -13,7 +13,7 @@ use Drupal\salesforce\SFID;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Handles pull cron deletion of Drupal entities based onSF mapping settings.
@@ -60,9 +60,9 @@ class DeleteHandler {
   /**
    * Request service.
    *
-   * @var \Symfony\Component\HttpFoundation\Request
+   * @var \Drupal\Component\Datetime\TimeInterface
    */
-  protected $request;
+  protected $time;
 
   protected $eventDispatcher;
 
@@ -76,14 +76,13 @@ class DeleteHandler {
    * @param \Drupal\Core\State\StateInterface $state
    *   State service.
    */
-    public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack) {
+    public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher) {
     $this->sfapi = $sfapi;
     $this->etm = $entity_type_manager;
     $this->mappingStorage = $this->etm->getStorage('salesforce_mapping');
     $this->mappedObjectStorage = $this->etm->getStorage('salesforce_mapped_object');
     $this->state = $state;
     $this->eventDispatcher = $event_dispatcher;
-    $this->request = $request_stack->getCurrentRequest();
   }
 
   /**
@@ -94,9 +93,11 @@ class DeleteHandler {
    */
   public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
+    $pull_info = $this->state->get('salesforce.sobject_pull_info', []);
     foreach (array_reverse($this->mappingStorage->getMappedSobjectTypes()) as $type) {
-      $last_delete = $this->state->get('salesforce_pull_last_delete', []);
-      $last_delete_sync = !empty($last_delete[$type]) ? $last_delete[$type] : strtotime('-29 days');
+      $last_delete_sync = !empty($pull_info[$type]['last_delete_timestamp'])
+        ? $pull_info[$type]['last_delete_timestamp']
+        : strtotime('-29 days');
       $now = time();
       // getDeleted() restraint: startDate must be at least one minute
       // greater than endDate.
@@ -105,8 +106,8 @@ class DeleteHandler {
       $now_sf = gmdate('Y-m-d\TH:i:s\Z', $now);
       $deleted = $this->sfapi->getDeleted($type, $last_delete_sync_sf, $now_sf);
       $this->handleDeletedRecords($deleted, $type);
-      $last_delete[$type] = $now;
-      $this->state->set('salesforce_pull_last_delete', $last_delete);
+      $pull_info[$type]['last_delete_timestamp'] = $now;
+      $this->state->set('salesforce.sobject_pull_info', $pull_info);
     }
     return TRUE;
   }

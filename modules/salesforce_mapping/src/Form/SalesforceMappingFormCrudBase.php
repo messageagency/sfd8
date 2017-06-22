@@ -6,9 +6,9 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\Core\Url;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
-use Drupal\Core\Url;
 
 /**
  * Salesforce Mapping Form base.
@@ -23,16 +23,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   protected $storageController;
 
   /**
-   * The mapping field plgin controller.
-   * Note used currently
-   * @var [type]
-   */
-  //protected $mappingFieldPluginManager;
-
-  // not currently used (1 use commented out)
-  //protected $pushPluginManager;
-
-  /**
    * {@inheritdoc}
    *
    * @TODO this function is almost 200 lines. Look into leveraging core Entity
@@ -40,6 +30,15 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    *   into smaller chunks.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    // Perform our salesforce queries first, so that if we can't connect we don't waste time on the rest of the form.
+    try {
+      $object_type_options = $this->get_salesforce_object_type_options();
+    }
+    catch (\Exception $e) {
+      $href = new Url('salesforce.authorize');
+      drupal_set_message($this->t('Error when connecting to Salesforce. Please <a href="@href">check your credentials</a> and try again: %message', ['@href' => $href->toString(), '%message' => $e->getMessage()]), 'error');
+      return $form;
+    }
     $form = parent::buildForm($form, $form_state);
 
     $mapping = $this->entity;
@@ -137,7 +136,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#type' => 'select',
       '#description' => $this->t('Select a Salesforce object to map.'),
       '#default_value' => $salesforce_object_type,
-      '#options' => $this->get_salesforce_object_type_options(),
+      '#options' => $object_type_options,
       '#required' => TRUE,
       '#empty_option' => $this->t('- Select -'),
     ];
@@ -182,6 +181,36 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       ];
 
       if (!$mapping->isNew()) {
+        $form['pull']['last_pull_date'] = [
+          '#type' => 'item',
+          '#title' => t('Last Pull Date: %last_pull', ['%last_pull' => $mapping->getLastPullTime() ? \Drupal::service('date.formatter')->format($mapping->getLastPullTime()) : 'never']),
+          '#markup' => t('Resetting last pull date will cause salesforce pull module to query for updated records without respect for the pull trigger date. This is useful, for example, to re-pull all records after a purge.'),
+        ];
+        $form['pull']['last_pull_reset'] = [
+          '#type' => 'button',
+          '#value' => t('Reset Last Pull Date'),
+          '#disabled' => $mapping->getLastPullTime() == NULL,
+          '#limit_validation_errors' => [],
+          '#validate' => ['::lastPullReset'],
+        ];
+
+        $form['pull']['last_delete_date'] = [
+          '#type' => 'item',
+          '#title' => t('Last Delete Date: %last_pull', ['%last_pull' => $mapping->getLastDeleteTime() ? \Drupal::service('date.formatter')->format($mapping->getLastDeleteTime()) : 'never']),
+          '#markup' => t('Resetting last delete date will cause salesforce pull module to query for deleted record without respect for the pull trigger date.'),
+        ];
+        $form['pull']['last_delete_reset'] = [
+          '#type' => 'button',
+          '#value' => t('Reset Last Delete Date'),
+          '#disabled' => $mapping->getLastDeleteTime() == NULL,
+          '#limit_validation_errors' => [],
+          '#validate' => ['::lastDeleteReset'],
+        ];
+
+
+          // ' ; Last delete date/time: %last_delete',  '%last_delete' => $mapping->getLastDeleteTime() ? date('Y-m-d h:ia', $mapping->getLastDeleteTime()) : 'never'])
+        // ];
+
         // This doesn't work until after mapping gets saved.
         // @TODO figure out best way to alert admins about this, or AJAX-ify it.
         $form['pull']['pull_trigger_date'] = [
@@ -199,6 +228,20 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         '#type' => 'textarea',
         '#description' => t('Add a "where" SOQL condition clause to limit records pulled from Salesforce. e.g. Email != \'\' AND RecordType.DevelopName = \'ExampleRecordType\''),
         '#default_value' => $mapping->pull_where_clause,
+      ];
+
+      $form['pull']['pull_where_clause'] = [
+        '#title' => t('Pull query SOQL "Where" clause'),
+        '#type' => 'textarea',
+        '#description' => t('Add a "where" SOQL condition clause to limit records pulled from Salesforce. e.g. Email != \'\' AND RecordType.DevelopName = \'ExampleRecordType\''),
+        '#default_value' => $mapping->pull_where_clause,
+      ];
+
+      $form['pull']['pull_frequency'] = [
+        '#title' => t('Pull Frequency'),
+        '#type' => 'number',
+        '#default_value' => $mapping->pull_frequency,
+        '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to pull data to Drupal. Enter 0 to pull as often as possible. FYI: 1 hour = 3600; 1 day = 86400. <em>NOTE: pull frequency is shared per-Salesforce Object. The setting is exposed here for convenience.</em>'),
       ];
     }
 
@@ -221,6 +264,38 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         '#type' => 'checkbox',
         '#description' => t('When real-time push is disabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD, and only enqueue failures for async push.'),
         '#default_value' => $mapping->async,
+      ];
+
+      $form['push']['push_frequency'] = [
+        '#title' => t('Push Frequency'),
+        '#type' => 'number',
+        '#default_value' => $mapping->push_frequency,
+        '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to push data to Salesforce. Enter 0 to push as often as possible. FYI: 1 hour = 3600; 1 day = 86400.'),
+        '#min' => 0,
+      ];
+
+      $form['push']['push_limit'] = [
+        '#title' => t('Push Limit'),
+        '#type' => 'number',
+        '#default_value' => $mapping->push_limit,
+        '#description' => t('Enter the maximum number of records to be pushed to Salesforce during a single queue batch. Enter 0 to process as many records as possible, subject to the global push queue limit.'),
+        '#min' => 0,
+      ];
+
+      $form['push']['push_retries'] = [
+        '#title' => t('Push Retries'),
+        '#type' => 'number',
+        '#default_value' => $mapping->push_retries,
+        '#description' => t('Enter the maximum number of attempts to push a record to Salesforce before it\'s considered failed. Enter 0 for no limit.'),
+        '#min' => 0,
+      ];
+
+      $form['push']['weight'] = [
+        '#title' => t('Weight'),
+        '#type' => 'select',
+        '#options' => array_combine(range(-50,50), range(-50,50)),
+        '#description' => t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
+        '#default_value' => $mapping->weight,
       ];
 
       $description = t('Check this box to disable cron push processing for this mapping, and allow standalone processing. A URL will be generated after saving the mapping.');
@@ -251,14 +326,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         $form['push']['push_standalone']['#disabled'] = TRUE;
         $form['push']['push_standalone']['#description'] .= ' ' . t('See also <a href="@url">global standalone processing settings</a>.', ['@url' => $settings_url]);
       }
-
-      $form['push']['weight'] = [
-        '#title' => t('Weight'),
-        '#type' => 'select',
-        '#options' => array_combine(range(-50,50), range(-50,50)),
-        '#description' => t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
-        '#default_value' => $mapping->weight,
-      ];
     }
 
     $form['meta'] = [
@@ -266,6 +333,14 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#open' => TRUE,
       '#tree' => FALSE,
       '#title' => t('Additional properties'),
+    ];
+
+    $form['meta']['weight'] = [
+      '#title' => t('Weight'),
+      '#type' => 'select',
+      '#options' => array_combine(range(-50,50), range(-50,50)),
+      '#description' => t('Not yet in use.'),
+      '#default_value' => $mapping->weight,
     ];
 
     $form['meta']['status'] = [
@@ -289,12 +364,17 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    $button = $form_state->getTriggeringElement();
+    if ($button['#id'] != $form['actions']['submit']['#id']) {
+      // Skip validation unless we hit the "save" button
+      return;
+    }
+
     parent::validateForm($form, $form_state);
 
     $entity_type = $form_state->getValue('drupal_entity_type');
     if (!empty($entity_type) && empty($form_state->getValue('drupal_bundle')[$entity_type])) {
       $element = &$form['drupal_entity']['drupal_bundle'][$entity_type];
-      // @TODO replace with Dependency Injection
       $form_state->setError($element, $this->t('%name field is required.', ['%name' => $element['#title']]));
     }
     // dpm($form_state->getValues());
@@ -307,6 +387,20 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       }
     }
+  }
+
+  /**
+   * Submit handler for "reset pull timestamp" button
+   */
+  public function lastPullReset(array $form, FormStateInterface $form_state) {
+    $mapping = $this->entity->setLastPullTime(NULL);
+  }
+
+  /**
+   * Submit handler for "reset delete timestamp" button
+   */
+  public function lastDeleteReset(array $form, FormStateInterface $form_state) {
+    $mapping = $this->entity->setLastDeleteTime(NULL);
   }
 
   /**

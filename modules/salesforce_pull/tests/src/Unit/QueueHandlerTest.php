@@ -1,21 +1,20 @@
 <?php
 namespace Drupal\Tests\salesforce_pull\Unit;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Queue\QueueDatabaseFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Tests\UnitTestCase;
+use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_pull\QueueHandler;
-use Drupal\salesforce\Rest\RestClientInterface;
-use Drupal\salesforce\SelectQueryResult;
-use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\ServerBag;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Test Object instantitation
@@ -33,20 +32,29 @@ class QueueHandlerTest extends UnitTestCase {
     parent::setUp();
     $result = [
       'totalSize' => 1,
-      'done' => true,
-      'records' => [
-        [
-          'Id' => '1234567890abcde',
-          'attributes' => ['type' => 'dummy',],
-          'name' => 'Example',
-        ],
-      ]
+      'done' => TRUE,
+      'records' => [],
+    ];
+    $this->sqrDone = new SelectQueryResult($result);
+
+    $result['records'] = [
+      [
+        'Id' => '1234567890abcde',
+        'attributes' => ['type' => 'dummy'],
+        'name' => 'Example',
+      ],
     ];
     $this->sqr = new SelectQueryResult($result);
+
+    $soql = new SelectQuery('dummy');
+    $soql->fields = ['Id'];
+    $soql->addCondition('LastModifiedDate', '1970-1-1T00:00:00Z', '>');
 
     $prophecy = $this->prophesize(RestClientInterface::CLASS);
     $prophecy->query(Argument::any())
       ->willReturn($this->sqr);
+    $prophecy->queryMore(Argument::any())
+      ->willReturn($this->sqrDone);
     $this->sfapi = $prophecy->reveal();
 
     $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
@@ -60,6 +68,11 @@ class QueueHandlerTest extends UnitTestCase {
     $this->mapping->expects($this->any())
       ->method('getPullFieldsArray')
       ->willReturn(['Name' => 'Name', 'Account Number' => 'Account Number']);
+    $this->mapping->expects($this->any())
+      ->method('getNextPullTime')
+      ->willReturn(0);
+    $this->mapping->method('getPullQuery')
+      ->willReturn($soql);
 
     $prophecy = $this->prophesize(QueueInterface::CLASS);
     $prophecy->createItem()->willReturn(1);
@@ -83,33 +96,21 @@ class QueueHandlerTest extends UnitTestCase {
 
     // mock state
     $prophecy = $this->prophesize(StateInterface::CLASS);
-    $prophecy->get('salesforce_pull_last_sync_default', Argument::any())->willReturn('1485787434');
-    $prophecy->get('salesforce_pull_max_queue_size', Argument::any())->willReturn('100000');
-    $prophecy->set('salesforce_pull_last_sync_default', Argument::any())->willReturn(null);
+    $prophecy->get('salesforce.sobject_pull_info', Argument::any())->willReturn(['default' => ['last_pull_timestamp' => '0']]);
+    $prophecy->get('salesforce.pull_max_queue_size', Argument::any())->willReturn(QueueHandler::PULL_MAX_QUEUE_SIZE);
+    $prophecy->set('salesforce.sobject_pull_info', Argument::any())->willReturn(null);
     $this->state = $prophecy->reveal();
 
     // mock event dispatcher
-    $prophecy = $this->prophesize(ContainerAwareEventDispatcher::CLASS);
+    $prophecy = $this->prophesize(EventDispatcherInterface::CLASS);
     $prophecy->dispatch(Argument::any(), Argument::any())->willReturn();
     $this->ed = $prophecy->reveal();
 
-    // mock server
-    $prophecy = $this->prophesize(ServerBag::CLASS);
-    $prophecy->get(Argument::any())->willReturn('1485787434');
-    $this->server = $prophecy->reveal();
-
-    // mock request
-    $request = $this->prophesize(Request::CLASS);
-
-    // mock request stack
-    $prophecy = $this->prophesize(RequestStack::CLASS);
-    $prophecy->server = $this->server;
-    $prophecy->getCurrentRequest()->willReturn($request->reveal());
-    $this->request_stack = $prophecy->reveal();
+    $this->time = $this->getMock(TimeInterface::CLASS);
 
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->request_stack])
+      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->time])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')
@@ -138,7 +139,7 @@ class QueueHandlerTest extends UnitTestCase {
     // initialize with queue size > 100000 (default)
     $prophecy = $this->prophesize(QueueInterface::CLASS);
     $prophecy->createItem()->willReturn(1);
-    $prophecy->numberOfItems()->willReturn(100001);
+    $prophecy->numberOfItems()->willReturn(QueueHandler::PULL_MAX_QUEUE_SIZE + 1);
     $this->queue = $prophecy->reveal();
 
     $prophecy = $this->prophesize(QueueDatabaseFactory::CLASS);
@@ -147,7 +148,7 @@ class QueueHandlerTest extends UnitTestCase {
 
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->request_stack])
+      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->time])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')

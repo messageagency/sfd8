@@ -2,12 +2,13 @@
 
 namespace Drupal\salesforce_mapping\Entity;
 
+use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
  *
  */
-interface SalesforceMappingInterface {
+interface SalesforceMappingInterface extends ConfigEntityInterface {
   // Placeholder interface.
   // @TODO figure out what to abstract out of SalesforceMapping
 
@@ -126,13 +127,30 @@ interface SalesforceMappingInterface {
   public function getKeyValue(EntityInterface $entity);
 
   /**
+   * Return the timestamp for the date of most recent delete processing for
+   * this mapping, or NULL if it has never been processed.
+   *
+   * @return mixed
+   *   integer timestamp of last delete, or NULL.
+   */
+  public function getLastDeleteTime();
+
+  /**
+   * Set this mapping as having been last processed for deletes at $time
+   *
+   * @param int $time
+   * @return $this
+   */
+  public function setLastDeleteTime($time);
+
+  /**
    * We keep track of when this mapping was last pulled with a state value.
    * Fetch the value.
    *
    * @return mixed
-   *   integer timestamp of last sync, or NULL.
+   *   integer timestamp of last pull, or NULL.
    */
-  public function getLastSyncTime();
+  public function getLastPullTime();
 
   /**
    * Set this mapping as having been last pulled at $time.
@@ -140,7 +158,14 @@ interface SalesforceMappingInterface {
    * @param int $time 
    * @return $this
    */
-  public function setLastSyncTime($time);
+  public function setLastPullTime($time);
+
+  /**
+   * Get the timestamp when the next pull should be processed for this mapping.
+   *
+   * @return int
+   */
+  public function getNextPullTime();
 
   /**
    * Generate a select query to pull records from Salesforce for this mapping.
@@ -152,5 +177,26 @@ interface SalesforceMappingInterface {
    */
   public function getPullQuery(array $mapped_fields = []);
   
+  /**
+   * Returns a timstamp when the push queue was last processed for this mapping.
+   *
+   * @return int
+   */
+  public function getLastPushTime();
+
+  /**
+   * Set the timestamp when the push queue was last process for this mapping.
+   *
+   * @param string $time 
+   * @return $this
+   */
+  public function setLastPushTime($time);
+
+  /**
+   * Get the timestamp when the next push should be processed for this mapping.
+   *
+   * @return int
+   */
+  public function getNextPushTime();
 
 }

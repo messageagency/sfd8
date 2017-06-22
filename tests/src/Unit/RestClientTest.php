@@ -15,6 +15,7 @@ use Drupal\salesforce\SelectQuery;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use GuzzleHttp\Psr7\Request as GuzzleRequest;
 use GuzzleHttp\Exception\RequestException;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * @coversDefaultClass \Drupal\salesforce\Rest\RestClient
@@ -51,6 +52,7 @@ class RestClientTest extends UnitTestCase {
         ->getMock();
     $this->cache = $this->getMock('\Drupal\Core\Cache\CacheBackendInterface');
     $this->json = $this->getMock(Json::CLASS);
+    $this->time = $this->getMock(TimeInterface::CLASS);
   }
 
   /**
@@ -61,7 +63,7 @@ class RestClientTest extends UnitTestCase {
       $methods = $this->methods;
     }
 
-    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json];
+    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->time];
 
     $this->client = $this->getMock(RestClient::CLASS, $methods, $args);
 

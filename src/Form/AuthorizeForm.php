@@ -42,8 +42,6 @@ class AuthorizeForm extends ConfigFormBase {
    */
   protected $state;
 
-  protected $logger;
-
   /**
    * Constructs a \Drupal\system\ConfigFormBase object.
    *
@@ -53,8 +51,6 @@ class AuthorizeForm extends ConfigFormBase {
    *   The factory for configuration objects.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
-   * @param \Drupal\Core\Logger\LoggerChannelFactory $logger_factory
-   *   The logger factory service.
    */
   public function __construct(ConfigFactoryInterface $config_factory, RestClientInterface $salesforce_client, StateInterface $state, EventDispatcherInterface $event_dispatcher) {
     parent::__construct($config_factory);

@@ -8,12 +8,13 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\salesforce\EntityNotFoundException;
-use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce_mapping\Entity\MappedObject;
-use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent;
-use Drupal\salesforce_push\PushQueue;
+use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_push\PushQueueInterface;
 use Drupal\salesforce_push\PushQueueProcessorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -45,7 +46,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   protected $event_dispatcher;
   protected $etm;
 
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueue $queue, RestClientInterface $client,  EntityTypeManagerInterface $etm, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueueInterface $queue, RestClientInterface $client,  EntityTypeManagerInterface $etm, EventDispatcherInterface $event_dispatcher) {
     $this->queue = $queue;
     $this->client = $client;
     $this->etm = $etm;
@@ -81,7 +82,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     }
   }
 
-  protected function processItem(\stdClass $item) {
+  public function processItem(\stdClass $item) {
     $mapped_object = $this
       ->mapped_object_storage
       ->load($item->mapped_object_id);
@@ -94,11 +95,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
         // If mapped object doesn't exist or fails to load for this delete, this item can be considered successfully processed.
         return;
       }
-      $mapped_object = new MappedObject([
-        'entity_id' => $item->entity_id,
-        'entity_type_id' => $mapping->drupal_entity_type,
-        'salesforce_mapping' => $mapping->id(),
-      ]);
+      $mapped_object = $this->createMappedObject($item, $mapping);
     }
 
     // @TODO: the following is nearly identical to the end of salesforce_push_entity_crud(). Can we DRY it? Do we care?
@@ -116,7 +113,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
         $entity = $this->etm
           ->getStorage($mapping->drupal_entity_type)
           ->load($item->entity_id);
-        if (!$entity) {
+        if ($entity === NULL) {
           // Bubble this up also
           throw new EntityNotFoundException($item->entity_id, $mapping->drupal_entity_type);
         }
@@ -144,6 +141,22 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
       }
       throw $e;
     }
+  }
+
+  /**
+   * Helper method to generate a new MappedObject during push procesing.
+   *
+   * @param string $item 
+   * @param string $mapping 
+   * @return void
+   * @author Aaron Bauman
+   */
+  protected function createMappedObject(\stdClass $item, SalesforceMappingInterface $mapping) {
+    return new MappedObject([
+      'entity_id' => $item->entity_id,
+      'entity_type_id' => $mapping->drupal_entity_type,
+      'salesforce_mapping' => $mapping->id(),
+    ]);
   }
 
 }

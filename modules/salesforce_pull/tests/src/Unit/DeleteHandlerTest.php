@@ -15,8 +15,6 @@ use Drupal\salesforce_pull\DeleteHandler;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\ServerBag;
 
 /**
  * Test Object instantitation.
@@ -132,8 +130,8 @@ class DeleteHandlerTest extends UnitTestCase {
 
     // Mock state.
     $prophecy = $this->prophesize(StateInterface::CLASS);
-    $prophecy->get('salesforce_pull_last_delete', Argument::any())->willReturn(['default' => '1485787434']);
-    $prophecy->set('salesforce_pull_last_delete', Argument::any())->willReturn(['default' => null]);
+    $prophecy->get('salesforce.sobject_pull_info', Argument::any())->willReturn(['default' => ['last_delete_timestamp' => '1485787434']]);
+    $prophecy->set('salesforce.sobject_pull_info', Argument::any())->willReturn(null);
     $this->state = $prophecy->reveal();
 
    // mock event dispatcher
@@ -141,22 +139,11 @@ class DeleteHandlerTest extends UnitTestCase {
     $prophecy->dispatch(Argument::any(), Argument::any())->willReturn();
     $this->ed = $prophecy->reveal();
 
-    // Mock server.
-    $prophecy = $this->prophesize(ServerBag::CLASS);
-    $prophecy->get(Argument::any())->willReturn('1485787434');
-    $this->server = $prophecy->reveal();
-
-    // Mock request.
-    $prophecy = $this->prophesize(RequestStack::CLASS);
-    $prophecy->server = $this->server;
-    $this->request_stack = $prophecy->reveal();
-
     $this->dh = new DeleteHandler(
       $this->sfapi,
       $this->etm,
       $this->state,
-      $this->ed,
-      $this->request_stack
+      $this->ed
     );
   }
 

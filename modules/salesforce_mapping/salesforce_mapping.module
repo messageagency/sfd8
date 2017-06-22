@@ -91,7 +91,7 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
     // Resaving the object should update the timestamp.
     // NB: we are purposefully not creating a new revision here.
     $mapped_object
-      ->set('entity_updated', REQUEST_TIME)
+      ->set('entity_updated', \Drupal::time()->getRequestTime())
       ->save();
   }
 }

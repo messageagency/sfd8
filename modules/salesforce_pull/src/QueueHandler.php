@@ -16,7 +16,7 @@ use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforceQueryEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Handles pull cron queue set up.
@@ -24,6 +24,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * @see \Drupal\salesforce_pull\QueueHandler
  */
 class QueueHandler {
+
+  const PULL_MAX_QUEUE_SIZE = 100000;
 
   /**
    * @var \Drupal\salesforce\Rest\RestClientInterface
@@ -60,15 +62,14 @@ class QueueHandler {
    * @param QueueInterface $queue
    * @param StateInterface $state
    * @param EventDispatcherInterface $event_dispatcher
-   * @param RequestStack $request_stack
    */
 
-  public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, QueueDatabaseFactory $queue_factory, StateInterface $state, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack) {
+  public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, QueueDatabaseFactory $queue_factory, StateInterface $state, EventDispatcherInterface $event_dispatcher, TimeInterface $time) {
     $this->sfapi = $sfapi;
     $this->queue = $queue_factory->get('cron_salesforce_pull');
     $this->state = $state;
     $this->eventDispatcher = $event_dispatcher;
-    $this->request = $request_stack->getCurrentRequest();
+    $this->time = $time;
     $this->mappings = $entity_type_manager
       ->getStorage('salesforce_mapping')
       ->loadPullMappings();
@@ -86,11 +87,11 @@ class QueueHandler {
   public function getUpdatedRecords() {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
-    if ($this->queue->numberOfItems() > $this->state->get('salesforce_pull_max_queue_size', 100000)) {
+    if ($this->queue->numberOfItems() > $this->state->get('salesforce.pull_max_queue_size', self::PULL_MAX_QUEUE_SIZE)) {
       $message = 'Pull Queue contains %noi items, exceeding the max size of %max items. Pull processing will be blocked until the number of items in the queue is reduced to below the max size.';
       $args = [
         '%noi' => $this->queue->numberOfItems(),
-        '%max' => $this->state->get('salesforce_pull_max_queue_size', 100000),
+        '%max' => $this->state->get('salesforce.pull_max_queue_size', self::PULL_MAX_QUEUE_SIZE),
       ];
       $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
       return FALSE;
@@ -101,12 +102,17 @@ class QueueHandler {
       if (!$mapping->doesPull()) {
         continue;
       }
+      if ($mapping->getNextPullTime() > $this->time->getRequestTime()) {
+        // Skip this mapping, based on pull frequency.
+        continue;
+      }
+
       $results = $this->doSfoQuery($mapping);
       if ($results) {
         $this->enqueueAllResults($mapping, $results);
         // @TODO Replace this with a better implementation when available,
         // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
-        $mapping->setLastSyncTime($this->request->server->get('REQUEST_TIME'));
+        $mapping->setLastPullTime($this->time->getRequestTime());
       }
     }
     return TRUE;
@@ -155,6 +161,8 @@ class QueueHandler {
         $message = '%type: @message in %function (line %line of %file).';
         $args = Error::decodeException($e);
         $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e, $message, $args));
+        // @TODO do we really want to eat this exception here?
+        return;
       }
     }
   }
@@ -188,8 +196,8 @@ class QueueHandler {
   /**
    * Enqueue a single record for pull.
    *
-   * @param SalesforceMappingInterface $mapping 
-   * @param SObject $record 
+   * @param SalesforceMappingInterface $mapping
+   * @param SObject $record
    */
   public function enqueueRecord(SalesforceMappingInterface $mapping, SObject $record) {
     $this->queue->createItem(new PullQueueItem($record, $mapping));

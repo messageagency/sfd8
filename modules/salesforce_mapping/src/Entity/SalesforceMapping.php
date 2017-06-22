@@ -4,9 +4,10 @@ namespace Drupal\salesforce_mapping\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\salesforce_mapping\MappingConstants;
-use Drupal\salesforce\SelectQuery;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce_mapping\MappingConstants;
 use \Drupal\Component\Utility\NestedArray;
 
 /**
@@ -55,7 +56,11 @@ use \Drupal\Component\Utility\NestedArray;
  *    "salesforce_object_type",
  *    "drupal_entity_type",
  *    "drupal_bundle",
- *    "field_mappings"
+ *    "field_mappings",
+ *    "push_limit",
+ *    "push_retries",
+ *    "push_frequency",
+ *    "pull_frequency",
  *   },
  *   lookup_keys = {
  *     "drupal_entity_type",
@@ -183,6 +188,71 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   protected $sync_triggers = [];
 
   /**
+   * Stateful push data for this mapping
+   *
+   * @var array
+   */
+  protected $push_info;
+
+  /**
+   * Statefull pull data for this mapping.
+   *
+   * @var array
+   */
+  protected $pull_info;
+
+  /**
+   * How often (in seconds) to push with this mapping
+   *
+   * @var int
+   */
+  protected $push_frequency = 0;
+
+  /**
+   * Maxmimum number of records to push during a batch.
+   *
+   * @var int
+   */
+  protected $push_limit = 0;
+
+  /**
+   * Maximum number of attempts to push a record before it's considered failed.
+   *
+   * @var string
+   */
+  protected $push_retries = 3;
+
+  /**
+   * How often (in seconds) to pull with this mapping.
+   *
+   * @var int
+   */
+  protected $pull_frequency = 0;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $values, $entity_type) {
+    parent::__construct($values, $entity_type);
+    $push_info = $this->state()->get('salesforce.mapping_push_info', []);
+    if (empty($push_info[$this->id()])) {
+      $push_info[$this->id()] = [
+        'last_timestamp' => 0,
+      ];
+    }
+    $this->push_info = $push_info[$this->id()];
+
+    $pull_info = $this->state()->get('salesforce.sobject_pull_info', []);
+    if (empty($pull_info[$this->getSalesforceObjectType()])) {
+      $pull_info[$this->getSalesforceObjectType()] = [
+        'last_pull_timestamp' => 0,
+        'last_delete_timestamp' => 0,
+      ];
+    }
+    $this->pull_info = $pull_info[$this->getSalesforceObjectType()];    
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function __get($key) {
@@ -196,11 +266,38 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    *   The newly saved version of the entity.
    */
   public function save() {
-    $this->updated = REQUEST_TIME;
+    $this->updated = $this->getRequestTime();
     if (isset($this->is_new) && $this->is_new) {
-      $this->created = REQUEST_TIME;
+      $this->created = $this->getRequestTime();
     }
     return parent::save();
+  }
+
+  /**
+   * Testable func to return the request time server variable.
+   *
+   * @return int REQUEST_TIME
+   *   The request time.
+   */
+  protected function getRequestTime() {
+    return \Drupal::time()->getRequestTime();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    // Update shared pull values across other mappings to same object type.
+    $pull_mappings = $storage->loadByProperties([
+        'salesforce_object_type' => $this->salesforce_object_type,
+      ]);
+    unset($pull_mappings[$this->id()]);
+    foreach ($pull_mappings as $mapping) {
+      if ($this->pull_frequency != $mapping->pull_frequency) {
+        $mapping->pull_frequency = $this->pull_frequency;
+        $mapping->save();
+      }
+    }
   }
 
   /**
@@ -386,22 +483,89 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   /**
    * {@inheritdoc}
    */
-  public function getLastSyncTime() {
-    $last_sync = $this->state()->get('salesforce_pull_last_sync', []);
-    return empty($last_sync[$this->getSalesforceObjectType()])
-      ? 0
-      : $last_sync[$this->getSalesforceObjectType()];
+  public function getLastDeleteTime() {
+    return $this->pull_info['last_delete_timestamp'] ? $this->pull_info['last_delete_timestamp'] : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setLastSyncTime($time) {
-    $last_sync = $this->state()->get('salesforce_pull_last_sync', []);
-    $last_sync[$this->getSalesforceObjectType()] = $time;
-    $this->state()->set('salesforce_pull_last_sync', $last_sync);
+  public function setLastDeleteTime($time) {
+    return $this->setPullInfo('last_delete_timestamp', $time);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastPullTime() {
+    return $this->pull_info['last_pull_timestamp'] ? $this->pull_info['last_pull_timestamp'] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastPullTime($time) {
+    return $this->setPullInfo('last_pull_timestamp', $time);
+  }
+
+  /**
+   * Setter for pull info
+   *
+   * @param string $key 
+   * @param mixed $value 
+   * @return $this
+   */
+  protected function setPullInfo($key, $value) {
+    $this->pull_info[$key] = $value;
+    $pull_info = $this->state()->get('salesforce.sobject_pull_info');
+    $pull_info[$this->getSalesforceObjectType()] = $this->pull_info;
+    $this->state()->set('salesforce.sobject_pull_info', $pull_info);
     return $this;
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getNextPullTime() {
+    return $this->pull_info['last_pull_timestamp'] + $this->pull_frequency;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastPushTime() {
+    return $this->push_info['last_timestamp'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastPushTime($time) {
+    return $this->setPushInfo('last_timestamp', $time);
+  }
+
+  /**
+   * Setter for pull info
+   *
+   * @param string $key 
+   * @param mixed $value 
+   * @return $this
+   */
+  protected function setPushInfo($key, $value) {
+    $this->push_info[$key] = $value;
+    $push_info = $this->state()->get('salesforce.mapping_push_info');
+    $push_info[$this->id()] = $this->push_info;
+    $this->state()->set('salesforce.mapping_push_info', $push_info);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getNextPushTime() {
+    return $this->push_info['last_timestamp'] + $this->push_frequency;
+  }
+
 
   /**
    * {@inheritdoc}
@@ -423,7 +587,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     $soql->fields[] = $this->getPullTriggerDate();
 
     // If no lastupdate, get all records, else get records since last pull.
-    $sf_last_sync = $this->getLastSyncTime();
+    $sf_last_sync = $this->getLastPullTime();
     if ($sf_last_sync) {
       $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
       $soql->addCondition($this->getPullTriggerDate(), $last_sync, '>');

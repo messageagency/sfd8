@@ -4,6 +4,7 @@ namespace Drupal\salesforce\Rest;
 
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\SelectQueryResult;
 use GuzzleHttp\Psr7\Response;
 
 /**
@@ -243,6 +244,17 @@ interface RestClientInterface {
    * @addtogroup salesforce_apicalls
    */
   public function query(SelectQuery $query);
+
+  /**
+   * Given a select query result, fetch the next results set, if it exists.
+   *
+   * @param SelectQueryResult $results
+   *   The query result which potentially has more records.
+   *
+   * @return SelectQueryResult
+   *   If there are no more results, $results->records will be empty.
+   */
+  public function queryMore(SelectQueryResult $results);
 
   /**
    * Retreieve all the metadata for an object.

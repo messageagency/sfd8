@@ -13,6 +13,7 @@ use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\Tests\UnitTestCase;
 use Psr\Log\LogLevel;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Test Mapped Object instantitation
@@ -104,11 +105,14 @@ class MappedObjectTest extends UnitTestCase {
       ->will($this->returnValue(
         $this->getMock('Drupal\Core\Field\FieldItemListInterface')));
 
+    $this->time = $this->getMock(TimeInterface::CLASS);
+    
     $container = new ContainerBuilder();
     $container->set('entity.manager', $this->entityManager);
     $container->set('salesforce.client', $this->client);
     $container->set('event_dispatcher', $this->event_dispatcher);
     $container->set('plugin.manager.field.field_type', $this->fieldTypePluginManager);
+    $container->set('datetime.time', $this->time);
     \Drupal::setContainer($container);
 
     $this->entity = $this->getMock('\Drupal\Core\Entity\ContentEntityInterface');

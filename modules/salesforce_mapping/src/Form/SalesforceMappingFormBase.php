@@ -51,7 +51,6 @@ abstract class SalesforceMappingFormBase extends EntityForm {
     }
 
     drupal_set_message($this->t('The mapping has been successfully saved.'));
-    $form_state->setRedirect('entity.salesforce_mapping.fields', ['salesforce_mapping' => $this->entity->id()]);
   }
 
   /**

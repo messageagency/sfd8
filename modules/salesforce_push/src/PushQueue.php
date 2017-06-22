@@ -5,7 +5,7 @@ namespace Drupal\salesforce_push;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Merge;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Queue\DatabaseQueue;
 use Drupal\Core\Queue\RequeueException;
 use Drupal\Core\Queue\SuspendQueueException;
@@ -15,6 +15,8 @@ use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
+use Drupal\Component\Datetime\TimeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
 /**
@@ -29,13 +31,16 @@ class PushQueue extends DatabaseQueue {
    */
   const TABLE_NAME = 'salesforce_push_queue';
 
-  const DEFAULT_CRON_PUSH_LIMIT = 200;
+  const DEFAULT_GLOBAL_LIMIT = 10000;
 
   const DEFAULT_QUEUE_PROCESSOR = 'rest';
 
   const DEFAULT_MAX_FAILS = 10;
 
-  protected $limit;
+  const DEFAULT_LEASE_TIME = 300;
+
+  protected $mapping_limit;
+  protected $global_limit;
   protected $connection;
   protected $state;
   protected $logger;
@@ -58,12 +63,17 @@ class PushQueue extends DatabaseQueue {
   protected $mapped_object_storage;
 
   /**
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * Constructs a \Drupal\Core\Queue\DatabaseQueue object.
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
    */
-  public function __construct(Connection $connection, StateInterface $state, PushQueueProcessorPluginManager $queue_manager, EntityManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(Connection $connection, StateInterface $state, PushQueueProcessorPluginManager $queue_manager, EntityTypeManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher, TimeInterface $time) {
     $this->connection = $connection;
     $this->state = $state;
     $this->queueManager = $queue_manager;
@@ -71,10 +81,21 @@ class PushQueue extends DatabaseQueue {
     $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
     $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
     $this->eventDispatcher = $event_dispatcher;
+    $this->time = $time;
 
-    $this->limit = $state->get('salesforce.push_limit', static::DEFAULT_CRON_PUSH_LIMIT);
-
+    $this->global_limit = $state->get('salesforce.global_push_limit', static::DEFAULT_GLOBAL_LIMIT);
     $this->max_fails = $state->get('salesforce.push_queue_max_fails', static::DEFAULT_MAX_FAILS);
+  }
+
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('database'),
+      $container->get('state'),
+      $container->get('plugin.manager.salesforce_push_queue_processor'),
+      $container->get('entity_type.manager'),
+      $container->get('event_dispatcher'),
+      $container->get('datetime.time')
+    );
   }
 
   /**
@@ -116,7 +137,7 @@ class PushQueue extends DatabaseQueue {
       throw new \Exception('Salesforce push queue data values are required for "name", "entity_id" and "op"');
     }
     $this->name = $data['name'];
-    $time = time();
+    $time = $this->time->getRequestTime();
     $fields = [
       'name' => $this->name,
       'entity_id' => $data['entity_id'],
@@ -149,21 +170,14 @@ class PushQueue extends DatabaseQueue {
   }
 
   /**
-   * Claim up to $n items from the current queue.
-   *
-   * If queue is empty, return an empty array.
-   *
-   * @see DatabaseQueue::claimItem
-   *
-   * @return array
-   *   Zero to $n Items indexed by item_id
+   * {@inheritdoc}
    */
-  public function claimItems($n, $lease_time = 300) {
+  public function claimItems($n, $fail_limit = self::DEFAULT_MAX_FAILS, $lease_time = self::DEFAULT_LEASE_TIME) {
     while (TRUE) {
       try {
         // @TODO: convert items to content entities.
         // @see \Drupal::entityQuery()
-        $items = $this->connection->queryRange('SELECT * FROM {' . static::TABLE_NAME . '} q WHERE expire = 0 AND name = :name AND failures < :fail_limit ORDER BY created, item_id ASC', 0, $n, array(':name' => $this->name, ':fail_limit' => $this->max_fails))->fetchAllAssoc('item_id');
+        $items = $this->connection->queryRange('SELECT * FROM {' . static::TABLE_NAME . '} q WHERE expire = 0 AND name = :name AND failures < :fail_limit ORDER BY created, item_id ASC', 0, $n, array(':name' => $this->name, ':fail_limit' => $fail_limit))->fetchAllAssoc('item_id');
       }
       catch (\Exception $e) {
         $this->catchException($e);
@@ -180,7 +194,7 @@ class PushQueue extends DatabaseQueue {
         // should really expire.
         $update = $this->connection->update(static::TABLE_NAME)
           ->fields(array(
-            'expire' => time() + $lease_time,
+            'expire' => $this->time->getRequestTime() + $lease_time,
           ))
           ->condition('item_id', array_keys($items), 'IN')
           ->condition('expire', 0);
@@ -197,9 +211,7 @@ class PushQueue extends DatabaseQueue {
   }
 
   /**
-   * DO NOT USE THIS FUNCTION.
-   *
-   * Use claimItems() instead.
+   * {@inheritdoc}
    */
   public function claimItem($lease_time = NULL) {
     throw new \Exception('This queue is designed to process multiple items at once. Please use "claimItems" instead.');
@@ -294,8 +306,12 @@ class PushQueue extends DatabaseQueue {
       return $this;
     }
 
+    $i = 0;
     foreach ($mappings as $mapping) {
-      $this->processQueue($mapping);
+      $i += $this->processQueue($mapping);
+      if ($i >= $this->global_limit) {
+        break;
+      }
     }
     return $this;
   }
@@ -311,24 +327,30 @@ class PushQueue extends DatabaseQueue {
    */
   public function processQueue(SalesforceMappingInterface $mapping) {
     static $queue_processor = FALSE;
+    // Check mapping frequency before proceeding.
+    if ($mapping->getNextPushTime() > $this->time->getRequestTime()) {
+      return;
+    }
+
     if (!$queue_processor) {
       // @TODO push queue processor could be set globally, or per-mapping. Exposing some UI setting would probably be better than this:
       $plugin_name = $this->state->get('salesforce.push_queue_processor', static::DEFAULT_QUEUE_PROCESSOR);
-
       $queue_processor = $this->queueManager->createInstance($plugin_name);
     }
 
+    $i = 0;
     // Set the queue name, which is the mapping id.
     $this->setName($mapping->id());
 
-    $i = 0;
-
-    // Iterate through items in this queue until we run out or hit the limit.
+    // Iterate through items in this queue (mapping) until we run out or hit
+    // the mapping limit, then move to the next queue. If we hit the global
+    // limit, return immediately.
     while (TRUE) {
       // Claim as many items as we can from this queue and advance our counter. If this queue is empty, move to the next mapping.
-      $items = $this->claimItems($this->limit);
+      $items = $this->claimItems($mapping->push_limit, $mapping->push_retries);
       if (empty($items)) {
-        return 0;
+        $mapping->setLastPushTime($this->time->getRequestTime());
+        return $i;
       }
 
       // Hand them to the queue processor.
@@ -337,7 +359,7 @@ class PushQueue extends DatabaseQueue {
       }
       catch (RequeueException $e) {
         // Getting a Requeue here is weird for a group of items, but we'll
-        // deal with it and continue to next set of items.
+        // deal with it.
         $this->releaseItems($items);
         $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
         continue;
@@ -353,13 +375,13 @@ class PushQueue extends DatabaseQueue {
       catch (\Exception $e) {
         // In case of any other kind of exception, log it and leave the item
         // in the queue to be processed again later.
-        // @TODO: this is how Cron.php queue works, but I don't really understand why it doesn't get released and re-queued.
+        // @TODO: this is how Cron.php queue works, but I don't really understand why it doesn't get re-queued.
         $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       }
       finally {
         // If we've reached our limit, we're done. Otherwise, continue to next items.
         $i += count($items);
-        if ($i >= $this->limit) {
+        if ($i >= $this->global_limit) {
           return $i;
         }
       }
@@ -368,13 +390,7 @@ class PushQueue extends DatabaseQueue {
   }
 
   /**
-   * Failed item handler.
-   *
-   * Exception handler so that Queue Processors don't have to worry about what
-   * happens when a queue item fails.
-   *
-   * @param Exception $e
-   * @param stdClass $item
+   * {@inheritdoc}
    */
   public function failItem(\Exception $e, \stdClass $item) {
     $mapping = $this->mapping_storage->load($item->name);

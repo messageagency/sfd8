@@ -17,6 +17,7 @@ use Drupal\salesforce\SelectQueryResult;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
+use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
@@ -98,13 +99,14 @@ class RestClient implements RestClientInterface {
    * @param \Drupal\Component\Serialization\Json $json
    *   The JSON serializer service.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
-    $this->config = $this->configFactory->get('salesforce.settings');
+    $this->config = $this->configFactory->getEditable('salesforce.settings');
     $this->state = $state;
     $this->cache = $cache;
     $this->json = $json;
+    $this->time = $time;
     $this->httpClientOptions = [];
     return $this;
   }
@@ -313,6 +315,27 @@ class RestClient implements RestClientInterface {
       return $version['version'];
     }
     return $this->config->get('rest_api_version.version');
+  }
+
+  /**
+   * Setter for config salesforce.settings rest_api_version and use_latest
+   *
+   * @param bool $use_latest
+   * @param int $version
+   */
+  public function setApiVersion($use_latest = TRUE, $version = NULL) {
+    if ($use_latest) {
+      $this->config->set('use_latest', $use_latest);
+    }
+    else {
+      $versions = $this->getVersions();
+      if (empty($versions[$version])) {
+        throw new Exception("Version $version is not available.");
+      }
+      $version = $versions[$version];
+      $this->config->set('rest_api_version', $version);
+    }
+    $this->config->save();
   }
 
   /**
@@ -1006,7 +1029,7 @@ class RestClient implements RestClientInterface {
    *   The REQUEST_TIME server variable.
    */
   protected function getRequestTime() {
-    return defined('REQUEST_TIME') ? REQUEST_TIME : (int) $_SERVER['REQUEST_TIME'];
+    return $this->time->getRequestTime();
   }
 
 }

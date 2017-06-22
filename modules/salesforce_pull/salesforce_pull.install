@@ -5,11 +5,13 @@
  * Install/uninstall tasks for the Salesforce Pull module.
  */
 
+use Drupal\salesforce_pull\QueueHandler;
+
  /**
   * Implements hook_install().
   */
 function salesforce_pull_install() {
-  \Drupal::state()->set('salesforce.pull_max_queue_size', 100000);
+  \Drupal::state()->set('salesforce.pull_max_queue_size', QueueHandler::PULL_MAX_QUEUE_SIZE);
 }
 
 /**
@@ -18,9 +20,31 @@ function salesforce_pull_install() {
 function salesforce_pull_uninstall() {
   $delete = [
     'salesforce.pull_max_queue_size',
-    'salesforce_pull_last_sync',
-    'salesforce_pull_last_delete',
+    'salesforce.sobject_pull_info',
   ];
+  \Drupal::state()->deleteMultiple($delete);
+}
+
+/**
+ * Convert per-object pull timestamp key-values into one big array.
+ */
+function salesforce_pull_update_1() {
+  $pull_info = [];
+  $delete = [];
+  $objects = \Drupal::service('salesforce.client')->objects();
+  foreach ($objects as $type) {
+    $last_del = \Drupal::state()->get('salesforce_pull_last_delete_' . $type);
+    $last_pull = \Drupal::state()->get('salesforce_pull_last_sync_' . $type);
+    $delete[] = 'salesforce_pull_last_delete_' . $type;
+    $delete[] = 'salesforce_pull_last_sync_' . $type;
+    if (!empty($last_del)) {
+      $pull_info[$type]['last_delete_timestamp'] = $last_del;
+    }
+    if (!empty($last_pull)) {
+      $pull_info[$type]['last_pull_timestamp'] = $last_pull;
+    }
+  }
+  \Drupal::state()->set('salesforce.sobject_pull_info', $pull_info);
   \Drupal::state()->deleteMultiple($delete);
 }
 
