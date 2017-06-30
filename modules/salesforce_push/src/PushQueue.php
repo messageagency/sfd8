@@ -24,7 +24,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
  *
  * @ingroup queue
  */
-class PushQueue extends DatabaseQueue {
+class PushQueue extends DatabaseQueue implements PushQueueInterface {
 
   /**
    * The database table name.
@@ -175,6 +175,10 @@ class PushQueue extends DatabaseQueue {
   public function claimItems($n, $fail_limit = self::DEFAULT_MAX_FAILS, $lease_time = self::DEFAULT_LEASE_TIME) {
     while (TRUE) {
       try {
+        if ($n <= 0) {
+          // If $n is zero, process as many items as possible.
+          $n = $this->global_limit;
+        }
         // @TODO: convert items to content entities.
         // @see \Drupal::entityQuery()
         $items = $this->connection->queryRange('SELECT * FROM {' . static::TABLE_NAME . '} q WHERE expire = 0 AND name = :name AND failures < :fail_limit ORDER BY created, item_id ASC', 0, $n, array(':name' => $this->name, ':fail_limit' => $fail_limit))->fetchAllAssoc('item_id');

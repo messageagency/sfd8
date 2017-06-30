@@ -49,6 +49,10 @@ class RestResponse_Describe extends RestResponse {
     $this->data = $response->data;
   }
 
+  public function getName() {
+    return $this->name;
+  }
+
   /**
    * getter
    */
