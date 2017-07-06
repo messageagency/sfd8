@@ -154,7 +154,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       ),
     ];
     if (empty($trigger_options)) {
-      $form['sync_triggers']['#description'] += ' ' . t('<em>No trigger options are available when Salesforce Push and Pull modules are disabled. Enable one or both modules to allow Push or Pull processing.');
+      $form['sync_triggers']['#description'] .= ' ' . t('<em>No trigger options are available when Salesforce Push and Pull modules are disabled. Enable one or both modules to allow Push or Pull processing.');
     }
 
     foreach ($trigger_options as $option => $label) {
