@@ -35,6 +35,8 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
 
   const DEFAULT_QUEUE_PROCESSOR = 'rest';
 
+  const MAPPING_CRON_PUSH_LIMIT = 30;
+
   const DEFAULT_MAX_FAILS = 10;
 
   const DEFAULT_LEASE_TIME = 300;
