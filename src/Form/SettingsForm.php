@@ -42,7 +42,7 @@ class SettingsForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
-   * @param \Drupal\salesforce\RestClient $salesforce_client
+   * @param \Drupal\salesforce\Rest\RestClientInterface $salesforce_client
    *   The factory for configuration objects.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
@@ -106,7 +106,7 @@ class SettingsForm extends ConfigFormBase {
       '#states' => [
         'visible' => [
           ':input[name="use_latest"]' => ['checked' => FALSE],
-        ]
+        ],
       ],
     ];
 
@@ -184,7 +184,6 @@ class SettingsForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
   }
 
-
   /**
    * Helper method to generate Salesforce option list for select element.
    *
@@ -192,7 +191,10 @@ class SettingsForm extends ConfigFormBase {
    */
   protected function getVersionOptions() {
     $versions = $this->sf_client->getVersions();
-    array_walk($versions, function(&$item, $key) { $item = $item['label'];} );
+    array_walk($versions,
+      function (&$item, $key) {
+        $item = $item['label'];
+      });
     return $versions;
   }
 
