@@ -119,6 +119,7 @@ class SettingsForm extends ConfigFormBase {
       '#type' => 'number',
       '#description' => $this->t('Set the maximum number of records to be processed during each push queue process. Enter 0 for no limit.'),
       '#required' => TRUE,
+      '#default_value' => $config->get('push_limit'),
       '#min' => 0,
     ];
 
@@ -127,6 +128,7 @@ class SettingsForm extends ConfigFormBase {
       '#type' => 'number',
       '#description' => $this->t('Set the maximum number of items which can be enqueued for pull at any given time. Note this setting is not exactly analogous to the push queue limit, since Drupal Cron API does not offer such granularity. Enter 0 for no limit.'),
       '#required' => TRUE,
+      '#default_value' => $config->get('pull_max_queue_size'),
       '#min' => 0,
     ];
 
@@ -173,6 +175,8 @@ class SettingsForm extends ConfigFormBase {
     $config = $this->config('salesforce.settings');
     $config->set('show_all_objects', $form_state->getValue('show_all_objects'));
     $config->set('standalone', $form_state->getValue('standalone'));
+    $config->set('push_limit', $form_state->getValue('push_limit'));
+    $config->set('pull_max_queue_size', $form_state->getValue('pull_max_queue_size'));
     $use_latest = $form_state->getValue('use_latest');
     $config->set('use_latest', $use_latest);
     if (!$use_latest) {
