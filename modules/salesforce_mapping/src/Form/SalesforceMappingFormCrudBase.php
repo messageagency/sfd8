@@ -82,36 +82,36 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#default_value' => $mapping->drupal_entity_type,
       '#required' => TRUE,
       '#empty_option' => $this->t('- Select -'),
+      '#ajax' => [
+        'callback' => [$this, 'bundleCallback'],
+        'event' => 'change',
+        'wrapper' => 'drupal_bundle',
+      ],
     ];
 
-    $form['drupal_entity']['drupal_bundle'] = ['#title' => 'Drupal Bundle', '#tree' => TRUE];
-    foreach ($entity_types as $entity_type => $label) {
-      $bundle_info = $this->entityManager->getBundleInfo($entity_type);
-      if (empty($bundle_info)) {
-        continue;
-      }
-      $form['drupal_entity']['drupal_bundle'][$entity_type] = [
-        '#title' => $this->t('@entity_type Bundle', ['@entity_type' => $label]),
-        '#type' => 'select',
-        '#empty_option' => $this->t('- Select -'),
-        '#options' => [],
-        '#states' => [
-          'visible' => [
-            ':input#edit-drupal-entity-type' => ['value' => $entity_type],
-          ],
-          'required' => [
-            ':input#edit-drupal-entity-type, dummy1' => ['value' => $entity_type],
-          ],
-          'disabled' => [
-            ':input#edit-drupal-entity-type, dummy2' => ['!value' => $entity_type],
-          ],
-        ],
-      ];
+    $form['drupal_entity']['drupal_bundle'] = [
+      '#title' => $this->t('Bundle'),
+      '#type' => 'select',
+      '#default_value' => $mapping->drupal_bundle,
+      '#empty_option' => $this->t('- Select -'),
+      '#options' => [],
+      '#required' => TRUE,
+      '#prefix' => '<div id="drupal_bundle">',
+      '#suffix' => '</div>',
+    ];
+    $input = $form_state->getUserInput();
+    if (!empty($input) && !empty($input['drupal_entity_type'])) {
+      $entity_type = $input['drupal_entity_type'];
+    }
+    else {
+      $entity_type = $form['drupal_entity']['drupal_entity_type']['#default_value'];
+    }
+    $bundle_info = $this->entityManager->getBundleInfo($entity_type);
+
+    if (!empty($bundle_info)) {
+      $form['drupal_entity']['drupal_bundle']['#title'] = $this->t('@entity_type Bundle', ['@entity_type' => $entity_types[$entity_type]]);
       foreach ($bundle_info as $key => $info) {
-        $form['drupal_entity']['drupal_bundle'][$entity_type]['#options'][$key] = $info['label'];
-        if ($key == $mapping->drupal_bundle) {
-          $form['drupal_entity']['drupal_bundle'][$entity_type]['#default_value'] = $key;
-        }
+        $form['drupal_entity']['drupal_bundle']['#options'][$key] = $info['label'];
       }
     }
 
@@ -372,12 +372,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
 
     parent::validateForm($form, $form_state);
 
-    $entity_type = $form_state->getValue('drupal_entity_type');
-    if (!empty($entity_type) && empty($form_state->getValue('drupal_bundle')[$entity_type])) {
-      $element = &$form['drupal_entity']['drupal_bundle'][$entity_type];
-      $form_state->setError($element, $this->t('%name field is required.', ['%name' => $element['#title']]));
-    }
-    // dpm($form_state->getValues());
     if ($this->entity->doesPull()) {
       try {
         $testQuery = $this->client->query($this->entity->getPullQuery());
@@ -404,17 +398,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function save(array $form, FormStateInterface $form_state) {
-    // Drupal bundle is still an array, but needs to be a string.
-    $entity_type = $this->entity->get('drupal_entity_type');
-    $bundle = $form_state->getValue('drupal_bundle')[$entity_type];
-    $this->entity->set('drupal_bundle', $bundle);
-    parent::save($form, $form_state);
-  }
-
-  /**
    *
    */
   public function drupal_entity_type_bundle_callback($form, FormStateInterface $form_state) {
@@ -431,6 +414,13 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#edit-salesforce-field-mappings-wrapper', render($form['salesforce_field_mappings_wrapper'])));
     return $response;
+  }
+
+  /**
+   * Ajax callback for salesforce_mapping_form() bundle selection.
+   */
+  public function bundleCallback($form, FormStateInterface $form_state) {
+    return $form['drupal_entity']['drupal_bundle'];
   }
 
   /**
