@@ -5,14 +5,10 @@ namespace Drupal\salesforce\Form;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\State\StateInterface;
 use Drupal\salesforce\Rest\RestClientInterface;
-use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Drupal\salesforce\Event\SalesforceEvents;
-use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\Core\Url;
 
 /**
