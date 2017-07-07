@@ -40,7 +40,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       return $form;
     }
     $form = parent::buildForm($form, $form_state);
-
     $mapping = $this->entity;
     $form['label'] = [
       '#type' => 'textfield',
@@ -176,8 +175,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         '#states' => [
           'visible' => [
             ':input[name^="sync_triggers[pull"]' => array('checked' => TRUE),
-          ]
-        ]
+          ],
+        ],
       ];
 
       if (!$mapping->isNew()) {
@@ -208,7 +207,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         ];
 
 
-          // ' ; Last delete date/time: %last_delete',  '%last_delete' => $mapping->getLastDeleteTime() ? date('Y-m-d h:ia', $mapping->getLastDeleteTime()) : 'never'])
+        // ' ; Last delete date/time: %last_delete',  '%last_delete' => $mapping->getLastDeleteTime() ? date('Y-m-d h:ia', $mapping->getLastDeleteTime()) : 'never'])
         // ];
 
         // This doesn't work until after mapping gets saved.
@@ -255,8 +254,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         '#states' => [
           'visible' => [
             ':input[name^="sync_triggers[push"]' => array('checked' => TRUE),
-          ]
-        ]
+          ],
+        ],
       ];
 
       $form['push']['async'] = [
@@ -286,14 +285,14 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         '#title' => t('Push Retries'),
         '#type' => 'number',
         '#default_value' => $mapping->push_retries,
-        '#description' => t('Enter the maximum number of attempts to push a record to Salesforce before it\'s considered failed. Enter 0 for no limit.'),
+        '#description' => t("Enter the maximum number of attempts to push a record to Salesforce before it's considered failed. Enter 0 for no limit."),
         '#min' => 0,
       ];
 
       $form['push']['weight'] = [
         '#title' => t('Weight'),
         '#type' => 'select',
-        '#options' => array_combine(range(-50,50), range(-50,50)),
+        '#options' => array_combine(range(-50, 50), range(-50, 50)),
         '#description' => t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
         '#default_value' => $mapping->weight,
       ];
@@ -301,12 +300,12 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $description = t('Check this box to disable cron push processing for this mapping, and allow standalone processing. A URL will be generated after saving the mapping.');
       if ($mapping->id()) {
         $standalone_url = Url::fromRoute(
-            'salesforce_push.endpoint.salesforce_mapping',
-            [
-              'salesforce_mapping' => $mapping->id(),
-              'key' => \Drupal::state()->get('system.cron_key')
-            ],
-            ['absolute' => TRUE])
+          'salesforce_push.endpoint.salesforce_mapping',
+          [
+            'salesforce_mapping' => $mapping->id(),
+            'key' => \Drupal::state()->get('system.cron_key'),
+          ],
+          ['absolute' => TRUE])
           ->toString();
         $description = t('Check this box to disable cron push processing for this mapping, and allow standalone processing via this URL: <a href=":url">:url</a>', [':url' => $standalone_url]);
       }
@@ -338,7 +337,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $form['meta']['weight'] = [
       '#title' => t('Weight'),
       '#type' => 'select',
-      '#options' => array_combine(range(-50,50), range(-50,50)),
+      '#options' => array_combine(range(-50, 50), range(-50, 50)),
       '#description' => t('Not yet in use.'),
       '#default_value' => $mapping->weight,
     ];
@@ -357,6 +356,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#default_value' => $mapping->locked,
     ];
 
+
     return $form;
   }
 
@@ -366,7 +366,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $button = $form_state->getTriggeringElement();
     if ($button['#id'] != $form['actions']['submit']['#id']) {
-      // Skip validation unless we hit the "save" button
+      // Skip validation unless we hit the "save" button.
       return;
     }
 
