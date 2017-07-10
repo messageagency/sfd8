@@ -3,10 +3,10 @@
 namespace Drupal\salesforce;
 
 class SFID {
-  
+
   protected $id;
   const MAX_LENGTH = 18;
-  
+
   public function __construct($id) {
     if (strlen($id) != 15 && strlen($id) != self::MAX_LENGTH) {
       throw new \Exception('Invalid sfid ' . strlen($id));
@@ -18,16 +18,20 @@ class SFID {
   }
 
   public function __toString() {
-    return $this->id;
+    return (string) $this->id;
   }
 
   /**
+   * Convert 15-character Salesforce ID to an 18-character ID.
+   *
    * Converts a 15-character case-sensitive Salesforce ID to 18-character
    * case-insensitive ID. If input is not 15-characters, return input unaltered.
    *
    * @param string $sfid15
-   *   15-character case-sensitive Salesforce ID
-   * @return SFID
+   *   15-character case-sensitive Salesforce ID.
+   *
+   * @return string
+   *   18-character case-insensitive Salesforce ID
    */
   private static function convertId($sfid15) {
     $chunks = str_split($sfid15, 5);
