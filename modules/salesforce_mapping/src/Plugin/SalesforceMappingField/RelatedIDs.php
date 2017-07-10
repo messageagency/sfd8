@@ -49,8 +49,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
   /**
    * @see RelatedProperties::value
    */
-  public function value(EntityInterface $entity, SalesforceMappingInterface
-$mapping) {
+  public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     $field_name = $this->config('drupal_field_value');
     $instances = $this->entityFieldManager->getFieldDefinitions(
       $entity->getEntityTypeId(),
@@ -62,18 +61,18 @@ $mapping) {
     }
 
     $field = $entity->get($field_name);
-    if (empty($field->value)) {
+    if (empty($field->getValue())) {
       // This reference field is blank.
       return;
     }
 
     // Now we can actually fetch the referenced entity.
-    $field_settings = $field->getFieldDefinition()->getFieldSettings();
+    $field_settings = $field->getFieldDefinition()->getSettings();
     // @TODO this procedural call will go away when sf mapping object becomes a service or field
-    if ($referenced_mapping = $this
-        ->mapped_object_storage
-        ->loadByDrupal($field_settings['target_type'], $field->value)) {
-      return $referenced_mapping->sfid();
+    $referenced_mappings = $this->mapped_object_storage->loadByDrupal($field_settings['target_type'], $field->entity->id());
+    if (!empty($referenced_mappings)) {
+      $mapping = reset($referenced_mappings);
+      return $mapping->sfid();
     }
   }
 
