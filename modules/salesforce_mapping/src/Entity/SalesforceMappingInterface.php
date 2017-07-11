@@ -171,7 +171,7 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * Generate a select query to pull records from Salesforce for this mapping.
    *
    * @param array $mapped_fields
-   *   Fetch only these fields, if given, otherwise fetch all fields.
+   *   Fetch only these fields, if given, otherwise fetch all mapped fields.
    *
    * @return \Drupal\salesforce\SelectQuery
    */

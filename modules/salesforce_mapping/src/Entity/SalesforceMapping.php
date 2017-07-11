@@ -579,8 +579,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
 
     // Convert field mappings to SOQL.
     if (empty($mapped_fields)) {
-      $describe = $this->client()->objectDescribe($object_type);
-      $mapped_fields = array_keys($describe->getFields());
+      $mapped_fields = $this->getPullFieldsArray();
     }
     $soql->fields = $mapped_fields;
     $soql->fields[] = 'Id';

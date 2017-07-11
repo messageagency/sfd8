@@ -119,7 +119,7 @@ class QueueHandler {
   }
 
   /**
-   * Perform the SFO Query on each SF Object type with concolidated array of fields.
+   * Perform the SFO Query for a mapping and its mapped fields.
    *
    * @param SalesforceMappingInterface
    *   Mapping for which to execute pull
