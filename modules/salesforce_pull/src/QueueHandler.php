@@ -121,7 +121,7 @@ class QueueHandler {
   /**
    * Perform the SFO Query for a mapping and its mapped fields.
    *
-   * @param SalesforceMappingInterface
+   * @param SalesforceMappingInterface $mapping
    *   Mapping for which to execute pull
    *
    * @return SelectQueryResult
@@ -170,9 +170,9 @@ class QueueHandler {
   /**
    * Enqueue a set of results into pull queue.
    *
-   * @param SalesforceMappingInterface
+   * @param SalesforceMappingInterface $mapping
    *   Mapping object currently being processed
-   * @param array
+   * @param SelectQueryResult $results
    *   Result record set
    * @return bool
    *   Returns results->done(): TRUE if there are no more results, or FALSE if
@@ -181,7 +181,7 @@ class QueueHandler {
   public function enqueueResultSet(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
     try {
       foreach ($results->records() as $record) {
-        // @TDOD? Pull Queue Enqueue Event
+        // @TODO? Pull Queue Enqueue Event
         $this->enqueueRecord($mapping, $record);
       }
       return $results->done();
