@@ -91,4 +91,14 @@ class PushParams {
     return $this;
   }
 
+  /**
+   * @param string $key
+   *   Key to unset for this param
+   * @return $this
+   */
+  public function unsetParam($key) {
+    unset($this->params[$key]);
+    return $this;
+  }
+
 }
