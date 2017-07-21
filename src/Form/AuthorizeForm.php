@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce\Form;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -156,19 +157,16 @@ class AuthorizeForm extends ConfigFormBase {
   }
 
   /**
-   * Return an array of valid Salesforce endpoint URLs.
+   * Return whether or not the given URL is a valid endpoint.
    *
-   * @return array
+   * @return bool
    */
-  public static function validEndpoints() {
-    return [
-      'https://login.salesforce.com',
-      'https://test.salesforce.com',
-    ];
+  public static function validEndpoint($url) {
+    return UrlHelper::isValid($url, TRUE);
   }
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    if (!in_array($form_state->getValue('login_url'), self::validEndpoints())) {
+    if (!self::validEndpoint($form_state->getValue('login_url'))) {
       $form_state->setErrorByName('login_url', t('Please enter a valid Salesforce login URL.'));
     }
 
