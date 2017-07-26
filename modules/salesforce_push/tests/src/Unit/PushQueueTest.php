@@ -2,7 +2,12 @@
 
 namespace Drupal\Tests\salesforce_push\Unit;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Config\Config;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\Update;
+use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -11,14 +16,12 @@ use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use Drupal\salesforce_push\PushQueue;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Drupal\salesforce_push\PushQueueProcessorPluginManager;
-use Drupal\Core\Database\StatementInterface;
-use Drupal\Core\Database\Query\Update;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
+use Drupal\salesforce_push\PushQueue;
 use Drupal\salesforce_push\PushQueueProcessorInterface;
-use Drupal\Component\Datetime\TimeInterface;
+use Drupal\salesforce_push\PushQueueProcessorPluginManager;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Prophecy\Argument;
 
 /**
  * Test Object instantitation.
@@ -70,6 +73,15 @@ class PushQueueTest extends UnitTestCase {
       ->with($this->equalTo('salesforce_mapped_object'))
       ->willReturn($this->mapped_object_storage);
 
+    // mock config
+    $prophecy = $this->prophesize(Config::CLASS);
+    $prophecy->get('global_push_limit', Argument::any())->willReturn(PushQueue::DEFAULT_GLOBAL_LIMIT);
+    $config = $prophecy->reveal();
+
+    $prophecy = $this->prophesize(ConfigFactoryInterface::CLASS);
+    $prophecy->get('salesforce.settings')->willReturn($config);
+    $this->configFactory = $prophecy->reveal();
+
     $container = new ContainerBuilder();
     $container->set('database', $this->database);
     $container->set('state', $this->state);
@@ -79,6 +91,7 @@ class PushQueueTest extends UnitTestCase {
     $container->set('entity.manager', $this->entity_manager);
     $container->set('plugin.manager.salesforce_push_queue_processor', $this->push_queue_processor_plugin_manager);
     $container->set('datetime.time', $this->time);
+    $container->set('config.factory', $this->configFactory);
     \Drupal::setContainer($container);
   }
 
@@ -130,7 +143,7 @@ class PushQueueTest extends UnitTestCase {
   /**
    * @covers ::processQueues
    */
-  public function testProcessQueues() {
+  public function testProcessQueue() {
     $items = [1, 2, 3];
     $mapping1 = $this->getMock(SalesforceMappingInterface::CLASS);
     $mapping1->expects($this->any())
@@ -142,11 +155,6 @@ class PushQueueTest extends UnitTestCase {
     $mapping1->push_limit = 1;
     $mapping1->push_retries = 1;
 
-    $mappings =
-    $this->mapping_storage->expects($this->once())
-      ->method('loadPushMappings')
-      ->willReturn([$mapping1]);
-
     $this->worker = $this->getMock(PushQueueProcessorInterface::class);
     $this->worker->expects($this->once())
       ->method('process')
@@ -155,15 +163,17 @@ class PushQueueTest extends UnitTestCase {
       ->method('createInstance')
       ->willReturn($this->worker);
 
-    $this->queue = $this->getMock(PushQueue::class, ['claimItems', 'setName'], [$this->database, $this->state, $this->push_queue_processor_plugin_manager, $this->entityTypeManager, $this->eventDispatcher, $this->time]);
-    $this->queue->expects($this->once())
+    $this->queue = $this->getMock(PushQueue::class, ['claimItems', 'setName'], [$this->database, $this->state, $this->push_queue_processor_plugin_manager, $this->entityTypeManager, $this->eventDispatcher, $this->time, $this->configFactory]);
+
+    // I don't know why at(1) works.
+    $this->queue->expects($this->at(1))
       ->method('claimItems')
       ->willReturn($items);
     $this->queue->expects($this->once())
       ->method('setName')
       ->willReturn(NULL);
 
-    $this->queue->processQueues();
+    $this->assertEquals(3, $this->queue->processQueue($mapping1));
 
   }
 

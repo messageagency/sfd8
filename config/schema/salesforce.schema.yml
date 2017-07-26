@@ -2,6 +2,12 @@ salesforce.settings:
   type: config_object
   label: 'Salesforce Settings'
   mapping:
+    global_push_limit:
+      type: integer
+      label: 'Salesforce push queue global limit'
+    pull_max_queue_size:
+      type: integer
+      label: 'Salesforce pull queue max size'
     standalone:
       type: boolean
       label: 'Provide standalone push queue processing endpoint.'

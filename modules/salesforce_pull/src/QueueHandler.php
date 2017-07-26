@@ -4,7 +4,7 @@ namespace Drupal\salesforce_pull;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Queue\QueueDatabaseFactory;
-use Drupal\Core\State\StateInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceEvents;
@@ -43,9 +43,9 @@ class QueueHandler {
   protected $mappings;
 
   /**
-   * @var \Drupal\Core\State\StateInterface
+   * @var \Drupal\Core\Config\Config
    */
-  protected $state;
+  protected $config;
 
   /**
    * @var \Symfony\Component\HttpFoundation\Request
@@ -64,10 +64,10 @@ class QueueHandler {
    * @param EventDispatcherInterface $event_dispatcher
    */
 
-  public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, QueueDatabaseFactory $queue_factory, StateInterface $state, EventDispatcherInterface $event_dispatcher, TimeInterface $time) {
+  public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, QueueDatabaseFactory $queue_factory, ConfigFactoryInterface $config, EventDispatcherInterface $event_dispatcher, TimeInterface $time) {
     $this->sfapi = $sfapi;
     $this->queue = $queue_factory->get('cron_salesforce_pull');
-    $this->state = $state;
+    $this->config = $config->get('salesforce.settings');
     $this->eventDispatcher = $event_dispatcher;
     $this->time = $time;
     $this->mappings = $entity_type_manager
@@ -87,11 +87,11 @@ class QueueHandler {
   public function getUpdatedRecords() {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
-    if ($this->queue->numberOfItems() > $this->state->get('salesforce.pull_max_queue_size', self::PULL_MAX_QUEUE_SIZE)) {
+    if ($this->queue->numberOfItems() > $this->config->get('pull_max_queue_size', self::PULL_MAX_QUEUE_SIZE)) {
       $message = 'Pull Queue contains %noi items, exceeding the max size of %max items. Pull processing will be blocked until the number of items in the queue is reduced to below the max size.';
       $args = [
         '%noi' => $this->queue->numberOfItems(),
-        '%max' => $this->state->get('salesforce.pull_max_queue_size', self::PULL_MAX_QUEUE_SIZE),
+        '%max' => $this->config->get('pull_max_queue_size', self::PULL_MAX_QUEUE_SIZE),
       ];
       $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
       return FALSE;

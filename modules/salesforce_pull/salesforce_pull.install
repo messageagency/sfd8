@@ -7,19 +7,11 @@
 
 use Drupal\salesforce_pull\QueueHandler;
 
- /**
-  * Implements hook_install().
-  */
-function salesforce_pull_install() {
-  \Drupal::state()->set('salesforce.pull_max_queue_size', QueueHandler::PULL_MAX_QUEUE_SIZE);
-}
-
 /**
  * Implements hook_uninstall().
  */
 function salesforce_pull_uninstall() {
   $delete = [
-    'salesforce.pull_max_queue_size',
     'salesforce.sobject_pull_info',
   ];
   \Drupal::state()->deleteMultiple($delete);
@@ -69,4 +61,15 @@ function salesforce_pull_update_8001() {
   \Drupal::state()->set('salesforce_pull_last_delete', $delete);
   \Drupal::state()->set('salesforce_pull_last_sync', $sync);
   \Drupal::state()->deleteMultiple(array_keys($kv));
+}
+
+/**
+ * Moves global push limit out of state into config
+ */
+function salesforce_push_update_3() {
+  $config = \Drupal::configFactory()->getEditable('salesforce.settings');
+  $config
+    ->set('pull_max_queue_size', \Drupal::state()->get('salesforce.pull_max_queue_size'))
+    ->save();
+  \Drupal::state()->delete('salesforce.pull_max_queue_size');
 }

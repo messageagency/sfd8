@@ -5,7 +5,6 @@ namespace Drupal\salesforce\Form;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\State\StateInterface;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -31,26 +30,16 @@ class SettingsForm extends ConfigFormBase {
   protected $eventDispatcher;
 
   /**
-   * The state keyvalue collection.
-   *
-   * @var \Drupal\Core\State\StateInterface
-   */
-  protected $state;
-
-  /**
    * Constructs a \Drupal\system\ConfigFormBase object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
    * @param \Drupal\salesforce\Rest\RestClientInterface $salesforce_client
    *   The factory for configuration objects.
-   * @param \Drupal\Core\State\StateInterface $state
-   *   The state keyvalue collection to use.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, RestClientInterface $salesforce_client, StateInterface $state, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(ConfigFactoryInterface $config_factory, RestClientInterface $salesforce_client, EventDispatcherInterface $event_dispatcher) {
     parent::__construct($config_factory);
     $this->sf_client = $salesforce_client;
-    $this->state = $state;
     $this->eventDispatcher = $event_dispatcher;
   }
 
@@ -61,7 +50,6 @@ class SettingsForm extends ConfigFormBase {
     return new static(
       $container->get('config.factory'),
       $container->get('salesforce.client'),
-      $container->get('state'),
       $container->get('event_dispatcher')
     );
   }
@@ -110,12 +98,12 @@ class SettingsForm extends ConfigFormBase {
       ],
     ];
 
-    $form['push_limit'] = [
+    $form['global_push_limit'] = [
       '#title' => $this->t('Global push limit'),
       '#type' => 'number',
       '#description' => $this->t('Set the maximum number of records to be processed during each push queue process. Enter 0 for no limit.'),
       '#required' => TRUE,
-      '#default_value' => $config->get('push_limit'),
+      '#default_value' => $config->get('global_push_limit'),
       '#min' => 0,
     ];
 
@@ -171,7 +159,7 @@ class SettingsForm extends ConfigFormBase {
     $config = $this->config('salesforce.settings');
     $config->set('show_all_objects', $form_state->getValue('show_all_objects'));
     $config->set('standalone', $form_state->getValue('standalone'));
-    $config->set('push_limit', $form_state->getValue('push_limit'));
+    $config->set('global_push_limit', $form_state->getValue('global_push_limit'));
     $config->set('pull_max_queue_size', $form_state->getValue('pull_max_queue_size'));
     $use_latest = $form_state->getValue('use_latest');
     $config->set('use_latest', $use_latest);

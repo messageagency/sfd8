@@ -6,6 +6,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Queue\QueueDatabaseFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\Config\Config;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SelectQuery;
@@ -94,10 +96,18 @@ class QueueHandlerTest extends UnitTestCase {
     $this->etm = $prophecy->reveal();
 
 
+    // mock config
+    $prophecy = $this->prophesize(Config::CLASS);
+    $prophecy->get('pull_max_queue_size', Argument::any())->willReturn(QueueHandler::PULL_MAX_QUEUE_SIZE);
+    $config = $prophecy->reveal();
+
+    $prophecy = $this->prophesize(ConfigFactoryInterface::CLASS);
+    $prophecy->get('salesforce.settings')->willReturn($config);
+    $this->configFactory = $prophecy->reveal();
+
     // mock state
     $prophecy = $this->prophesize(StateInterface::CLASS);
     $prophecy->get('salesforce.sobject_pull_info', Argument::any())->willReturn(['default' => ['last_pull_timestamp' => '0']]);
-    $prophecy->get('salesforce.pull_max_queue_size', Argument::any())->willReturn(QueueHandler::PULL_MAX_QUEUE_SIZE);
     $prophecy->set('salesforce.sobject_pull_info', Argument::any())->willReturn(null);
     $this->state = $prophecy->reveal();
 
@@ -110,7 +120,7 @@ class QueueHandlerTest extends UnitTestCase {
 
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->time])
+      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->configFactory, $this->ed, $this->time])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')
@@ -148,7 +158,7 @@ class QueueHandlerTest extends UnitTestCase {
 
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->state, $this->ed, $this->time])
+      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->configFactory, $this->ed, $this->time])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')

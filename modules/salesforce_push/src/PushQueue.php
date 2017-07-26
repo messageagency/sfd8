@@ -2,6 +2,8 @@
 
 namespace Drupal\salesforce_push;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Merge;
 use Drupal\Core\Entity\EntityInterface;
@@ -12,12 +14,11 @@ use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\State\StateInterface;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
-use Drupal\salesforce\Event\SalesforceNoticeEvent;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
-use Drupal\Component\Datetime\TimeInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Salesforce push queue.
@@ -70,12 +71,17 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
   protected $time;
 
   /**
+   * @var Drupal\Core\Config\Config
+   */
+  protected $config;
+
+  /**
    * Constructs a \Drupal\Core\Queue\DatabaseQueue object.
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   The Connection object containing the key-value tables.
    */
-  public function __construct(Connection $connection, StateInterface $state, PushQueueProcessorPluginManager $queue_manager, EntityTypeManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher, TimeInterface $time) {
+  public function __construct(Connection $connection, StateInterface $state, PushQueueProcessorPluginManager $queue_manager, EntityTypeManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher, TimeInterface $time, ConfigFactoryInterface $config) {
     $this->connection = $connection;
     $this->state = $state;
     $this->queueManager = $queue_manager;
@@ -85,7 +91,8 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     $this->eventDispatcher = $event_dispatcher;
     $this->time = $time;
 
-    $this->global_limit = $state->get('salesforce.global_push_limit', static::DEFAULT_GLOBAL_LIMIT);
+    $this->config = $config->get('salesforce.settings');
+    $this->global_limit = $this->config->get('global_push_limit', static::DEFAULT_GLOBAL_LIMIT);
     $this->max_fails = $state->get('salesforce.push_queue_max_fails', static::DEFAULT_MAX_FAILS);
   }
 
@@ -96,7 +103,8 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
       $container->get('plugin.manager.salesforce_push_queue_processor'),
       $container->get('entity_type.manager'),
       $container->get('event_dispatcher'),
-      $container->get('datetime.time')
+      $container->get('datetime.time'),
+      $container->get('config.factory')
     );
   }
 
@@ -354,6 +362,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     while (TRUE) {
       // Claim as many items as we can from this queue and advance our counter. If this queue is empty, move to the next mapping.
       $items = $this->claimItems($mapping->push_limit, $mapping->push_retries);
+      print_r($items);
       if (empty($items)) {
         $mapping->setLastPushTime($this->time->getRequestTime());
         return $i;
