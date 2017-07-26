@@ -49,7 +49,7 @@ class SalesforceAdminSettingsTest extends WebTestBase {
     $this->assertNull(\Drupal::state()->get('salesforce.login_url'));
 
     $key = $this->randomMachineName();
-    $secret = $this->randomMachineName();
+    $secret = rand(100000, 10000000);
     $url = 'https://login.salesforce.com';
     $post = [
         'consumer_key' => $key,
