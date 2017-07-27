@@ -46,7 +46,7 @@ function salesforce_push_update_2() {
 }
 
 /**
- * Moves global push limit out of state into config
+ * Moves global push limit out of state into config.
  */
 function salesforce_push_update_3() {
   $config = \Drupal::configFactory()->getEditable('salesforce.settings');
