@@ -338,7 +338,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#title' => t('Weight'),
       '#type' => 'select',
       '#options' => array_combine(range(-50, 50), range(-50, 50)),
-      '#description' => t('Not yet in use.'),
+      '#description' => t('During cron, mapping weight determines in which order items will be pushed or pulled. Lesser weight items will be pushed or pulled before greater weight items.'),
       '#default_value' => $mapping->weight,
     ];
 
