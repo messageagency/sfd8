@@ -5,7 +5,6 @@ namespace Drupal\salesforce_pull\Plugin\QueueWorker;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
@@ -18,7 +17,6 @@ use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_pull\PullException;
-use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -69,8 +67,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *   The entity type manager.
    * @param \Drupal\salesforce\Rest\RestClientInterface $client
    *   Salesforce REST client.
-   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
-   *   Logger factory service.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   Event dispatcher service.
    */
@@ -302,10 +298,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       return TRUE;
     }
     catch (RestException $e) {
-      $this->logger->log(
-        LogLevel::ERROR,
-        'Unable to contact Salesforce API, suspending queue'
-      );
+      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       return FALSE;
     }
   }
