@@ -14,6 +14,7 @@ use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
+use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\salesforce_pull\PullException;
@@ -222,7 +223,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       $entity_keys = $this->etm->getDefinition($entity_type)->getKeys();
       $values = [];
       if (isset($entity_keys['bundle'])
-      && !empty($entity_keys['bundle'])) {
+          && !empty($entity_keys['bundle'])) {
         $values[$entity_keys['bundle']] = $mapping->getDrupalBundle();
       }
 
@@ -251,15 +252,23 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
 
       $mapped_object->pull();
 
-      // Push upsert ID to SF object, if allowed.
+      // Push upsert ID to SF object, if allowed and not already set.
       if ($mapping->hasKey() && $mapping->checkTriggers([
-        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
-        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
-      ])) {
+          MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
+          MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
+        ]) && $sf_object->field($mapping->getKeyField()) === NULL) {
+        $params = new PushParams($mapping, $entity);
+        $this->eventDispatcher->dispatch(
+          SalesforceEvents::PUSH_PARAMS,
+          new SalesforcePushParamsEvent($mapped_object, $params)
+        );
+        // Get just the key param and send that.
+        $key_field = $mapping->getKeyField();
+        $key_param = [$key_field => $params->getParam($key_field)];
         $sent_id = $this->sendEntityId(
           $mapping->getSalesforceObjectType(),
           $mapped_object->sfid(),
-          new PushParams($mapping, $entity)
+          $key_param
         );
         if (!$sent_id) {
           throw new PullException();
@@ -286,15 +295,15 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *   Salesforce object type.
    * @param string $sfid
    *   Salesforce ID.
-   * @param PushParams $params
-   *   Parameters to be pushed.
+   * @param array $key_param
+   *   Key parameter to be pushed.
    *
    * @return bool
    *   TRUE/FALSE
    */
-  protected function sendEntityId(string $object_type, string $sfid, PushParams $params) {
+  protected function sendEntityId(string $object_type, string $sfid, array $key_param) {
     try {
-      $this->client->objectUpdate($object_type, $sfid, $params->getParams());
+      $this->client->objectUpdate($object_type, $sfid, $key_param);
       return TRUE;
     }
     catch (RestException $e) {
