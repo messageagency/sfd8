@@ -164,10 +164,18 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         ])
         && $sf_object->field($mapping->getKeyField()) === NULL
       ) {
+        $params = new PushParams($mapping, $entity);
+        $this->eventDispatcher->dispatch(
+          SalesforceEvents::PUSH_PARAMS,
+          new SalesforcePushParamsEvent($mapped_object, $params)
+        );
+        // Get just the key param and send that.
+        $key_field = $mapping->getKeyField();
+        $key_param = [$key_field => $params->getParam($key_field)];
         $sent_id = $this->sendEntityId(
           $mapping->getSalesforceObjectType(),
           $mapped_object->sfid(),
-          new PushParams($mapping, $entity)
+          $key_param
         );
         if (!$sent_id) {
           throw new PullException();
