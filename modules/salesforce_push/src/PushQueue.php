@@ -362,7 +362,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     while (TRUE) {
       // Claim as many items as we can from this queue and advance our counter. If this queue is empty, move to the next mapping.
       $items = $this->claimItems($mapping->push_limit, $mapping->push_retries);
-      print_r($items);
+
       if (empty($items)) {
         $mapping->setLastPushTime($this->time->getRequestTime());
         return $i;
