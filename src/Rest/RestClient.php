@@ -580,10 +580,7 @@ class RestClient implements RestClientInterface {
    *   Array of all available Salesforce versions.
    */
   public function getVersions($reset = FALSE) {
-    $cache = $this->cache->get('salesforce:versions');
-
-    // Force the recreation of the cache when it is older than 24 hours.
-    if ($cache && $this->getRequestTime() < ($cache->created + self::LONGTERM_CACHE_LIFETIME) && !$reset) {
+    if (!$reset && ($cache = $this->cache->get('salesforce:versions'))) {
       return $cache->data;
     }
 
@@ -594,7 +591,7 @@ class RestClient implements RestClientInterface {
     foreach ($response->data as $version) {
       $versions[$version['version']] = $version;
     }
-    $this->cache->set('salesforce:versions', $versions, 0, ['salesforce']);
+    $this->cache->set('salesforce:versions', $versions, $this->getRequestTime() + self::LONGTERM_CACHE_LIFETIME, ['salesforce']);
     return $versions;
   }
 
@@ -639,15 +636,13 @@ class RestClient implements RestClientInterface {
    * @addtogroup salesforce_apicalls
    */
   public function objects(array $conditions = ['updateable' => TRUE], $reset = FALSE) {
-    $cache = $this->cache->get('salesforce:objects');
-
-    // Force the recreation of the cache when it is older than 5 minutes.
-    if ($cache && $this->getRequestTime() < ($cache->created + self::CACHE_LIFETIME) && !$reset) {
+    // Use the cached data if we have it.
+    if (!$reset && ($cache = $this->cache->get('salesforce:objects'))) {
       $result = $cache->data;
     }
     else {
       $result = $this->apiCall('sobjects');
-      $this->cache->set('salesforce:objects', $result, 0, ['salesforce']);
+      $this->cache->set('salesforce:objects', $result, $this->getRequestTime() + self::CACHE_LIFETIME, ['salesforce']);
     }
 
     if (!empty($conditions)) {
@@ -719,14 +714,12 @@ class RestClient implements RestClientInterface {
       throw new \Exception('No name provided to describe');
     }
 
-    $cache = $this->cache->get('salesforce:object:' . $name);
-    // Force the recreation of the cache when it is older than 5 minutes.
-    if ($cache && $this->getRequestTime() < ($cache->created + self::CACHE_LIFETIME) && !$reset) {
+    if (!$reset && ($cache = $this->cache->get('salesforce:object:' . $name))) {
       return $cache->data;
     }
     else {
       $response = new RestResponse_Describe($this->apiCall("sobjects/{$name}/describe", [], 'GET', TRUE));
-      $this->cache->set('salesforce:object:' . $name, $response, 0, ['salesforce']);
+      $this->cache->set('salesforce:object:' . $name, $response, $this->getRequestTime() + self::CACHE_LIFETIME, ['salesforce']);
       return $response;
     }
   }
@@ -951,10 +944,7 @@ class RestClient implements RestClientInterface {
    *   Otherwise, an array of record type arrays, indexed by object type name.
    */
   public function getRecordTypes($name = NULL, $reset = FALSE) {
-    $cache = $this->cache->get('salesforce:record_types');
-
-    // Force the recreation of the cache when it is older than CACHE_LIFETIME
-    if ($cache && $this->getRequestTime() < ($cache->created + self::CACHE_LIFETIME) && !$reset) {
+    if (!$reset && ($cache = $this->cache->get('salesforce:record_types'))) {
       $record_types = $cache->data;
     }
     else {
@@ -965,7 +955,7 @@ class RestClient implements RestClientInterface {
       foreach ($result->records() as $rt) {
         $record_types[$rt->field('SobjectType')][$rt->field('DeveloperName')] = $rt;
       }
-      $this->cache->set('salesforce:record_types', $record_types, 0, ['salesforce']);
+      $this->cache->set('salesforce:record_types', $record_types, $this->getRequestTime() + self::CACHE_LIFETIME, ['salesforce']);
     }
 
     if ($name != NULL) {
@@ -1025,7 +1015,7 @@ class RestClient implements RestClientInterface {
   /**
    * Returns REQUEST_TIME.
    *
-   * @return string
+   * @return int
    *   The REQUEST_TIME server variable.
    */
   protected function getRequestTime() {
