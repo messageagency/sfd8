@@ -209,7 +209,6 @@ function salesforce_push_enqueue_async(EntityInterface $entity, SalesforceMappin
  */
 function salesforce_push_cron() {
   $queue = \Drupal::service('queue.salesforce_push');
-  $queue->garbageCollection();
   if (\Drupal::config('salesforce.settings')->get('standalone')) {
     // If global standalone processing is enabled, stop here.
     return;

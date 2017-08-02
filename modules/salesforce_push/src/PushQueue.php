@@ -50,6 +50,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
   protected $queueManager;
   protected $max_fails;
   protected $eventDispatcher;
+  protected $garbageCollected;
 
   /**
    * Storage handler for SF mappings
@@ -94,6 +95,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     $this->config = $config->get('salesforce.settings');
     $this->global_limit = $this->config->get('global_push_limit', static::DEFAULT_GLOBAL_LIMIT);
     $this->max_fails = $state->get('salesforce.push_queue_max_fails', static::DEFAULT_MAX_FAILS);
+    $this->garbageCollected = FALSE;
   }
 
   public static function create(ContainerInterface $container) {
@@ -340,6 +342,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
    *   dispatches a SalesforceEvents::ERROR event.
    */
   public function processQueue(SalesforceMappingInterface $mapping) {
+    $this->garbageCollection();
     static $queue_processor = FALSE;
     // Check mapping frequency before proceeding.
     if ($mapping->getNextPushTime() > $this->time->getRequestTime()) {
@@ -489,6 +492,31 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
    */
   public function deleteTable() {
     $this->connection->schema()->dropTable(static::TABLE_NAME);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function garbageCollection() {
+    if ($this->garbageCollected) {
+      // Prevent excessive garbage collection. We only need it once per request.
+      return;
+    }
+    try {
+      // Reset expired items in the default queue implementation table. If
+      // that's not used, this will simply be a no-op.
+      $this->connection->update(static::TABLE_NAME)
+        ->fields([
+          'expire' => 0,
+        ])
+        ->condition('expire', 0, '<>')
+        ->condition('expire', REQUEST_TIME, '<')
+        ->execute();
+      $this->garbageCollected = TRUE;
+    }
+    catch (\Exception $e) {
+      $this->catchException($e);
+    }
   }
 
 }
