@@ -163,15 +163,18 @@ class PushQueueTest extends UnitTestCase {
       ->method('createInstance')
       ->willReturn($this->worker);
 
-    $this->queue = $this->getMock(PushQueue::class, ['claimItems', 'setName'], [$this->database, $this->state, $this->push_queue_processor_plugin_manager, $this->entityTypeManager, $this->eventDispatcher, $this->time, $this->configFactory]);
+    $this->queue = $this->getMock(PushQueue::class, ['claimItems', 'setName', 'garbageCollection'], [$this->database, $this->state, $this->push_queue_processor_plugin_manager, $this->entityTypeManager, $this->eventDispatcher, $this->time, $this->configFactory]);
 
-    // I don't know why at(1) works.
-    $this->queue->expects($this->at(1))
-      ->method('claimItems')
-      ->willReturn($items);
     $this->queue->expects($this->once())
       ->method('setName')
       ->willReturn(NULL);
+    $this->queue->expects($this->any())
+      ->method('garbageCollection')
+      ->willReturn(NULL);
+    // I don't know why at(2) works.
+    $this->queue->expects($this->at(2))
+      ->method('claimItems')
+      ->willReturn($items);
 
     $this->assertEquals(3, $this->queue->processQueue($mapping1));
 
