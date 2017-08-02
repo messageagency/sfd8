@@ -8,6 +8,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\salesforce\SFID;
+use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -92,6 +93,22 @@ class MappedObjectStorage extends SqlContentEntityStorage {
     return $this->loadByProperties([
       'salesforce_id' => (string)$salesforce_id,
     ]);
+  }
+
+  /**
+   * Set the "force_pull" column to TRUE for all mapped objects of the given
+   * mapping
+   *
+   * @param SalesforceMappingInterface $mapping
+   *
+   * @return $this
+   */
+  public function setForcePull(SalesforceMappingInterface $mapping) {
+    $query = $this->database->update($this->baseTable)
+      ->condition('salesforce_mapping', $mapping->id())
+      ->fields(array('force_pull' => 1))
+      ->execute();
+    return $this;
   }
 
 }

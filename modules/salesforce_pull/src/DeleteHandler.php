@@ -99,9 +99,13 @@ class DeleteHandler {
         ? $pull_info[$type]['last_delete_timestamp']
         : strtotime('-29 days');
       $now = time();
-      // getDeleted() restraint: startDate must be at least one minute
+      // getDeleted() constraint: startDate must be at least one minute
       // greater than endDate.
       $now = $now > $last_delete_sync + 60 ? $now : $now + 60;
+      // getDeleted() constraint: startDate cannot be more than 30 days ago.
+      if ($last_delete_sync < strtotime('-29 days')) {
+        $last_delete_sync = strtotime('-29 days');
+      }
       $last_delete_sync_sf = gmdate('Y-m-d\TH:i:s\Z', $last_delete_sync);
       $now_sf = gmdate('Y-m-d\TH:i:s\Z', $now);
       $deleted = $this->sfapi->getDeleted($type, $last_delete_sync_sf, $now_sf);

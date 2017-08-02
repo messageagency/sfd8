@@ -75,13 +75,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   protected $drupal_entity = NULL;
 
   /**
-   * Force update of mapped entity Flag.
-   *
-   * @var bool
-   */
-  protected $force_update = FALSE;
-
-  /**
    * Overrides ContentEntityBase::__construct().
    */
   public function __construct(array $values) {
@@ -228,6 +221,11 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setSetting('is_ascii', TRUE)
       ->setSetting('max_length', MappingConstants::SALESFORCE_MAPPING_TRIGGER_MAX_LENGTH)
       ->setRevisionable(TRUE);
+
+    $fields['force_pull'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Force Pull'))
+      ->setDescription(t('Whether to ignore entity timestamps and force an update on the next pull for this record.'))
+      ->setRevisionable(FALSE);
 
     // @see ContentEntityBase::baseFieldDefinitions
     // and RevisionLogEntityTrait::revisionLogBaseFieldDefinitions
@@ -544,7 +542,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->set('entity_updated', $this->getRequestTime())
       ->set('last_sync_action', 'pull')
       ->set('last_sync_status', TRUE)
-      // ->set('last_sync_message', '')
+      ->set('force_pull', 0)
       ->save();
 
     return $this;
@@ -558,26 +556,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   protected function getRequestTime() {
     return \Drupal::time()->getRequestTime();
-  }
-
-  /**
-   * Set the force entity update flag to desired state.
-   *
-   * @param bool $state
-   *   TRUE or FALSE.
-   */
-  public function setForceUpdate(bool $state) {
-    $this->force_update = $state;
-  }
-
-  /**
-   * Return the state of the force update flag.
-   *
-   * @return bool
-   *   TRUE or FALSE.
-   */
-  public function forceUpdate() {
-    return $this->force_update;
   }
 
 }

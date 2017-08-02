@@ -388,6 +388,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   public function lastPullReset(array $form, FormStateInterface $form_state) {
     $mapping = $this->entity->setLastPullTime(NULL);
+    $this->entityTypeManager
+      ->getStorage('salesforce_mapped_object')
+      ->setForcePull($mapping);
   }
 
   /**

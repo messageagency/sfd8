@@ -187,9 +187,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
       );
 
-      // By default $mapped_object->forceUpdate() is FALSE. To force true, call
-      // $mapped_object->setForceUpdate() in the prepull event hook above.
-      if ($sf_record_updated > $entity_updated || $mapped_object->forceUpdate()) {
+      if ($sf_record_updated > $entity_updated || $mapped_object->force_pull) {
         // Set fields values on the Drupal entity.
         $mapped_object->pull();
         $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, 'Updated entity %label associated with Salesforce Object ID: %sfid', ['%label' => $entity->label(), '%sfid' => (string) $sf_object->id()]));

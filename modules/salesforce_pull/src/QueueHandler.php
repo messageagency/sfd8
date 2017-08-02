@@ -87,11 +87,12 @@ class QueueHandler {
   public function getUpdatedRecords() {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
-    if ($this->queue->numberOfItems() > $this->config->get('pull_max_queue_size', self::PULL_MAX_QUEUE_SIZE)) {
+    $max_size = $this->config->get('pull_max_queue_size', static::PULL_MAX_QUEUE_SIZE);
+    if ($max_size && $this->queue->numberOfItems() > $max_size) {
       $message = 'Pull Queue contains %noi items, exceeding the max size of %max items. Pull processing will be blocked until the number of items in the queue is reduced to below the max size.';
       $args = [
         '%noi' => $this->queue->numberOfItems(),
-        '%max' => $this->config->get('pull_max_queue_size', self::PULL_MAX_QUEUE_SIZE),
+        '%max' => $max_size,
       ];
       $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
       return FALSE;
