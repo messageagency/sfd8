@@ -23,7 +23,7 @@ function salesforce_uninstall() {
 
 function salesforce_requirements($phase) {
   if ($phase != 'runtime') {
-    return;
+    return [];
   }
 
   // Check requirements once per 24 hours
