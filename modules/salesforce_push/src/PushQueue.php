@@ -94,7 +94,13 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
 
     $this->config = $config->get('salesforce.settings');
     $this->global_limit = $this->config->get('global_push_limit', static::DEFAULT_GLOBAL_LIMIT);
+    if (empty($this->global_limit)) {
+      $this->global_limit = static::DEFAULT_GLOBAL_LIMIT;
+    }
     $this->max_fails = $state->get('salesforce.push_queue_max_fails', static::DEFAULT_MAX_FAILS);
+    if (empty($this->max_fails)) {
+      $this->max_fails = static::DEFAULT_MAX_FAILS;
+    }
     $this->garbageCollected = FALSE;
   }
 
