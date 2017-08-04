@@ -93,10 +93,19 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#type' => 'select',
       '#default_value' => $mapping->drupal_bundle,
       '#empty_option' => $this->t('- Select -'),
-      '#options' => [],
+      // Bundle select options will get completely replaced after user selects
+      // an entity, but we include all possibilities here for js-free
+      // compatibility (for simpletest)
+      '#options' => $this->getBundleOptions(),
       '#required' => TRUE,
       '#prefix' => '<div id="drupal_bundle">',
       '#suffix' => '</div>',
+      // Don't expose the bundle listing until user has selected an entity
+      '#states' => [
+        'visible' => [
+          ':input[name="drupal_entity_type"]' => array('!value' => ''),
+        ],
+      ],
     ];
     $input = $form_state->getUserInput();
     if (!empty($input) && !empty($input['drupal_entity_type'])) {
@@ -108,6 +117,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $bundle_info = $this->entityManager->getBundleInfo($entity_type);
 
     if (!empty($bundle_info)) {
+      $form['drupal_entity']['drupal_bundle']['#options'] = array();
       $form['drupal_entity']['drupal_bundle']['#title'] = $this->t('@entity_type Bundle', ['@entity_type' => $entity_types[$entity_type]]);
       foreach ($bundle_info as $key => $info) {
         $form['drupal_entity']['drupal_bundle']['#options'][$key] = $info['label'];
@@ -364,6 +374,10 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    $bundles = $this->entityManager->getBundleInfo($form_state->getValue('drupal_entity_type'));
+    if (empty($bundles[$form_state->getValue('drupal_bundle')])) {
+      $form_state->setErrorByName('drupal_bundle', $this->t('Invalid bundle for entity type.'));
+    }
     $button = $form_state->getTriggeringElement();
     if ($button['#id'] != $form['actions']['submit']['#id']) {
       // Skip validation unless we hit the "save" button.
@@ -424,6 +438,25 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   public function bundleCallback($form, FormStateInterface $form_state) {
     return $form['drupal_entity']['drupal_bundle'];
+  }
+
+  /**
+   * Return an array of all bundle options, for javascript-free fallback.
+   */
+  protected function getBundleOptions() {
+    $entities = $this->get_entity_type_options();
+    $bundles = $this->entityManager->getAllBundleInfo();
+    $options = [];
+    foreach ($bundles as $entity => $bundle_info) {
+      if (empty($entities[$entity])) {
+        continue;
+      }
+      foreach ($bundle_info as $bundle => $info) {
+        $entity_label = $entities[$entity];
+        $options[(string)$entity_label][$bundle] = (string)$info['label'];
+      }
+    }
+    return $options;
   }
 
   /**
