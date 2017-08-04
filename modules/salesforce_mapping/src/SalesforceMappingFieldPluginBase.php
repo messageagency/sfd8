@@ -192,10 +192,6 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
           $value = (string) (new SFID($value));
         }
         break;
-
-      case 'url':
-        $value = $entity->{$this->configuration['drupal_field_value']}->first()->getValue()['uri'];
-        break;
     }
 
     if ($field_definition['length'] > 0 && strlen($value) > $field_definition['length']) {
