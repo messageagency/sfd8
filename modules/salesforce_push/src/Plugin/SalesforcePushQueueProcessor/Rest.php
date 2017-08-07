@@ -83,19 +83,14 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   }
 
   public function processItem(\stdClass $item) {
-    $mapped_object = $this
-      ->mapped_object_storage
-      ->load($item->mapped_object_id);
-
     // Allow exceptions to bubble up for PushQueue to sort things out.
     $mapping = $this->mapping_storage->load($item->name);
+    $mapped_object = $this->getMappedObject($item, $mapping);
 
-    if (!$mapped_object) {
-      if ($item->op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
-        // If mapped object doesn't exist or fails to load for this delete, this item can be considered successfully processed.
-        return;
-      }
-      $mapped_object = $this->createMappedObject($item, $mapping);
+    if ($mapped_object->isNew()
+    && $item->op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
+      // If mapped object doesn't exist or fails to load for this delete, this item can be considered successfully processed.
+      return;
     }
 
     // @TODO: the following is nearly identical to the end of salesforce_push_entity_crud(). Can we DRY it? Do we care?
@@ -144,12 +139,49 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   }
 
   /**
+   * Return the mapped object given a queue item and mapping.
+   *
+   * @param stdClass $item
+   * @param SalesforceMappingInterface $mapping
+   * @return MappedObject
+   */
+  protected function getMappedObject(\stdClass $item, SalesforceMappingInterface $mapping) {
+    $mapped_object = FALSE;
+    // Prefer mapped object id if we have one.
+    if ($item->mapped_object_id) {
+      $mapped_object = $this
+        ->mapped_object_storage
+        ->load($item->mapped_object_id);
+    }
+    if ($mapped_object) {
+      return $mapped_object;
+    }
+
+    // Fall back to entity+mapping, which is a unique key.
+    if ($item->entity_id) {
+      $mapped_object = $this
+        ->mapped_object_storage
+        ->loadByProperties([
+          'entity_type_id' => $mapping->drupal_entity_type,
+          'entity_id' => $item->entity_id,
+          'salesforce_mapping' => $mapping->id(),
+          ]);
+    }
+    if ($mapped_object) {
+      if (is_array($mapped_object)) {
+        $mapped_object = current($mapped_object);
+      }
+      return $mapped_object;
+    }
+
+    return $this->createMappedObject($item, $mapping);
+  }
+
+  /**
    * Helper method to generate a new MappedObject during push procesing.
    *
-   * @param string $item 
-   * @param string $mapping 
-   * @return void
-   * @author Aaron Bauman
+   * @param stdClass $item 
+   * @param SalesforceMappingInterface $mapping 
    */
   protected function createMappedObject(\stdClass $item, SalesforceMappingInterface $mapping) {
     return new MappedObject([
