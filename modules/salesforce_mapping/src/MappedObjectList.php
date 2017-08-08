@@ -90,9 +90,9 @@ class MappedObjectList extends EntityListBuilder {
     /* @var $entity \Drupal\salesforce_mapping\MappedObject */
     $row['id'] = $entity->id();
     $row['entity_id'] = $entity->entity_id->value;
-    $row['entity_type'] = $entity->get('entity_type_id')[0]->value;
+    $row['entity_type'] = $entity->entity_type_id->value;
     $row['salesforce_id'] = $entity->sfid();
-    $row['changed'] = $entity->get('changed')->value;
+    $row['changed'] = $entity->changed->value;
     return $row + parent::buildRow($entity);
   }
 

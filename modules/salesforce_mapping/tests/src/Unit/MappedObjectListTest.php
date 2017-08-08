@@ -80,14 +80,12 @@ class MappedObjectListTest extends UnitTestCase {
       ->method('__get')
       ->will($this->returnValueMap([
         ['entity_id',$this->setPropertyValue('1')],
-        ['entity_type', $this->setPropertyValue('Foo')]
+        ['entity_type_id', $this->setPropertyValue('Foo')],
+        ['changed', $this->setPropertyValue('12:00:00')]
       ]));
     $this->entity->expects($this->any())
       ->method('sfid')
       ->willReturn('1234567890abcdeAAA');
-    $this->entity->expects($this->any())
-      ->method('get')->with('changed')
-      ->willReturn($this->setPropertyValue('12:00:00'));
 
     $this->entityQuery = $this->prophesize(QueryInterface::class);
     $this->entityQuery->sort(Argument::any())->willReturn($this->entityQuery);
