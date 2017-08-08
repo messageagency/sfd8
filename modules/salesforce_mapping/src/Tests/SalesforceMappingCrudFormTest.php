@@ -57,7 +57,7 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
     $newurl = parse_url($this->getUrl());
 
     // Make sure the redirect was correct (and therefore form was submitted successfully)
-    $this->assertEqual($newurl['path'], '/admin/structure/salesforce/mappings/manage/' . $mapping_name . '/fields');
+    $this->assertEqual($newurl['path'], $base_path . 'admin/structure/salesforce/mappings/manage/' . $mapping_name . '/fields');
     $mapping = $mappingStorage->load($mapping_name);
     // Make sure mapping was saved correctly.
     $this->assertEqual($mapping->id(), $mapping_name);

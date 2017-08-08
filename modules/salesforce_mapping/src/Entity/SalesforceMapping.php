@@ -570,7 +570,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   /**
    * {@inheritdoc}
    */
-  public function getPullQuery(array $mapped_fields = []) {
+  public function getPullQuery(array $mapped_fields = [], $start = 0, $stop = 0) {
     if (!$this->doesPull()) {
       throw new Exception('Mapping does not pull.');
     }
@@ -585,12 +585,18 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     $soql->fields[] = 'Id';
     $soql->fields[] = $this->getPullTriggerDate();
 
-    // If no lastupdate, get all records, else get records since last pull.
-    $sf_last_sync = $this->getLastPullTime();
-    if ($sf_last_sync) {
-      $last_sync = gmdate('Y-m-d\TH:i:s\Z', $sf_last_sync);
-      $soql->addCondition($this->getPullTriggerDate(), $last_sync, '>');
+    $start = $start > 0 ? $start : $this->getLastPullTime();
+    // If no lastupdate and no start window provided, get all records.
+    if ($start) {
+      $start = gmdate('Y-m-d\TH:i:s\Z', $start);
+      $soql->addCondition($this->getPullTriggerDate(), $start, '>');
     }
+
+    if ($stop) {
+      $stop = gmdate('Y-m-d\TH:i:s\Z', $stop);
+      $soql->addCondition($this->getPullTriggerDate(), $stop, '<');
+    }
+
     if (!empty($this->pull_where_clause)) {
       $soql->conditions[] = [$this->pull_where_clause];
     }

@@ -81,10 +81,19 @@ class QueueHandler {
    * Executes a SOQL query based on defined mappings, loops through the results,
    * and places each updated SF object into the queue for later processing.
    *
+   * @param bool $force_pull
+   *   Whether to force the queried records to be pulled.
+   * @param int $start
+   *   Timestamp of starting window from which to pull records. If omitted, use
+   *   ::getLastPullTime().
+   * @param int $stop
+   *   Timestamp of ending window from which to pull records. If omitted, use 
+   *   "now"
+   *
    * @return bool
    *   TRUE if there was room to add items, FALSE otherwise.
    */
-  public function getUpdatedRecords() {
+  public function getUpdatedRecords($force_pull = FALSE, $start = 0, $stop = 0) {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
     $max_size = $this->config->get('pull_max_queue_size', static::PULL_MAX_QUEUE_SIZE);
@@ -100,23 +109,50 @@ class QueueHandler {
 
     // Iterate over each field mapping to determine our query parameters.
     foreach ($this->mappings as $mapping) {
-      if (!$mapping->doesPull()) {
-        continue;
-      }
-      if ($mapping->getNextPullTime() > $this->time->getRequestTime()) {
-        // Skip this mapping, based on pull frequency.
-        continue;
-      }
-
-      $results = $this->doSfoQuery($mapping);
-      if ($results) {
-        $this->enqueueAllResults($mapping, $results);
-        // @TODO Replace this with a better implementation when available,
-        // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
-        $mapping->setLastPullTime($this->time->getRequestTime());
-      }
+      $this->getUpdatedRecordsForMapping($mapping, $force_pull, $start, $stop);
     }
     return TRUE;
+  }
+
+  /**
+   * Given a mapping and optional timeframe, perform an API query for updated
+   * records and enqueue them into the pull queue.
+   *
+   * @param SalesforceMappingInterface $mapping
+   *   The salesforce mapping for which to query.
+   * @param bool $force_pull
+   *   Whether to force the queried records to be pulled.
+   * @param int $start
+   *   Timestamp of starting window from which to pull records. If omitted, use
+   *   ::getLastPullTime().
+   * @param int $stop
+   *   Timestamp of ending window from which to pull records. If omitted, use 
+   *   "now"
+   *
+   * @return FALSE | int
+   *   Return the number of records fetched by the pull query, or FALSE no
+   *   query was executed.
+   *
+   * @see SalesforceMappingInterface
+   */
+  public function getUpdatedRecordsForMapping(SalesforceMappingInterface $mapping, $force_pull = FALSE, $start = 0, $stop = 0) {
+    if (!$mapping->doesPull()) {
+      return FALSE;
+    }
+
+    if ($start == 0 && $mapping->getNextPullTime() > $this->time->getRequestTime()) {
+      // Skip this mapping, based on pull frequency.
+      return FALSE;
+    }
+
+    $results = $this->doSfoQuery($mapping);
+    if ($results) {
+      $this->enqueueAllResults($mapping, $results, $force_pull);
+      // @TODO Replace this with a better implementation when available,
+      // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
+      $mapping->setLastPullTime($this->time->getRequestTime());
+    }
+    return $results->size();
   }
 
   /**
@@ -124,15 +160,25 @@ class QueueHandler {
    *
    * @param SalesforceMappingInterface $mapping
    *   Mapping for which to execute pull
+   * @param array $mapped_fields
+   *   Fetch only these fields, if given, otherwise fetch all mapped fields.
+   * @param int $start
+   *   Timestamp of starting window from which to pull records. If omitted, use
+   *   ::getLastPullTime().
+   * @param int $stop
+   *   Timestamp of ending window from which to pull records. If omitted, use 
+   *   "now"
    *
    * @return SelectQueryResult
    *   returned result object from Salesforce
+   *
+   * @see SalesforceMappingInterface
    */
-  protected function doSfoQuery(SalesforceMappingInterface $mapping) {
+  public function doSfoQuery(SalesforceMappingInterface $mapping, $mapped_fields = [], $start = 0, $stop = 0) {
     // @TODO figure out the new way to build the query.
     // Execute query.
     try {
-      $soql = $mapping->getPullQuery();
+      $soql = $mapping->getPullQuery($mapped_fields, $start, $stop);
       $this->eventDispatcher->dispatch(
         SalesforceEvents::PULL_QUERY,
         new SalesforceQueryEvent($mapping, $soql)
@@ -152,9 +198,10 @@ class QueueHandler {
    *
    * @param SalesforceMappingInterface $mapping
    * @param SelectQueryResult $results
+   * @param bool $force_pull
    */
-  public function enqueueAllResults(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
-    while (!$this->enqueueResultSet($mapping, $results)) {
+  public function enqueueAllResults(SalesforceMappingInterface $mapping, SelectQueryResult $results, $force_pull = FALSE) {
+    while (!$this->enqueueResultSet($mapping, $results, $force_pull)) {
       try {
         $results = $this->sfapi->queryMore($results);
       }
@@ -175,15 +222,18 @@ class QueueHandler {
    *   Mapping object currently being processed
    * @param SelectQueryResult $results
    *   Result record set
+   * @param bool $force_pull
+   *   Whether to force pull for enqueued items.
+   *
    * @return bool
    *   Returns results->done(): TRUE if there are no more results, or FALSE if
    *   there are additional records to be queried.
    */
-  public function enqueueResultSet(SalesforceMappingInterface $mapping, SelectQueryResult $results) {
+  public function enqueueResultSet(SalesforceMappingInterface $mapping, SelectQueryResult $results, $force_pull = FALSE) {
     try {
       foreach ($results->records() as $record) {
         // @TODO? Pull Queue Enqueue Event
-        $this->enqueueRecord($mapping, $record);
+        $this->enqueueRecord($mapping, $record, $force_pull);
       }
       return $results->done();
     }
@@ -199,9 +249,10 @@ class QueueHandler {
    *
    * @param SalesforceMappingInterface $mapping
    * @param SObject $record
+   * @param bool $foce
    */
-  public function enqueueRecord(SalesforceMappingInterface $mapping, SObject $record) {
-    $this->queue->createItem(new PullQueueItem($record, $mapping));
+  public function enqueueRecord(SalesforceMappingInterface $mapping, SObject $record, $force_pull = FALSE) {
+    $this->queue->createItem(new PullQueueItem($record, $mapping, $force_pull));
   }
 
 }

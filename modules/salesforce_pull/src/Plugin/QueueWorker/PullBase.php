@@ -109,10 +109,10 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     // @TODO one-to-many: this is a blocker for OTM support:
     $mapped_object = current($mapped_object);
     if (!empty($mapped_object)) {
-      return $this->updateEntity($mapping, $mapped_object, $sf_object);
+      return $this->updateEntity($mapping, $mapped_object, $sf_object, $item->force_pull);
     }
     else {
-      return $this->createEntity($mapping, $sf_object);
+      return $this->createEntity($mapping, $sf_object, $item->force_pull);
     }
 
   }
@@ -126,8 +126,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *   SF Mmapped object.
    * @param SObject $sf_object
    *   Current Salesforce record array.
+   * @param bool $force
    */
-  protected function updateEntity(SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object, SObject $sf_object) {
+  protected function updateEntity(SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object, SObject $sf_object, $force_pull = FALSE) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
       return;
     }
@@ -187,7 +188,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
       );
 
-      if ($sf_record_updated > $entity_updated || $mapped_object->force_pull) {
+      if ($sf_record_updated > $entity_updated || $mapped_object->force_pull || $force_pull) {
         // Set fields values on the Drupal entity.
         $mapped_object->pull();
         $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, 'Updated entity %label associated with Salesforce Object ID: %sfid', ['%label' => $entity->label(), '%sfid' => (string) $sf_object->id()]));
@@ -217,8 +218,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *   Object of field maps.
    * @param SObject $sf_object
    *   Current Salesforce record array.
+   * @param bool $force_pull
    */
-  protected function createEntity(SalesforceMappingInterface $mapping, SObject $sf_object) {
+  protected function createEntity(SalesforceMappingInterface $mapping, SObject $sf_object, $force_pull = FALSE) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE])) {
       return;
     }

@@ -172,10 +172,16 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    *
    * @param array $mapped_fields
    *   Fetch only these fields, if given, otherwise fetch all mapped fields.
+   * @param int $start
+   *   Timestamp of starting window from which to pull records. If omitted, use
+   *   ::getLastPullTime()
+   * @param int $stop
+   *   Timestamp of ending window from which to pull records. If omitted, use 
+   *   "now"
    *
    * @return \Drupal\salesforce\SelectQuery
    */
-  public function getPullQuery(array $mapped_fields = []);
+  public function getPullQuery(array $mapped_fields = [], $start = 0, $stop = 0);
   
   /**
    * Returns a timstamp when the push queue was last processed for this mapping.
