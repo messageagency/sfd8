@@ -13,6 +13,9 @@ use Drupal\salesforce\Rest\RestClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Datetime\DateFormatterInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Adapter for entity Token and fields.
@@ -30,8 +33,8 @@ class Token extends SalesforceMappingFieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityManagerInterface $entity_manager, TokenService $token) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_bundle_info, $entity_field_manager, $rest_client, $entity_manager);
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityManagerInterface $entity_manager, EntityTypeManagerInterface $etm, DateFormatterInterface $dateFormatter, EventDispatcherInterface $event_dispatcher, TokenService $token) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_bundle_info, $entity_field_manager, $rest_client, $entity_manager, $etm,  $dateFormatter,  $event_dispatcher);
     $this->token = $token;
   }
 
@@ -44,6 +47,9 @@ class Token extends SalesforceMappingFieldPluginBase {
       $container->get('entity_field.manager'),
       $container->get('salesforce.client'),
       $container->get('entity.manager'),
+      $container->get('entity_type.manager'),
+      $container->get('date.formatter'),
+      $container->get('event_dispatcher'),
       $container->get('token')
     );
   }
