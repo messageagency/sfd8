@@ -107,8 +107,8 @@ class QueueHandlerTest extends UnitTestCase {
 
     // mock state
     $prophecy = $this->prophesize(StateInterface::CLASS);
-    $prophecy->get('salesforce.sobject_pull_info', Argument::any())->willReturn(['default' => ['last_pull_timestamp' => '0']]);
-    $prophecy->set('salesforce.sobject_pull_info', Argument::any())->willReturn(null);
+    $prophecy->get('salesforce.mapping_pull_info', Argument::any())->willReturn([1 => ['last_pull_timestamp' => '0']]);
+    $prophecy->set('salesforce.mapping_pull_info', Argument::any())->willReturn(null);
     $this->state = $prophecy->reveal();
 
     // mock event dispatcher

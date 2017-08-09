@@ -12,7 +12,7 @@ use Drupal\salesforce_pull\QueueHandler;
  */
 function salesforce_pull_uninstall() {
   $delete = [
-    'salesforce.sobject_pull_info',
+    'salesforce.mapping_pull_info',
   ];
   \Drupal::state()->deleteMultiple($delete);
 }
@@ -20,7 +20,7 @@ function salesforce_pull_uninstall() {
 /**
  * Convert per-object pull timestamp key-values into one big array.
  */
-function salesforce_pull_update_1() {
+function salesforce_pull_update_8002() {
   $pull_info = [];
   $delete = [];
   $objects = \Drupal::service('salesforce.client')->objects();
@@ -66,10 +66,30 @@ function salesforce_pull_update_8001() {
 /**
  * Moves global pull limit out of state into config
  */
-function salesforce_pull_update_3() {
+function salesforce_pull_update_8003() {
   $config = \Drupal::configFactory()->getEditable('salesforce.settings');
   $config
     ->set('pull_max_queue_size', \Drupal::state()->get('salesforce.pull_max_queue_size'))
     ->save();
   \Drupal::state()->delete('salesforce.pull_max_queue_size');
 }
+
+/**
+ * Refactor pull timestamps, again, into per-mapping timestamps.
+ */
+function salesforce_pull_update_8004() {
+  $pull_info = \Drupal::state()->get('salesforce.sobject_pull_info', $pull_info);
+  $mappings = \Drupal::entityTypeManager()->getStorage('salesforce_mapping')->loadMultiple();
+  $new_pull_info = [];
+  foreach ($mappings as $mapping) {
+    $sobject_type = $mapping->getSalesforceObjectType();
+    if (empty($pull_info[$sobject_type])) {
+      continue;
+    }
+    $mapping_pull_info = $pull_info[$sobject_type];
+    $new_pull_info[$mapping->id()] = $mapping_pull_info;
+  }
+  \Drupal::state()->set('salesforce.mapping_pull_info', $mapping_pull_info);
+  \Drupal::state()->delete('salesforce.sobject_pull_info');
+}
+

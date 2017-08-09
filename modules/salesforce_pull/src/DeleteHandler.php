@@ -93,9 +93,13 @@ class DeleteHandler {
    */
   public function processDeletedRecords() {
     // @TODO Add back in SOAP, and use autoloading techniques
-    $pull_info = $this->state->get('salesforce.sobject_pull_info', []);
-    foreach (array_reverse($this->mappingStorage->getMappedSobjectTypes()) as $type) {
-      $last_delete_sync = !empty($pull_info[$type]['last_delete_timestamp'])
+    $pull_info = $this->state->get('salesforce.mapping_pull_info', []);
+    foreach ($this->mappingStorage->loadMultiple() as $mapping) {
+      if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
+        continue;
+      }
+      // @TODO add some accommodation to handle deleted records per-mapping.
+      $last_delete_sync = !empty($pull_info[$mapping->id()]['last_delete_timestamp'])
         ? $pull_info[$type]['last_delete_timestamp']
         : strtotime('-29 days');
       $now = time();
@@ -108,10 +112,10 @@ class DeleteHandler {
       }
       $last_delete_sync_sf = gmdate('Y-m-d\TH:i:s\Z', $last_delete_sync);
       $now_sf = gmdate('Y-m-d\TH:i:s\Z', $now);
-      $deleted = $this->sfapi->getDeleted($type, $last_delete_sync_sf, $now_sf);
-      $this->handleDeletedRecords($deleted, $type);
-      $pull_info[$type]['last_delete_timestamp'] = $now;
-      $this->state->set('salesforce.sobject_pull_info', $pull_info);
+      $deleted = $this->sfapi->getDeleted($mapping->getSalesforceObjectType(), $last_delete_sync_sf, $now_sf);
+      $this->handleDeletedRecords($deleted, $mapping->getSalesforceObjectType());
+      $pull_info[$mapping->id()]['last_delete_timestamp'] = $now;
+      $this->state->set('salesforce.mapping_pull_info', $pull_info);
     }
     return TRUE;
   }

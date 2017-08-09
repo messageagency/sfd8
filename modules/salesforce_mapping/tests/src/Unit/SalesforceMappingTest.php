@@ -101,7 +101,7 @@ class SalesforceMappingTest extends UnitTestCase {
 
     // mock state
     $prophecy = $this->prophesize(StateInterface::CLASS);
-    $prophecy->get('salesforce.sobject_pull_info', Argument::any())->willReturn([]);
+    $prophecy->get('salesforce.mapping_pull_info', Argument::any())->willReturn([]);
     $prophecy->get('salesforce.mapping_push_info', Argument::any())->willReturn([$this->id => [
       'last_timestamp' => 0,
     ]]);

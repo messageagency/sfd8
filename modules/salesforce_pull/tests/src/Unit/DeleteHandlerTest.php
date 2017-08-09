@@ -103,8 +103,8 @@ class DeleteHandlerTest extends UnitTestCase {
     $prophecy = $this->prophesize(SalesforceMappingStorage::CLASS);
     $prophecy->loadByProperties(Argument::any())->willReturn([$this->mapping]);
     $prophecy->load(Argument::any())->willReturn($this->mapping);
-    $prophecy->getMappedSobjectTypes()->willReturn([
-      'default'
+    $prophecy->loadMultiple()->willReturn([
+      $this->mapping
     ]);
     $this->configStorage = $prophecy->reveal();
 
@@ -130,8 +130,8 @@ class DeleteHandlerTest extends UnitTestCase {
 
     // Mock state.
     $prophecy = $this->prophesize(StateInterface::CLASS);
-    $prophecy->get('salesforce.sobject_pull_info', Argument::any())->willReturn(['default' => ['last_delete_timestamp' => '1485787434']]);
-    $prophecy->set('salesforce.sobject_pull_info', Argument::any())->willReturn(null);
+    $prophecy->get('salesforce.mapping_pull_info', Argument::any())->willReturn([1 => ['last_delete_timestamp' => '1485787434']]);
+    $prophecy->set('salesforce.mapping_pull_info', Argument::any())->willReturn(null);
     $this->state = $prophecy->reveal();
 
    // mock event dispatcher

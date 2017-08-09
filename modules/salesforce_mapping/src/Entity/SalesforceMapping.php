@@ -242,14 +242,14 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     }
     $this->push_info = $push_info[$this->id()];
 
-    $pull_info = $this->state()->get('salesforce.sobject_pull_info', []);
-    if (empty($pull_info[$this->getSalesforceObjectType()])) {
-      $pull_info[$this->getSalesforceObjectType()] = [
+    $pull_info = $this->state()->get('salesforce.mapping_pull_info', []);
+    if (empty($pull_info[$this->id()])) {
+      $pull_info[$this->id()] = [
         'last_pull_timestamp' => 0,
         'last_delete_timestamp' => 0,
       ];
     }
-    $this->pull_info = $pull_info[$this->getSalesforceObjectType()];    
+    $this->pull_info = $pull_info[$this->id()];
   }
 
   /**
@@ -517,9 +517,9 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    */
   protected function setPullInfo($key, $value) {
     $this->pull_info[$key] = $value;
-    $pull_info = $this->state()->get('salesforce.sobject_pull_info');
-    $pull_info[$this->getSalesforceObjectType()] = $this->pull_info;
-    $this->state()->set('salesforce.sobject_pull_info', $pull_info);
+    $pull_info = $this->state()->get('salesforce.mapping_pull_info');
+    $pull_info[$this->id()] = $this->pull_info;
+    $this->state()->set('salesforce.mapping_pull_info', $pull_info);
     return $this;
   }
 
