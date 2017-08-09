@@ -20,15 +20,17 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceWarningEvent;
+use Drupal\salesforce\Exception as SalesforceException;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-  
+
 /**
  * Defines a base Salesforce Mapping Field Plugin implementation.
  * Extenders need to implement SalesforceMappingFieldPluginInterface::value() and
@@ -99,8 +101,8 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, 
-      $container->get('entity_type.bundle.info'),   
+    return new static($configuration, $plugin_id, $plugin_definition,
+      $container->get('entity_type.bundle.info'),
       $container->get('entity_field.manager'),
       $container->get('salesforce.client'),
       $container->get('entity.manager'),
@@ -130,7 +132,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
       return $value;
     }
 
-    // objectDescribe can throw an exception, but that's outside the scope of 
+    // objectDescribe can throw an exception, but that's outside the scope of
     // being handled here. Allow it to percolate.
     $describe = $this
       ->salesforceClient
@@ -196,6 +198,92 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
 
     if ($field_definition['length'] > 0 && strlen($value) > $field_definition['length']) {
       $value = substr($value, 0, $field_definition['length']);
+    }
+
+    return $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function pullValue(SObject $sf_object, EntityInterface $entity, SalesforceMappingInterface $mapping) {
+    // @TODO to provide for better extensibility, this would be better implemented as some kind of constraint or plugin system. That would also open new possibilities for injecting business logic into he mapping layer.
+
+    if (!$this->pull() || empty($this->config('salesforce_field'))) {
+      throw new SalesforceException('No data to pull. Salesforce field mapping is not defined.');
+    }
+
+    $value = $sf_object->field($this->config('salesforce_field'));
+
+    // objectDescribe can throw an exception, but that's outside the scope of
+    // being handled here. Allow it to percolate.
+    $describe = $this
+      ->salesforceClient
+      ->objectDescribe($mapping->getSalesforceObjectType());
+
+    $field_definition = $describe->getField($this->config('salesforce_field'));
+
+    $drupal_field_definition = $entity->get($this->config('drupal_field_value'))
+      ->getFieldDefinition()
+      ->getItemDefinition();
+    // @TODO this will need to be rewritten for https://www.drupal.org/node/2899460
+    $drupal_field_type = $drupal_field_definition
+      ->getPropertyDefinition($drupal_field_definition->getMainPropertyName())
+      ->getDataType();
+    $drupal_field_settings = $drupal_field_definition->getSettings();
+
+    switch (strtolower($field_definition['type'])) {
+      case 'boolean':
+        if (is_string($value) && strtolower($value) === 'false') {
+          $value = FALSE;
+        }
+        $value = (bool) $value;
+        break;
+
+      case 'datetime':
+        if ($drupal_field_type === 'datetime_iso8601') {
+          $value = substr($value, 0, 19);
+        }
+        break;
+
+      case 'double':
+        $value = (double) $value;
+        break;
+
+      case 'integer':
+        $value = (int) $value;
+        break;
+
+      case 'multipicklist':
+        if (!is_array($value)) {
+          $value = explode(';', $value);
+          $value = array_map('trim', $value);
+        }
+        break;
+
+      case 'id':
+      case 'reference':
+        if (empty($value)) {
+          break;
+        }
+        // If value is an SFID, cast to string.
+        if ($value instanceof SFID) {
+          $value = (string) $value;
+        }
+        // Otherwise, send it through SFID constructor & cast to validate.
+        else {
+          $value = (string) (new SFID($value));
+        }
+        break;
+
+      default:
+        if (is_string($value)) {
+          if (isset($drupal_field_settings['max_length']) && $drupal_field_settings['max_length'] > 0 && $drupal_field_settings['max_length'] < strlen($value)) {
+            $value = substr($value, 0, $drupal_field_settings['max_length']);
+          }
+        }
+        break;
+
     }
 
     return $value;
@@ -288,14 +376,14 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * Implements PluginFormInterface::validateConfigurationForm().
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    
+
   }
 
   /**
    * Implements PluginFormInterface::submitConfigurationForm().
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    
+
   }
 
   /**
@@ -323,7 +411,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * @see \Drupal\Core\Entity\EntityInterface::getConfigDependencyName()
    */
   public function calculateDependencies() {
-    
+
   }
 
   /**
@@ -354,7 +442,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    */
   public function push() {
     return in_array($this->config('direction'), [
-      MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF, 
+      MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF,
       MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC
     ]);
   }
@@ -366,7 +454,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    */
   public function pull() {
     return in_array($this->config('direction'), [
-      MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC, 
+      MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC,
       MappingConstants::SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL
     ]);
   }

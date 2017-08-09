@@ -5,8 +5,9 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
+use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
+use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 
 /**
  * Adapter for entity Reference and fields.
@@ -75,6 +76,34 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
       return $mapping->sfid();
     }
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function pullValue(SObject $sf_object, EntityInterface $entity, SalesforceMappingInterface $mapping) {
+
+    if (!$this->pull() || empty($this->config('salesforce_field'))) {
+      throw new SalesforceException('No data to pull. Salesforce field mapping is not defined.');
+    }
+
+    $value = $sf_object->field($this->config('salesforce_field'));
+
+    // If value is not an SFID, make it one.
+    if (!($value instanceof SFID)) {
+      $value = new SFID($value);
+    }
+
+    // Convert SF Id to Drupal Id.
+    $referenced_mappings = $this->mapped_object_storage->loadBySfid($value);
+    if (!empty($referenced_mappings)) {
+      $mapped_object = reset($referenced_mappings);
+      return $mapped_object->getMappedEntity()->id();
+    }
+    else {
+      throw new SalesforceException('No Drupal entity mapped to the Salesforce Id.');
+    }
+  }
+
 
   /**
    *

@@ -202,8 +202,6 @@ class MappedObjectForm extends ContentEntityForm {
 
     // Pull from SF.
     $mapped_object->pull();
-    $mapped_object->setNewRevision(TRUE);
-    $mapped_object->save();
 
     // @TODO: more verbose feedback for successful pull.
     drupal_set_message('Pull successful.');

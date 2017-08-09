@@ -3,6 +3,7 @@
 namespace Drupal\salesforce_mapping;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
 /**
@@ -54,11 +55,23 @@ interface SalesforceMappingFieldPluginInterface {
    * validation against Salesforce field types to protect against basic data
    * errors.
    *
-   * @param EntityInterface $entity 
-   * @param SalesforceMappingInterface $mapping 
+   * @param EntityInterface $entity
+   * @param SalesforceMappingInterface $mapping
    * @return mixed
    */
   public function pushValue(EntityInterface $entity, SalesforceMappingInterface $mapping);
+
+  /**
+   * An extension of ::value, ::pullValue does some basic type-checking and
+   * validation against Drupal field types to protect against basic data
+   * errors.
+   *
+   * @param SObject $sf_object
+   * @param EntityInterface $entity
+   * @param SalesforceMappingInterface $mapping
+   * @return mixed
+   */
+  public function pullValue(SObject $sf_object, EntityInterface $entity, SalesforceMappingInterface $mapping);
 
   /**
    * Given a SF Mapping, return TRUE or FALSE whether this field plugin can be
@@ -75,8 +88,8 @@ interface SalesforceMappingFieldPluginInterface {
   /**
    * Get/set a key-value config pair for this plugin.
    *
-   * @param string $key 
-   * @param mixed $value 
+   * @param string $key
+   * @param mixed $value
    */
   public function config($key = NULL, $value = NULL);
 

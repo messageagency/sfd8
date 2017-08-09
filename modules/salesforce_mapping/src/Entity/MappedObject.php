@@ -481,9 +481,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // @TODO better way to handle push/pull:
     $fields = $mapping->getPullFields();
     foreach ($fields as $field) {
-      // @TODO: The field plugin should be in charge of setting its value on an entity, we should not assume the field plugin's logic as we're doing here.
       try {
-        $value = $this->sf_object->field($field->get('salesforce_field'));
+        $value = $field->pullValue($this->sf_object, $this->drupal_entity, $mapping);
       }
       catch (\Exception $e) {
         // Field missing from SObject? Skip it.
