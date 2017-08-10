@@ -1,3 +1,24 @@
 salesforce_mapping.entities:
   class: \Drupal\Core\Menu\LocalTaskDefault
   deriver: \Drupal\salesforce_mapping\Plugin\Derivative\SalesforceMappingLocalTask
+
+salesforce_mapped_object.admin:
+  title: Salesforce
+  base_route: system.admin_content
+  route_name: entity.salesforce_mapped_object.list
+
+entity.salesforce_mapped_object.canonical:
+  route_name: entity.salesforce_mapped_object.canonical
+  base_route: entity.salesforce_mapped_object.canonical
+  title: 'View'
+
+entity.salesforce_mapped_object.edit_form:
+  route_name: entity.salesforce_mapped_object.edit_form
+  base_route: entity.salesforce_mapped_object.canonical
+  title: 'Edit'
+
+entity.salesforce_mapped_object.delete_form:
+  route_name: entity.salesforce_mapped_object.delete_form
+  base_route: entity.salesforce_mapped_object.canonical
+  title: 'Delete'
+  weight: 10

@@ -3,8 +3,8 @@ services:
     class: Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager
     arguments: ['@container.namespaces', '@cache.default', '@module_handler']
 
-  salesforce_mapping.route_subscriber:
-    class: Drupal\salesforce_mapping\Routing\RouteSubscriber
-    arguments: ['@entity_type.manager']
-    tags:
-      - { name: event_subscriber }
+  # salesforce_mapping.route_subscriber:
+  #   class: Drupal\salesforce_mapping\Routing\RouteSubscriber
+  #   arguments: ['@entity_type.manager']
+  #   tags:
+  #     - { name: event_subscriber }

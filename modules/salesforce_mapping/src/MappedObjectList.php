@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
+use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -75,11 +76,27 @@ class MappedObjectList extends EntityListBuilder {
    * and inserts the 'edit' and 'delete' links as defined for the entity type.
    */
   public function buildHeader() {
-    $header['id'] = $this->t('ID');
-    $header['entity_id'] = $this->t('Entity ID');
-    $header['entity_type'] = $this->t('Entity Type');
+    $header['id'] = [
+      'data' => $this->t('ID'),
+      'class' => [RESPONSIVE_PRIORITY_LOW],
+    ];
+    $header['entity_id'] = [
+      'data' => $this->t('Entity ID'),
+      'class' => [RESPONSIVE_PRIORITY_MEDIUM],
+    ];
+    $header['entity_type'] = [
+      'data' => $this->t('Entity Type'),
+      'class' => [RESPONSIVE_PRIORITY_MEDIUM],
+    ];
     $header['salesforce_id'] = $this->t('Salesforce ID');
-    $header['changed'] = $this->t('Last Updated');
+    $header['mapping'] = [
+      'data' => $this->t('Mapping'),
+      'class' => [RESPONSIVE_PRIORITY_MEDIUM],
+    ];
+    $header['changed'] = [
+      $this->t('Last Updated'),
+      'class' => [RESPONSIVE_PRIORITY_LOW],
+    ];
     return $header + parent::buildHeader();
   }
 
@@ -91,9 +108,32 @@ class MappedObjectList extends EntityListBuilder {
     $row['id'] = $entity->id();
     $row['entity_id'] = $entity->entity_id->value;
     $row['entity_type'] = $entity->entity_type_id->value;
-    $row['salesforce_id'] = $entity->sfid();
+    $row['salesforce_id']['data'] = [
+      '#type' => 'link',
+      '#title' => $entity->sfid(),
+      '#url' => Url::fromUri($entity->getSalesforceUrl()),
+    ];
+    $row['mapping']['data'] = [
+      '#type' => 'link',
+      '#title' => $entity->getMapping()->label(),
+      '#url' => $entity->getMapping()->urlInfo(),
+    ];
     $row['changed'] = $entity->changed->value;
     return $row + parent::buildRow($entity);
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOperations(EntityInterface $entity) {
+    $operations['view'] = [
+      'title' => $this->t('View'),
+      'weight' => -100,
+      'url' => $entity->urlInfo('canonical')
+    ];
+    $operations += parent::getDefaultOperations($entity);
+    return $operations;
+  }
+
 
 }

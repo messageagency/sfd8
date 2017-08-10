@@ -1,0 +1,10 @@
+entity.salesforce_mapped_object.edit_form:
+  route_name: entity.salesforce_mapped_object.edit_form
+  group: salesforce_mapped_object
+  title: Edit
+
+entity.salesforce_mapped_object.delete_form:
+  route_name: entity.salesforce_mapped_object.delete_form
+  group: salesforce_mapped_object
+  title: Delete
+  weight: 10

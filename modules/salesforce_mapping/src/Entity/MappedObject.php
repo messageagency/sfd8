@@ -34,7 +34,7 @@ use Drupal\salesforce_mapping\PushParams;
  *   handlers = {
  *     "storage" = "Drupal\salesforce_mapping\MappedObjectStorage",
  *     "storage_schema" = "Drupal\salesforce_mapping\MappedObjectStorageSchema",
- *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
+ *     "view_builder" = "Drupal\salesforce_mapping\MappedObjectViewBuilder",
 *      "views_data" = "Drupal\views\EntityViewsData",
  *     "list_builder" = "Drupal\salesforce_mapping\MappedObjectList",
  *     "form" = {
@@ -48,6 +48,11 @@ use Drupal\salesforce_mapping\PushParams;
  *   base_table = "salesforce_mapped_object",
  *   revision_table = "salesforce_mapped_object_revision",
  *   admin_permission = "administer salesforce mapping",
+ *   links = {
+ *     "canonical" = "/admin/content/salesforce/{salesforce_mapped_object}",
+ *     "edit-form" = "/admin/content/salesforce/{salesforce_mapped_object}/edit",
+ *     "delete-form" = "/admin/content/salesforce/{salesforce_mapped_object}/delete"
+ *   },
  *   entity_keys = {
  *      "id" = "id",
  *      "entity_id" = "entity_id",

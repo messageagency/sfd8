@@ -58,25 +58,25 @@ entity.salesforce_mapped_object.list:
   requirements:
     _permission: 'administer salesforce mapped objects'
   
-entity.salesforce_mapped_object.edit:
-  path: '/admin/content/salesforce/{entity_type}/{entity}'
+entity.salesforce_mapped_object.canonical:
+  path: '/admin/content/salesforce/{salesforce_mapped_object}'
   defaults:
-    _entity_form: salesforce_mapped_object.edit
+    _title: 'Salesforce Mapped Object'
+    _entity_view: 'salesforce_mapped_object.full'
+  requirements:
+    _permission: 'administer salesforce mapped objects'
+
+entity.salesforce_mapped_object.edit_form:
+  path: '/admin/content/salesforce/{salesforce_mapped_object}/edit'
+  defaults:
+    _entity_form: 'salesforce_mapped_object.edit'
     _title: 'Salesforce Mapped Object'
   requirements:
     _permission: 'administer salesforce mapped objects'
-  options:
-    parameters:
-      entity:
-        type: entity:{entity_type}
-  
 
-# @TODO: make enable/disable work like views:
-# @TODO: remove it from tabs and make it a checkbox on the properties form
-# views_ui.operation:
-#   path: '/admin/structure/views/view/{view}/{op}'
-#   defaults:
-#     _controller: '\Drupal\views_ui\Controller\ViewsUIController::ajaxOperation'
-#   requirements:
-#     _permission: 'administer views'
-#     op: 'enable|disable'
+entity.salesforce_mapped_object.delete_form:
+  path: '/admin/content/salesforce/{salesforce_mapped_object}/delete'
+  defaults:
+    _entity_form: 'salesforce_mapped_object.delete'
+  requirements:
+    _permission: 'administer salesforce mapped objects'
