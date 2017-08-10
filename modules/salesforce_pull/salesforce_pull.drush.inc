@@ -89,8 +89,8 @@ function drush_salesforce_pull_sf_pull_query($name) {
   $where = drush_get_option('where');
   
   if (!($soql = $mapping->getPullQuery([], $start, $stop))) {
-    drush_log(dt('!mapping: Unable to generate pull query. Does this mapping have any Salesforce Action Triggers enabled?', ['!mapping' => $mapping->id()]), 'warning');
-    continue;
+    drush_log(dt('!mapping: Unable to generate pull query. Does this mapping have any Salesforce Action Triggers enabled?', ['!mapping' => $mapping->id()]), 'error');
+    return;
   }
 
   if ($where) {
