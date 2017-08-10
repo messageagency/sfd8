@@ -10,6 +10,7 @@
  */
 function salesforce_push_drush_command() {
   $items['sf-push-queue'] = [
+    'category' => 'salesforce',
     'description' => 'Process push queues (as though during cron) for one or all Salesforce Mappings.',
     'aliases' => ['sfpushq', 'sfpm'],
     'arguments' => [
