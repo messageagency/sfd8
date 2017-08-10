@@ -95,3 +95,11 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
       ->save();
   }
 }
+
+/**
+ * Implements hook_field_formatter_info_alter().
+ */
+function salesforce_mapping_field_formatter_info_alter(array &$info) {
+  $info['link']['field_types'][] = 'mapped_entity_link';
+  $info['link']['field_types'][] = 'salesforce_link';
+}

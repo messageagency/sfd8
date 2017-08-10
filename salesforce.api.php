@@ -18,7 +18,7 @@
  */
 
 /**
- * Use the SalesforceMappinfField plugin system.
+ * Use the SalesforceMappingField plugin system.
  * @see Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Properties
  */
 function hook_salesforce_mapping_fieldmap_type() {}

@@ -20,6 +20,7 @@ use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
 use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_mapping\PushParams;
+use Drupal\salesforce_mapping\Plugin\Field\ComputedItemList;
 
 /**
  * Defines a Salesforce Mapped Object entity class.
@@ -34,7 +35,7 @@ use Drupal\salesforce_mapping\PushParams;
  *   handlers = {
  *     "storage" = "Drupal\salesforce_mapping\MappedObjectStorage",
  *     "storage_schema" = "Drupal\salesforce_mapping\MappedObjectStorageSchema",
- *     "view_builder" = "Drupal\salesforce_mapping\MappedObjectViewBuilder",
+ *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
 *      "views_data" = "Drupal\views\EntityViewsData",
  *     "list_builder" = "Drupal\salesforce_mapping\MappedObjectList",
  *     "form" = {
@@ -124,9 +125,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         'type' => 'hidden',
       ])
       ->setDisplayOptions('view', [
-        'label' => 'above',
-        'type' => 'string',
-        'weight' => $i++,
+        'type' => 'hidden',
       ]);
 
     $fields['entity_type_id'] = BaseFieldDefinition::create('string')
@@ -138,6 +137,17 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setDisplayOptions('form', [
         'type' => 'hidden',
       ])
+      ->setDisplayOptions('view', [
+        'type' => 'hidden',
+      ]);
+
+    $fields['mapped_entity'] = BaseFieldDefinition::create('mapped_entity_link')
+      ->setLabel('Mapped Entity')
+      ->setDescription(t('Link to mapped entity'))
+      ->setRevisionable(FALSE)
+      ->setTranslatable(FALSE)
+      ->setComputed(TRUE)
+      ->setClass(ComputedItemList::class)
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'string',
@@ -178,6 +188,17 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         'type' => 'string_textfield',
         'weight' => 0,
       ])
+      ->setDisplayOptions('view', [
+        'type' => 'hidden',
+      ]);
+
+    $fields['salesforce_link'] = BaseFieldDefinition::create('salesforce_link')
+      ->setLabel('Salesforce Record')
+      ->setDescription(t('Link to salesforce record'))
+      ->setRevisionable(FALSE)
+      ->setTranslatable(FALSE)
+      ->setComputed(TRUE)
+      ->setClass(ComputedItemList::class)
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'string',

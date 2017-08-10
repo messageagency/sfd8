@@ -80,15 +80,11 @@ class MappedObjectList extends EntityListBuilder {
       'data' => $this->t('ID'),
       'class' => [RESPONSIVE_PRIORITY_LOW],
     ];
-    $header['entity_id'] = [
-      'data' => $this->t('Entity ID'),
+    $header['mapped_entity'] = [
+      'data' => $this->t('Entity'),
       'class' => [RESPONSIVE_PRIORITY_MEDIUM],
     ];
-    $header['entity_type'] = [
-      'data' => $this->t('Entity Type'),
-      'class' => [RESPONSIVE_PRIORITY_MEDIUM],
-    ];
-    $header['salesforce_id'] = $this->t('Salesforce ID');
+    $header['salesforce_link'] = $this->t('Salesforce Record');
     $header['mapping'] = [
       'data' => $this->t('Mapping'),
       'class' => [RESPONSIVE_PRIORITY_MEDIUM],
@@ -106,13 +102,8 @@ class MappedObjectList extends EntityListBuilder {
   public function buildRow(EntityInterface $entity) {
     /* @var $entity \Drupal\salesforce_mapping\MappedObject */
     $row['id'] = $entity->id();
-    $row['entity_id'] = $entity->entity_id->value;
-    $row['entity_type'] = $entity->entity_type_id->value;
-    $row['salesforce_id']['data'] = [
-      '#type' => 'link',
-      '#title' => $entity->sfid(),
-      '#url' => Url::fromUri($entity->getSalesforceUrl()),
-    ];
+    $row['mapped_entity']['data'] = $entity->mapped_entity->first()->view();
+    $row['salesforce_link']['data'] = $entity->salesforce_link->first()->view();
     $row['mapping']['data'] = [
       '#type' => 'link',
       '#title' => $entity->getMapping()->label(),
