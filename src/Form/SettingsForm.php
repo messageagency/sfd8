@@ -84,7 +84,15 @@ class SettingsForm extends ConfigFormBase {
       '#description' => $this->t('Always use the latest Rest API version when connecting to Salesforce. In general, Rest API is backwards-compatible for many years. Unless you have a very specific reason, you should probably just use the latest version.'),
       '#default_value' => $config->get('use_latest'),
     ];
-    $versions = $this->getVersionOptions();
+    $versions = [];
+    try {
+      $versions = $this->getVersionOptions();
+    }
+    catch (\Exception $e) {
+      $href = new Url('salesforce.authorize');
+      drupal_set_message($this->t('Error when connecting to Salesforce. Please <a href="@href">check your credentials</a> and try again: %message', ['@href' => $href->toString(), '%message' => $e->getMessage()]), 'error');
+    }
+
     $form['rest_api_version'] = [
       '#title' => $this->t('Select a specific Rest API version'),
       '#type' => 'select',
