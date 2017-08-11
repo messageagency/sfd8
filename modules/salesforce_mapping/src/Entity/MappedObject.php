@@ -51,6 +51,7 @@ use Drupal\salesforce_mapping\Plugin\Field\ComputedItemList;
  *   admin_permission = "administer salesforce mapping",
  *   links = {
  *     "canonical" = "/admin/content/salesforce/{salesforce_mapped_object}",
+ *     "add-form" = "/admin/content/salesforce/add",
  *     "edit-form" = "/admin/content/salesforce/{salesforce_mapped_object}/edit",
  *     "delete-form" = "/admin/content/salesforce/{salesforce_mapped_object}/delete"
  *   },

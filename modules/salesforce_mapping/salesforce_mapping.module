@@ -11,16 +11,24 @@ use Drupal\Core\Entity\EntityInterface;
 /**
  * Implements hook_entity_type_alter().
  */
-// function salesforce_mapping_entity_type_alter(array &$entity_types) {
-//   /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
-//   foreach ($entity_types as $entity_type_id => $entity_type) {
-//     if ($entity_type->hasViewBuilderClass() && $entity_type->hasLinkTemplate('canonical')) {
-//       $entity_type->setLinkTemplate('salesforce', "/$entity_type_id/{{$entity_type_id}}/salesforce");
-//       $entity_type->setLinkTemplate('salesforce_edit', "/$entity_type_id/{{$entity_type_id}}/salesforce/edit");
-//       $entity_type->setLinkTemplate('salesforce_delete', "/$entity_type_id/{{$entity_type_id}}/salesforce/delete");
-//     }
-//   }
-// }
+function salesforce_mapping_entity_type_alter(array &$entity_types) {
+  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    if ($entity_type->hasViewBuilderClass() && $entity_type->hasLinkTemplate('canonical')) {
+      $entity_type->setLinkTemplate('salesforce', "/$entity_type_id/{{$entity_type_id}}/salesforce");
+      $entity_type->setLinkTemplate('salesforce_add', "/$entity_type_id/{{$entity_type_id}}/salesforce/add");
+    }
+  }
+}
+
+function salesforce_mapping_menu_local_actions_alter(&$local_actions) {
+  foreach (\Drupal::entityManager()->getDefinitions() as $entity_type_id => $entity_type) {
+    if ($entity_type->hasLinkTemplate('salesforce')) {
+      $local_actions['salesforce_mapped_object.add_action']['appears_on'][] =
+        "entity.$entity_type_id.salesforce";
+    }
+  }
+}
 
 /**
  * Implements hook_entity_operation().

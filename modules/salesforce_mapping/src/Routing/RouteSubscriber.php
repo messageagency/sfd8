@@ -35,14 +35,6 @@ class RouteSubscriber extends RouteSubscriberBase {
   public function __construct(EntityTypeManagerInterface $entity_manager) {
     $this->entityTypeManager = $entity_manager;
   } 
- //  *   links = {
- // *     "canonical" = "/node/{node}",
- // *     "delete-form" = "/node/{node}/delete",
- // *     "edit-form" = "/node/{node}/edit",
- // *     "version-history" = "/node/{node}/revisions",
- // *     "revision" = "/node/{node}/revisions/{node_revision}/view",
- // *   }
-
 
   /**
    * {@inheritdoc}
@@ -50,41 +42,15 @@ class RouteSubscriber extends RouteSubscriberBase {
   protected function alterRoutes(RouteCollection $collection) {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
       // Note the empty operation, so we get the nice clean route "entity.entity-type.salesforce"
-      foreach (['', 'edit', 'delete'] as $op) {
-        if ($route = $this->getMappedObjectRoute($entity_type, $op)) {
-          $sf_route = !empty($op) ? "salesforce_$op" : 'salesforce';
-          $routename = "entity.$entity_type_id.$sf_route";
-          $collection->add($routename, $route);
-        }
+      if (!($path = $entity_type->getLinkTemplate('salesforce'))) {
+        continue;
       }
-    }
-  }
-
-  /**
-   * Gets the devel load route.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type.
-   * @param string $op
-   *   The salesforce mapped object operation. view, edit, add, or delete.
-   *
-   * @return \Symfony\Component\Routing\Route|null
-   *   The generated route, if available.
-   */
-  protected function getMappedObjectRoute(EntityTypeInterface $entity_type, $op) {
-    if ($path = $entity_type->getLinkTemplate('salesforce')) {
-      $entity_type_id = $entity_type->id();
-      if (empty($op)) {
-        $route = new Route($path);
-        $op = 'view';
-      }
-      else {
-        $route = new Route($path . "/$op");
-      }
+      // Create the "listing" route to show all the mapped objects for this entity.
+      $route = new Route($path);
       $route
         ->addDefaults([
-          '_controller' => "\Drupal\salesforce_mapping\Controller\MappedObjectController::$op",
-          '_title' => "Salesforce mapped object $op",
+          '_controller' => "\Drupal\salesforce_mapping\Controller\MappedObjectController::listing",
+          '_title' => "Salesforce mapped objects",
         ])
         ->addRequirements([
           '_permission' => 'administer salesforce',
@@ -94,8 +60,7 @@ class RouteSubscriber extends RouteSubscriberBase {
         ->setOption('parameters', [
           $entity_type_id => ['type' => 'entity:' . $entity_type_id],
         ]);
-
-      return $route;
+      $collection->add("entity.$entity_type_id.salesforce", $route);
     }
   }
 

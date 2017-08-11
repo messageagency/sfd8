@@ -29,9 +29,23 @@ salesforce_mapping.list_action:
     - entity.salesforce_mapping.edit_form
     - entity.salesforce_mapped_object.list
     - entity.salesforce_mapping.fields
+    - entity.salesforce_mapped_object.add_form
 
 salesforce_mapping.edit_action:
   route_name: entity.salesforce_mapping.edit_form
   title: 'Edit Properties'
   appears_on:
     - entity.salesforce_mapping.fields
+
+salesforce_mapped_object.list_action:
+  route_name: entity.salesforce_mapped_object.list
+  title: 'List Mapped Objects'
+  appears_on:
+    - entity.salesforce_mapped_object.add_form
+
+salesforce_mapped_object.add_action:
+  route_name: entity.salesforce_mapped_object.add_form
+  class: '\Drupal\salesforce_mapping\Plugin\Menu\LocalAction\SalesforceMappedObjectAddLocalAction'
+  title: 'Create Mapped Object'
+  appears_on:
+    - entity.salesforce_mapped_object.list

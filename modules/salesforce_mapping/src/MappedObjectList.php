@@ -25,6 +25,13 @@ class MappedObjectList extends EntityListBuilder {
   protected $urlGenerator;
 
   /**
+   * Set entityIds to show a partial listing of mapped objects.
+   *
+   * @var array
+   */
+  protected $entityIds;
+
+  /**
    * {@inheritdoc}
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
@@ -126,5 +133,26 @@ class MappedObjectList extends EntityListBuilder {
     return $operations;
   }
 
+  /**
+   * Set the given entity ids to show only those in a listing of mapped objects.
+   *
+   * @param array $ids 
+   *
+   * @return $this
+   */
+  public function setEntityIds(array $ids) {
+    $this->entityIds = $ids;
+    return $this;
+  }
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEntityIds() {
+    // If we're building a partial list, only query for those entities.
+    if (!empty($this->entityIds)) {
+      return $this->entityIds;
+    }
+    return parent::getEntityIds();
+  }
 
 }

@@ -46,29 +46,19 @@ class MappedObjectController extends ControllerBase {
    *
    * @return MappedObject
    */
-  private function getMappedObject(EntityInterface $entity) {
+  private function getMappedObjects(EntityInterface $entity) {
     // @TODO this probably belongs in a service
-    $result = $this
+    return $this
       ->entityManager()
       ->getStorage('salesforce_mapped_object')
       ->loadByProperties([
         'entity_id' => $entity->id(),
         'entity_type_id' => $entity->getEntityTypeId(),
       ]);
-
-    // @TODO change this to allow one-to-many mapping support.
-    if (!empty($result)) {
-      return current($result);
-    }
-    // If an existing mapping was not found, return a new stub instead.
-    return new MappedObject([
-      'entity_id' => $entity->id(),
-      'entity_type_id' => $entity->getEntityTypeId(),
-    ]);
   }
 
   /**
-   * Prints the loaded structure of the current entity.
+   * List mapped objects for the entity along the current route.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *    A RouteMatch object.
@@ -76,57 +66,18 @@ class MappedObjectController extends ControllerBase {
    * @return array
    *    Array of page elements to render.
    */
-  public function view(RouteMatchInterface $route_match) {
+  public function listing(RouteMatchInterface $route_match) {
     $entity = $this->getEntity($route_match);
-    $salesforce_mapped_object = $this->getMappedObject($entity);
-    if ($salesforce_mapped_object->isNew()) {
+    $salesforce_mapped_objects = $this->getMappedObjects($entity);
+    if (empty($salesforce_mapped_objects)) {
       return [
-        '#markup' => $this->t(
-          'Object is not mapped. <a href="@href">Use the edit form</a> to push or manually set mapping.',
-          ['@href' => $entity->toUrl('salesforce_edit')->toString()]),
+        '#markup' => $this->t('No mapped objects for %label.', ['%label' => $entity->label()])
       ];
     }
 
     // Show the entity view for the mapped object.
-    $builder = $this->entityTypeManager()->getViewBuilder('salesforce_mapped_object');
-    return $builder->view($salesforce_mapped_object);
-  }
-
-  /**
-   * Show the MappedObject entity add/edit form.
-   *
-   * @param RouteMatchInterface $route_match
-   *
-   * @return array
-   *   Renderable form array
-   */
-  public function edit(RouteMatchInterface $route_match) {
-    // Show the "create" form.
-    $entity = $this->getEntity($route_match);
-    $salesforce_mapped_object = $this->getMappedObject($entity);
-    $form = $this->entityFormBuilder()->getForm($salesforce_mapped_object, 'edit');
-    // @TODO add validation for fieldmap options
-    // @TODO add validation of SFID input
-    // @TODO create a new field / data type for SFID (?)
-    return $form;
-  }
-
-  /**
-   * Show the MappedObject delete form.
-   *
-   * @param RouteMatchInterface $route_match
-   *
-   * @return array
-   *   Renderable form array
-   */
-  public function delete(RouteMatchInterface $route_match) {
-    $entity = $this->getEntity($route_match);
-    $salesforce_mapped_object = $this->getMappedObject($entity);
-    if ($salesforce_mapped_object->isNew()) {
-      return ['#markup' => 'Object is not mapped. Use the edit form to push or manually set mapping.'];
-    }
-    $form = $this->entityFormBuilder()->getForm($salesforce_mapped_object, 'delete');
-    return $form;
+    $builder = $this->entityTypeManager()->getListBuilder('salesforce_mapped_object');
+    return $builder->setEntityIds(array_keys($salesforce_mapped_objects))->render();
   }
 
 }
