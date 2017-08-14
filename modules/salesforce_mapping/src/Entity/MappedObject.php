@@ -407,10 +407,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * @return $this
    */
   public function setDrupalEntity(EntityInterface $entity = NULL) {
-    $this->drupal_entity->setValue([
-      'target_id' => $entity->id(),
-      'target_type' => $entity->getEntityTypeId()
-    ]);
+    $this->drupal_entity->setValue($entity);
     return $this;
   }
 
@@ -497,9 +494,9 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
             '@sfobj' => $mapping->getSalesforceObjectType(),
             '@sffield' => $sf_field,
             '@sfid' => $this->sfid(),
-            '@dobj' => $this->entity_type_id->value,
+            '@dobj' => $this->getMappedEntity()->getEntityTypeId(),
             '@dprop' => $drupal_field,
-            '@did' => $this->entity_id->value,
+            '@did' => $this->getMappedEntity()->id(),
             '@v' => $value,
           ];
         $this->eventDispatcher()->dispatch(SalesforceEvents::WARNING, new SalesforceWarningEvent($e, $message, $args));

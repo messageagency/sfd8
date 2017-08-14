@@ -29,9 +29,8 @@ class MappedObjectStorageSchema extends SqlContentEntityStorageSchema {
         ]
       ];
     }
-    $schema['salesforce_mapped_object']['fields']['entity_type_id']['length'] =
+
     $schema['salesforce_mapped_object']['fields']['salesforce_mapping']['length'] =
-    $schema['salesforce_mapped_object_revision']['fields']['entity_type_id']['length'] =
     $schema['salesforce_mapped_object_revision']['fields']['salesforce_mapping']['length'] =
       EntityTypeInterface::ID_MAX_LENGTH;
 

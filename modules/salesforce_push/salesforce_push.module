@@ -92,8 +92,8 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
 
   // Look for existing mapped object or create a new one (except for deletes).
   $props = [
-    'entity_id' => $entity->id(),
-    'entity_type_id' => $entity->getEntityTypeId(),
+    'drupal_entity__target_type' => $entity->getEntityTypeId(),
+    'drupal_entity__target_id' => $entity->id(),
     'salesforce_mapping' => $mapping->id(),
   ];
 

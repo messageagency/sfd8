@@ -8,7 +8,7 @@ use Drupal\salesforce_mapping\MappedObjectStorageSchema;
 /**
  * Copy entity_id-entity_type_id data into new mapped_entity field
  */
-function salesforce_mapping_update_8010(&$sandbox) {
+function salesforce_mapping_update_8001(&$sandbox) {
   if (!\Drupal::moduleHandler()->moduleExists('dynamic_entity_reference')) {
     throw new \Exception('Please enable new dependency dynamic_entity_reference before continuing.');
   }
@@ -57,7 +57,7 @@ function salesforce_mapping_update_8010(&$sandbox) {
 /**
  * Drop vestigial fields manually, since entity update refuses to do it.
  */
-function salesforce_mapping_update_8011() {
+function salesforce_mapping_update_8002() {
   try {
     // drop this index if it exists.
     db_drop_index('salesforce_mapped_object', 'entity__mapping');

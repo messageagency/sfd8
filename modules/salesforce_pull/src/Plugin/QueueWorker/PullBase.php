@@ -134,7 +134,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     }
 
     try {
-      $entity = $this->getMappedEntity($mapped_object);
+      $entity = $mapped_object->getMappedEntity();
       if (!$entity) {
         $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent(NULL, 'Drupal entity existed at one time for Salesforce object %sfobjectid, but does not currently exist.', ['%sfobjectid' => (string) $sf_object->id()]));
         return;
@@ -205,12 +205,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     }
   }
 
-  protected function getMappedEntity($mapped_object) {
-    return $this->etm
-      ->getStorage($mapped_object->entity_type_id->value)
-      ->load($mapped_object->entity_id->value);
-  }
-
   /**
    * Create a Drupal entity and mapped object.
    *
@@ -243,9 +237,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         ->getStorage($entity_type)
         ->create($values);
 
-      // Create mapping object.
+      // Create mapped object.
       $mapped_object = $this->mappedObjectStorage->create([
-        'entity_type_id' => $entity_type,
+        'drupal_entity' => [
+          'target_type' => $entity_type,
+        ],
         'salesforce_mapping' => $mapping->id,
         'salesforce_id' => (string) $sf_object->id(),
       ]);

@@ -93,7 +93,7 @@ class DeleteHandlerTest extends UnitTestCase {
     $this->mappedObject
       ->expects($this->any())
       ->method('getFieldDefinitions')
-      ->willReturn(['entity_type_id', 'entity_id', 'salesforce_mapping']);
+      ->willReturn(['drupal_entity', 'salesforce_mapping']);
     $this->mappedObject
       ->expects($this->any())
       ->method('getMappedEntity')

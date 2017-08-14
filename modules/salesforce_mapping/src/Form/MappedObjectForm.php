@@ -176,8 +176,10 @@ class MappedObjectForm extends ContentEntityForm {
     $mapped_object = $this->entity;
     $mapped_object
       ->set('salesforce_id', $form_state->getValue('salesforce_id'))
-      ->set('entity_id', $drupal_entity->id())
-      ->set('entity_type_id', $drupal_entity->getEntityTypeId())
+      ->set('drupal_entity', [
+        'target_id' => $drupal_entity->id(),
+        'target_type' => $drupal_entity->getEntityTypeId()
+          ])
       ->set('salesforce_mapping', $form_state->getValue('salesforce_mapping'));
 
     // Validate mapped object. Upon failure, rebuild form.
@@ -216,8 +218,10 @@ class MappedObjectForm extends ContentEntityForm {
 
     $errors = $mapped_object
       ->set('salesforce_id', $form_state->getValue('salesforce_id'))
-      ->set('entity_id', $drupal_entity->id())
-      ->set('entity_type_id', $drupal_entity->getEntityTypeId())
+      ->set('drupal_entity', [
+        'target_id' => $drupal_entity->id(),
+        'target_type' => $drupal_entity->getEntityTypeId()
+          ])
       ->set('salesforce_mapping', $form_state->getValue('salesforce_mapping'))
       ->validate();
 

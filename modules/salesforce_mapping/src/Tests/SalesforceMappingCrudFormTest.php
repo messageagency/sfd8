@@ -21,6 +21,7 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
     'salesforce_test_rest_client',
     'salesforce_mapping',
     'user',
+    'link',
     'dynamic_entity_reference',
   ];
 

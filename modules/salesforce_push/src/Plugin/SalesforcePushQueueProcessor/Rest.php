@@ -162,8 +162,8 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
       $mapped_object = $this
         ->mapped_object_storage
         ->loadByProperties([
-          'entity_type_id' => $mapping->drupal_entity_type,
-          'entity_id' => $item->entity_id,
+          'drupal_entity__target_type' => $mapping->drupal_entity_type,
+          'drupal_entity__target_id' => $item->entity_id,
           'salesforce_mapping' => $mapping->id(),
           ]);
     }
@@ -185,8 +185,10 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    */
   protected function createMappedObject(\stdClass $item, SalesforceMappingInterface $mapping) {
     return new MappedObject([
-      'entity_id' => $item->entity_id,
-      'entity_type_id' => $mapping->drupal_entity_type,
+      'drupal_entity' => [
+        'target_id' => $item->entity_id,
+        'target_type' => $mapping->drupal_entity_type,
+      ],
       'salesforce_mapping' => $mapping->id(),
     ]);
   }

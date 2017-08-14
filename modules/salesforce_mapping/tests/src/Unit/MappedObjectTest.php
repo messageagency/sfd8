@@ -42,15 +42,6 @@ class MappedObjectTest extends UnitTestCase {
       'foo' => 'bar',
     ]);
 
-    $values = array(
-      'id' => $this->mapped_object_id,
-      // 'defaultLangcode' => array(LanguageInterface::LANGCODE_DEFAULT => 'en'),
-      'entity_id' => $this->entity_id,
-      'entity_type_id' => $this->entityTypeId,
-      'salesforce_id' => $this->salesforce_id,
-      'salesforce_mapping' => $this->mapping_id,
-    );
-
     $this->sfid = $this->getMockBuilder(SFID::CLASS)
       ->setConstructorArgs([$this->salesforce_id])
       ->getMock();
@@ -126,13 +117,13 @@ class MappedObjectTest extends UnitTestCase {
       ->method('isTranslatable')
       ->willReturn(FALSE);
 
-    $this->fieldDefinitions = array(
-      'id' => BaseFieldDefinition::create('integer'),
-      'entity_id' => BaseFieldDefinition::create('integer'),
-      'entity_type_id' => BaseFieldDefinition::create('string'),
-      'salesforce_id' => BaseFieldDefinition::create('string'),
-      'salesforce_mapping' => BaseFieldDefinition::create('entity_reference'),
-    );
+    // $this->fieldDefinitions = array(
+    //   'id' => BaseFieldDefinition::create('integer'),
+    //   'entity_id' => BaseFieldDefinition::create('integer'),
+    //   'entity_type_id' => BaseFieldDefinition::create('string'),
+    //   'salesforce_id' => BaseFieldDefinition::create('string'),
+    //   'salesforce_mapping' => BaseFieldDefinition::create('entity_reference'),
+    // );
 
     // $this->entityManager->expects($this->any())
     //   ->method('getFieldDefinitions')
