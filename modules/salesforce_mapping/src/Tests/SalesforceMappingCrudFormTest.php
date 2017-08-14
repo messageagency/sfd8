@@ -18,9 +18,10 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
    */
   protected static $modules = [
     'salesforce',
-    'user',
     'salesforce_test_rest_client',
     'salesforce_mapping',
+    'user',
+    'dynamic_entity_reference',
   ];
 
   protected $normalUser;

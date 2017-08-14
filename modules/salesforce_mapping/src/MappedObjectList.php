@@ -108,14 +108,11 @@ class MappedObjectList extends EntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     /* @var $entity \Drupal\salesforce_mapping\MappedObject */
+    $mapping = $entity->getMapping();
     $row['id'] = $entity->id();
-    $row['mapped_entity']['data'] = $entity->mapped_entity->first()->view();
+    $row['mapped_entity']['data'] = $entity->drupal_entity->first()->view();
     $row['salesforce_link']['data'] = $entity->salesforce_link->first()->view();
-    $row['mapping']['data'] = [
-      '#type' => 'link',
-      '#title' => $entity->getMapping()->label(),
-      '#url' => $entity->getMapping()->urlInfo(),
-    ];
+    $row['mapping']['data'] = $entity->salesforce_mapping->first()->view();
     $row['changed'] = $entity->changed->value;
     return $row + parent::buildRow($entity);
   }

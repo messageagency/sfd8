@@ -51,10 +51,7 @@ class MappedObjectController extends ControllerBase {
     return $this
       ->entityManager()
       ->getStorage('salesforce_mapped_object')
-      ->loadByProperties([
-        'entity_id' => $entity->id(),
-        'entity_type_id' => $entity->getEntityTypeId(),
-      ]);
+      ->loadByEntity($entity);
   }
 
   /**

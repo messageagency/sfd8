@@ -75,13 +75,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   protected $sf_object = NULL;
 
   /**
-   * Drupal Entity.
-   *
-   * @var \Drupal\Core\Entity\EntityInterface
-   */
-  protected $drupal_entity = NULL;
-
-  /**
    * Overrides ContentEntityBase::__construct().
    */
   public function __construct(array $values) {
@@ -114,54 +107,25 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $i = 0;
-    // We can't use an entity reference, which requires a single entity type.
-    // We need to accommodate a reference to any entity type, as specified by
-    // entity_type_id.
-    $fields['entity_id'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Entity ID'))
-      ->setDescription(t('Reference to the mapped Drupal entity.'))
-      ->setRequired(TRUE)
-      ->setRevisionable(TRUE)
-      ->setDisplayOptions('form', [
-        'type' => 'string_textfield',
-        'weight' => $i++,
-      ])
-      ->setDisplayOptions('view', [
-        'type' => 'hidden',
-      ]);
-
-    $fields['entity_type_id'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Entity type'))
-      ->setDescription(t('The entity type of the mapped entity.'))
-      ->setRevisionable(TRUE)
-     // This doesn't actually work for list_string:
-      ->setSetting('max_length', EntityTypeInterface::ID_MAX_LENGTH)
-      ->setRequired(TRUE)
-      ->setSettings([
-        'allowed_values' => [
-          // Entity Types will be filled in here on the form generator
-        ],
-      ])
-      ->setDisplayOptions('form', [
-        'type' => 'options_select',
-        'weight' => $i++,
-      ])
-      ->setDisplayOptions('view', [
-        'type' => 'hidden',
-      ]);
-
-    $fields['mapped_entity'] = BaseFieldDefinition::create('mapped_entity_link')
-      ->setLabel('Mapped Entity')
-      ->setDescription(t('Link to mapped entity'))
-      ->setRevisionable(FALSE)
-      ->setTranslatable(FALSE)
-      ->setComputed(TRUE)
-      ->setClass(ComputedItemList::class)
-      ->setDisplayOptions('view', [
-        'label' => 'above',
-        'type' => 'string',
-        'weight' => $i++,
-      ]);
+    if (\Drupal::moduleHandler()->moduleExists('dynamic_entity_reference')) {
+      $fields['drupal_entity'] = BaseFieldDefinition::create('dynamic_entity_reference')
+        ->setLabel(t('Mapped Entity'))
+        ->setDescription(t('Reference to the Drupal entity mapped by this mapped object.'))
+        ->setRequired(TRUE)
+        ->setRevisionable(FALSE)
+        ->setCardinality(1)
+        ->setDisplayOptions('form', [
+          'type' => 'dynamic_entity_reference_default',
+          'weight' => $i,
+        ])
+        ->setDisplayOptions('view', [
+          'label' => 'above',
+          'type' => 'dynamic_entity_reference_label',
+          'weight' => $i++,
+        ])
+        ->setDisplayConfigurable('form', TRUE)
+        ->setDisplayConfigurable('view', TRUE);
+    }
 
     $fields['salesforce_mapping'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Salesforce mapping'))
@@ -294,17 +258,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    *   The mapped Drupal entity.
    */
   public function getMappedEntity() {
-    $entity_id = $this->entity_id->value;
-    if (!$entity_id) {
-      // This is a new entity...
-      return $this->drupal_entity;
-    }
-    else {
-      $entity_type_id = $this->entity_type_id->value;
-      return $this
-        ->entityTypeManager()
-        ->getStorage($entity_type_id)->load($entity_id);
-    }
+    return $this->drupal_entity->entity;
   }
 
   /**
@@ -360,7 +314,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     $mapping = $this->getMapping();
 
-    // @TODO Convert to $this->drupal_entity
     $drupal_entity = $this->getMappedEntity();
 
     // Previously hook_salesforce_push_params_alter.
@@ -454,10 +407,10 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * @return $this
    */
   public function setDrupalEntity(EntityInterface $entity = NULL) {
-    if ($entity->id() != $this->entity_id->value) {
-      throw new SalesforceException('Cannot set Drupal entity to a different value than MappedObject entity_id property.');
-    }
-    $this->drupal_entity = $entity;
+    $this->drupal_entity->setValue([
+      'target_id' => $entity->id(),
+      'target_type' => $entity->getEntityTypeId()
+    ]);
     return $this;
   }
 
@@ -487,10 +440,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   public function pull() {
     $mapping = $this->getMapping();
 
-    if ($this->drupal_entity == NULL) {
-      $this->drupal_entity = $this->getMappedEntity();
-    }
-
     // If the pull isn't coming from a cron job.
     if ($this->sf_object == NULL) {
       if ($this->sfid()) {
@@ -503,7 +452,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         $this->sf_object = $this->client()->objectReadbyExternalId(
           $mapping->getSalesforceObjectType(),
           $mapping->getKeyField(),
-          $mapping->getKeyValue($this->drupal_entity)
+          $mapping->getKeyValue($this->getMappedEntity())
         );
         $this->set('salesforce_id', (string) $sf_object->id());
       }
@@ -518,7 +467,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $fields = $mapping->getPullFields();
     foreach ($fields as $field) {
       try {
-        $value = $field->pullValue($this->sf_object, $this->drupal_entity, $mapping);
+        $value = $field->pullValue($this->sf_object, $this->getMappedEntity(), $mapping);
       }
       catch (\Exception $e) {
         // Field missing from SObject? Skip it.
@@ -540,7 +489,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       $drupal_field = $field->get('drupal_field_value');
 
       try {
-        $this->drupal_entity->set($drupal_field, $value);
+        $this->getMappedEntity()->set($drupal_field, $value);
       }
       catch (\Exception $e) {
         $message = 'Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v';
@@ -561,19 +510,19 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // @TODO: Event dispatching and entity saving should not be happening in this context, but inside a controller. This class needs to be more model-like.
     $this->eventDispatcher()->dispatch(
       SalesforceEvents::PULL_PRESAVE,
-      new SalesforcePullEvent($this, $this->drupal_entity->isNew()
+      new SalesforcePullEvent($this, $this->getMappedEntity()->isNew()
         ? MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
         : MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
     );
 
     // Set a flag here to indicate that a pull is happening, to avoid
     // triggering a push.
-    $this->drupal_entity->salesforce_pull = TRUE;
-    $this->drupal_entity->save();
+    $this->getMappedEntity()->salesforce_pull = TRUE;
+    $this->getMappedEntity()->save();
 
     // Update mapping object.
     $this
-      ->set('entity_id', $this->drupal_entity->id())
+      ->set('entity_id', $this->getMappedEntity()->id())
       ->set('entity_updated', $this->getRequestTime())
       ->set('last_sync_action', 'pull')
       ->set('last_sync_status', TRUE)

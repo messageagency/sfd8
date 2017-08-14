@@ -128,46 +128,20 @@ class MappedObjectForm extends ContentEntityForm {
       $drupal_entity = $this->getDrupalEntityFromUrl();
     }
     else {
-      $drupal_entity = $this->entity->getMappedEntity();
+      $drupal_entity = $this->entity->drupal_entity->entity;
     }
 
     // Allow exception to bubble up here, because we shouldn't have got here if
     // there isn't a mapping.
     $mappings = [];
-    if ($drupal_entity) {
-      $form['entity_id']['widget'][0]['value']['#value'] = $drupal_entity->id();
-      $form['entity_id']['widget'][0]['value']['#disabled'] = TRUE;
-
-      $form['entity_type_id']['widget']['#options'] = [
-        $drupal_entity->getEntityType()->id() =>
-          $drupal_entity->getEntityType()->getLabel()
-      ];
-      $form['entity_type_id']['widget']['#default_value'] = 
-        $drupal_entity->getEntityType()->id();
-      $form['entity_type_id']['widget']['#disabled'] = TRUE;
-
-      // Mapping cannot be changed after mapped object has been created.
-      // If this is a new mapped object, and a drupal entity is given, mappings
-      // depend on given entity type.
-      if ($this->entity->isNew()) {
-        $mappings = $this
-          ->mapping_storage
-          ->loadByDrupal($drupal_entity->getEntityTypeId());
-      }
-      else {
-        $form['salesforce_mapping']['widget']['#disabled'] = TRUE;
-      }
-    }
-    else {
-      // If entity is not set, entity types are dependent on available mappings.
-      $mappings = $this
-        ->mapping_storage
-        ->loadMultiple();
-      foreach ($mappings as $mapping) {
-        $entity_type_id = $mapping->getDrupalEntityType();
-        $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
-        $form['entity_type_id']['widget']['#options'][$entity_type_id] = $entity_type->getLabel();
-      }
+    // If entity is not set, entity types are dependent on available mappings.
+    $mappings = $this
+      ->mapping_storage
+      ->loadMultiple();
+    foreach ($mappings as $mapping) {
+      $entity_type_id = $mapping->getDrupalEntityType();
+      $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
+      $form['entity_type_id']['widget']['#options'][$entity_type_id] = $entity_type->getLabel();
     }
 
     if ($mappings) {

@@ -12,6 +12,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\dynamic_entity_reference\Plugin\Field\FieldType\DynamicEntityReferenceItem;
 
 /**
  * Class MappedObjectStorage.
@@ -63,8 +64,8 @@ class MappedObjectStorage extends SqlContentEntityStorage {
    */
   public function loadByDrupal($entity_type_id, $entity_id) {
     return $this->loadByProperties([
-      'entity_type_id' => $entity_type_id,
-      'entity_id' => $entity_id,
+      'drupal_entity__target_type' => $entity_type_id,
+      'drupal_entity__target_id' => $entity_id,
     ]);
   }
 
@@ -77,8 +78,8 @@ class MappedObjectStorage extends SqlContentEntityStorage {
    */
   public function loadByEntity(ContentEntityInterface $entity) {
     return $this->loadByProperties([
-      'entity_type_id' => $entity->getEntityTypeId(),
-      'entity_id' => $entity->id(),
+      'drupal_entity__target_type' => $entity->getEntityTypeId(),
+      'drupal_entity__target_id' => $entity->id(),
     ]);
   }
 
