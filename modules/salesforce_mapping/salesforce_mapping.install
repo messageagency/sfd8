@@ -1,0 +1,67 @@
+<?php
+
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\salesforce_mapping\Entity\MappedObject;
+use Drupal\salesforce_mapping\MappedObjectStorageSchema;
+
+/**
+ * Change salesforce_mapped_object.entity_type_id to list_string field type.
+ */
+function salesforce_mapping_update_8001() {
+  // Just wanted to change entity type widget to a select dropdown, but Drupal entity update script prevents me from doing this, even though it's a compatible operation. So, we're dropping the existing definition and allowing it to be re-created through entup. Then, we'll re-populate it based on entity types from mapping.
+  $value = db_query("SELECT value FROM key_value WHERE name = 'salesforce_mapped_object.field_storage_definitions' and collection = 'entity.definitions.installed'")->fetchField();
+  $value = db_select("key_value", 'k')
+    ->fields('k', ['value'])
+    ->condition('name', 'salesforce_mapped_object.field_storage_definitions')
+    ->condition('collection', 'entity.definitions.installed')
+    ->execute()
+    ->fetchField();
+  $value = unserialize($value);
+  unset($value['entity_type_id']);
+  db_update('key_value')
+    ->fields(['value' => serialize($value)])
+    ->condition('name', 'salesforce_mapped_object.field_storage_definitions')
+    ->condition('collection', 'entity.definitions.installed')
+    ->execute();
+  db_drop_field("salesforce_mapped_object", 'entity_type_id');
+  db_drop_field("salesforce_mapped_object_revision", 'entity_type_id');
+}
+
+/**
+ * Update field definitions if entity update has been run.
+ */
+function salesforce_mapping_update_8002() {
+  if (Drupal::entityDefinitionUpdateManager()->needsUpdates()) {
+    throw new \Exception('Refused to run ' . __FUNCTION__ . ' with pending entity definition updates. Please run `entup` first.');
+  }
+  $field = [
+    'type' => 'varchar',
+    'length' => 32,
+  ];
+  // Yes, we're dropping the field *again*
+  // We only dropped it before to appease entity update manager.
+  // Now we drop it for real so we can set the appropriate length and add our index.
+  db_drop_field('salesforce_mapped_object', 'entity_type_id');
+  db_add_field('salesforce_mapped_object', 'entity_type_id', $field);
+  db_drop_field('salesforce_mapped_object_revision', 'entity_type_id');
+  db_add_field('salesforce_mapped_object_revision', 'entity_type_id', $field);
+
+  // WTF drupal, seriously WTF.
+  $schema = ['fields' => ['entity_type_id' => $field]];
+  db_add_index('salesforce_mapped_object', 'salesforce_mapped_object__9a86469251', ['entity_type_id'], $schema);
+  db_add_index('salesforce_mapped_object_revision', 'salesforce_mapped_object__9a86469251', ['entity_type_id'], $schema);
+}
+
+/**
+ * Finally, populate the new new field with the values from the mapping.
+ */
+function salesforce_mapping_update_8003() {
+  $mappings = \Drupal::service('entity_type.manager')
+    ->getStorage('salesforce_mapping')
+    ->loadMultiple();
+  foreach ($mappings as $mapping) {
+    db_query("UPDATE salesforce_mapped_object SET entity_type_id = :etid WHERE salesforce_mapping = :mapping", [':etid' => $mapping->getDrupalEntityType(), ':mapping' => $mapping->id()]);
+    db_query("UPDATE salesforce_mapped_object_revision SET entity_type_id = :etid WHERE salesforce_mapping = :mapping", [':etid' => $mapping->getDrupalEntityType(), ':mapping' => $mapping->id()]);
+  }
+}

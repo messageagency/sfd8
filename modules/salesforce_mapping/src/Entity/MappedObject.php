@@ -123,20 +123,28 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setRequired(TRUE)
       ->setRevisionable(TRUE)
       ->setDisplayOptions('form', [
-        'type' => 'hidden',
+        'type' => 'string_textfield',
+        'weight' => $i++,
       ])
       ->setDisplayOptions('view', [
         'type' => 'hidden',
       ]);
 
-    $fields['entity_type_id'] = BaseFieldDefinition::create('string')
+    $fields['entity_type_id'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Entity type'))
-      ->setDescription(t('The entity type to which this mapped object is attached.'))
+      ->setDescription(t('The entity type of the mapped entity.'))
       ->setRevisionable(TRUE)
-      ->setSetting('is_ascii', TRUE)
+     // This doesn't actually work for list_string:
       ->setSetting('max_length', EntityTypeInterface::ID_MAX_LENGTH)
+      ->setRequired(TRUE)
+      ->setSettings([
+        'allowed_values' => [
+          // Entity Types will be filled in here on the form generator
+        ],
+      ])
       ->setDisplayOptions('form', [
-        'type' => 'hidden',
+        'type' => 'options_select',
+        'weight' => $i++,
       ])
       ->setDisplayOptions('view', [
         'type' => 'hidden',
@@ -159,12 +167,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setLabel(t('Salesforce mapping'))
       ->setDescription(t('Salesforce mapping used to push/pull this mapped object'))
       ->setRevisionable(TRUE)
+      ->setSetting('max_length', EntityTypeInterface::ID_MAX_LENGTH)
       ->setSetting('target_type', 'salesforce_mapping')
       ->setSetting('handler', 'default')
       ->setRequired(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => -4,
+        'weight' => $i,
       ])
       ->setSettings([
         'allowed_values' => [
@@ -187,7 +196,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setSetting('max_length', SFID::MAX_LENGTH)
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
-        'weight' => 0,
+        'weight' => $i++,
       ])
       ->setDisplayOptions('view', [
         'type' => 'hidden',
