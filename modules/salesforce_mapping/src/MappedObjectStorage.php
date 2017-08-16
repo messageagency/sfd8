@@ -84,6 +84,24 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   }
 
   /**
+   * Load a single mapped object by Drupal Entity and Mapping
+   *
+   * @param ContentEntityInterface $entity
+   *
+   * @return MappedObjectInterface|null
+   *
+   * @see loadByProperties()
+   */
+  public function loadByEntityAndMapping(ContentEntityInterface $entity, SalesforceMappingInterface $mapping) {
+     $result = $this->loadByProperties([
+      'drupal_entity__target_type' => $entity->getEntityTypeId(),
+      'drupal_entity__target_id' => $entity->id(),
+      'salesforce_mapping' => $mapping->id()
+    ]);
+    return empty($result) ? NULL : reset($result);
+  }
+
+  /**
    * Load mapped objects by Salesforce ID
    *
    * @param SFID $salesforce_id
@@ -94,6 +112,23 @@ class MappedObjectStorage extends SqlContentEntityStorage {
     return $this->loadByProperties([
       'salesforce_id' => (string)$salesforce_id,
     ]);
+  }
+
+  /**
+   * Load a single mapped object by Mapping and SFID
+   *
+   * @param ContentEntityInterface $entity
+   *
+   * @return MappedObjectInterface|null
+   *
+   * @see loadByProperties()
+   */
+  public function loadBySfidAndMapping(SFID $salesforce_id, SalesforceMappingInterface $mapping) {
+    $result = $this->loadByProperties([
+      'salesforce_id' => (string)$salesforce_id,
+      'salesforce_mapping' => $mapping->id(),
+    ]);
+    return empty($result) ? NULL : reset($result);
   }
 
   /**

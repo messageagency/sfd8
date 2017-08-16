@@ -57,7 +57,7 @@ use Drupal\salesforce_mapping\Plugin\Field\ComputedItemList;
  *   },
  *   entity_keys = {
  *      "id" = "id",
- *      "entity_id" = "entity_id",
+ *      "entity_id" = "drupal_entity__target_id",
  *      "salesforce_id" = "salesforce_id",
  *      "revision" = "revision_id"
  *   }
@@ -73,6 +73,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * @var SObject
    */
   protected $sf_object = NULL;
+
+  protected $drupal_entity_stub = NULL;
 
   /**
    * Overrides ContentEntityBase::__construct().
@@ -111,7 +113,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       $fields['drupal_entity'] = BaseFieldDefinition::create('dynamic_entity_reference')
         ->setLabel(t('Mapped Entity'))
         ->setDescription(t('Reference to the Drupal entity mapped by this mapped object.'))
-        ->setRequired(TRUE)
         ->setRevisionable(FALSE)
         ->setCardinality(1)
         ->setDisplayOptions('form', [
@@ -262,6 +263,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function setDrupalEntity(EntityInterface $entity = NULL) {
+    $this->set('drupal_entity', $entity);
+    return $this;
+  }
+
+  /**
    * @return Link
    */
   public function getSalesforceLink(array $options = []) {
@@ -406,9 +415,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    *
    * @return $this
    */
-  public function setDrupalEntity(EntityInterface $entity = NULL) {
-    $this->drupal_entity->setValue($entity);
+  public function setDrupalEntityStub(EntityInterface $entity = NULL) {
+    $this->drupal_entity_stub = $entity;
     return $this;
+  }
+
+  public function getDrupalEntityStub(EntityInterface $entity = NULL) {
+    return $this->drupal_entity_stub;
   }
 
   /**
@@ -462,9 +475,10 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // @TODO better way to handle push/pull:
     $fields = $mapping->getPullFields();
+    $drupal_entity = $this->drupal_entity->entity ?: $this->getDrupalEntityStub();
     foreach ($fields as $field) {
       try {
-        $value = $field->pullValue($this->sf_object, $this->getMappedEntity(), $mapping);
+        $value = $field->pullValue($this->sf_object, $drupal_entity, $mapping);
       }
       catch (\Exception $e) {
         // Field missing from SObject? Skip it.
@@ -486,7 +500,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       $drupal_field = $field->get('drupal_field_value');
 
       try {
-        $this->getMappedEntity()->set($drupal_field, $value);
+        $drupal_entity->set($drupal_field, $value);
       }
       catch (\Exception $e) {
         $message = 'Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v';
@@ -494,9 +508,9 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
             '@sfobj' => $mapping->getSalesforceObjectType(),
             '@sffield' => $sf_field,
             '@sfid' => $this->sfid(),
-            '@dobj' => $this->getMappedEntity()->getEntityTypeId(),
+            '@dobj' => $drupal_entity->getEntityTypeId(),
             '@dprop' => $drupal_field,
-            '@did' => $this->getMappedEntity()->id(),
+            '@did' => $drupal_entity->id(),
             '@v' => $value,
           ];
         $this->eventDispatcher()->dispatch(SalesforceEvents::WARNING, new SalesforceWarningEvent($e, $message, $args));
@@ -507,19 +521,19 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     // @TODO: Event dispatching and entity saving should not be happening in this context, but inside a controller. This class needs to be more model-like.
     $this->eventDispatcher()->dispatch(
       SalesforceEvents::PULL_PRESAVE,
-      new SalesforcePullEvent($this, $this->getMappedEntity()->isNew()
+      new SalesforcePullEvent($this, $drupal_entity->isNew()
         ? MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
         : MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
     );
 
     // Set a flag here to indicate that a pull is happening, to avoid
     // triggering a push.
-    $this->getMappedEntity()->salesforce_pull = TRUE;
-    $this->getMappedEntity()->save();
+    $drupal_entity->salesforce_pull = TRUE;
+    $drupal_entity->save();
 
     // Update mapping object.
     $this
-      ->set('entity_id', $this->getMappedEntity()->id())
+      ->set('drupal_entity', $drupal_entity)
       ->set('entity_updated', $this->getRequestTime())
       ->set('last_sync_action', 'pull')
       ->set('last_sync_status', TRUE)
