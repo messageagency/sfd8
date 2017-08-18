@@ -100,9 +100,10 @@ class MappedObjectForm extends ContentEntityForm {
     $drupal_entity = $entity_id = $entity_type_id = FALSE;
     dpm($form);
     if ($this->entity->isNew()) {
-      $drupal_entity = $this->getDrupalEntityFromUrl();
-      $form['drupal_entity']['widget'][0]['target_type']['#default_value'] = $drupal_entity->getEntityTypeId();
-      $form['drupal_entity']['widget'][0]['target_id']['#default_value'] = $drupal_entity;
+      if ($drupal_entity = $this->getDrupalEntityFromUrl()) {
+        $form['drupal_entity']['widget'][0]['target_type']['#default_value'] = $drupal_entity->getEntityTypeId();
+        $form['drupal_entity']['widget'][0]['target_id']['#default_value'] = $drupal_entity;
+      }
     }
 
     // Allow exception to bubble up here, because we shouldn't have got here if
@@ -150,22 +151,10 @@ class MappedObjectForm extends ContentEntityForm {
     $drupal_entity_array = $form_state->getValue(['drupal_entity', 0]);
     $entity = FALSE;
 
-    // Verify entity was specified
+    // Verify entity was given - required for push.
     if (empty($drupal_entity_array['target_id'])) {
       $form_state->setErrorByName('drupal_entity][0][target_id', t('Please specify an entity to push.'));
       return;
-    }
-
-    // Get the mapping.
-    $mapping = $this->mappingStorage
-      ->load($form_state->getValue(['salesforce_mapping', 0, 'target_id']));
-
-    $this->validateUniqueEntityAndMapping($drupal_entity_array, $mapping, $form_state);
-
-    // If an SFID was given, verify that it's not already assigned to this mapping.
-    $sfid = $form_state->getValue(['salesforce_id', 0, 'value'], FALSE);
-    if ($sfid) {
-      $this->validateUniqueSfidAndMapping($sfid, $mapping, $form_state);
     }
   }
 
@@ -181,71 +170,6 @@ class MappedObjectForm extends ContentEntityForm {
     if (!$sfid) {
       $form_state->setErrorByName('salesforce_id', t('Please specify a Salesforce ID to pull.'));
       return;
-    }
-
-    // Fetch mapping and verify that this SFID is not already mapped.
-    $mapping = $this->mappingStorage
-      ->load($form_state->getValue(['salesforce_mapping', 0, 'target_id']));
-    $this->validateUniqueSfidAndMapping($sfid, $mapping, $form_state);
-
-    // If entity was given, verify that it's not already mapped with this mapping.
-    $drupal_entity_array = $form_state->getValue(['drupal_entity', 0]);
-    if (!empty($drupal_entity_array['target_id'])) {
-      dpm($drupal_entity_array);
-      $this->validateUniqueEntityAndMapping($drupal_entity_array, $mapping, $form_state);
-    }
-  }
-
-
-  /**
-   * Helper method to verify a given entity-mapping combo is unique.
-   * Uses $form_state to set an error if not.
-   * @return NULL
-   */
-  protected function validateUniqueEntityAndMapping(array $entity_array, SalesforceMappingInterface $mapping, FormStateInterface $form_state) {
-    $entity = $this->entityTypeManager
-      ->getStorage($entity_array['target_type'])
-      ->load($entity_array['target_id']);
-    if ($existing_mapped_object = $this->mappedObjectStorage->loadByEntityAndMapping($entity, $mapping)) {
-      $url = Url::fromRoute('entity.salesforce_mapped_object.canonical', ['salesforce_mapped_object' => $existing_mapped_object->id()]);
-      $form_state->setErrorByName('drupal_entity][0][target_id', t('Mapped object already exists for this entity: <a href=":url">:sfid</a>', [':url' => $url->toString(), ':sfid' => $existing_mapped_object->sfid()]));
-    }    
-  }
-
-  /**
-   * Helper method to verify a given sfid-mapping combo is unique.
-   * uses $form_state to set an error if not.
-   * @return NULL
-   */
-  protected function validateUniqueSfidAndMapping($sfid, SalesforceMappingInterface $mapping, FormStateInterface $form_state) {
-    try {
-      $sfid = new SFID($sfid);
-    }
-    catch (\Exception $e) {
-      $form_state->setErrorByName('salesforce_id', t('The given value is not a valid Salesforce ID.'));
-      return;
-    }
-
-    if ($existing_mapped_object = $this->mappedObjectStorage->loadBySfidAndMapping(new SFID($sfid), $mapping)) {
-      $url = Url::fromRoute('entity.salesforce_mapped_object.canonical', ['salesforce_mapped_object' => $existing_mapped_object->id()]);
-      $form_state->setErrorByName('drupal_entity][0][target_id', t('Mapped object already exists for this SFID: <a href=":url">:sfid</a>', [':url' => $url->toString(), ':sfid' => $existing_mapped_object->sfid()]));
-    }
-  }
-
-  /**
-   * Verify that mapping was selected, and can be loaded successfully.
-   *
-   * @param array $form 
-   * @param FormStateInterface $form_state 
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
-
-    // Verify mapping and entity type match.
-    $mapping = $this->mappingStorage
-      ->load($form_state->getValue(['salesforce_mapping', 0, 'target_id']));
-    if ($mapping->getDrupalEntityType() != $form_state->getValue(['drupal_entity', 0, 'target_type'])) {
-      $form_state->setErrorByName('salesforce_mapping', t('Mapping %mapping can only be used with entity type %entity_type_id', ['%mapping' => $mapping->label(), '%entity_type_id' => $mapping->getDrupalEntityType()]));
     }
   }
 
@@ -265,19 +189,6 @@ class MappedObjectForm extends ContentEntityForm {
     else {
       $mapped_object->set('salesforce_id', '');
     }
-    
-
-    // Validate mapped object. Upon failure, rebuild form.
-    // Do not pass go, do not collect $200.
-    $errors = $mapped_object->validate();
-
-    if ($errors->count() > 0) {
-      foreach ($errors as $error) {
-        drupal_set_message($error->getMessage(), 'error');
-      }
-      $form_state->setRebuild();
-      return;
-    }
 
     // Push to SF.
     try {
@@ -285,7 +196,6 @@ class MappedObjectForm extends ContentEntityForm {
       $mapped_object->push();
     }
     catch (\Exception $e) {
-      dpm($e);
       $mapped_object->delete();
       $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       drupal_set_message(t('Push failed with an exception: %exception', array('%exception' => $e->getMessage())), 'error');
@@ -305,8 +215,6 @@ class MappedObjectForm extends ContentEntityForm {
     $mapped_object = $this->entity
       ->set('salesforce_id', (string)new SFID($form_state->getValue(['salesforce_id', 0, 'value'])))
       ->set('salesforce_mapping', $form_state->getValue(['salesforce_mapping', 0, 'target_id']));
-    $errors = $mapped_object->validate();
-
     // Create stub entity.
     $drupal_entity_array = $form_state->getValue(['drupal_entity', 0]);
     if ($drupal_entity_array['target_id']) {
@@ -321,14 +229,6 @@ class MappedObjectForm extends ContentEntityForm {
         ->create(['salesforce_pull' => TRUE]);
       $mapped_object->set('drupal_entity', NULL);
       $mapped_object->setDrupalEntityStub($drupal_entity);
-    }
-
-    if ($errors->count() > 0) {
-      foreach ($errors as $error) {
-        drupal_set_message($error->getMessage(), 'error');
-      }
-      $form_state->setRebuild();
-      return;
     }
 
     try {

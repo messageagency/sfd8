@@ -101,12 +101,14 @@ function _salesforce_example_entity_manage(\Drupal\Core\Entity\EntityInterface &
 
     /** @var \Drupal\salesforce_mapping\Entity\MappedObject $entity */
     $mapped_entity = $entity->getMappedEntity();
-
+    if (!$mapped_entity) {
+      return;
+    }
     /**
      * Here we check to see if the entity that the SFDC Mapping Object dealt with was a Commerce Product
      * Variation.
      */
-    if($mapped_entity->getEntityTypeId() == 'commerce_product_variation') {
+    if ($mapped_entity->getEntityTypeId() == 'commerce_product_variation') {
       /** @var \Drupal\salesforce\SObject $sf */
       $sf = $entity->getSalesforceRecord();
 

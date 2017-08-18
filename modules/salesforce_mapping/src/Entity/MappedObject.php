@@ -59,7 +59,13 @@ use Drupal\salesforce_mapping\Plugin\Field\ComputedItemList;
  *      "id" = "id",
  *      "entity_id" = "drupal_entity__target_id",
  *      "salesforce_id" = "salesforce_id",
- *      "revision" = "revision_id"
+ *      "revision" = "revision_id",
+ *      "label" = "salesforce_id"
+ *   },
+ *   constraints = {
+ *     "MappingSfid" = {},
+ *     "MappingEntity" = {},
+ *     "MappingEntityType" = {}
  *   }
  * )
  */
@@ -475,7 +481,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // @TODO better way to handle push/pull:
     $fields = $mapping->getPullFields();
-    $drupal_entity = $this->drupal_entity->entity ?: $this->getDrupalEntityStub();
+    $drupal_entity = $this->getMappedEntity() ?: $this->getDrupalEntityStub();
     foreach ($fields as $field) {
       try {
         $value = $field->pullValue($this->sf_object, $drupal_entity, $mapping);
