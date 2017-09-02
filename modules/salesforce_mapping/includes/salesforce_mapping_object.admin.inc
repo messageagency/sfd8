@@ -422,7 +422,7 @@ function salesforce_mapping_object_overview_table($header, $mapping_id = NULL) {
       }
       $rows[$row_id]['operations'] = l(t('view'), $uri['path']) . ' ' .
         l(t('edit'), $uri['path'] . '/edit', array('query' => drupal_get_destination())) . ' ' .
-        l(t('delete'), $uri['path'] . '/delete', array('query' => drupal_get_destination()));
+        l(t('delete'), 'admin/content/salesforce/' . $wrapper->salesforce_id->value() . '/delete', array('query' => drupal_get_destination()));
     }
   }
 

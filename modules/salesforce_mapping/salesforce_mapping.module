@@ -239,8 +239,20 @@ function salesforce_mapping_menu() {
       'title' => 'Delete',
       'type' => MENU_LOCAL_TASK,
       'context' => MENU_CONTEXT_INLINE,
-    ) + $defaults;
+    );
   }
+  // Provide a default Delete location, in case a mapping gets orphaned.
+  $items['admin/content/salesforce/%/delete'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array(
+      'salesforce_mapping_universal_object_delete_form',
+      3,
+    ),
+    'access arguments' => array('delete salesforce mapping object'),
+    'title' => 'Delete',
+    'type' => MENU_NORMAL_ITEM,
+    'context' => MENU_CONTEXT_INLINE,
+  );
   return $items;
 }
 
@@ -390,19 +402,20 @@ function salesforce_mapping_object_edit($entity, $type) {
 }
 
 /**
- * Edit a salesforce object mapping based only on the object.
+ * Delete a salesforce object mapping based only on the object.
  *
  * @param Entity $entity
  *   The mapped Entity.
- * @param String $type
+ * @param string $type
  *   The mapped Entity's Type.
  *
  * @return array
  *   Render array.
  */
-function salesforce_mapping_object_delete_form($form, &$form_state, $entity, $type) {
+function salesforce_mapping_object_delete_form($form, &$form_state, Entity $entity, $type) {
   $entity_wrapper = entity_metadata_wrapper($type, $entity);
   $sf_mapping_object = $entity_wrapper->salesforce_mapping_object->value();
+
   $form_state['salesforce_mapping_object'] = $sf_mapping_object;
   $form['#submit'][] = 'salesforce_mapping_object_delete_form_submit';
 
@@ -410,6 +423,50 @@ function salesforce_mapping_object_delete_form($form, &$form_state, $entity, $ty
     t('Are you sure you want to delete the mapping from !entity_label to Salesforce object %sf_id?',
       array(
         '!entity_label' => $entity_wrapper->label(),
+        '%sf_id' => $sf_mapping_object->salesforce_id,
+      )),
+    entity_uri('salesforce_mapping_object', $sf_mapping_object),
+    '<p>' . t('Deleting this link cannot be undone.') . '</p>',
+    t('Delete'),
+    t('Cancel'),
+    'confirm'
+  );
+
+  return $form;
+}
+
+
+/**
+ * Delete a salesforce object mapping based only on the SFID.
+ *
+ * @param string $sfid
+ *   SFID for the mapping.
+ *
+ * @return array
+ *   Render array.
+ */
+function salesforce_mapping_universal_object_delete_form($form, &$form_state, $sfid) {
+  $sf_mapping_object = salesforce_mapping_object_load_by_sfid($sfid);
+  if (!$sf_mapping_object) {
+    drupal_set_message(t('No mapping found for SF ID %sfid', array('%sfid' => $sfid)), 'warning');
+    return $form;
+  }
+  $type = $sf_mapping_object->entity_type;
+  $entity = entity_load_single($sf_mapping_object->entity_type, $sf_mapping_object->entity_id);
+  if ($entity) {
+    $entity_wrapper = entity_metadata_wrapper($type, $entity);
+  }
+  else {
+    $entity_wrapper = NULL;
+  }
+
+  $form_state['salesforce_mapping_object'] = $sf_mapping_object;
+  $form['#submit'][] = 'salesforce_mapping_object_delete_form_submit';
+
+  $form = confirm_form($form,
+    t('Are you sure you want to delete the mapping from !entity_label to Salesforce object %sf_id?',
+      array(
+        '!entity_label' => $entity_wrapper ? $entity_wrapper->label() : t('(missing entity)'),
         '%sf_id' => $sf_mapping_object->salesforce_id,
       )),
     entity_uri('salesforce_mapping_object', $sf_mapping_object),
