@@ -281,10 +281,10 @@ function hook_salesforce_push_fail($op, $result, $synced_entity) {
     $mapping_object->last_sync = REQUEST_TIME;
     $mapping_object->last_sync_action = 'push';
     $mapping_object->last_sync_status = SALESFORCE_MAPPING_STATUS_ERROR;
-    $mapping_object->last_sync_message = t('Push error via %function with the following messages: @message.', array(
+    $mapping_object->last_sync_message = truncate_utf8(t('Push error via %function. Message: @message', array(
       '%function' => __FUNCTION__,
       '@message' => implode(' | ', $error_messages),
-    ));
+    )), 255, FALSE, TRUE);
     $mapping_object->save();
   }
 }

@@ -267,7 +267,7 @@ function salesforce_push_sync_rest($entity_type, $entity, $mapping, $sf_sync_tri
         '@sfid' => $mapping_object->salesforce_id,
         '@msg' => $e->getMessage(),
       )), 'error');
-      $mapping_object->last_sync_message = $e->getMessage();
+      $mapping_object->last_sync_message = truncate_utf8($e->getMessage(), 255, FALSE, TRUE);
       $mapping_object->last_sync_status = SALESFORCE_MAPPING_STATUS_ERROR;
       module_invoke_all('salesforce_push_fail', $op, $sfapi->response, $synced_entity);
     }
@@ -487,10 +487,10 @@ function salesforce_push_process_soap_results($op, $results, $synced_entities) {
         $mapping_object->last_sync = REQUEST_TIME;
         $mapping_object->last_sync_action = 'push';
         $mapping_object->last_sync_status = SALESFORCE_MAPPING_STATUS_ERROR;
-        $mapping_object->last_sync_message = t('Push error via %function with the following messages: @message.', array(
+        $mapping_object->last_sync_message = truncate_utf8(t('Push error via %function. Message: @message', array(
           '%function' => __FUNCTION__,
           '@message' => implode(' | ', $error_messages),
-        ));
+        )), 255, FALSE, TRUE);
         $mapping_object->save();
       }
 
