@@ -130,13 +130,6 @@ function salesforce_mapping_schema() {
         'default' => 0,
         'description' => 'Indicates this mapping should be processed asynchronously.',
       ),
-      'push_batch' => array(
-        'type' => 'int',
-        'size' => 'tiny',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => 'Indicates if SOAP API batch processing should be used during async processing.',
-      ),
       'created' => array(
         'description' => 'The Unix timestamp when the salesforce_mapping was created.',
         'type' => 'int',
@@ -711,4 +704,13 @@ function salesforce_mapping_update_7307(&$sandbox) {
       }
     }
   }
+}
+
+/**
+ * Removing the unused 'push_batch' setting per mappings.
+ */
+function salesforce_mapping_update_7308(&$sandbox) {
+  entity_info_cache_clear();
+  db_drop_field('salesforce_mapping', 'push_batch');
+  cache_clear_all('schema', 'cache', TRUE);
 }

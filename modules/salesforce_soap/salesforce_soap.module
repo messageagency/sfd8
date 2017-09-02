@@ -38,3 +38,16 @@ function salesforce_soap_libraries_info() {
 function salesforce_soap_libraries_version_callback() {
   return TRUE;
 }
+
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function salesforce_soap_form_salesforce_settings_form_alter(&$form, &$form_state, $form_id) {
+  $form['salesforce_soap_batch_enable'] = array(
+    '#title' => t('Batch records'),
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('salesforce_soap_batch_enable', TRUE),
+    '#description' =>  t('If a mapping has "Process asynchronously" checked, all its items will be processed in a single batch to the Salesforce API rather than one at a time. This may be preferable if API limits are of concern, although changes are not reflected immediately in Salesforce.'),
+  );
+}

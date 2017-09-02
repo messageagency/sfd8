@@ -365,25 +365,6 @@ function salesforce_mapping_form($form, &$form_state, SalesforceMapping $mapping
     '#description' => t('If selected, push data will be queued for processing and synchronized when cron is run. This may increase site performance, but changes will not be reflected in real time.'),
     '#default_value' => _salesforce_mapping_get_default_value('push_async', $form_state),
   );
-  $form['push_batch'] = array(
-    '#title' => t('Batch records'),
-    '#type' => 'checkbox',
-    '#default_value' => _salesforce_mapping_get_default_value('push_batch', $form_state),
-  );
-  if (module_exists('salesforce_soap')) {
-    $requirements_description = t('Requires "Process asynchronously" option to be enabled.');
-    $form['push_batch']['#states'] = array(
-      'enabled' => array(
-        ':input[name="push_async"]' => array('checked' => TRUE),
-      ),
-    );
-  }
-  else {
-    $requirements_description = t('Requires the "Salesforce SOAP (salesforce_soap)" module to be enabled, and the "Process asynchronously" option to be checked.');
-    $form['push_batch']['#disabled'] = TRUE;
-  }
-  $push_batch_description = t('Push items will be processed in a single batch to the Salesforce API rather than one at a time. This may be preferable if API limits are of concern, although changes are not reflected immediately in Salesforce.');
-  $form['push_batch']['#description'] = $requirements_description . ' ' . $push_batch_description;
 
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
@@ -736,7 +717,6 @@ function salesforce_mapping_form_submit($form, &$form_state) {
     'sync_triggers' => $sync_triggers,
     'pull_trigger_date' => $values['pull_trigger_date'],
     'push_async' => $values['push_async'],
-    'push_batch' => $values['push_batch'],
   );
 
   if ($form_state['salesforce_mapping']->name) {
@@ -838,12 +818,6 @@ function _salesforce_mapping_get_default_value($field, &$form_state, $delta = NU
         }
       }
       $value = $breakup;
-    }
-
-    // Special case for push_batch.
-    if ($field == 'push_batch' && !module_exists('salesforce_soap')) {
-      // Enforce this to be disabled when salesforce_soap is disabled.
-      $value = 0;
     }
   }
   else {

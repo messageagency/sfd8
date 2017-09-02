@@ -289,7 +289,7 @@ function salesforce_push_cron() {
 
   $queue = DrupalQueue::get(SALESFORCE_PUSH_QUEUE);
   $limit = variable_get('salesforce_push_limit', 50);
-  $use_soap = module_exists('salesforce_soap');
+  $use_soap = module_exists('salesforce_soap') && variable_get('salesforce_soap_batch_enable', TRUE);
   $entity_ids = array();
 
   $delta = 0;
