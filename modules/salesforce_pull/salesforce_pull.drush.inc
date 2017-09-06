@@ -11,6 +11,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 function salesforce_pull_drush_command() {
 
   $items['sf-pull-query'] = [
+    'category' => 'salesforce',
     'description' => 'Given a mapping, enqueue records for pull from Salesforce, ignoring modification timestamp. This command is useful, for example, when seeding content for a Drupal site prior to deployment.',
     'aliases' => ['sfpq', 'sfiq'],
     'arguments' => [
@@ -35,6 +36,7 @@ function salesforce_pull_drush_command() {
   ];
 
   $items['sf-pull-file'] = [
+    'category' => 'salesforce',
     'description' => 'Given a mapping, enqueue a list of object IDs to be pulled from a CSV file, e.g. a Salesforce report. The first column of the CSV file must be SFIDs. Additional columns will be ignored.',
     'aliases' => ['sfpf', 'sfif'],
     'arguments' => [
@@ -44,6 +46,7 @@ function salesforce_pull_drush_command() {
   ];
 
   $items['sf-pull-reset'] = [
+    'category' => 'salesforce',
     'description' => 'Reset pull timestamps for one or all Salesforce Mappings, and set all mapped objects to be force-pulled.',
     'arguments' => [
       'name' => [
@@ -86,8 +89,8 @@ function drush_salesforce_pull_sf_pull_query($name) {
   $where = drush_get_option('where');
   
   if (!($soql = $mapping->getPullQuery([], $start, $stop))) {
-    drush_log(dt('!mapping: Unable to generate pull query. Does this mapping have any Salesforce Action Triggers enabled?', ['!mapping' => $mapping->id()]), 'warning');
-    continue;
+    drush_log(dt('!mapping: Unable to generate pull query. Does this mapping have any Salesforce Action Triggers enabled?', ['!mapping' => $mapping->id()]), 'error');
+    return;
   }
 
   if ($where) {

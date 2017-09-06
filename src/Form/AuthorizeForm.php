@@ -8,6 +8,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\Url;
 use Drupal\salesforce\Rest\RestClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -93,6 +94,8 @@ class AuthorizeForm extends ConfigFormBase {
     // We're not actually doing anything with this, but may figure out
     // something that makes sense.
     $config = $this->config('salesforce.settings');
+    $url = new Url('salesforce.oauth_callback', [], ['absolute' => TRUE]);
+    drupal_set_message($this->t('Callback URL: :url', [':url' => str_replace('http:', 'https:', $url->toString())]));
 
     $form['creds'] = [
       '#title' => $this->t('API / OAuth Connection Settings'),

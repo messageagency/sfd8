@@ -66,7 +66,22 @@ class Properties extends SalesforceMappingFieldPluginBase {
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     // No error checking here. If a property is not defined, it's a
     // configuration bug that needs to be solved elsewhere.
-    return $entity->get($this->config('drupal_field_value'))->value;
+
+    // Multipicklist is the only target type that handles multi-valued fields.
+    $describe = $this
+      ->salesforceClient
+      ->objectDescribe($mapping->getSalesforceObjectType());
+    $field_definition = $describe->getField($this->config('salesforce_field'));
+    if ($field_definition['type'] == 'multipicklist') {
+      $values = [];
+      foreach ($entity->get($this->config('drupal_field_value')) as $value) {
+        $values[] = $value->value;
+      }
+      return implode(';', $values);
+    }
+    else {
+      return $entity->get($this->config('drupal_field_value'))->value;
+    }
   }
 
   /**
