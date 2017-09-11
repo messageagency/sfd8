@@ -87,17 +87,14 @@ class MappedObjectList extends EntityListBuilder {
       'data' => $this->t('ID'),
       'class' => [RESPONSIVE_PRIORITY_LOW],
     ];
-    $header['mapped_entity'] = [
-      'data' => $this->t('Entity'),
-      'class' => [RESPONSIVE_PRIORITY_MEDIUM],
-    ];
+    $header['mapped_entity'] = $this->t('Entity');
     $header['salesforce_link'] = $this->t('Salesforce Record');
     $header['mapping'] = [
       'data' => $this->t('Mapping'),
       'class' => [RESPONSIVE_PRIORITY_MEDIUM],
     ];
     $header['changed'] = [
-      $this->t('Last Updated'),
+      'data' => $this->t('Last Updated'),
       'class' => [RESPONSIVE_PRIORITY_LOW],
     ];
     return $header + parent::buildHeader();
@@ -113,7 +110,7 @@ class MappedObjectList extends EntityListBuilder {
     $row['mapped_entity']['data'] = $entity->drupal_entity->first()->view();
     $row['salesforce_link']['data'] = $entity->salesforce_link->first()->view();
     $row['mapping']['data'] = $entity->salesforce_mapping->first()->view();
-    $row['changed'] = $entity->changed->value;
+    $row['changed'] = \Drupal::service('date.formatter')->format($entity->changed->value);
     return $row + parent::buildRow($entity);
   }
 

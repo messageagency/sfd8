@@ -54,11 +54,13 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   }
 
   /**
-   * Load mapped object by entity type id and entity id
+   * Load MappedObjects by entity type id and entity id
    *
    * @pararm string entity_type_id
    *
    * @param int/string entity_id
+   *
+   * @return array
    *
    * @see loadByProperties()
    */
@@ -70,9 +72,11 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   }
 
   /**
-   * Load mapped objects by Drupal Entity
+   * Load MappedObjects by Drupal Entity
    *
    * @param ContentEntityInterface $entity
+   *
+   * @return array
    *
    * @see loadByProperties()
    */
@@ -84,7 +88,7 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   }
 
   /**
-   * Load a single mapped object by Drupal Entity and Mapping
+   * Load a single MappedObject by Drupal Entity and Mapping
    *
    * @param ContentEntityInterface $entity
    *
@@ -102,7 +106,7 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   }
 
   /**
-   * Load mapped objects by Salesforce ID
+   * Load MappedObjects by Salesforce ID
    *
    * @param SFID $salesforce_id
    *
@@ -115,7 +119,7 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   }
 
   /**
-   * Load a single mapped object by Mapping and SFID
+   * Load a single MappedObject by Mapping and SFID
    *
    * @param ContentEntityInterface $entity
    *

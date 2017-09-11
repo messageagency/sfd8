@@ -98,7 +98,7 @@ class MappedObjectForm extends ContentEntityForm {
     // Include the parent entity on the form.
     $form = parent::buildForm($form, $form_state);
     $drupal_entity = $entity_id = $entity_type_id = FALSE;
-    dpm($form);
+
     if ($this->entity->isNew()) {
       if ($drupal_entity = $this->getDrupalEntityFromUrl()) {
         $form['drupal_entity']['widget'][0]['target_type']['#default_value'] = $drupal_entity->getEntityTypeId();
