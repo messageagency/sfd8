@@ -18,19 +18,22 @@ class SalesforcePushOpEvent extends SalesforcePushEvent {
    * example on SalesforceEvents::PUSH_ALLOWED, before any entities have been
    * loaded.
    *
-   * @param MappedObjectInterface $mapped_object
+   * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mapped_object
    * @param string $op
    *   One of
    *     Drupal\salesforce_mapping\MappingConstants::
    *       SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
    *       SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
+   *       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE.
    */
   public function __construct(MappedObjectInterface $mapped_object, $op) {
     parent::__construct($mapped_object);
     $this->op = $op;
   }
 
+  /**
+   *
+   */
   public function getOp() {
     return $this->op;
   }

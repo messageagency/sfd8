@@ -13,6 +13,9 @@ namespace Drupal\salesforce_mapping\Plugin\Validation\Constraint;
  */
 class MappingEntityConstraint extends UniqueFieldsConstraint {
 
+  /**
+   *
+   */
   public function __construct($options = NULL) {
     $options = ['fields' => ["drupal_entity.target_type", "drupal_entity.target_id", "salesforce_mapping"]];
     parent::__construct($options);

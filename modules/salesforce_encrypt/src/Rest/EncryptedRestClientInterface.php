@@ -14,7 +14,7 @@ interface EncryptedRestClientInterface extends RestClientInterface {
    * Encrypts all sensitive salesforce config values.
    *
    * @param string $profile_id
-   *   Id of the Encrypt Profile to use for encryption
+   *   Id of the Encrypt Profile to use for encryption.
    *
    * @return bool
    *   TRUE if encryption was enabled or FALSE if it is already enabled
@@ -30,6 +30,7 @@ interface EncryptedRestClientInterface extends RestClientInterface {
    *
    * @return bool
    *   TRUE if encryption was disabled or FALSE if it is already disabled
+   *
    * @throws RuntimeException
    *   if Salesforce encryption profile hasn't been selected
    */
@@ -42,7 +43,7 @@ interface EncryptedRestClientInterface extends RestClientInterface {
    * @throws Drupal\salesforce\EntityNotFoundException
    *   if a profile is assigned, but cannot be loaded.
    *
-   * @return EncryptionProfileInterface | NULL
+   * @return \Drupal\encrypt\EncryptionProfileInterface | NULL
    */
   public function getEncryptionProfile();
 
@@ -51,7 +52,7 @@ interface EncryptedRestClientInterface extends RestClientInterface {
    * it gets deleted. Check to see if the  profile being deleted is the one
    * assigned for encryption; if so, decrypt our config and disable encryption.
    *
-   * @param EncryptionProfileInterface $profile
+   * @param \Drupal\encrypt\EncryptionProfileInterface $profile
    */
   public function hookEncryptionProfileDelete(EncryptionProfileInterface $profile);
 

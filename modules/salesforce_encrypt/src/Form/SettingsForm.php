@@ -77,11 +77,11 @@ class SettingsForm extends FormBase {
     ];
 
     $form['actions']['#type'] = 'actions';
-    $form['actions']['submit'] = array(
+    $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save configuration'),
       '#button_type' => 'primary',
-    );
+    ];
 
     // By default, render the form using system-config-form.html.twig.
     $form['#theme'] = 'system_config_form';
@@ -120,7 +120,7 @@ class SettingsForm extends FormBase {
       $this->client->enableEncryption($profile);
     }
     else {
-      // Changing encryption profiles: disable, then re-enable
+      // Changing encryption profiles: disable, then re-enable.
       $this->client->disableEncryption();
       $this->client->enableEncryption($profile);
     }

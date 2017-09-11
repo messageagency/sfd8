@@ -2,6 +2,9 @@
 
 namespace Drupal\salesforce\Rest;
 
+/**
+ *
+ */
 class RestResponse_Describe extends RestResponse {
 
   /**
@@ -10,23 +13,23 @@ class RestResponse_Describe extends RestResponse {
    * @var array
    */
   protected $fields;
-  
+
   /**
-   * The name of this SObject type, e.g. "Contact", "Account", "Opportunity"
+   * The name of this SObject type, e.g. "Contact", "Account", "Opportunity".
    *
    * @var string
    */
   protected $name;
 
   /**
-   * Flattened fields mapping field name => field label
+   * Flattened fields mapping field name => field label.
    *
    * @var array
    */
   private $field_options;
 
   /**
-   * See https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_sobject_describe.htm
+   * See https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_sobject_describe.htm.
    *
    * @param RestResponse $response
    */
@@ -49,12 +52,15 @@ class RestResponse_Describe extends RestResponse {
     $this->data = $response->data;
   }
 
+  /**
+   *
+   */
   public function getName() {
     return $this->name;
   }
 
   /**
-   * getter
+   * Getter.
    */
   public function getFields() {
     return $this->fields;
@@ -114,12 +120,14 @@ class RestResponse_Describe extends RestResponse {
    *    type
    *    unique
    *    updateable
-   *    writeRequiresMasterRead
+   *    writeRequiresMasterRead.
    *
-   * for more information @see https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_methods_system_fields_describe.htm
+   * For more information @see https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_methods_system_fields_describe.htm.
    *
    * @param string $field_name
+   *
    * @return array field definition
+   *
    * @throws Exception if field_name is not defined for this SObject type
    */
   public function getField($field_name) {
@@ -130,7 +138,7 @@ class RestResponse_Describe extends RestResponse {
   }
 
   /**
-   * Return a one-dimensional array of field names => field labels
+   * Return a one-dimensional array of field names => field labels.
    *
    * @return array
    */

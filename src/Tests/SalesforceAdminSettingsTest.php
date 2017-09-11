@@ -19,7 +19,7 @@ class SalesforceAdminSettingsTest extends WebTestBase {
   protected static $modules = [
     'salesforce',
     'user',
-    'salesforce_test_rest_client'
+    'salesforce_test_rest_client',
   ];
 
   protected $normalUser;
@@ -52,14 +52,14 @@ class SalesforceAdminSettingsTest extends WebTestBase {
     $secret = rand(100000, 10000000);
     $url = 'https://login.salesforce.com';
     $post = [
-        'consumer_key' => $key,
-        'consumer_secret' => $secret,
-        'login_url' => $url,
-      ];
+      'consumer_key' => $key,
+      'consumer_secret' => $secret,
+      'login_url' => $url,
+    ];
     $this->drupalPostForm('admin/config/salesforce/authorize', $post, t('Save configuration'));
 
     $newurl = parse_url($this->getUrl());
-    
+
     $query = [];
     parse_str($newurl['query'], $query);
 
@@ -75,6 +75,9 @@ class SalesforceAdminSettingsTest extends WebTestBase {
 
   }
 
+  /**
+   *
+   */
   public function testOauthCallback() {
     $this->drupalLogin($this->adminSalesforceUser);
 

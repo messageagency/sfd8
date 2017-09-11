@@ -2,7 +2,6 @@
 
 namespace Drupal\salesforce\Event;
 
-
 /**
  *
  */
@@ -16,7 +15,7 @@ interface SalesforceExceptionEventInterface {
 
   /**
    * @return mixed Log Level
-   *   Severity level for the event. Probably a Drupal\Core\Logger\RfcLogLevel 
+   *   Severity level for the event. Probably a Drupal\Core\Logger\RfcLogLevel
    *   or Psr\Log\LogLevel value.
    */
   public function getLevel();
@@ -24,7 +23,7 @@ interface SalesforceExceptionEventInterface {
   /**
    * @return string
    *   The formatted message for this event. (Note: to get the Exception
-   *   message, use ::getExceptionMessage()). If no message was given, 
+   *   message, use ::getExceptionMessage()). If no message was given,
    *   FormattableMarkup will be an empty string.
    */
   public function getMessage();

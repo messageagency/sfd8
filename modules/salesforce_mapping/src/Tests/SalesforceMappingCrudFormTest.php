@@ -47,7 +47,7 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
     $this->drupalLogin($this->adminSalesforceUser);
 
     /* Salesforce Mapping Add Form */
-    $mapping_name = 'mapping' . rand(100,10000);
+    $mapping_name = 'mapping' . rand(100, 10000);
     $post = [
       'id' => $mapping_name,
       'label' => $mapping_name,
@@ -66,7 +66,7 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
     $this->assertEqual($mapping->label(), $mapping_name);
 
     /* Salesforce Mapping Edit Form */
-    // Need to rebuild caches before proceeding to edit link
+    // Need to rebuild caches before proceeding to edit link.
     drupal_flush_all_caches();
     $post = [
       'label' => $this->randomMachineName(),
@@ -94,7 +94,6 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
         $this->drupalPostForm('admin/structure/salesforce/mappings/manage/' . $mapping_name . '/fields', $post, t('Add a field mapping to get started'));
       }
     }
-
 
   }
 

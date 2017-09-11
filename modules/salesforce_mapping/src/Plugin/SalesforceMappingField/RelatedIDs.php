@@ -104,7 +104,6 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     }
   }
 
-
   /**
    *
    */
@@ -137,7 +136,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
       return [];
     }
     return [
-      'config' => array($field_config->getConfigDependencyName()),
+      'config' => [$field_config->getConfigDependencyName()],
     ];
   }
 

@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\Tests\salesforce_mapping\Unit;
 
 use Drupal\Core\Config\Entity\ConfigEntityTypeInterface;
@@ -12,13 +13,11 @@ use Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Properties;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
 use Prophecy\Argument;
 
-
 /**
- * Test Object instantitation
+ * Test Object instantitation.
  *
  * @group salesforce_mapping
  */
-
 class SalesforceMappingTest extends UnitTestCase {
   static $modules = ['salesforce_mapping'];
 
@@ -32,7 +31,7 @@ class SalesforceMappingTest extends UnitTestCase {
     $this->saleforceObjectType = $this->randomMachineName();
     $this->drupalEntityTypeId = $this->randomMachineName();
     $this->drupalBundleId = $this->randomMachineName();
-    $this->values = array(
+    $this->values = [
       'id' => $this->id,
       'langcode' => 'en',
       'uuid' => '3bb9ee60-bea5-4622-b89b-a63319d10b3a',
@@ -72,9 +71,9 @@ class SalesforceMappingTest extends UnitTestCase {
           'direction' => 'sync',
         ],
       ],
-    );
+    ];
 
-    // mock EntityType Definition
+    // Mock EntityType Definition.
     $this->entityTypeId = $this->randomMachineName();
     $this->provider = $this->randomMachineName();
     $prophecy = $this->prophesize(ConfigEntityTypeInterface::CLASS);
@@ -83,29 +82,30 @@ class SalesforceMappingTest extends UnitTestCase {
       ->willReturn('test_provider.' . $this->entityTypeId);
     $this->entityDefinition = $prophecy->reveal();
 
-    // mock EntityTypeManagerInterface
+    // Mock EntityTypeManagerInterface.
     $prophecy = $this->prophesize(EntityTypeManagerInterface::CLASS);
     $prophecy->getDefinition($this->entityTypeId)->willReturn($this->entityDefinition);
     $this->etm = $prophecy->reveal();
 
-    // mock Properties SalesforceMappingField
+    // Mock Properties SalesforceMappingField.
     $prophecy = $this->prophesize(Properties::CLASS);
-    $prophecy->pull()->willReturn(true);
+    $prophecy->pull()->willReturn(TRUE);
     $sf_mapping_field = $prophecy->reveal();
 
-    // mode field plugin manager
+    // Mode field plugin manager.
     $prophecy = $this->prophesize(SalesforceMappingFieldPluginManager::CLASS);
     $prophecy->createInstance(Argument::any(), Argument::any())->willReturn($sf_mapping_field);
     $field_manager = $prophecy->reveal();
 
-
-    // mock state
+    // Mock state.
     $prophecy = $this->prophesize(StateInterface::CLASS);
     $prophecy->get('salesforce.mapping_pull_info', Argument::any())->willReturn([]);
-    $prophecy->get('salesforce.mapping_push_info', Argument::any())->willReturn([$this->id => [
-      'last_timestamp' => 0,
-    ]]);
-    $prophecy->set('salesforce.mapping_push_info', Argument::any())->willReturn(null);
+    $prophecy->get('salesforce.mapping_push_info', Argument::any())->willReturn([
+      $this->id => [
+        'last_timestamp' => 0,
+      ],
+    ]);
+    $prophecy->set('salesforce.mapping_push_info', Argument::any())->willReturn(NULL);
     $this->state = $prophecy->reveal();
 
     $container = new ContainerBuilder();
@@ -122,16 +122,16 @@ class SalesforceMappingTest extends UnitTestCase {
   }
 
   /**
-   * Test object instantiation
+   * Test object instantiation.
    */
   public function testObject() {
     $this->assertTrue($this->mapping instanceof SalesforceMapping);
     $this->assertEquals($this->id, $this->mapping->id());
   }
 
-    /**
-     * Test getPullFields()
-     */
+  /**
+   * Test getPullFields()
+   */
   public function testGetPullFields() {
     $fields_array = $this->mapping->getPullFields();
     $this->assertTrue(is_array($fields_array));
@@ -144,8 +144,9 @@ class SalesforceMappingTest extends UnitTestCase {
   public function testCheckTriggers() {
     $triggers = $this->mapping->checkTriggers([
       MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
-      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
     ]);
     $this->assertTrue($triggers);
   }
+
 }

@@ -53,14 +53,14 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
   protected $garbageCollected;
 
   /**
-   * Storage handler for SF mappings
+   * Storage handler for SF mappings.
    *
    * @var SalesforceMappingStorage
    */
   protected $mapping_storage;
 
   /**
-   * Storage handler for Mapped Objects
+   * Storage handler for Mapped Objects.
    *
    * @var MappedObjectStorage
    */
@@ -104,6 +104,9 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     $this->garbageCollected = FALSE;
   }
 
+  /**
+   *
+   */
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('database'),
@@ -162,15 +165,15 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
       'op' => $data['op'],
       'updated' => $time,
       'failures' => empty($data['failures'])
-        ? 0
-        : $data['failures'],
+      ? 0
+      : $data['failures'],
       'mapped_object_id' => empty($data['mapped_object_id'])
-        ? 0
-        : $data['mapped_object_id'],
+      ? 0
+      : $data['mapped_object_id'],
     ];
 
     $query = $this->connection->merge(static::TABLE_NAME)
-      ->key(array('name' => $this->name, 'entity_id' => $data['entity_id']))
+      ->key(['name' => $this->name, 'entity_id' => $data['entity_id']])
       ->fields($fields);
 
     // Return Merge::STATUS_INSERT or Merge::STATUS_UPDATE.
@@ -180,7 +183,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     // 9 years.
     if ($ret == Merge::STATUS_INSERT) {
       $this->connection->merge(static::TABLE_NAME)
-        ->key(array('name' => $this->name, 'entity_id' => $data['entity_id']))
+        ->key(['name' => $this->name, 'entity_id' => $data['entity_id']])
         ->fields(['created' => $time])
         ->execute();
     }
@@ -199,7 +202,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
         }
         // @TODO: convert items to content entities.
         // @see \Drupal::entityQuery()
-        $items = $this->connection->queryRange('SELECT * FROM {' . static::TABLE_NAME . '} q WHERE expire = 0 AND name = :name AND failures < :fail_limit ORDER BY created, item_id ASC', 0, $n, array(':name' => $this->name, ':fail_limit' => $fail_limit))->fetchAllAssoc('item_id');
+        $items = $this->connection->queryRange('SELECT * FROM {' . static::TABLE_NAME . '} q WHERE expire = 0 AND name = :name AND failures < :fail_limit ORDER BY created, item_id ASC', 0, $n, [':name' => $this->name, ':fail_limit' => $fail_limit])->fetchAllAssoc('item_id');
       }
       catch (\Exception $e) {
         $this->catchException($e);
@@ -215,9 +218,9 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
         // time from the lease, and will tend to reset items before the lease
         // should really expire.
         $update = $this->connection->update(static::TABLE_NAME)
-          ->fields(array(
+          ->fields([
             'expire' => $this->time->getRequestTime() + $lease_time,
-          ))
+          ])
           ->condition('item_id', array_keys($items), 'IN')
           ->condition('expire', 0);
         // If there are affected rows, this update succeeded.
@@ -269,7 +272,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
-          'description' => 'Foreign key for salesforce_mapped_object table.'
+          'description' => 'Foreign key for salesforce_mapped_object table.',
         ],
         'op' => [
           'type' => 'varchar_ascii',
@@ -467,9 +470,9 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
   public function releaseItems(array $items) {
     try {
       $update = $this->connection->update(static::TABLE_NAME)
-        ->fields(array(
+        ->fields([
           'expire' => 0,
-        ))
+        ])
         ->condition('item_id', array_keys($items), 'IN');
       return $update->execute();
     }
@@ -481,6 +484,9 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     }
   }
 
+  /**
+   *
+   */
   public function deleteItemByEntity(EntityInterface $entity) {
     try {
       $this->connection->delete(static::TABLE_NAME)

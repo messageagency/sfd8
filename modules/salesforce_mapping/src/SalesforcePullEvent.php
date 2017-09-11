@@ -11,6 +11,9 @@ use Drupal\salesforce_mapping\Event\SalesforcePullEvent as ParentSalesforcePullE
  */
 class SalesforcePullEvent extends ParentSalesforcePullEvent {
 
+  /**
+   *
+   */
   public function __construct() {
     @trigger_error(__CLASS__ . ' is deprecated. Use the parent class in the Drupal\salesforce_mapping\Event namespace.', E_USER_DEPRECATED);
     $args = func_get_args();

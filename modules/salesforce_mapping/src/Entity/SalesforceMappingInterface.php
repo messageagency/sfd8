@@ -36,7 +36,7 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
   public function getFieldMappings();
 
   /**
-   * @param  array  $field
+   * @param  array $field
    * @return SalesforceMappingFieldPluginInterface
    */
   public function getFieldMapping(array $field);
@@ -57,13 +57,13 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
   public function getDrupalBundle();
 
   /**
-  * Given a Salesforce object, return an array of Drupal entity key-value pairs.
-  *
-  * @return array
-  *   Array of SalesforceMappingFieldPluginInterface objects
-  *
-  * @see salesforce_pull_map_field (from d7)
-  */
+   * Given a Salesforce object, return an array of Drupal entity key-value pairs.
+   *
+   * @return array
+   *   Array of SalesforceMappingFieldPluginInterface objects
+   *
+   * @see salesforce_pull_map_field (from d7)
+   */
   public function getPullFields();
 
   /**
@@ -83,24 +83,25 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
   public function doesPushStandalone();
 
   /**
-   * Checks mappings for any push operation positive
+   * Checks mappings for any push operation positive.
    *
-   * @return boolean
+   * @return bool
    */
   public function doesPush();
 
   /**
-   * Checks mappings for any pull operation positive
+   * Checks mappings for any pull operation positive.
    *
-   * @return boolean
+   * @return bool
    */
   public function doesPull();
 
   /**
-   * Checks if mapping has any of the given triggers
+   * Checks if mapping has any of the given triggers.
    *
    * @param array $triggers
-   * @return boolean
+   *
+   * @return bool
    *   TRUE if this mapping uses any of the given $triggers, otherwise FALSE.
    */
   public function checkTriggers(array $triggers);
@@ -136,9 +137,10 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
   public function getLastDeleteTime();
 
   /**
-   * Set this mapping as having been last processed for deletes at $time
+   * Set this mapping as having been last processed for deletes at $time.
    *
    * @param int $time
+   *
    * @return $this
    */
   public function setLastDeleteTime($time);
@@ -155,7 +157,8 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
   /**
    * Set this mapping as having been last pulled at $time.
    *
-   * @param int $time 
+   * @param int $time
+   *
    * @return $this
    */
   public function setLastPullTime($time);
@@ -176,13 +179,13 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    *   Timestamp of starting window from which to pull records. If omitted, use
    *   ::getLastPullTime()
    * @param int $stop
-   *   Timestamp of ending window from which to pull records. If omitted, use 
-   *   "now"
+   *   Timestamp of ending window from which to pull records. If omitted, use
+   *   "now".
    *
    * @return \Drupal\salesforce\SelectQuery
    */
   public function getPullQuery(array $mapped_fields = [], $start = 0, $stop = 0);
-  
+
   /**
    * Returns a timstamp when the push queue was last processed for this mapping.
    *
@@ -193,7 +196,8 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
   /**
    * Set the timestamp when the push queue was last process for this mapping.
    *
-   * @param string $time 
+   * @param string $time
+   *
    * @return $this
    */
   public function setLastPushTime($time);

@@ -2,7 +2,6 @@
 
 namespace Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\PluginBase;
@@ -31,22 +30,25 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   protected $client;
 
   /**
-   * Storage handler for SF mappings
+   * Storage handler for SF mappings.
    *
    * @var SalesforceMappingStorage
    */
   protected $mapping_storage;
 
   /**
-   * Storage handler for Mapped Objects
+   * Storage handler for Mapped Objects.
    *
-   * @var MappedObjectStorage
+   * @var \Drupal\salesforce_mapping\Entity\MappedObjectStorage
    */
   protected $mapped_object_storage;
   protected $event_dispatcher;
   protected $etm;
 
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueueInterface $queue, RestClientInterface $client,  EntityTypeManagerInterface $etm, EventDispatcherInterface $event_dispatcher) {
+  /**
+   *
+   */
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueueInterface $queue, RestClientInterface $client, EntityTypeManagerInterface $etm, EventDispatcherInterface $event_dispatcher) {
     $this->queue = $queue;
     $this->client = $client;
     $this->etm = $etm;
@@ -67,6 +69,9 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     );
   }
 
+  /**
+   *
+   */
   public function process(array $items) {
     if (!$this->client->isAuthorized()) {
       throw new SuspendQueueException('Salesforce client not authorized.');
@@ -82,6 +87,9 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     }
   }
 
+  /**
+   *
+   */
   public function processItem(\stdClass $item) {
     // Allow exceptions to bubble up for PushQueue to sort things out.
     $mapping = $this->mapping_storage->load($item->name);
@@ -109,7 +117,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
           ->getStorage($mapping->drupal_entity_type)
           ->load($item->entity_id);
         if ($entity === NULL) {
-          // Bubble this up also
+          // Bubble this up also.
           throw new EntityNotFoundException($item->entity_id, $mapping->drupal_entity_type);
         }
 
@@ -141,9 +149,10 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   /**
    * Return the mapped object given a queue item and mapping.
    *
-   * @param stdClass $item
-   * @param SalesforceMappingInterface $mapping
-   * @return MappedObject
+   * @param object $item
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *
+   * @return \Drupal\salesforce_mapping\Entity\MappedObject
    */
   protected function getMappedObject(\stdClass $item, SalesforceMappingInterface $mapping) {
     $mapped_object = FALSE;
@@ -165,7 +174,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
           'drupal_entity__target_type' => $mapping->drupal_entity_type,
           'drupal_entity__target_id' => $item->entity_id,
           'salesforce_mapping' => $mapping->id(),
-          ]);
+        ]);
     }
     if ($mapped_object) {
       if (is_array($mapped_object)) {
@@ -180,8 +189,8 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   /**
    * Helper method to generate a new MappedObject during push procesing.
    *
-   * @param stdClass $item 
-   * @param SalesforceMappingInterface $mapping 
+   * @param object $item
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    */
   protected function createMappedObject(\stdClass $item, SalesforceMappingInterface $mapping) {
     return new MappedObject([

@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @file
+ */
+
 use Drupal\Core\Url;
 use Drupal\salesforce\EntityNotFoundException;
 
@@ -14,23 +18,23 @@ function salesforce_encrypt_requirements($phase) {
       $profile = \Drupal::service('salesforce.client')->getEncryptionProfile();
     }
     catch (EntityNotFoundException $e) {
-      // noop
+      // Noop.
     }
-    $requirements['salesforce_encrypt'] = array(
+    $requirements['salesforce_encrypt'] = [
       'title' => t('Salesforce Encrypt'),
       'value' => t('Encryption Profile'),
-    );
+    ];
     if (empty($profile)) {
-      $requirements['salesforce_encrypt'] += array(
+      $requirements['salesforce_encrypt'] += [
         'severity' => REQUIREMENT_ERROR,
-        'description' => t('You need to <a href="@url">select an encryption profile</a> in order to fully enable Salesforce Encrypt and protect sensitive information.', array('@url' => Url::fromRoute('salesforce_encrypt.settings')->toString())),
-      );
+        'description' => t('You need to <a href="@url">select an encryption profile</a> in order to fully enable Salesforce Encrypt and protect sensitive information.', ['@url' => Url::fromRoute('salesforce_encrypt.settings')->toString()]),
+      ];
     }
     else {
-      $requirements['salesforce_encrypt'] += array(
+      $requirements['salesforce_encrypt'] += [
         'severity' => REQUIREMENT_OK,
         'description' => t('Profile id: <a href=":url">%profile</a>', ['%profile' => $profile->id(), ':url' => $profile->url()]),
-      );
+      ];
     }
   }
   return $requirements;

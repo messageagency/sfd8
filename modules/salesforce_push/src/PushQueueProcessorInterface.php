@@ -35,7 +35,6 @@ interface PushQueueProcessorInterface extends ContainerFactoryPluginInterface {
    * @throws \Exception
    *   Indicate any other condition. Processing for this queue should continue.
    *   Items should not be released.
-   *   
    */
   public function process(array $items);
 

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginBase.
- */
-
 namespace Drupal\salesforce_mapping;
 
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
@@ -25,9 +20,6 @@ use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
-use Drupal\salesforce_mapping\MappedObjectStorage;
-use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
-use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -35,6 +27,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  * Defines a base Salesforce Mapping Field Plugin implementation.
  * Extenders need to implement SalesforceMappingFieldPluginInterface::value() and
  * PluginFormInterface::buildConfigurationForm().
+ *
  * @see Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
  * @see Drupal\Core\Plugin\PluginFormInterface
  */
@@ -48,19 +41,17 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
 
   // @see SalesforceMappingFieldPluginInterface::value()
   // public function value();
-
   // @see PluginFormInterface::buildConfigurationForm().
   // public function buildConfigurationForm(array $form, FormStateInterface $form_state);
-
   /**
-   * Storage handler for SF mappings
+   * Storage handler for SF mappings.
    *
    * @var \Drupal\salesforce_mapping\Entity\SalesforceMappingStorage
    */
   protected $mapping_storage;
 
   /**
-   * Storage handler for Mapped Objects
+   * Storage handler for Mapped Objects.
    *
    * @var \Drupal\salesforce_mapping\MappedObjectStorage
    */
@@ -337,7 +328,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    $pluginForm = array();
+    $pluginForm = [];
     $plugin_def = $this->getPluginDefinition();
 
     // Extending plugins will probably inject most of their own logic here:
@@ -371,7 +362,6 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
     return $pluginForm;
   }
 
-
   /**
    * Implements PluginFormInterface::validateConfigurationForm().
    */
@@ -398,14 +388,14 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * @return array
    *   An array of dependencies grouped by type (config, content, module,
    *   theme). For example:
-   *   @code
+   * @code
    *   array(
    *     'config' => array('user.role.anonymous', 'user.role.authenticated'),
    *     'content' => array('node:article:f0a189e6-55fb-47fb-8005-5bef81c44d6d'),
    *     'module' => array('node', 'user'),
    *     'theme' => array('seven'),
    *   );
-   *   @endcode
+   * @endcode
    *
    * @see \Drupal\Core\Config\Entity\ConfigDependencyManager
    * @see \Drupal\Core\Entity\EntityInterface::getConfigDependencyName()
@@ -437,25 +427,25 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
 
   /**
    * @return bool
-   *  Whether or not this field should be pushed to Salesforce.
+   *   Whether or not this field should be pushed to Salesforce.
    * @TODO This needs a better name. Could be mistaken for a verb.
    */
   public function push() {
     return in_array($this->config('direction'), [
       MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF,
-      MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC
+      MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC,
     ]);
   }
 
   /**
    * @return bool
-   *  Whether or not this field should be pulled from Salesforce to Drupal.
+   *   Whether or not this field should be pulled from Salesforce to Drupal.
    * @TODO This needs a better name. Could be mistaken for a verb.
    */
   public function pull() {
     return in_array($this->config('direction'), [
       MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC,
-      MappingConstants::SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL
+      MappingConstants::SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL,
     ]);
   }
 
@@ -472,7 +462,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   protected function get_salesforce_field_options($sfobject_name) {
     // Static cache since this function is called frequently across many
     // different object instances.
-    $options = &drupal_static(__CLASS__.__FUNCTION__, []);
+    $options = &drupal_static(__CLASS__ . __FUNCTION__, []);
     if (empty($options[$sfobject_name])) {
       $describe = $this->salesforceClient->objectDescribe($sfobject_name);
       $options[$sfobject_name] = $describe->getFieldOptions();

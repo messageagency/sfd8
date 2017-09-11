@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Component\Datetime\TimeInterface;
@@ -19,11 +20,10 @@ use Prophecy\Argument;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
- * Test Object instantitation
+ * Test Object instantitation.
  *
  * @group salesforce_pull
  */
-
 class QueueHandlerTest extends UnitTestCase {
   static $modules = ['salesforce_pull'];
 
@@ -95,8 +95,7 @@ class QueueHandlerTest extends UnitTestCase {
     $prophecy->getStorage('salesforce_mapping')->willReturn($this->mappingStorage);
     $this->etm = $prophecy->reveal();
 
-
-    // mock config
+    // Mock config.
     $prophecy = $this->prophesize(Config::CLASS);
     $prophecy->get('pull_max_queue_size', Argument::any())->willReturn(QueueHandler::PULL_MAX_QUEUE_SIZE);
     $config = $prophecy->reveal();
@@ -105,13 +104,13 @@ class QueueHandlerTest extends UnitTestCase {
     $prophecy->get('salesforce.settings')->willReturn($config);
     $this->configFactory = $prophecy->reveal();
 
-    // mock state
+    // Mock state.
     $prophecy = $this->prophesize(StateInterface::CLASS);
     $prophecy->get('salesforce.mapping_pull_info', Argument::any())->willReturn([1 => ['last_pull_timestamp' => '0']]);
-    $prophecy->set('salesforce.mapping_pull_info', Argument::any())->willReturn(null);
+    $prophecy->set('salesforce.mapping_pull_info', Argument::any())->willReturn(NULL);
     $this->state = $prophecy->reveal();
 
-    // mock event dispatcher
+    // Mock event dispatcher.
     $prophecy = $this->prophesize(EventDispatcherInterface::CLASS);
     $prophecy->dispatch(Argument::any(), Argument::any())->willReturn();
     $this->ed = $prophecy->reveal();
@@ -128,14 +127,14 @@ class QueueHandlerTest extends UnitTestCase {
   }
 
   /**
-   * Test object instantiation
+   * Test object instantiation.
    */
   public function testObject() {
     $this->assertTrue($this->qh instanceof QueueHandler);
   }
 
   /**
-   * Test handler operation, good data
+   * Test handler operation, good data.
    */
   public function testGetUpdatedRecords() {
     $result = $this->qh->getUpdatedRecords();
@@ -143,10 +142,10 @@ class QueueHandlerTest extends UnitTestCase {
   }
 
   /**
-   * Test handler operation, too many queue items
+   * Test handler operation, too many queue items.
    */
   public function testTooManyQueueItems() {
-    // initialize with queue size > 100000 (default)
+    // Initialize with queue size > 100000 (default)
     $prophecy = $this->prophesize(QueueInterface::CLASS);
     $prophecy->createItem()->willReturn(1);
     $prophecy->numberOfItems()->willReturn(QueueHandler::PULL_MAX_QUEUE_SIZE + 1);

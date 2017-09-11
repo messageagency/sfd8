@@ -2,11 +2,17 @@
 
 namespace Drupal\salesforce;
 
+/**
+ *
+ */
 class SFID {
 
   protected $id;
   const MAX_LENGTH = 18;
 
+  /**
+   *
+   */
   public function __construct($id) {
     if (strlen($id) != 15 && strlen($id) != self::MAX_LENGTH) {
       throw new \Exception('Invalid sfid ' . strlen($id));
@@ -17,6 +23,9 @@ class SFID {
     }
   }
 
+  /**
+   *
+   */
   public function __toString() {
     return (string) $this->id;
   }

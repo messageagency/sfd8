@@ -2,11 +2,17 @@
 
 namespace Drupal\salesforce;
 
+/**
+ *
+ */
 class SObject {
   protected $type;
   protected $fields;
   protected $id;
 
+  /**
+   *
+   */
   public function __construct(array $data = []) {
     if (!isset($data['id']) && !isset($data['Id'])) {
       throw new \Exception('Refused to instantiate SObject without ID');
@@ -29,23 +35,32 @@ class SObject {
     foreach ($data as $key => $value) {
       $this->fields[$key] = $value;
     }
-    $this->fields['Id'] = (string)$this->id;
+    $this->fields['Id'] = (string) $this->id;
   }
 
+  /**
+   *
+   */
   public function id() {
     return $this->id;
   }
 
+  /**
+   *
+   */
   public function type() {
     return $this->type;
   }
 
+  /**
+   *
+   */
   public function fields() {
     return $this->fields;
   }
 
   /**
-   * Given $key, return corresponding field value
+   * Given $key, return corresponding field value.
    *
    * @throws Exception if $key is not found
    */

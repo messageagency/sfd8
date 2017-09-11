@@ -1,11 +1,11 @@
-<?php 
+<?php
 
 namespace Drupal\salesforce_mapping\Plugin\Field\FieldType;
 
 use Drupal\salesforce_mapping\Plugin\Field\CalculatedLinkItemBase;
 
 /**
- * Lifted from https://www.drupal.org/docs/8/api/entity-api/dynamicvirtual-field-values-using-computed-field-property-classes
+ * Lifted from https://www.drupal.org/docs/8/api/entity-api/dynamicvirtual-field-values-using-computed-field-property-classes.
  *
  * @FieldType(
  *   id = "salesforce_link",

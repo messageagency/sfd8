@@ -29,7 +29,10 @@ class SalesforceMappingFieldPluginManager extends DefaultPluginManager implement
     $this->setCacheBackend($cache_backend, 'salesforce_mapping_field', ['salesforce_mapping_plugins']);
   }
 
-  public function getFallbackPluginId($plugin_id, array $configuration = array()) {
+  /**
+   *
+   */
+  public function getFallbackPluginId($plugin_id, array $configuration = []) {
     return 'broken';
   }
 

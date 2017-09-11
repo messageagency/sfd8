@@ -4,6 +4,9 @@ namespace Drupal\salesforce_push;
 
 use Drupal\Core\Queue\ReliableQueueInterface;
 
+/**
+ *
+ */
 interface PushQueueInterface extends ReliableQueueInterface {
 
   /**
@@ -32,7 +35,7 @@ interface PushQueueInterface extends ReliableQueueInterface {
    * @throws \Exception
    *   Whenever called.
    */
-  public function claimItem($lease_time = NULL);  
+  public function claimItem($lease_time = NULL);
 
   /**
    * Failed item handler.
@@ -41,10 +44,8 @@ interface PushQueueInterface extends ReliableQueueInterface {
    * happens when a queue item fails.
    *
    * @param Exception $e
-   * @param stdClass $item
+   * @param object $item
    */
   public function failItem(\Exception $e, \stdClass $item);
 
-
 }
-

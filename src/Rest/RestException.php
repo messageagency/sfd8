@@ -21,10 +21,16 @@ class RestException extends \RuntimeException implements ExceptionInterface {
     parent::__construct($message, $code, $previous);
   }
 
+  /**
+   *
+   */
   public function getResponse() {
     return $this->response;
   }
 
+  /**
+   *
+   */
   public function getResponseBody() {
     if (!$this->response) {
       return;

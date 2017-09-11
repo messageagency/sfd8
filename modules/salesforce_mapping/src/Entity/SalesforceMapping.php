@@ -8,7 +8,6 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce_mapping\MappingConstants;
-use \Drupal\Component\Utility\NestedArray;
 
 /**
  * Defines a Salesforce Mapping configuration entity class.
@@ -188,7 +187,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   protected $sync_triggers = [];
 
   /**
-   * Stateful push data for this mapping
+   * Stateful push data for this mapping.
    *
    * @var array
    */
@@ -202,7 +201,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   protected $pull_info;
 
   /**
-   * How often (in seconds) to push with this mapping
+   * How often (in seconds) to push with this mapping.
    *
    * @var int
    */
@@ -289,8 +288,8 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     // Update shared pull values across other mappings to same object type.
     $pull_mappings = $storage->loadByProperties([
-        'salesforce_object_type' => $this->salesforce_object_type,
-      ]);
+      'salesforce_object_type' => $this->salesforce_object_type,
+    ]);
     unset($pull_mappings[$this->id()]);
     foreach ($pull_mappings as $mapping) {
       if ($this->pull_frequency != $mapping->pull_frequency) {
@@ -442,7 +441,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     return $this->checkTriggers([
       MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
       MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
-      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
+      MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE,
     ]);
   }
 
@@ -453,7 +452,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     return $this->checkTriggers([
       MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE,
       MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE,
-      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE
+      MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE,
     ]);
   }
 
@@ -509,10 +508,11 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Setter for pull info
+   * Setter for pull info.
    *
-   * @param string $key 
-   * @param mixed $value 
+   * @param string $key
+   * @param mixed $value
+   *
    * @return $this
    */
   protected function setPullInfo($key, $value) {
@@ -545,10 +545,11 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Setter for pull info
+   * Setter for pull info.
    *
-   * @param string $key 
-   * @param mixed $value 
+   * @param string $key
+   * @param mixed $value
+   *
    * @return $this
    */
   protected function setPushInfo($key, $value) {
@@ -565,7 +566,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   public function getNextPushTime() {
     return $this->push_info['last_timestamp'] + $this->push_frequency;
   }
-
 
   /**
    * {@inheritdoc}
@@ -604,7 +604,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Salesforce Mapping Field Manager service
+   * Salesforce Mapping Field Manager service.
    *
    * @return \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager
    */
@@ -613,7 +613,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Salesforce API client service
+   * Salesforce API client service.
    *
    * @return \Drupal\salesforce\Rest\RestClient
    */
@@ -622,7 +622,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * State service
+   * State service.
    *
    * @return \Drupal\Core\State\StateInterface
    */

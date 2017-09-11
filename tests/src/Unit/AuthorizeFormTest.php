@@ -39,8 +39,6 @@ class AuthorizeFormTest extends UnitTestCase {
     $this->unrouted_url_assembler = new UnroutedUrlAssembler($this->request_stack->reveal(), $this->obpath->reveal());
     $this->event_dispatcher = $this->getMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
 
-    
-
     $this->client->getAuthCallbackUrl()->willReturn($this->example_url);
     $this->client->getAuthEndpointUrl()->willReturn($this->example_url);
 

@@ -168,6 +168,9 @@ class AuthorizeForm extends ConfigFormBase {
     return UrlHelper::isValid($url, TRUE);
   }
 
+  /**
+   *
+   */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     if (!self::validEndpoint($form_state->getValue('login_url'))) {
       $form_state->setErrorByName('login_url', t('Please enter a valid Salesforce login URL.'));

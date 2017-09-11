@@ -27,17 +27,20 @@ function salesforce_push_drush_command() {
   return $items;
 }
 
+/**
+ *
+ */
 function drush_salesforce_push_sf_push_queue($name = NULL) {
   $queue = \Drupal::service('queue.salesforce_push');
   if ($name !== NULL) {
     if (!($mapping = _salesforce_drush_get_mapping($name))) {
       return;
     }
-    // Process one mapping queue
+    // Process one mapping queue.
     $queue->processQueue($mapping);
   }
   else {
-    // Process all queues
+    // Process all queues.
     $queue->processQueues();
   }
 }

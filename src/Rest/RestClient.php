@@ -262,7 +262,7 @@ class RestClient implements RestClientInterface {
   /**
    * Extract normalized error information from a RequestException.
    *
-   * @param RequestException $e
+   * @param \GuzzleHttp\Exception\RequestException $e
    *   Exception object.
    *
    * @return array
@@ -306,7 +306,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Wrapper for config rest_api_version.version
+   * Wrapper for config rest_api_version.version.
    */
   public function getApiVersion() {
     if ($this->config->get('use_latest')) {
@@ -318,7 +318,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Setter for config salesforce.settings rest_api_version and use_latest
+   * Setter for config salesforce.settings rest_api_version and use_latest.
    *
    * @param bool $use_latest
    * @param int $version
@@ -339,14 +339,14 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Getter for consumer_key
+   * Getter for consumer_key.
    */
   public function getConsumerKey() {
     return $this->state->get('salesforce.consumer_key');
   }
 
   /**
-   * Setter for consumer_key
+   * Setter for consumer_key.
    */
   public function setConsumerKey($value) {
     return $this->state->set('salesforce.consumer_key', $value);
@@ -603,10 +603,10 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Helper method to extract API Usage info from response header and write to 
+   * Helper method to extract API Usage info from response header and write to
    * stateful variable.
    *
-   * @param RestResponse $response 
+   * @param RestResponse $response
    */
   protected function updateApiUsage(RestResponse $response) {
     if ($limit_info = $response->getHeader('Sforce-Limit-Info')) {
@@ -661,10 +661,10 @@ class RestClient implements RestClientInterface {
   /**
    * Use SOQL to get objects based on query string.
    *
-   * @param SelectQuery $query
+   * @param \Drupal\salesforce\SelectQuery $query
    *   The constructed SOQL query.
    *
-   * @return SelectQueryResult
+   * @return \Drupal\salesforce\SelectQueryResult
    *   Query result object.
    *
    * @addtogroup salesforce_apicalls
@@ -678,9 +678,10 @@ class RestClient implements RestClientInterface {
   /**
    * Given a select query result, fetch the next results set, if it exists.
    *
-   * @param SelectQueryResult $results
-   *   The query result which potentially has more records
-   * @return SelectQueryResult
+   * @param \Drupal\salesforce\SelectQueryResult $results
+   *   The query result which potentially has more records.
+   *
+   * @return \Drupal\salesforce\SelectQueryResult
    *   If there are no more results, $results->records will be empty.
    */
   public function queryMore(SelectQueryResult $results) {
@@ -811,7 +812,7 @@ class RestClient implements RestClientInterface {
    * @param string $id
    *   Salesforce id of the object.
    *
-   * @return SObject
+   * @return \Drupal\salesforce\SObject
    *   Object of the requested Salesforce object.
    *
    * @addtogroup salesforce_apicalls
@@ -830,7 +831,7 @@ class RestClient implements RestClientInterface {
    * @param string $value
    *   Value of external id.
    *
-   * @return SObject
+   * @return \Drupal\salesforce\SObject
    *   Object of the requested Salesforce object.
    *
    * @addtogroup salesforce_apicalls
@@ -877,6 +878,7 @@ class RestClient implements RestClientInterface {
    *   Start date to check for deleted objects (in ISO 8601 format).
    * @param string $endDate
    *   End date to check for deleted objects (in ISO 8601 format).
+   *
    * @return GetDeletedResult
    */
   public function getDeleted($type, $startDate, $endDate) {
@@ -949,9 +951,9 @@ class RestClient implements RestClientInterface {
     }
     else {
       $query = new SelectQuery('RecordType');
-      $query->fields = array('Id', 'Name', 'DeveloperName', 'SobjectType');
+      $query->fields = ['Id', 'Name', 'DeveloperName', 'SobjectType'];
       $result = $this->query($query);
-      $record_types = array();
+      $record_types = [];
       foreach ($result->records() as $rt) {
         $record_types[$rt->field('SobjectType')][$rt->field('DeveloperName')] = $rt;
       }
@@ -976,7 +978,8 @@ class RestClient implements RestClientInterface {
    *   Object type name, E.g., Contact, Account.
    * @param string $devname
    *   RecordType DeveloperName, e.g. Donation, Membership, etc.
-   * @return SFID
+   *
+   * @return \Drupal\salesforce\SFID
    *   The Salesforce ID of the given Record Type, or null.
    *
    * @throws Exception if record type not found
@@ -992,7 +995,7 @@ class RestClient implements RestClientInterface {
   /**
    * Utility function to determine object type for given SFID.
    *
-   * @param SFID $id
+   * @param \Drupal\salesforce\SFID $id
    *   Salesforce object ID.
    *
    * @return string
@@ -1002,7 +1005,7 @@ class RestClient implements RestClientInterface {
    *   If SFID doesn't match any object type.
    */
   public function getObjectTypeName(SFID $id) {
-    $prefix = substr((string)$id, 0, 3);
+    $prefix = substr((string) $id, 0, 3);
     $describe = $this->objects();
     foreach ($describe as $object) {
       if ($prefix == $object['keyPrefix']) {

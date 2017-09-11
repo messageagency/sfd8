@@ -17,16 +17,14 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Prophecy\Argument;
 
 /**
- * Test SalesforcePushQueueProcessor plugin Rest
+ * Test SalesforcePushQueueProcessor plugin Rest.
  *
  * @coversDefaultClass \Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor\Rest
  *
  * @group salesforce_pull
  */
-
 class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
   static $modules = ['salesforce_pull'];
 
@@ -91,7 +89,7 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->method('isAuthorized')
       ->willReturn(TRUE);
 
-    // test suspend queue if not authorized
+    // Test suspend queue if not authorized.
     $this->client->expects($this->at(1))
       ->method('isAuthorized')
       ->willReturn(FALSE);
@@ -100,13 +98,13 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->method('processItem')
       ->willReturn(NULL);
 
-    // test delete item after successful processItem()
+    // Test delete item after successful processItem()
     $this->queue->expects($this->once())
       ->method('deleteItem')
       ->willReturn(NULL);
 
-    $this->handler->process([(object)[1]]);
-    $this->handler->process([(object)[2]]);
+    $this->handler->process([(object) [1]]);
+    $this->handler->process([(object) [2]]);
   }
 
   /**
@@ -127,18 +125,18 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->method('getMappedObject')
       ->willReturn($mappedObject);
 
-    $this->handler->processItem((object)['op' => MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE, 'mapped_object_id' => 'foo', 'name' => 'bar']);
+    $this->handler->processItem((object) ['op' => MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE, 'mapped_object_id' => 'foo', 'name' => 'bar']);
   }
 
   /**
    * @covers ::processItem
    */
   public function testProcessItemDelete() {
-    // test push delete for op == delete
-    $this->queueItem = (object)[
+    // Test push delete for op == delete.
+    $this->queueItem = (object) [
       'op' => MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE,
       'mapped_object_id' => 'foo',
-      'name' => 'bar'
+      'name' => 'bar',
     ];
 
     $this->mappedObject = $this->getMock(MappedObjectInterface::class);
@@ -152,10 +150,9 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->method('getMappedObject')
       ->willReturn($this->mappedObject);
 
-    // test skip item on missing mapped object and op == delete
+    // Test skip item on missing mapped object and op == delete
     // test push on op == insert / update
-    // test throwing exception on drupal entity not found
-
+    // test throwing exception on drupal entity not found.
     $this->handler->processItem($this->queueItem);
   }
 
@@ -163,9 +160,9 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
    * @covers ::processItem
    */
   public function testProcessItemPush() {
-    // test push on op == insert / update
+    // Test push on op == insert / update.
     $this->mappedObject = $this->getMock(MappedObjectInterface::class);
-    $this->queueItem = (object)[
+    $this->queueItem = (object) [
       'entity_id' => 'foo',
       'op' => NULL,
       'mapped_object_id' => NULL,
@@ -200,7 +197,7 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->willReturn($this->mappedObject);
 
     $this->handler->processItem($this->queueItem);
-        
+
   }
 
   /**
@@ -209,8 +206,8 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
    * @expectedException \Drupal\salesforce\EntityNotFoundException
    */
   public function testProcessItemEntityNotFound() {
-    // test throwing exception on drupal entity not found
-    $this->queueItem = (object)[
+    // Test throwing exception on drupal entity not found.
+    $this->queueItem = (object) [
       'op' => '',
       'mapped_object_id' => 'foo',
       'name' => 'bar',
@@ -245,4 +242,3 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
   }
 
 }
-

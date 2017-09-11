@@ -5,7 +5,6 @@ namespace Drupal\salesforce_mapping\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\salesforce_mapping\Entity\MappedObject;
 
 /**
  * Returns responses for devel module routes.
@@ -16,9 +15,9 @@ class MappedObjectController extends ControllerBase {
    * Helper function to get entity from router path
    * e.g. get User from user/1/salesforce.
    *
-   * @param RouteMatchInterface $route_match
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *
-   * @return EntityInterface
+   * @return \Drupal\Core\Entity\EntityInterface
    *
    * @throws Exception if an EntityInterface is not found at the given route
    *
@@ -41,10 +40,10 @@ class MappedObjectController extends ControllerBase {
   /**
    * Helper function to fetch existing MappedObject or create a new one.
    *
-   * @param EntityInterface $entity
+   * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to be mapped.
    *
-   * @return MappedObject
+   * @return \Drupal\salesforce_mapping\Entity\MappedObject
    */
   private function getMappedObjects(EntityInterface $entity) {
     // @TODO this probably belongs in a service
@@ -58,17 +57,17 @@ class MappedObjectController extends ControllerBase {
    * List mapped objects for the entity along the current route.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
-   *    A RouteMatch object.
+   *   A RouteMatch object.
    *
    * @return array
-   *    Array of page elements to render.
+   *   Array of page elements to render.
    */
   public function listing(RouteMatchInterface $route_match) {
     $entity = $this->getEntity($route_match);
     $salesforce_mapped_objects = $this->getMappedObjects($entity);
     if (empty($salesforce_mapped_objects)) {
       return [
-        '#markup' => $this->t('No mapped objects for %label.', ['%label' => $entity->label()])
+        '#markup' => $this->t('No mapped objects for %label.', ['%label' => $entity->label()]),
       ];
     }
 

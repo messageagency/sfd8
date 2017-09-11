@@ -11,15 +11,15 @@ use GuzzleHttp\Psr7\Response;
 class RestResponse extends Response {
 
   /**
-   * The original Response used to build this object
+   * The original Response used to build this object.
    *
-   * @var GuzzleHttp\Psr7\Response;
+   * @var GuzzleHttp\Psr7\Response
    * @see __get()
    */
   protected $response;
 
   /**
-   * The json-decoded response body
+   * The json-decoded response body.
    *
    * @var mixed
    * @see __get()
@@ -41,10 +41,12 @@ class RestResponse extends Response {
    * Magic getter method to return the given property.
    *
    * @param string $key
+   *
    * @return mixed
+   *
    * @throws Exception if $key is not a property
    */
-  function __get($key) {
+  public function __get($key) {
     if (!property_exists($this, $key)) {
       throw new \Exception("Undefined property $key");
     }

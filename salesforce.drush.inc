@@ -34,14 +34,14 @@ Options are:
 info: (default) Display metadata about an object
 fields: Display information about fields that are part of the object
 field-data FIELDNAME: Display information about a specific field that is part of an object
-raw: Display the complete, raw describe response."
+raw: Display the complete, raw describe response.",
     ],
     'examples' => [
       'drush sfdo Contact' => 'Show metadata about Contact SObject type.',
       'drush sfdo Contact --output=fields' => 'Show addtional metadata about Contact fields.',
       'drush sfdo Contact --output=field --field=Email' => 'Show full metadata about Contact.Email field.',
-      'drush sfdo Contact --output=raw' => 'Display the full metadata for Contact SObject type.'
-    ]
+      'drush sfdo Contact --output=raw' => 'Display the full metadata for Contact SObject type.',
+    ],
   ];
 
   $items['sf-list-resources'] = [
@@ -49,68 +49,68 @@ raw: Display the complete, raw describe response."
     'aliases' => ['sflr'],
   ];
 
-  $items['sf-read-object'] = array(
+  $items['sf-read-object'] = [
     'description' => 'Retrieve all the data for an object with a specific ID.',
-    'aliases' => array('sfro'),
-    'arguments' => array(
+    'aliases' => ['sfro'],
+    'arguments' => [
       'id' => 'The object ID in Salesforce.',
-    ),
-    'options' => array(
-      'format' => array(
+    ],
+    'options' => [
+      'format' => [
         'description' => 'Format to output the object. Use "print_r" for print_r (default), "export" for var_export, and "json" for JSON.',
         'example-value' => 'export',
-      ),
-    ),
-  );
+      ],
+    ],
+  ];
 
-  $items['sf-create-object'] = array(
+  $items['sf-create-object'] = [
     'description' => 'Create an object with specified data.',
-    'aliases' => array('sfco'),
-    'arguments' => array(
+    'aliases' => ['sfco'],
+    'arguments' => [
       'object' => 'The object type name in Salesforce (e.g. Account).',
       'data' => 'The data to use when creating the object (default is JSON format). Use \'-\' to read the data from STDIN.',
-    ),
-    'options' => array(
-      'format' => array(
+    ],
+    'options' => [
+      'format' => [
         'description' => 'Format to parse the object. Use  "json" for JSON (default) or "query" for data formatted like a query string, e.g. \'Company=Foo&LastName=Bar\'.',
         'example-value' => 'json',
-      ),
-    ),
-  );
+      ],
+    ],
+  ];
 
-  $items['sf-query-object'] = array(
+  $items['sf-query-object'] = [
     'description' => 'Query an object using SOQL with specified conditions.',
-    'aliases' => array('sfqo'),
-    'arguments' => array(
+    'aliases' => ['sfqo'],
+    'arguments' => [
       'object' => 'The object type name in Salesforce (e.g. Account).',
-    ),
-    'options' => array(
-      'format' => array(
+    ],
+    'options' => [
+      'format' => [
         'description' => 'Format to output the objects. Use "print_r" for print_r (default), "export" for var_export, and "json" for JSON.',
         'example-value' => 'export',
-      ),
-      'where' =>array(
+      ],
+      'where' => [
         'description' => 'A WHERE clause to add to the SOQL query',
-      ),
-      'fields' =>array(
+      ],
+      'fields' => [
         'description' => 'A comma-separated list fields to select in the SOQL query. If absent, an API call is used to find all fields',
-      ),
+      ],
       'limit' => [
         'description' => 'Integer limit on the number of results to return for the query.',
       ],
       'order' => [
         'description' => 'Comma-separated fields by which to sort results. Make sure to enclose in quotes for any whitespace.',
       ],
-    ),
-  );
+    ],
+  ];
 
-  $items['sf-execute-query'] = array(
+  $items['sf-execute-query'] = [
     'description' => 'Execute a SOQL query.',
-    'aliases' => array('sfeq', 'soql'),
-    'arguments' => array(
+    'aliases' => ['sfeq', 'soql'],
+    'arguments' => [
       'query' => 'The query to execute.',
-    ),
-  );
+    ],
+  ];
 
   $items['sf-pull-query'] = [
     'description' => 'Given a mapping, enqueue records for pull from Salesforce, ignoring modification timestamp. This command is useful, for example, when seeding content for a Drupal site prior to deployment.',
@@ -191,6 +191,7 @@ function drush_salesforce_sf_describe_object($object_name = NULL) {
     case 'raw':
       drush_print_r($object->data);
       return;
+
     case 'fields':
       $rows = [['Name', 'Type', 'Label']];
       foreach ($object->fields as $field) {
@@ -198,6 +199,7 @@ function drush_salesforce_sf_describe_object($object_name = NULL) {
       }
       drush_print_table($rows, TRUE);
       return;
+
     case 'field':
       $fieldname = drush_get_option('field');
       if (empty($fieldname)) {
@@ -303,7 +305,7 @@ function drush_salesforce_sf_read_object($id) {
     if ($object = $salesforce->objectRead($name, $id)) {
       drush_print(dt('!type with id !id:', [
         '!type' => $object->type(),
-        '!id' => $object->id()
+        '!id' => $object->id(),
       ]));
       drush_print(drush_format($object->fields()));
     }
@@ -327,14 +329,16 @@ function drush_salesforce_sf_create_object($name, $data) {
     $data = stream_get_contents(STDIN);
   }
   $format = drush_get_option('format', 'json');
-  $params = array();
+  $params = [];
   switch ($format) {
     case 'query':
       parse_str($data, $params);
       break;
+
     case 'json':
       $params = json_decode($data, TRUE);
       break;
+
     default:
       drush_log(dt('Invalid format'), 'error');
       return;
@@ -396,7 +400,7 @@ function drush_salesforce_sf_query_object($name) {
   foreach ($result->records() as $sfid => $record) {
     drush_print(drush_format([$sfid => $record->fields()]));
   }
-  $pretty_query = str_replace('+', ' ', (string)$query);
+  $pretty_query = str_replace('+', ' ', (string) $query);
   if (!$fields) {
     $fields = implode(',', $query->fields);
     $pretty_query = str_replace($fields, ' * ', $pretty_query);
@@ -404,7 +408,7 @@ function drush_salesforce_sf_query_object($name) {
   drush_print(dt("Showing !size of !total records for query:\n!query", [
     '!size' => count($result->records()),
     '!total' => $result->size(),
-    '!query' => $pretty_query
+    '!query' => $pretty_query,
   ]));
 
 }
@@ -430,10 +434,11 @@ function drush_salesforce_sf_execute_query($query = NULL) {
 }
 
 /**
- * Helper method to get a mapping from the given name, or from user input if 
+ * Helper method to get a mapping from the given name, or from user input if
  * name is empty.
  *
  * @param string $name
+ *
  * @return SalesforceMappingInterface
  */
 function _salesforce_drush_get_mapping($name = NULL) {
@@ -459,4 +464,3 @@ function _salesforce_drush_get_mapping($name = NULL) {
   }
   return $mapping;
 }
-

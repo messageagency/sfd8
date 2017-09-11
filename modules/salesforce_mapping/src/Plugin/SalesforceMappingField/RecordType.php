@@ -37,10 +37,9 @@ class RecordType extends SalesforceMappingFieldPluginBase {
     ];
 
     $pluginForm['direction']['#options'] = [
-      'drupal_sf' => $pluginForm['direction']['#options']['drupal_sf']
+      'drupal_sf' => $pluginForm['direction']['#options']['drupal_sf'],
     ];
     $pluginForm['direction']['#default_value'] = 'drupal_sf';
-
 
     return $pluginForm;
   }
@@ -49,7 +48,7 @@ class RecordType extends SalesforceMappingFieldPluginBase {
    *
    */
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
-    return (string)($this
+    return (string) ($this
       ->salesforceClient
       ->getRecordTypeIdByDeveloperName(
           $mapping->getSalesforceObjectType(),

@@ -13,7 +13,6 @@ use Drupal\salesforce\SFID;
 use Drupal\salesforce_mapping\MappedObjectStorage;
 use Drupal\salesforce_mapping\MappingConstants;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Handles pull cron deletion of Drupal entities based onSF mapping settings.
@@ -76,7 +75,7 @@ class DeleteHandler {
    * @param \Drupal\Core\State\StateInterface $state
    *   State service.
    */
-    public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher) {
     $this->sfapi = $sfapi;
     $this->etm = $entity_type_manager;
     $this->mappingStorage = $this->etm->getStorage('salesforce_mapping');

@@ -48,37 +48,41 @@ interface RestClientInterface {
    */
   public function apiCall($path, array $params = [], $method = 'GET', $returnObject = FALSE);
 
-
   /**
    * Set options for Guzzle HTTP client.
+   *
    * @see http://docs.guzzlephp.org/en/latest/request-options.html
    *
    * @param array $options
+   *
    * @return $this
    */
   public function setHttpClientOptions(array $options);
 
   /**
    * Set a single Guzzle HTTP client option.
+   *
    * @see setHttpClientOptions
    *
-   * @param string $option_name 
-   * @param mixed $option_value 
+   * @param string $option_name
+   * @param mixed $option_value
+   *
    * @return $this
    */
   public function setHttpClientOption($option_name, $option_value);
 
   /**
-   * Getter for HTTP client options
+   * Getter for HTTP client options.
    *
    * @return mixed
    */
   public function getHttpClientOptions();
 
   /**
-   * Getter for a single, named HTTP client option
+   * Getter for a single, named HTTP client option.
    *
    * @param string $option_name
+   *
    * @return mixed
    */
   public function getHttpClientOption($option_name);
@@ -236,10 +240,10 @@ interface RestClientInterface {
   /**
    * Use SOQL to get objects based on query string.
    *
-   * @param SelectQuery $query
+   * @param \Drupal\salesforce\SelectQuery $query
    *   The constructed SOQL query.
    *
-   * @return SelectQueryResult
+   * @return \Drupal\salesforce\SelectQueryResult
    *
    * @addtogroup salesforce_apicalls
    */
@@ -248,10 +252,10 @@ interface RestClientInterface {
   /**
    * Given a select query result, fetch the next results set, if it exists.
    *
-   * @param SelectQueryResult $results
+   * @param \Drupal\salesforce\SelectQueryResult $results
    *   The query result which potentially has more records.
    *
-   * @return SelectQueryResult
+   * @return \Drupal\salesforce\SelectQueryResult
    *   If there are no more results, $results->records will be empty.
    */
   public function queryMore(SelectQueryResult $results);
@@ -363,6 +367,7 @@ interface RestClientInterface {
    *   Object type name, E.g., Contact, Account.
    * @param string $id
    *   Salesforce id of the object.
+   *
    * @pararm bool $throw_exception
    *   (optional) If TRUE, 404 response code will cause RequestException to be
    *   thrown. Otherwise, hide those errors. Default is FALSE.
@@ -384,6 +389,7 @@ interface RestClientInterface {
    *   Start date to check for deleted objects (in ISO 8601 format).
    * @param string $endDate
    *   End date to check for deleted objects (in ISO 8601 format).
+   *
    * @return GetDeletedResult
    */
   public function getDeleted($type, $startDate, $endDate);
@@ -410,7 +416,7 @@ interface RestClientInterface {
    *
    * @param int $end
    *   unix timestamp for end of timeframe for updates.
-   *   Defaults to now if empty
+   *   Defaults to now if empty.
    *
    * @return array
    *   return array has 2 indexes:
@@ -423,7 +429,7 @@ interface RestClientInterface {
    *
    * @addtogroup salesforce_apicalls
    */
-  public function getUpdated($name, $start = null, $end = null);
+  public function getUpdated($name, $start = NULL, $end = NULL);
 
   /**
    * Retrieve all record types for this org. If $name is provided, retrieve
@@ -449,7 +455,7 @@ interface RestClientInterface {
    * @param string $devname
    *   RecordType DeveloperName, e.g. Donation, Membership, etc.
    *
-   * @return SFID
+   * @return \Drupal\salesforce\SFID
    *   The Salesforce ID of the given Record Type, or null.
    *
    * @throws Exception if record type not found
@@ -457,10 +463,12 @@ interface RestClientInterface {
   public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE);
 
   /**
-   * Utility function to determine object type for given SFID
+   * Utility function to determine object type for given SFID.
    *
-   * @param SFID $id
+   * @param \Drupal\salesforce\SFID $id
+   *
    * @return string
+   *
    * @throws Exception if SFID doesn't match any object type
    */
   public function getObjectTypeName(SFID $id);

@@ -1,13 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\Routing\RouteSubscriber.
- */
-
 namespace Drupal\salesforce_mapping\Routing;
 
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
@@ -34,14 +28,14 @@ class RouteSubscriber extends RouteSubscriberBase {
    */
   public function __construct(EntityTypeManagerInterface $entity_manager) {
     $this->entityTypeManager = $entity_manager;
-  } 
+  }
 
   /**
    * {@inheritdoc}
    */
   protected function alterRoutes(RouteCollection $collection) {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
-      // Note the empty operation, so we get the nice clean route "entity.entity-type.salesforce"
+      // Note the empty operation, so we get the nice clean route "entity.entity-type.salesforce".
       if (!($path = $entity_type->getLinkTemplate('salesforce'))) {
         continue;
       }

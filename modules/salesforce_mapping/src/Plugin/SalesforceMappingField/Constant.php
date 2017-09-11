@@ -34,7 +34,7 @@ class Constant extends SalesforceMappingFieldPluginBase {
     $pluginForm['direction']['#options'] = [
       MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => $pluginForm['direction']['#options'][MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF],
     ];
-    $pluginForm['direction']['#default_value'] = 
+    $pluginForm['direction']['#default_value'] =
       MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF;
 
     return $pluginForm;

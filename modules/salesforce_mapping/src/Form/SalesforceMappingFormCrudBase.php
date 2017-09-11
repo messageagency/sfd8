@@ -100,10 +100,10 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#required' => TRUE,
       '#prefix' => '<div id="drupal_bundle">',
       '#suffix' => '</div>',
-      // Don't expose the bundle listing until user has selected an entity
+      // Don't expose the bundle listing until user has selected an entity.
       '#states' => [
         'visible' => [
-          ':input[name="drupal_entity_type"]' => array('!value' => ''),
+          ':input[name="drupal_entity_type"]' => ['!value' => ''],
         ],
       ],
     ];
@@ -117,7 +117,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $bundle_info = $this->entityManager->getBundleInfo($entity_type);
 
     if (!empty($bundle_info)) {
-      $form['drupal_entity']['drupal_bundle']['#options'] = array();
+      $form['drupal_entity']['drupal_bundle']['#options'] = [];
       $form['drupal_entity']['drupal_bundle']['#title'] = $this->t('@entity_type Bundle', ['@entity_type' => $entity_types[$entity_type]]);
       foreach ($bundle_info as $key => $info) {
         $form['drupal_entity']['drupal_bundle']['#options'][$key] = $info['label'];
@@ -184,7 +184,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         '#tree' => FALSE,
         '#states' => [
           'visible' => [
-            ':input[name^="sync_triggers[pull"]' => array('checked' => TRUE),
+            ':input[name^="sync_triggers[pull"]' => ['checked' => TRUE],
           ],
         ],
       ];
@@ -216,10 +216,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
           '#validate' => ['::lastDeleteReset'],
         ];
 
-
         // ' ; Last delete date/time: %last_delete',  '%last_delete' => $mapping->getLastDeleteTime() ? date('Y-m-d h:ia', $mapping->getLastDeleteTime()) : 'never'])
-        // ];
-
+        // ];.
         // This doesn't work until after mapping gets saved.
         // @TODO figure out best way to alert admins about this, or AJAX-ify it.
         $form['pull']['pull_trigger_date'] = [
@@ -263,7 +261,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         '#tree' => FALSE,
         '#states' => [
           'visible' => [
-            ':input[name^="sync_triggers[push"]' => array('checked' => TRUE),
+            ':input[name^="sync_triggers[push"]' => ['checked' => TRUE],
           ],
         ],
       ];
@@ -366,7 +364,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#default_value' => $mapping->locked,
     ];
 
-
     return $form;
   }
 
@@ -398,7 +395,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   }
 
   /**
-   * Submit handler for "reset pull timestamp" button
+   * Submit handler for "reset pull timestamp" button.
    */
   public function lastPullReset(array $form, FormStateInterface $form_state) {
     $mapping = $this->entity->setLastPullTime(NULL);
@@ -408,7 +405,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   }
 
   /**
-   * Submit handler for "reset delete timestamp" button
+   * Submit handler for "reset delete timestamp" button.
    */
   public function lastDeleteReset(array $form, FormStateInterface $form_state) {
     $mapping = $this->entity->setLastDeleteTime(NULL);
@@ -453,7 +450,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       }
       foreach ($bundle_info as $bundle => $info) {
         $entity_label = $entities[$entity];
-        $options[(string)$entity_label][$bundle] = (string)$info['label'];
+        $options[(string) $entity_label][$bundle] = (string) $info['label'];
       }
     }
     return $options;

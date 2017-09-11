@@ -16,11 +16,12 @@ class SalesforceEncryptServiceProvider extends ServiceProviderBase {
    * {@inheritdoc}
    */
   public function alter(ContainerBuilder $container) {
-    // Overrides salesforce.client class with our EncryptedRestClientInterface
+    // Overrides salesforce.client class with our EncryptedRestClientInterface.
     $container->getDefinition('salesforce.client')
       ->setClass(RestClient::class)
       ->addArgument(new Reference('encryption'))
       ->addArgument(new Reference('encrypt.encryption_profile.manager'))
       ->addArgument(new Reference('lock'));
   }
+
 }

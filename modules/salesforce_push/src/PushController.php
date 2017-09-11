@@ -7,12 +7,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-  
+
+/**
+ *
+ */
 class PushController extends ControllerBase {
 
   protected $pushQueue;
   protected $mappingStorage;
 
+  /**
+   *
+   */
   public function __construct(PushQueue $pushQueue, EntityManagerInterface $entity_manager) {
     $this->pushQueue = $pushQueue;
     $this->mappingStorage = $entity_manager->getStorage('salesforce_mapping');

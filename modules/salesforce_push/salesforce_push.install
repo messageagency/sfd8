@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @file
+ */
+
 use Drupal\salesforce_push\PushQueue;
 
 /**
@@ -26,9 +30,10 @@ function salesforce_push_uninstall() {
 }
 
 /**
- * Set default variables
+ * Set default variables.
  *
  * @return void
+ *
  * @author Aaron Bauman
  */
 function salesforce_push_update_1() {

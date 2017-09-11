@@ -43,6 +43,7 @@ interface SalesforceMappingFieldPluginInterface {
 
   /**
    * Given a Drupal entity, return the outbound value.
+   *
    * @param $entity
    *   The entity being mapped.
    * @param $mapping
@@ -55,8 +56,9 @@ interface SalesforceMappingFieldPluginInterface {
    * validation against Salesforce field types to protect against basic data
    * errors.
    *
-   * @param EntityInterface $entity
-   * @param SalesforceMappingInterface $mapping
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *
    * @return mixed
    */
   public function pushValue(EntityInterface $entity, SalesforceMappingInterface $mapping);
@@ -66,9 +68,10 @@ interface SalesforceMappingFieldPluginInterface {
    * validation against Drupal field types to protect against basic data
    * errors.
    *
-   * @param SObject $sf_object
-   * @param EntityInterface $entity
-   * @param SalesforceMappingInterface $mapping
+   * @param \Drupal\salesforce\SObject $sf_object
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *
    * @return mixed
    */
   public function pullValue(SObject $sf_object, EntityInterface $entity, SalesforceMappingInterface $mapping);
@@ -77,7 +80,7 @@ interface SalesforceMappingFieldPluginInterface {
    * Given a SF Mapping, return TRUE or FALSE whether this field plugin can be
    * added via UI. Not used for validation or any other constraints.
    *
-   * @param SalesforceMappingInterface $mapping
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *
    * @return bool
    *
@@ -94,24 +97,26 @@ interface SalesforceMappingFieldPluginInterface {
   public function config($key = NULL, $value = NULL);
 
   /**
-   * Whether this plugin supports "push" operations
+   * Whether this plugin supports "push" operations.
    *
    * @return bool
    */
   public function push();
 
   /**
-   * Whether this plugin supports "pull" operations
+   * Whether this plugin supports "pull" operations.
    *
    * @return bool
    */
   public function pull();
 
   /**
-   * Return an array of dependencies, compatible with \Drupal\Component\Plugin\DependentPluginInterface::calculateDependencies
+   * Return an array of dependencies, compatible with \Drupal\Component\Plugin\DependentPluginInterface::calculateDependencies.
    *
    * @return array
+   *
    * @see \Drupal\Component\Plugin\DependentPluginInterface::calculateDependencies
    */
   public function getDependencies(SalesforceMappingInterface $mapping);
+
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\Tests\salesforce\Unit;
 
 use Drupal\Tests\UnitTestCase;
@@ -6,11 +7,10 @@ use Drupal\salesforce\SFID;
 use Drupal\salesforce\SelectQueryResult;
 
 /**
- * Test Object instantitation
+ * Test Object instantitation.
  *
  * @group salesforce_pull
  */
-
 class SelectQueryResultTest extends UnitTestCase {
   static $modules = ['salesforce'];
 
@@ -21,32 +21,33 @@ class SelectQueryResultTest extends UnitTestCase {
     parent::setUp();
     $result = [
       'totalSize' => 2,
-      'done' => true,
+      'done' => TRUE,
       'records' => [
         [
           'Id' => '1234567890abcde',
-          'attributes' => ['type' => 'dummy',],
+          'attributes' => ['type' => 'dummy'],
           'name' => 'Example',
         ],
         [
           'Id' => '1234567890abcdf',
-          'attributes' => ['type' => 'dummy',],
+          'attributes' => ['type' => 'dummy'],
           'name' => 'Example2',
         ],
-      ]
+      ],
     ];
     $this->sqr = new SelectQueryResult($result);
   }
 
   /**
-   * Test object instantiation with good resultd
+   * Test object instantiation with good resultd.
    */
   public function testGoodID() {
     $this->assertTrue($this->sqr instanceof SelectQueryResult);
   }
 
   /**
-   * Test object instantiation with no ID
+   * Test object instantiation with no ID.
+   *
    * @expectedException Exception
    */
   public function testNoID() {

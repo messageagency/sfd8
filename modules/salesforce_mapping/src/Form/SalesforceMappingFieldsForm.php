@@ -154,7 +154,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     return $form;
   }
 
-  /** 
+  /**
    * @return array
    *   Return an array of field names => labels for any field which is marked
    *   "externalId"
@@ -260,7 +260,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   }
 
   /**
-   * Submit handler
+   * Submit handler.
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Need to transform the schema slightly to remove the "config" dereference. Also trigger submit handlers on plugins.

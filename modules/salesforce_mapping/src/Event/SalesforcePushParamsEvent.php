@@ -15,18 +15,18 @@ class SalesforcePushParamsEvent extends SalesforcePushEvent {
   /**
    * {@inheritdoc}
    *
-   * @param MappedObjectInterface $mapped_object
-   * @param PushParams $params
+   * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mapped_object
+   * @param \Drupal\salesforce_mapping\PushParams $params
    */
   public function __construct(MappedObjectInterface $mapped_object, PushParams $params) {
     parent::__construct($mapped_object);
     $this->params = $params;
-    $this->entity = ($params) ? $params->getDrupalEntity() : null;
-    $this->mapping = ($params) ? $params->getMapping() : null;
+    $this->entity = ($params) ? $params->getDrupalEntity() : NULL;
+    $this->mapping = ($params) ? $params->getMapping() : NULL;
   }
 
   /**
-   * @return PushParams
+   * @return \Drupal\salesforce_mapping\PushParams
    */
   public function getParams() {
     return $this->params;

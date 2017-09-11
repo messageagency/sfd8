@@ -18,11 +18,11 @@ class SalesforcePullEntityValueEvent extends SalesforceBaseEvent {
   protected $entity;
 
   /**
-   * undocumented function
+   * Undocumented function.
    *
    * @param mixed &$value
-   * @param SalesforceMappingFieldPluginInterface $field_plugin
-   * @param MappedObjectInterface $mapped_object
+   * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface $field_plugin
+   * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mapped_object
    */
   public function __construct(&$value, SalesforceMappingFieldPluginInterface $field_plugin, MappedObjectInterface $mapped_object) {
     $this->entity_value = $value;
@@ -32,10 +32,16 @@ class SalesforcePullEntityValueEvent extends SalesforceBaseEvent {
     $this->mapping = $mapped_object->salesforce_mapping->entity;
   }
 
+  /**
+   *
+   */
   public function getEntityValue() {
     return $this->entity_value;
   }
 
+  /**
+   *
+   */
   public function getFieldPlugin() {
     return $this->field_plugin;
   }
@@ -55,12 +61,15 @@ class SalesforcePullEntityValueEvent extends SalesforceBaseEvent {
   }
 
   /**
-   * @return MappedObjectInterface
+   * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface
    */
   public function getMappedObject() {
     return $this->mapped_object;
   }
 
+  /**
+   *
+   */
   public function getOp() {
     return $this->op;
   }

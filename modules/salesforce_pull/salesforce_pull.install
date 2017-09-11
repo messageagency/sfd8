@@ -5,8 +5,6 @@
  * Install/uninstall tasks for the Salesforce Pull module.
  */
 
-use Drupal\salesforce_pull\QueueHandler;
-
 /**
  * Implements hook_uninstall().
  */
@@ -41,7 +39,7 @@ function salesforce_pull_update_8002() {
 }
 
 /**
- * Convert salesforce_pull_last* timestamps key-values into arrays
+ * Convert salesforce_pull_last* timestamps key-values into arrays.
  */
 function salesforce_pull_update_8001() {
   $kv = db_query("SELECT name, value FROM key_value WHERE name like 'salesforce_pull_last%'")->fetchAllKeyed();
@@ -64,7 +62,7 @@ function salesforce_pull_update_8001() {
 }
 
 /**
- * Moves global pull limit out of state into config
+ * Moves global pull limit out of state into config.
  */
 function salesforce_pull_update_8003() {
   $config = \Drupal::configFactory()->getEditable('salesforce.settings');
@@ -92,4 +90,3 @@ function salesforce_pull_update_8004() {
   \Drupal::state()->set('salesforce.mapping_pull_info', $mapping_pull_info);
   \Drupal::state()->delete('salesforce.sobject_pull_info');
 }
-

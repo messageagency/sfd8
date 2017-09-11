@@ -11,7 +11,6 @@ use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforceQueryEvent;
@@ -38,7 +37,7 @@ class QueueHandler {
   protected $queue;
 
   /**
-   * @var array of \Drupal\salesforce_mapping\Entity\SalesforceMapping
+   * @var arrayof\Drupal\salesforce_mapping\Entity\SalesforceMapping
    */
   protected $mappings;
 
@@ -58,12 +57,11 @@ class QueueHandler {
   protected $eventDispatcher;
 
   /**
-   * @param RestClientInterface $sfapi
+   * @param \Drupal\salesforce\Rest\RestClientInterface $sfapi
    * @param QueueInterface $queue
    * @param StateInterface $state
-   * @param EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    */
-
   public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, QueueDatabaseFactory $queue_factory, ConfigFactoryInterface $config, EventDispatcherInterface $event_dispatcher, TimeInterface $time) {
     $this->sfapi = $sfapi;
     $this->queue = $queue_factory->get('cron_salesforce_pull');
@@ -87,8 +85,8 @@ class QueueHandler {
    *   Timestamp of starting window from which to pull records. If omitted, use
    *   ::getLastPullTime().
    * @param int $stop
-   *   Timestamp of ending window from which to pull records. If omitted, use 
-   *   "now"
+   *   Timestamp of ending window from which to pull records. If omitted, use
+   *   "now".
    *
    * @return bool
    *   TRUE if there was room to add items, FALSE otherwise.
@@ -118,7 +116,7 @@ class QueueHandler {
    * Given a mapping and optional timeframe, perform an API query for updated
    * records and enqueue them into the pull queue.
    *
-   * @param SalesforceMappingInterface $mapping
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *   The salesforce mapping for which to query.
    * @param bool $force_pull
    *   Whether to force the queried records to be pulled.
@@ -126,8 +124,8 @@ class QueueHandler {
    *   Timestamp of starting window from which to pull records. If omitted, use
    *   ::getLastPullTime().
    * @param int $stop
-   *   Timestamp of ending window from which to pull records. If omitted, use 
-   *   "now"
+   *   Timestamp of ending window from which to pull records. If omitted, use
+   *   "now".
    *
    * @return FALSE | int
    *   Return the number of records fetched by the pull query, or FALSE no
@@ -158,18 +156,18 @@ class QueueHandler {
   /**
    * Perform the SFO Query for a mapping and its mapped fields.
    *
-   * @param SalesforceMappingInterface $mapping
-   *   Mapping for which to execute pull
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Mapping for which to execute pull.
    * @param array $mapped_fields
    *   Fetch only these fields, if given, otherwise fetch all mapped fields.
    * @param int $start
    *   Timestamp of starting window from which to pull records. If omitted, use
    *   ::getLastPullTime().
    * @param int $stop
-   *   Timestamp of ending window from which to pull records. If omitted, use 
-   *   "now"
+   *   Timestamp of ending window from which to pull records. If omitted, use
+   *   "now".
    *
-   * @return SelectQueryResult
+   * @return \Drupal\salesforce\SelectQueryResult
    *   returned result object from Salesforce
    *
    * @see SalesforceMappingInterface
@@ -196,8 +194,8 @@ class QueueHandler {
    * Iterates over an entire result set, calling nextRecordsUrl when necessary,
    * and inserts the records into pull queue.
    *
-   * @param SalesforceMappingInterface $mapping
-   * @param SelectQueryResult $results
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   * @param \Drupal\salesforce\SelectQueryResult $results
    * @param bool $force_pull
    */
   public function enqueueAllResults(SalesforceMappingInterface $mapping, SelectQueryResult $results, $force_pull = FALSE) {
@@ -218,10 +216,10 @@ class QueueHandler {
   /**
    * Enqueue a set of results into pull queue.
    *
-   * @param SalesforceMappingInterface $mapping
-   *   Mapping object currently being processed
-   * @param SelectQueryResult $results
-   *   Result record set
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Mapping object currently being processed.
+   * @param \Drupal\salesforce\SelectQueryResult $results
+   *   Result record set.
    * @param bool $force_pull
    *   Whether to force pull for enqueued items.
    *
@@ -247,8 +245,8 @@ class QueueHandler {
   /**
    * Enqueue a single record for pull.
    *
-   * @param SalesforceMappingInterface $mapping
-   * @param SObject $record
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   * @param \Drupal\salesforce\SObject $record
    * @param bool $foce
    */
   public function enqueueRecord(SalesforceMappingInterface $mapping, SObject $record, $force_pull = FALSE) {

@@ -7,4 +7,3 @@ services:
     arguments: ['@logger.channel.salesforce']
     tags:
       - { name: event_subscriber }
-    

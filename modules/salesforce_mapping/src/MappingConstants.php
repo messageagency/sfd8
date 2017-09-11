@@ -30,7 +30,7 @@ final class MappingConstants {
   /**
    * Delimiter used in Salesforce multipicklists.
    */
-  const SALESFORCE_MAPPING_ARRAY_DELIMITER =';';
+  const SALESFORCE_MAPPING_ARRAY_DELIMITER = ';';
 
   /**
    * Field mapping maximum name length.
@@ -40,4 +40,5 @@ final class MappingConstants {
 
   const SALESFORCE_MAPPING_STATUS_SUCCESS = 1;
   const SALESFORCE_MAPPING_STATUS_ERROR = 0;
+
 }

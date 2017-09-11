@@ -107,7 +107,7 @@ class RestClientTest extends UnitTestCase {
     $this->initClient();
 
     // Test that an apiCall returns a json-decoded value.
-    $body = array('foo' => 'bar');
+    $body = ['foo' => 'bar'];
     $response = new GuzzleResponse(200, [], json_encode($body));
 
     $this->client->expects($this->any())
@@ -125,7 +125,7 @@ class RestClientTest extends UnitTestCase {
   public function testExceptionApiCall() {
     $this->initClient();
 
-    // Test that SF client throws an exception for non-200 response
+    // Test that SF client throws an exception for non-200 response.
     $response = new GuzzleResponse(456);
 
     $this->client->expects($this->any())
@@ -141,7 +141,7 @@ class RestClientTest extends UnitTestCase {
   public function testReauthApiCall() {
     $this->initClient();
 
-    // Test that apiCall does auto-re-auth after 401 response
+    // Test that apiCall does auto-re-auth after 401 response.
     $response_401 = new GuzzleResponse(401);
     $response_200 = new GuzzleResponse(200);
 
@@ -157,7 +157,6 @@ class RestClientTest extends UnitTestCase {
     $result = $this->client->apiCall('');
   }
 
-
   /**
    * @covers ::objects
    */
@@ -170,7 +169,7 @@ class RestClientTest extends UnitTestCase {
         ],
         'NonUpdateable' => [
           'updateable' => FALSE,
-        ]
+        ],
       ],
     ];
     $cache = (object) [
@@ -203,12 +202,12 @@ class RestClientTest extends UnitTestCase {
     $this->initClient(array_merge($this->methods, ['apiCall']));
     $rawQueryResult = [
       'totalSize' => 1,
-      'done' => true,
+      'done' => TRUE,
       'records' => [
         0 => [
           'attributes' => [
             'type' => 'Foo',
-            'url' => 'Bar'
+            'url' => 'Bar',
           ],
           'Id' => $this->salesforce_id,
         ],
@@ -242,7 +241,7 @@ class RestClientTest extends UnitTestCase {
             $this->randomMachineName() => $this->randomMachineName(),
             $this->randomMachineName() => [
               $this->randomMachineName() => $this->randomMachineName(),
-              $this->randomMachineName() => $this->randomMachineName()
+              $this->randomMachineName() => $this->randomMachineName(),
             ],
           ],
           [
@@ -264,9 +263,9 @@ class RestClientTest extends UnitTestCase {
     // Test that cache gets set correctly:
     $this->cache->expects($this->any())
       ->method('get')
-      ->willReturn((object)[
+      ->willReturn((object) [
         'data' => $expected,
-        'created' => time()
+        'created' => time(),
       ]);
 
     // Test that we hit cache when we call again.
@@ -275,7 +274,6 @@ class RestClientTest extends UnitTestCase {
 
     // @TODO what happens when we provide a name for non-existent SF table?
     // 404 exception?
-
     // Test that we throw an exception if name is not provided.
     $this->client->objectDescribe('');
   }
@@ -287,8 +285,8 @@ class RestClientTest extends UnitTestCase {
     $this->initClient(array_merge($this->methods, ['apiCall']));
     $restResponse = new RestResponse(
       new GuzzleResponse('200', [], json_encode([
-        'id' => $this->salesforce_id
-        ]))
+        'id' => $this->salesforce_id,
+      ]))
       );
 
     $sfid = new SFID($this->salesforce_id);
@@ -398,7 +396,7 @@ class RestClientTest extends UnitTestCase {
     // 3 tests for objectDelete:
     // 1. test that a successful delete returns null
     // 2. test that a 404 response gets eaten
-    // 3. test that any other error response percolates
+    // 3. test that any other error response percolates.
     $this->client->expects($this->exactly(3))
       ->method('apiCall');
 
@@ -451,12 +449,12 @@ class RestClientTest extends UnitTestCase {
 
     $rawQueryResult = [
       'totalSize' => 1,
-      'done' => true,
+      'done' => TRUE,
       'records' => [
         0 => [
           'attributes' => [
             'type' => 'Foo',
-            'url' => 'Bar'
+            'url' => 'Bar',
           ],
           'SobjectType' => $SobjectType,
           'DeveloperName' => $DeveloperName,
@@ -467,10 +465,10 @@ class RestClientTest extends UnitTestCase {
     $recordTypes = [
       $SobjectType => [
         $DeveloperName =>
-          new SObject($rawQueryResult['records'][0])
+        new SObject($rawQueryResult['records'][0]),
       ],
     ];
-    $cache = (object)[
+    $cache = (object) [
       'created' => time(),
       'data' => $recordTypes,
     ];
@@ -485,8 +483,8 @@ class RestClientTest extends UnitTestCase {
       ->method('get')
       ->willReturn($cache);
     $this->client->expects($this->once())
-     ->method('query')
-     ->willReturn(new SelectQueryResult($rawQueryResult));
+      ->method('query')
+      ->willReturn(new SelectQueryResult($rawQueryResult));
 
     $this->assertEquals($recordTypes, $this->client->getRecordTypes());
 

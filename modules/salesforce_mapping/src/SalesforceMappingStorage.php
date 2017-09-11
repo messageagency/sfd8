@@ -68,7 +68,7 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
   }
 
   /**
-   * pass-through for loadMultipleMapping()
+   * Pass-through for loadMultipleMapping()
    */
   public function loadByDrupal($entity_type_id) {
     return $this->loadByProperties(["drupal_entity_type" => $entity_type_id]);
@@ -123,7 +123,7 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
     if (empty($push_mappings)) {
       return [];
     }
-    return $push_mappings;    
+    return $push_mappings;
   }
 
   /**
@@ -168,6 +168,7 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
 
   /**
    * Return a unique list of mapped Salesforce object types.
+   *
    * @see loadMultipleMapping()
    */
   public function getMappedSobjectTypes() {

@@ -5,7 +5,6 @@
  * Pull updates from Salesforce when a Salesforce object is updated.
  */
 
-
 /**
  * Implements hook_cron().
  */

@@ -34,14 +34,16 @@ class Broken extends SalesforceMappingFieldPluginBase {
 
     $pluginForm['drupal_field_type'] = [
       '#type' => 'hidden',
-      '#value' => $this->config('drupal_field_type')
+      '#value' => $this->config('drupal_field_type'),
     ];
 
-    return ['message' => [
-      '#markup' => '<div class="error">'
-        . $this->t('The field plugin %plugin is broken or missing.', ['%plugin' => $this->config('drupal_field_type')]) 
-          . '</div>',
-    ]];
+    return [
+      'message' => [
+        '#markup' => '<div class="error">'
+        . $this->t('The field plugin %plugin is broken or missing.', ['%plugin' => $this->config('drupal_field_type')])
+        . '</div>',
+      ],
+    ];
   }
 
   /**

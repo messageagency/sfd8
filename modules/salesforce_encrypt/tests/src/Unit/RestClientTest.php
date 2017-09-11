@@ -23,11 +23,14 @@ class RestClientTest extends UnitTestCase {
 
   static $modules = ['key', 'encrypt', 'salesforce', 'salesforce_encrypt'];
 
+  /**
+   *
+   */
   public function setUp() {
     parent::setUp();
     $this->accessToken = 'foo';
     $this->refreshToken = 'bar';
-    $this->identity = array('zee' => 'bang');
+    $this->identity = ['zee' => 'bang'];
 
     $this->httpClient = $this->getMock(Client::CLASS);
     $this->configFactory =
@@ -56,7 +59,7 @@ class RestClientTest extends UnitTestCase {
    * This test covers the case where access token is NULL.
    */
   public function testGetDecryptedNull() {
-    // Test unencrypted
+    // Test unencrypted.
     $this->state->expects($this->any())
       ->method('get')
       ->willReturn(NULL);
@@ -76,7 +79,7 @@ class RestClientTest extends UnitTestCase {
    * This test covers the case where access token is not NULL.
    */
   public function testGetDecryptedNotNull() {
-    // Test unencrypted
+    // Test unencrypted.
     $this->state->expects($this->once())
       ->method('get')
       ->willReturn('not null');

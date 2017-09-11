@@ -1,9 +1,12 @@
 <?php
 
+/**
+ * @file
+ */
+
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce_mapping\Event\SalesforceQueryEvent;
-use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
 /**
  * Implements hook_drush_command().
@@ -87,7 +90,7 @@ function drush_salesforce_pull_sf_pull_query($name) {
     $stop = strtotime($stop);
   }
   $where = drush_get_option('where');
-  
+
   if (!($soql = $mapping->getPullQuery([], $start, $stop))) {
     drush_log(dt('!mapping: Unable to generate pull query. Does this mapping have any Salesforce Action Triggers enabled?', ['!mapping' => $mapping->id()]), 'error');
     return;
@@ -102,7 +105,7 @@ function drush_salesforce_pull_sf_pull_query($name) {
     new SalesforceQueryEvent($mapping, $soql)
   );
 
-  drush_log(dt('!mapping: Issuing pull query: !query', ['!query' => (string)$soql, '!mapping' => $mapping->id()]), 'notice');
+  drush_log(dt('!mapping: Issuing pull query: !query', ['!query' => (string) $soql, '!mapping' => $mapping->id()]), 'notice');
   $results = \Drupal::service('salesforce.client')->query($soql);
 
   if (empty($results)) {
@@ -163,7 +166,7 @@ function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
     // Reset our base query:
     $soql = $mapping->getPullQuery([], 1, 0);
 
-    // Now add all the IDs to it
+    // Now add all the IDs to it.
     $sfids = [];
     foreach ($chunk as $j => $row) {
       if (empty($row) || empty($row[0])) {
@@ -172,7 +175,7 @@ function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
       }
       try {
         $sfid = new SFID($row[0]);
-        // Sanity check to make sure the key-prefix is correct. 
+        // Sanity check to make sure the key-prefix is correct.
         // If so, this is probably a good SFID.
         // If not, it is definitely not a good SFID.
         if ($mapping->getSalesforceObjectType() != $sf->getObjectTypeName($sfid)) {
@@ -183,7 +186,7 @@ function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
         drush_log(dt('Skipping row !n, no SFID found.', ['!n' => $base + $j + 1]), 'warning');
         continue;
       }
-      $sfid = (string)$sfid;
+      $sfid = (string) $sfid;
       if (empty($sfids[$sfid])) {
         $sfids[] = $sfid;
         $seen[$sfid] = $sfid;
@@ -206,7 +209,7 @@ function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
       new SalesforceQueryEvent($mapping, $soql)
     );
 
-    drush_log(dt('Issuing pull query: !query', ['!query' => (string)$soql]));
+    drush_log(dt('Issuing pull query: !query', ['!query' => (string) $soql]));
 
     $results = \Drupal::service('salesforce.client')->query($soql);
 
@@ -222,6 +225,9 @@ function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
 
 }
 
+/**
+ *
+ */
 function _salesforce_pull_load_single_mapping_array_or_all_pull_mappings($name = NULL) {
   if ($name != NULL) {
     $mapping = _salesforce_drush_get_mapping($name);
@@ -238,9 +244,11 @@ function _salesforce_pull_load_single_mapping_array_or_all_pull_mappings($name =
       ->getStorage('salesforce_mapping')
       ->loadPullMappings();
   }
-} 
+}
 
-// @TODO allow caller to specify query start window
+/**
+ * @TODO allow caller to specify query start window
+ */
 function drush_salesforce_pull_sf_pull_queue($name = NULL) {
 
   $queue_handler = \Drupal::service('salesforce_pull.queue_handler');
@@ -251,6 +259,9 @@ function drush_salesforce_pull_sf_pull_queue($name = NULL) {
   drush_queue_run('cron_salesforce_pull');
 }
 
+/**
+ *
+ */
 function drush_salesforce_pull_sf_pull_reset($name = NULL) {
   $mappings = _salesforce_pull_load_single_mapping_array_or_all_pull_mappings($name);
   if (empty($mappings)) {
@@ -263,4 +274,3 @@ function drush_salesforce_pull_sf_pull_reset($name = NULL) {
       ->setForcePull($mapping);
   }
 }
-

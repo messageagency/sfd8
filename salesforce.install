@@ -1,9 +1,13 @@
 <?php
 
+/**
+ * @file
+ */
+
 use Drupal\Component\Serialization\Json;
 
 /**
- * Purge Salesforce module state variables
+ * Purge Salesforce module state variables.
  */
 function salesforce_uninstall() {
   $delete = [
@@ -21,12 +25,15 @@ function salesforce_uninstall() {
   \Drupal::state()->deleteMultiple($delete);
 }
 
+/**
+ *
+ */
 function salesforce_requirements($phase) {
   if ($phase != 'runtime') {
     return [];
   }
 
-  // Check requirements once per 24 hours
+  // Check requirements once per 24 hours.
   $last = \Drupal::state()->get('salesforce.last_requirements_check', 0);
 
   $requirements['salesforce_usage'] = salesforce_get_usage_requirements();
@@ -40,6 +47,9 @@ function salesforce_requirements($phase) {
   return $requirements;
 }
 
+/**
+ *
+ */
 function salesforce_fetch_new_tls() {
   $response = FALSE;
   try {
@@ -55,12 +65,15 @@ function salesforce_fetch_new_tls() {
     }
   }
   catch (Exception $e) {
-    // noop
+    // Noop.
   }
   \Drupal::state()->set('salesforce.tls_status', $response);
   return $response;
 }
 
+/**
+ *
+ */
 function salesforce_get_tls_requirements() {
   $response = \Drupal::state()->get('salesforce.tls_status', FALSE);
   $last = \Drupal::state()->get('salesforce.last_requirements_check', 0);
@@ -99,6 +112,9 @@ function salesforce_get_tls_requirements() {
   return $requirements;
 }
 
+/**
+ *
+ */
 function salesforce_get_usage_requirements() {
   $requirements = [
     'title' => t('Salesforce usage'),
@@ -110,7 +126,7 @@ function salesforce_get_usage_requirements() {
     $usage = \Drupal::service('salesforce.client')->getApiUsage();
   }
   catch (Exception $e) {
-    // noop
+    // Noop.
   }
 
   if (empty($usage)) {
@@ -130,7 +146,7 @@ function salesforce_get_usage_requirements() {
     $args = [
       '%usage' => number_format($usage),
       '%limit' => number_format($limit),
-      '%pct' => number_format($pct, 2) . '%'
+      '%pct' => number_format($pct, 2) . '%',
     ];
     $requirements += [
       'description' => t('Usage: %usage requests of %limit limit (%pct) in the past 24 hours.', $args),
@@ -140,8 +156,6 @@ function salesforce_get_usage_requirements() {
 
   return $requirements;
 }
-
-
 
 /**
  * Install new "Use Latest API version" boolean; defaults to TRUE.

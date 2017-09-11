@@ -71,9 +71,9 @@ class SalesforceEvents {
   const PUSH_FAIL = 'salesforce.push_fail';
 
   /**
-   * Previously hook_salesforce_pull_select_query_alter
+   * Previously hook_salesforce_pull_select_query_alter.
    *
-   * Subscribers receive a Drupal\salesforce_mapping\Event\SalesforcePullEvent 
+   * Subscribers receive a Drupal\salesforce_mapping\Event\SalesforcePullEvent
    * instance, via which Drupal\salesforce\SelectQuery may be altered before
    * building Salesforce Drupal\salesforce_pull\PullQueueItem items.
    *
@@ -85,7 +85,7 @@ class SalesforceEvents {
 
   /**
    * Previously hook_salesforce_pull_mapping_object_alter.
-   * Subscribers receive a Drupal\salesforce_mapping\Event\SalesforcePullEvent 
+   * Subscribers receive a Drupal\salesforce_mapping\Event\SalesforcePullEvent
    * instance.
    *
    * Invoked prior to mapping entity fields for a pull. Can be used, for
@@ -102,7 +102,7 @@ class SalesforceEvents {
 
   /**
    * Previously hook_salesforce_pull_entity_value_alter
-   * Subscribers receive a Drupal\salesforce_mapping\Event\SalesforcePullEvent 
+   * Subscribers receive a Drupal\salesforce_mapping\Event\SalesforcePullEvent
    * instance in order to modify pull field values or entities.
    * Analogous to PUSH_PARAMS.
    *
@@ -114,11 +114,11 @@ class SalesforceEvents {
 
   /**
    * Previously hook_salesforce_pull_entity_presave.
-   * Subscribers receive a Drupal\salesforce_mapping\Event\SalesforcePullEvent 
-   * instance
+   * Subscribers receive a Drupal\salesforce_mapping\Event\SalesforcePullEvent
+   * instance.
    *
    * Invoked immediately prior to saving the pulled Drupal entity, after all
-   * fields have been mapped and values assigned. Can be used, for example, to 
+   * fields have been mapped and values assigned. Can be used, for example, to
    * override mapping fields or implement data transformations. Final chance
    * for subscribers to prevent creation or alter a Drupal entity during pull.
    *
@@ -135,6 +135,7 @@ class SalesforceEvents {
    * Dispatched when Salesforce encounters a loggable, non-fatal error.
    *
    * Subscribers receive a Drupal\salesforce\SalesforceErrorEvent instance.
+   *
    * @Event
    *
    * @var string
@@ -145,6 +146,7 @@ class SalesforceEvents {
    * Dispatched when Salesforce encounters a concerning, but non-error event.
    *
    * Subscribers receive a Drupal\salesforce\SalesforceWarningEvent instance.
+   *
    * @Event
    *
    * @var string
@@ -155,6 +157,7 @@ class SalesforceEvents {
    * Dispatched when Salesforce encounters a basic loggable event.
    *
    * Subscribers receive a Drupal\salesforce\SalesforceNoticeEvent instance.
+   *
    * @Event
    *
    * @var string

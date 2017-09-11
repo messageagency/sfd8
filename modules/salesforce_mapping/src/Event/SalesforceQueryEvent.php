@@ -18,7 +18,7 @@ class SalesforceQueryEvent extends SalesforceBaseEvent {
    * {@inheritdoc}
    *
    * @param MappedObjectInterface $mapped_object
-
+   *   *.
    */
   public function __construct(SalesforceMappingInterface $mapping, SelectQuery $query) {
     $this->mapping = $mapping;
@@ -33,7 +33,7 @@ class SalesforceQueryEvent extends SalesforceBaseEvent {
   }
 
   /**
-   * @return SalesforceMappingInterface (from PushParams)
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface (from PushParams)
    */
   public function getMapping() {
     return $this->mapping;

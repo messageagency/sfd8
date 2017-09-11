@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
@@ -35,10 +36,10 @@ class DeleteHandlerTest extends UnitTestCase {
       'deletedRecords' => [
         [
           'id' => '1234567890abcde',
-          'attributes' => ['type' => 'dummy',],
+          'attributes' => ['type' => 'dummy'],
           'name' => 'Example',
         ],
-      ]
+      ],
     ];
 
     $prophecy = $this->prophesize(RestClientInterface::CLASS);
@@ -104,7 +105,7 @@ class DeleteHandlerTest extends UnitTestCase {
     $prophecy->loadByProperties(Argument::any())->willReturn([$this->mapping]);
     $prophecy->load(Argument::any())->willReturn($this->mapping);
     $prophecy->loadMultiple()->willReturn([
-      $this->mapping
+      $this->mapping,
     ]);
     $this->configStorage = $prophecy->reveal();
 
@@ -131,10 +132,10 @@ class DeleteHandlerTest extends UnitTestCase {
     // Mock state.
     $prophecy = $this->prophesize(StateInterface::CLASS);
     $prophecy->get('salesforce.mapping_pull_info', Argument::any())->willReturn([1 => ['last_delete_timestamp' => '1485787434']]);
-    $prophecy->set('salesforce.mapping_pull_info', Argument::any())->willReturn(null);
+    $prophecy->set('salesforce.mapping_pull_info', Argument::any())->willReturn(NULL);
     $this->state = $prophecy->reveal();
 
-   // mock event dispatcher
+    // Mock event dispatcher.
     $prophecy = $this->prophesize(ContainerAwareEventDispatcher::CLASS);
     $prophecy->dispatch(Argument::any(), Argument::any())->willReturn();
     $this->ed = $prophecy->reveal();

@@ -19,13 +19,13 @@ class SalesforcePullEvent extends SalesforceBaseEvent {
   /**
    * {@inheritdoc}
    *
-   * @param MappedObjectInterface $mapped_object 
+   * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mapped_object
    * @param string $op
-   *   One of 
+   *   One of
    *     Drupal\salesforce_mapping\MappingConstants::
    *       SALESFORCE_MAPPING_SYNC_SF_CREATE
    *       SALESFORCE_MAPPING_SYNC_SF_UPDATE
-   *       SALESFORCE_MAPPING_SYNC_SF_DELETE
+   *       SALESFORCE_MAPPING_SYNC_SF_DELETE.
    */
   public function __construct(MappedObjectInterface $mapped_object, $op) {
     $this->mapped_object = $mapped_object;
@@ -49,12 +49,15 @@ class SalesforcePullEvent extends SalesforceBaseEvent {
   }
 
   /**
-   * @return MappedObjectInterface
+   * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface
    */
   public function getMappedObject() {
     return $this->mapped_object;
   }
 
+  /**
+   *
+   */
   public function getOp() {
     return $this->op;
   }

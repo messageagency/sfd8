@@ -120,11 +120,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   /**
    * Update an existing Drupal entity.
    *
-   * @param SalesforceMappingInterface $mapping
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *   Object of field maps.
-   * @param MappedObjectInterface $mapped_object
+   * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mapped_object
    *   SF Mmapped object.
-   * @param SObject $sf_object
+   * @param \Drupal\salesforce\SObject $sf_object
    *   Current Salesforce record array.
    * @param bool $force
    */
@@ -208,9 +208,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   /**
    * Create a Drupal entity and mapped object.
    *
-   * @param SalesforceMappingInterface $mapping
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *   Object of field maps.
-   * @param SObject $sf_object
+   * @param \Drupal\salesforce\SObject $sf_object
    *   Current Salesforce record array.
    * @param bool $force_pull
    */
@@ -258,9 +258,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
 
       // Push upsert ID to SF object, if allowed and not already set.
       if ($mapping->hasKey() && $mapping->checkTriggers([
-          MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
-          MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
-        ]) && $sf_object->field($mapping->getKeyField()) === NULL) {
+        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE,
+        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
+      ]) && $sf_object->field($mapping->getKeyField()) === NULL) {
         $params = new PushParams($mapping, $entity);
         $this->eventDispatcher->dispatch(
           SalesforceEvents::PUSH_PARAMS,

@@ -44,7 +44,7 @@ class UniqueFieldsConstraintValidator extends ConstraintValidator {
       $message_replacements = [
         '@entity_type' => $entity_type->getLowercaseLabel(),
         ':url' => $url->toString(),
-        '@label' => $entity->label()
+        '@label' => $entity->label(),
       ];
       $this->context->addViolation($constraint->message, $message_replacements);
     }

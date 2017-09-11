@@ -1,15 +1,15 @@
 <?php
+
 namespace Drupal\Tests\salesforce\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\SFID;
 
 /**
- * Test Object instantitation
+ * Test Object instantitation.
  *
  * @group salesforce_pull
  */
-
 class SFIDTest extends UnitTestCase {
   static $modules = ['salesforce'];
 
@@ -21,7 +21,7 @@ class SFIDTest extends UnitTestCase {
   }
 
   /**
-   * Test object instantiation with good ID
+   * Test object instantiation with good ID.
    */
   public function testGoodID() {
     $sfid = new SFID('1234567890abcde');
@@ -29,7 +29,8 @@ class SFIDTest extends UnitTestCase {
   }
 
   /**
-   * Test object instantiation with bad ID
+   * Test object instantiation with bad ID.
+   *
    * @expectedException Exception
    */
   public function testBadID() {
@@ -37,10 +38,11 @@ class SFIDTest extends UnitTestCase {
   }
 
   /**
-   * Test object instantiation with bad ID
+   * Test object instantiation with bad ID.
    */
   public function testConvertId() {
     $sfid = new SFID('1234567890adcde');
     $this->assertEquals('1234567890adcdeAAA', $sfid);
   }
+
 }

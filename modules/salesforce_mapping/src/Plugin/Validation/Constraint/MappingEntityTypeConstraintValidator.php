@@ -10,7 +10,6 @@ use Symfony\Component\Validator\ConstraintValidator;
  */
 class MappingEntityTypeConstraintValidator extends ConstraintValidator {
 
-
   /**
    * {@inheritdoc}
    */
@@ -19,7 +18,7 @@ class MappingEntityTypeConstraintValidator extends ConstraintValidator {
     if ($drupal_entity->getEntityTypeId() != $entity->getMapping()->getDrupalEntityType()) {
       $this->context->addViolation($constraint->message, [
         '%mapping' => $entity->getMapping()->label(),
-        '%entity_type' => $drupal_entity->getEntityType()->getLabel()
+        '%entity_type' => $drupal_entity->getEntityType()->getLabel(),
       ]);
     }
   }

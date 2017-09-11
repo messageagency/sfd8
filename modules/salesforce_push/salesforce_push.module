@@ -38,11 +38,12 @@ function salesforce_push_entity_delete(EntityInterface $entity) {
 /**
  * Push entities to Salesforce.
  *
- * @param EntityInterface $entity
+ * @param \Drupal\Core\Entity\EntityInterface $entity
  *   The entity object.
  * @param string $op
  *   The trigger being responded to.
  *   One of push_create, push_update, push_delete.
+ *
  * @TODO
  *   at some point all these hook_entity_* implementations will go away. We'll
  *   create an event subscriber class to respond to entity events and delegate
@@ -81,9 +82,10 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
 /**
  * Helper method for salesforce_push_entity_crud()
  *
- * @param EntityInterface $entity
+ * @param \Drupal\Core\Entity\EntityInterface $entity
  * @param string $op
- * @param SalesforceMappingInterface $mapping
+ * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+ *
  * @return void
  */
 function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
@@ -183,8 +185,9 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
 /**
  * Worker function to insert a new queue item into the async push queue for the
  * given mapping.
- * @param EntityInterface $entity
- * @param SalesforceMappingInterface $mapping
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
  * @param string $op
  */
 function salesforce_push_enqueue_async(EntityInterface $entity, SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object = NULL, $op) {

@@ -36,7 +36,7 @@ use Drupal\salesforce_mapping\Plugin\Field\ComputedItemList;
  *     "storage" = "Drupal\salesforce_mapping\MappedObjectStorage",
  *     "storage_schema" = "Drupal\salesforce_mapping\MappedObjectStorageSchema",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
-*      "views_data" = "Drupal\views\EntityViewsData",
+ *      "views_data" = "Drupal\views\EntityViewsData",
  *     "list_builder" = "Drupal\salesforce_mapping\MappedObjectList",
  *     "form" = {
  *       "default" = "Drupal\salesforce_mapping\Form\MappedObjectForm",
@@ -76,7 +76,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   /**
    * Salesforce Object.
    *
-   * @var SObject
+   * @var \Drupal\salesforce\SObject
    */
   protected $sf_object = NULL;
 
@@ -261,7 +261,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   /**
    * Get the mapped Drupal entity.
    *
-   * @return EntityInterface
+   * @return \Drupal\Core\Entity\EntityInterface
    *   The mapped Drupal entity.
    */
   public function getMappedEntity() {
@@ -322,7 +322,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
   /**
    * @return mixed
-   *  SFID or NULL depending on result from SF.
+   *   SFID or NULL depending on result from SF.
    */
   public function push() {
     // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context, or short of that clear documentation on how callers should handle errors and exceptions. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
@@ -416,7 +416,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   /**
    * Attach a Drupal entity to the mapped object.
    *
-   * @param EntityInterface $entity
+   * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to be attached.
    *
    * @return $this
@@ -426,12 +426,15 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return $this;
   }
 
+  /**
+   *
+   */
   public function getDrupalEntityStub(EntityInterface $entity = NULL) {
     return $this->drupal_entity_stub;
   }
 
   /**
-   * @param SObject $sf_object
+   * @param \Drupal\salesforce\SObject $sf_object
    *
    * @return $this
    */
@@ -442,7 +445,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
   /**
    * Get the mapped Salesforce record.
-   * @return SObject
+   *
+   * @return \Drupal\salesforce\SObject
    */
   public function getSalesforceRecord() {
     return $this->sf_object;
@@ -511,14 +515,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       catch (\Exception $e) {
         $message = 'Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v';
         $args = [
-            '@sfobj' => $mapping->getSalesforceObjectType(),
-            '@sffield' => $sf_field,
-            '@sfid' => $this->sfid(),
-            '@dobj' => $drupal_entity->getEntityTypeId(),
-            '@dprop' => $drupal_field,
-            '@did' => $drupal_entity->id(),
-            '@v' => $value,
-          ];
+          '@sfobj' => $mapping->getSalesforceObjectType(),
+          '@sffield' => $sf_field,
+          '@sfid' => $this->sfid(),
+          '@dobj' => $drupal_entity->getEntityTypeId(),
+          '@dprop' => $drupal_field,
+          '@did' => $drupal_entity->id(),
+          '@v' => $value,
+        ];
         $this->eventDispatcher()->dispatch(SalesforceEvents::WARNING, new SalesforceWarningEvent($e, $message, $args));
         continue;
       }

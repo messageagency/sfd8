@@ -65,7 +65,6 @@ class SalesforceMappingStorageTest extends UnitTestCase {
     //   ->setMethods(['__construct'])
     //   ->disableOriginalConstructor()
     //   ->getMock();
-
     $this->entity_type = new ConfigEntityType([
       'id' => $this->entityTypeId,
       'class' => SalesforceMapping::class,

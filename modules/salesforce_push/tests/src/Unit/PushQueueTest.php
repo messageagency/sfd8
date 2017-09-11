@@ -73,7 +73,7 @@ class PushQueueTest extends UnitTestCase {
       ->with($this->equalTo('salesforce_mapped_object'))
       ->willReturn($this->mapped_object_storage);
 
-    // mock config
+    // Mock config.
     $prophecy = $this->prophesize(Config::CLASS);
     $prophecy->get('global_push_limit', Argument::any())->willReturn(PushQueue::DEFAULT_GLOBAL_LIMIT);
     $config = $prophecy->reveal();
@@ -186,6 +186,5 @@ class PushQueueTest extends UnitTestCase {
   // Not sure best way to test this yet.
   // public function testFailItem() {
   //   // Test failed item gets its "fail" property incremented by 1.
-  // }
-
+  // }.
 }

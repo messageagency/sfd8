@@ -23,4 +23,5 @@ class SalesforceTestRestClientServiceProvider extends ServiceProviderBase {
       ->setClass(TestRestClient::class);
 
   }
+
 }

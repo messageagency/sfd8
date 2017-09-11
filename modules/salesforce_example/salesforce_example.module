@@ -5,6 +5,7 @@
  * Contains salesforce_example.module.
  */
 
+use Drupal\salesforce\SFID;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Entity\EntityInterface;
 
@@ -25,10 +26,10 @@ function salesforce_example_help($route_name, RouteMatchInterface $route_match) 
 }
 
 /**
- * implementation of hook_entity_insert()
+ * Implementation of hook_entity_insert()
  *
- * for this example we are simply calling a "manage" function and passing a
- * parameter to indicate what type of operaiton is taking place
+ * For this example we are simply calling a "manage" function and passing a
+ * parameter to indicate what type of operaiton is taking place.
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  */
@@ -37,11 +38,10 @@ function salesforce_example_entity_insert(EntityInterface $entity) {
 }
 
 /**
- * implementation of hook_entity_update()
+ * Implementation of hook_entity_update()
  *
- *
- * for this example we are simply calling a "manage" function and passing a
- * parameter to indicate what type of operaiton is taking place
+ * For this example we are simply calling a "manage" function and passing a
+ * parameter to indicate what type of operaiton is taking place.
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  */
@@ -50,11 +50,10 @@ function salesforce_example_entity_update(EntityInterface $entity) {
 }
 
 /**
- * implementation of hook_entity_delete()
+ * Implementation of hook_entity_delete()
  *
- *
- * for this example we are simply calling a "manage" function and passing a
- * parameter to indicate what type of operaiton is taking place
+ * For this example we are simply calling a "manage" function and passing a
+ * parameter to indicate what type of operaiton is taking place.
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  */
@@ -77,16 +76,15 @@ function salesforce_example_entity_delete(EntityInterface $entity) {
  * will have four Product Variations, one for each size.  The Product object will have entity references
  * to each Product Variation.
  *
- *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @param $op
  */
-function _salesforce_example_entity_manage(\Drupal\Core\Entity\EntityInterface &$entity, $op) {
+function _salesforce_example_entity_manage(EntityInterface &$entity, $op) {
 
   /** @var \Drupal\salesforce_mapping\MappedObjectStorage $mapped_object_storage */
   $mapped_object_storage = &drupal_static(__FUNCTION__);
 
-  if(!isset($mapped_object_storage)) {
+  if (!isset($mapped_object_storage)) {
     $mapped_object_storage = \Drupal::service('entity.manager')
       ->getStorage('salesforce_mapped_object');
   }
@@ -97,7 +95,7 @@ function _salesforce_example_entity_manage(\Drupal\Core\Entity\EntityInterface &
    * we could very well have product variations that are not being managed by the SFDC integration.
    * If this is the case, we do not want to be programmatically manipulating these objects.
    */
-  if($entity->getEntityTypeId() == 'salesforce_mapped_object') {
+  if ($entity->getEntityTypeId() == 'salesforce_mapped_object') {
 
     /** @var \Drupal\salesforce_mapping\Entity\MappedObject $entity */
     $mapped_entity = $entity->getMappedEntity();
@@ -119,20 +117,20 @@ function _salesforce_example_entity_manage(\Drupal\Core\Entity\EntityInterface &
          * the Salesforce Modules storage service and using the SDFC ID as the key.
          */
 
-        // get the SFDC ID for the parent Product (the Product -> Product Variation already exists in SFDC,
+        // Get the SFDC ID for the parent Product (the Product -> Product Variation already exists in SFDC,
         // conveniently mirroring the Drupal Commerce model)
         $course_sfdc_id = $sf->field('Parent_Product__c');
 
-        // create an SFID object using the vlaue
-        $sfid = new \Drupal\salesforce\SFID($course_sfdc_id);
+        // Create an SFID object using the vlaue.
+        $sfid = new SFID($course_sfdc_id);
 
-        // use the storage object to load the mapped object(s) that correspond to the SFID
+        // Use the storage object to load the mapped object(s) that correspond to the SFID.
         $mapped_objects = $mapped_object_storage->loadBySfid($sfid);
 
         if (is_array($mapped_objects)) {
 
-          // we are lazily assuming that there will only be one corresponding prodctu object
-          // and that it will be the first item in the returned array
+          // We are lazily assuming that there will only be one corresponding prodctu object
+          // and that it will be the first item in the returned array.
           $mapped_object = current($mapped_objects);
 
           /** @var \Drupal\commerce_product\Entity\Product $course */

@@ -18,6 +18,7 @@ class SalesforceController extends ControllerBase {
 
   protected $client;
   protected $http_client;
+
   /**
    * {@inheritdoc}
    */
@@ -38,10 +39,16 @@ class SalesforceController extends ControllerBase {
     );
   }
 
+  /**
+   *
+   */
   protected function request() {
     return \Drupal::request();
   }
 
+  /**
+   *
+   */
   protected function successMessage() {
     drupal_set_message(t('Successfully connected to %endpoint', ['%endpoint' => $this->client->getInstanceUrl()]));
   }
@@ -77,7 +84,7 @@ class SalesforceController extends ControllerBase {
 
     $this->successMessage();
 
-    return new RedirectResponse($this->url_generator->generateFromRoute('salesforce.authorize', [], ["absolute" => true], false));
+    return new RedirectResponse($this->url_generator->generateFromRoute('salesforce.authorize', [], ["absolute" => TRUE], FALSE));
   }
 
 }

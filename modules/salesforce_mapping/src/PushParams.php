@@ -19,8 +19,8 @@ class PushParams {
    * Given a Drupal entity, return an array of Salesforce key-value pairs
    * previously salesforce_push_map_params (d7)
    *
-   * @param SalesforceMappingInterface $mapping
-   * @param EntityInterface $entity
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   * @param \Drupal\Core\Entity\EntityInterface $entity
    * @param array $params
    *   (optional)
    */
@@ -45,7 +45,7 @@ class PushParams {
   }
 
   /**
-   * @return EntityInterface for this PushParams
+   * @return \Drupal\Core\Entity\EntityInterface for this PushParams
    */
   public function getDrupalEntity() {
     return $this->drupal_entity;
@@ -81,7 +81,7 @@ class PushParams {
 
   /**
    * @param string $key
-   *   Key to set for this param
+   *   Key to set for this param.
    * @param mixed $value
    *   Value to set for this param.
    * @return $this
@@ -93,7 +93,7 @@ class PushParams {
 
   /**
    * @param string $key
-   *   Key to unset for this param
+   *   Key to unset for this param.
    * @return $this
    */
   public function unsetParam($key) {

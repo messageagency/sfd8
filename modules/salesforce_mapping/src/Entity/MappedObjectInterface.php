@@ -19,7 +19,7 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
   public function getMapping();
 
   /**
-   * @return EntityInterface
+   * @return \Drupal\Core\Entity\EntityInterface
    */
   public function getMappedEntity();
 
@@ -36,7 +36,7 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
   public function getSalesforceLink(array $options = []);
 
   /**
-   * Wrapper for salesforce.client Drupal\salesforce\Rest\RestClient service
+   * Wrapper for salesforce.client Drupal\salesforce\Rest\RestClient service.
    */
   public function client();
 
@@ -58,7 +58,7 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
 
   /**
    * @return mixed
-   *  SFID or NULL depending on result from SF.
+   *   SFID or NULL depending on result from SF.
    */
   public function push();
 

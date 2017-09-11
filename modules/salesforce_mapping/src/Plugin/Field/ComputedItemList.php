@@ -1,11 +1,11 @@
-<?php 
+<?php
 
 namespace Drupal\salesforce_mapping\Plugin\Field;
 
 use Drupal\Core\Field\FieldItemList;
 
 /**
- * Lifted from https://www.drupal.org/docs/8/api/entity-api/dynamicvirtual-field-values-using-computed-field-property-classes
+ * Lifted from https://www.drupal.org/docs/8/api/entity-api/dynamicvirtual-field-values-using-computed-field-property-classes.
  */
 class ComputedItemList extends FieldItemList {
 
@@ -51,4 +51,5 @@ class ComputedItemList extends FieldItemList {
       $this->list[0] = $this->createItem(0);
     }
   }
+
 }

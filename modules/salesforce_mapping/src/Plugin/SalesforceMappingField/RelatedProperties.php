@@ -164,7 +164,6 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     return $options;
   }
 
-
   /**
    * {@inheritdoc}
    *
@@ -179,7 +178,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
       return $deps;
     }
     $deps[] = [
-      'config' => array($field_config->getConfigDependencyName()),
+      'config' => [$field_config->getConfigDependencyName()],
     ];
     $field_settings = $field_config->getSettings();
 

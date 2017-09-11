@@ -16,22 +16,22 @@ class MappedObjectStorageSchema extends SqlContentEntityStorageSchema {
    */
   protected function getEntitySchema(ContentEntityTypeInterface $entity_type, $reset = FALSE) {
     $schema = parent::getEntitySchema($entity_type, $reset);
-    // backwards compatibility for salesforce_mapping_update_8001
+    // Backwards compatibility for salesforce_mapping_update_8001
     // key is too long if length is 255, so we have to wait until the db update
-    // fires to avoid WSOD
+    // fires to avoid WSOD.
     $schema['salesforce_mapped_object']['unique keys'] += [
       'entity__mapping' => [
         'drupal_entity__target_type',
         'salesforce_mapping',
         'drupal_entity__target_id',
-      ]
+      ],
     ];
 
     $schema['salesforce_mapped_object']['unique keys'] += [
       'sfid__mapping' => [
         'salesforce_mapping',
-        'salesforce_id'
-      ]
+        'salesforce_id',
+      ],
     ];
 
     $schema['salesforce_mapped_object']['fields']['salesforce_mapping']['length'] =
@@ -40,4 +40,5 @@ class MappedObjectStorageSchema extends SqlContentEntityStorageSchema {
 
     return $schema;
   }
+
 }

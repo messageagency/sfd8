@@ -82,12 +82,18 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
     return $ret;
   }
 
+  /**
+   *
+   */
   public function hookEncryptionProfileDelete(EncryptionProfileInterface $profile) {
     if ($this->encryptionProfileId == $profile->id()) {
       $this->disableEncryption();
     }
   }
 
+  /**
+   *
+   */
   protected function setEncryption(EncryptionProfileInterface $profile = NULL) {
     if (!$this->lock->acquire('salesforce_encrypt')) {
       throw new \RuntimeException('Unable to acquire lock.');
@@ -127,6 +133,9 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
     return $profile;
   }
 
+  /**
+   *
+   */
   protected function getDecrypted($key) {
     $value = $this->state->get($key);
     try {
@@ -147,6 +156,9 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
     return FALSE;
   }
 
+  /**
+   *
+   */
   protected function setEncrypted($key, $value) {
     try {
       $profile = $this->getEncryptionProfile();
@@ -207,7 +219,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
       $profile_id = $this->getEncryptionProfile();
     }
     catch (EntityNotFoundException $e) {
-      // noop
+      // Noop.
     }
     if (!empty($profile_id) && is_array($data)) {
       $data = serialize($data);
@@ -229,7 +241,6 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
     }
     return $value;
   }
-
 
   /**
    *

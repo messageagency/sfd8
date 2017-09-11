@@ -7,7 +7,6 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
-use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -121,7 +120,7 @@ class MappedObjectList extends EntityListBuilder {
     $operations['view'] = [
       'title' => $this->t('View'),
       'weight' => -100,
-      'url' => $entity->urlInfo('canonical')
+      'url' => $entity->urlInfo('canonical'),
     ];
     $operations += parent::getDefaultOperations($entity);
     return $operations;
@@ -130,7 +129,7 @@ class MappedObjectList extends EntityListBuilder {
   /**
    * Set the given entity ids to show only those in a listing of mapped objects.
    *
-   * @param array $ids 
+   * @param array $ids
    *
    * @return $this
    */
@@ -138,6 +137,7 @@ class MappedObjectList extends EntityListBuilder {
     $this->entityIds = $ids;
     return $this;
   }
+
   /**
    * {@inheritdoc}
    */

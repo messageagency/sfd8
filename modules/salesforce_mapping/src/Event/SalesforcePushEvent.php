@@ -17,13 +17,13 @@ abstract class SalesforcePushEvent extends SalesforceBaseEvent {
   /**
    * {@inheritdoc}
    *
-   * @param MappedObjectInterface $mapped_object
+   * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mapped_object
    * @param PushParams $params
    *   One of
    *     Drupal\salesforce_mapping\MappingConstants::
    *       SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
    *       SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE
+   *       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE.
    */
   public function __construct(MappedObjectInterface $mapped_object) {
     $this->mapped_object = $mapped_object;
@@ -46,7 +46,7 @@ abstract class SalesforcePushEvent extends SalesforceBaseEvent {
   }
 
   /**
-   * @return MappedObjectInterface
+   * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface
    */
   public function getMappedObject() {
     return $this->mapped_object;

@@ -11,6 +11,9 @@ use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent as ParentSalesforcePus
  */
 class SalesforcePushOpEvent extends ParentSalesforcePushOpEvent {
 
+  /**
+   *
+   */
   public function __construct() {
     @trigger_error(__CLASS__ . ' is deprecated. Use the parent class in the Drupal\salesforce_mapping\Event namespace.', E_USER_DEPRECATED);
     $args = func_get_args();

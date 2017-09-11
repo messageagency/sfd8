@@ -13,7 +13,10 @@ namespace Drupal\salesforce_mapping\Plugin\Validation\Constraint;
  */
 class MappingSfidConstraint extends UniqueFieldsConstraint {
 
-  public function __construct($options = null) {
+  /**
+   *
+   */
+  public function __construct($options = NULL) {
     $options = ['fields' => ['salesforce_id', 'salesforce_mapping']];
     parent::__construct($options);
   }

@@ -66,7 +66,6 @@ class Properties extends SalesforceMappingFieldPluginBase {
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     // No error checking here. If a property is not defined, it's a
     // configuration bug that needs to be solved elsewhere.
-
     // Multipicklist is the only target type that handles multi-valued fields.
     $describe = $this
       ->salesforceClient
@@ -118,7 +117,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
       return [];
     }
     return [
-      'config' => array($field_config->getConfigDependencyName()),
+      'config' => [$field_config->getConfigDependencyName()],
     ];
   }
 

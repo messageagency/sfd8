@@ -8,16 +8,18 @@ use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\salesforce\Exception;
 
-
 /**
  * Class SalesforceExampleSubscriber.
  * Trivial example of subscribing to salesforce.push_params event to set a
- * constant value for Contact.FirstName
+ * constant value for Contact.FirstName.
  *
  * @package Drupal\salesforce_example
  */
 class SalesforceExampleSubscriber implements EventSubscriberInterface {
 
+  /**
+   *
+   */
   public function pushAllowed(SalesforcePushOpEvent $event) {
     /** @var \Drupal\Core\Entity\Entity $entity */
     $entity = $event->getEntity();
@@ -26,6 +28,9 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
     }
   }
 
+  /**
+   *
+   */
   public function pushParamsAlter(SalesforcePushParamsEvent $event) {
     $mapping = $event->getMapping();
     $mapped_object = $event->getMappedObject();
@@ -45,18 +50,25 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
     $params->setParam('FirstName', 'SalesforceExample');
   }
 
+  /**
+   *
+   */
   public function pushSuccess(SalesforcePushParamsEvent $event) {
     switch ($event->getMappedObject()->getMapping()->id()) {
       case 'mapping1':
-        // do X
+        // Do X.
         break;
+
       case 'mapping2':
-        // do Y
+        // Do Y.
         break;
     }
     drupal_set_message('push success example subscriber!: ' . $event->getMappedObject()->sfid());
   }
 
+  /**
+   *
+   */
   public function pushFail(SalesforcePushOpEvent $event) {
     drupal_set_message('push fail example: ' . $event->getMappedObject()->id());
   }
@@ -64,7 +76,7 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  static function getSubscribedEvents() {
+  public static function getSubscribedEvents() {
     $events = [
       SalesforceEvents::PUSH_ALLOWED => 'pushAllowed',
       SalesforceEvents::PUSH_PARAMS => 'pushParamsAlter',
