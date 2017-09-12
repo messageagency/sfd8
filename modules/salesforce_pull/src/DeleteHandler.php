@@ -99,7 +99,7 @@ class DeleteHandler {
       }
       // @TODO add some accommodation to handle deleted records per-mapping.
       $last_delete_sync = !empty($pull_info[$mapping->id()]['last_delete_timestamp'])
-        ? $pull_info[$type]['last_delete_timestamp']
+        ? $pull_info[$mapping->id()]['last_delete_timestamp']
         : strtotime('-29 days');
       $now = time();
       // getDeleted() constraint: startDate must be at least one minute
