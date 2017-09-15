@@ -30,7 +30,7 @@ salesforce.admin_config_salesforce:
     _title: 'Salesforce'
     _description: 'Manage settings for Salesforce Suite.'
   requirements:
-    _permission: 'administer salesforce'
+    _permission: 'administer salesforce+authorize salesforce'
 
 salesforce.structure_index:
   path: '/admin/structure/salesforce'
