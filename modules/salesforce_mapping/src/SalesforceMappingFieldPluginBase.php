@@ -218,9 +218,9 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
       ->getFieldDefinition()
       ->getItemDefinition();
     // @TODO this will need to be rewritten for https://www.drupal.org/node/2899460
-    $drupal_field_type = $drupal_field_definition
-      ->getPropertyDefinition($drupal_field_definition->getMainPropertyName())
-      ->getDataType();
+    $field_main_property = $drupal_field_type = $drupal_field_definition
+      ->getPropertyDefinition($drupal_field_definition->getMainPropertyName());
+    $drupal_field_type = $field_main_property ? $field_main_property->getDataType() : NULL;
     $drupal_field_settings = $drupal_field_definition->getSettings();
 
     switch (strtolower($field_definition['type'])) {
