@@ -9,6 +9,7 @@ use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
+use Drupal\salesforce\Exception as SalesforceException;
 
 /**
  * Adapter for entity Reference and fields.
