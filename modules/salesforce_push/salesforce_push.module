@@ -112,7 +112,9 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
         ->deleteItemByEntity($entity);
       return;
     }
-    $mapped_object = new MappedObject($props);
+    $mapped_object = new MappedObject(array());
+    $mapped_object->salesforce_mapping = $mapping;
+    $mapped_object->setDrupalEntity($entity);
   }
   else {
     // There should really only be one in this case, since we're loading on a
