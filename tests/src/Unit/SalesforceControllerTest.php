@@ -109,7 +109,7 @@ class SalesforceControllerTest extends UnitTestCase {
       ->willReturn(NULL);
     $expected = new RedirectResponse('foo/bar');
     $actual = $this->controller->oauthCallback();
-    $this->assertEquals($expected, $actual);
+    $this->assertEquals($expected->getTargetUrl(), $actual->getTargetUrl());
   }
 
 }
