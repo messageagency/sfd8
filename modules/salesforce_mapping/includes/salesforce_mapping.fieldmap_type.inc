@@ -127,11 +127,11 @@ function salesforce_mapping_related_entity_fieldmap_options($entity_type, $entit
  */
 function salesforce_mapping_related_entity_fieldmap_push_value($fieldmap, $entity_wrapper) {
   $value = NULL;
-  if (property_exists($entity_wrapper->$fieldmap['drupal_field']['fieldmap_value'], 'isEntityList')) {
-    $related_wrapper = $entity_wrapper->$fieldmap['drupal_field']['fieldmap_value']->get(0);
+  if (property_exists($entity_wrapper->{$fieldmap['drupal_field']['fieldmap_value']}, 'isEntityList')) {
+    $related_wrapper = $entity_wrapper->{$fieldmap['drupal_field']['fieldmap_value']}->get(0);
   }
   else {
-    $related_wrapper = $entity_wrapper->$fieldmap['drupal_field']['fieldmap_value'];
+    $related_wrapper = $entity_wrapper->{$fieldmap['drupal_field']['fieldmap_value']};
   }
   if ($related_entity = $related_wrapper->value()) {
     list($related_entity_id) = entity_extract_ids($related_wrapper->type(), $related_entity);

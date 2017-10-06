@@ -780,7 +780,7 @@ function _salesforce_mapping_get_default_value($field, &$form_state, $delta = NU
       $value = &$form_state['input'][$field];
     }
     elseif (!empty($mapping)) {
-      $value = &$mapping->$field;
+      $value = &$mapping->{$field};
     }
 
     // Special case for drupal bundle.

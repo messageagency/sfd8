@@ -25,9 +25,9 @@ class SalesforceMappingObjectController extends EntityAPIController {
     );
     $wrapper = entity_metadata_wrapper('salesforce_mapping_object', $entity);
     foreach ($render_props as $name) {
-      $info = $wrapper->$name->info();
+      $info = $wrapper->{$name}->info();
 
-      $markup = salesforce_mapping_object_render_property($wrapper, $name, $wrapper->$name);
+      $markup = salesforce_mapping_object_render_property($wrapper, $name, $wrapper->{$name});
 
       if ($markup) {
         $build[$name] = array(
