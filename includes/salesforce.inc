@@ -382,9 +382,20 @@ class Salesforce {
    *
    * @return array
    *   Returns FALSE is no identity has been stored.
+   *
+   * @throws SalesforceException
    */
   public function getIdentity() {
-    return variable_get('salesforce_identity', FALSE);
+    $identity = variable_get('salesforce_identity', FALSE);
+    if ($identity) {
+      $id_url_scheme = parse_url($identity['id']);
+      $allowed_endpoint = variable_get('salesforce_endpoint', NULL);
+      $allowed_endpoint_url_scheme = parse_url($allowed_endpoint);
+      if ($id_url_scheme['host'] != $allowed_endpoint_url_scheme['host']) {
+        throw new SalesforceException(t('Salesforce identity does not match salesforce endpoint: you need to re-authenticate.'));
+      }
+    }
+    return $identity;
   }
 
   /**
