@@ -89,10 +89,19 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     }
 
     $value = $sf_object->field($this->config('salesforce_field'));
+    // Empty value means nothing to do here.
+    if (empty($value)) {
+      return NULL;
+    }
 
     // If value is not an SFID, make it one.
     if (!($value instanceof SFID)) {
-      $value = new SFID($value);
+      try {
+        $value = new SFID($value);
+      }
+      catch (\Exception $e) {
+        return NULL;
+      }
     }
 
     // Convert SF Id to Drupal Id.

@@ -206,6 +206,25 @@ class RestClient implements RestClientInterface {
   }
 
   /**
+   * Return raw response content from given URL. Useful for fetching data from
+   * binary fields like Attachments.
+   *
+   * @param string $url
+   * @return mixed
+   */
+  public function httpRequestRaw($url) {
+    if (!$this->getAccessToken()) {
+      throw new \Exception('Missing OAuth Token');
+    }
+    $headers = [
+      'Authorization' => 'OAuth ' . $this->getAccessToken(),
+      'Content-type' => 'application/json',
+    ];
+    $response = $this->httpRequest($url, NULL, $headers);
+    return $response->getBody()->getContents();
+  }
+
+  /**
    * Make the HTTP request. Wrapper around drupal_http_request().
    *
    * @param string $url
