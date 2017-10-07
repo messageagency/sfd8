@@ -140,9 +140,15 @@ function salesforce_push_sync_rest($entity_type, $entity, $mapping, $sf_sync_tri
       try {
         $sfapi->objectDelete($mapping->salesforce_object_type, $mapping_object->salesforce_id);
       }
-      catch(SalesforceException $e) {
-        watchdog_exception('salesforce_push', $e);
-        salesforce_set_message(t('Salesforce Exception during @event : @exception', array('@event' => 'push', '@exception' => $e->getMessage())), 'error');
+      catch (SalesforceException $e) {
+        $exception_message = t('Salesforce Exception during @event attempting @op : @exception');
+        $message_vars = array(
+          '@event' => 'push',
+          '@op' => $op,
+          '@exception' => $e->getMessage(),
+        );
+        watchdog_exception('salesforce_push', $e, $exception_message, $message_vars);
+        salesforce_set_message(format_string($exception_message, $message_vars), 'error');
 
         module_invoke_all('salesforce_push_fail', $op, $sfapi->response, $synced_entity);
       }
@@ -204,9 +210,15 @@ function salesforce_push_sync_rest($entity_type, $entity, $mapping, $sf_sync_tri
         $data = $sfapi->objectCreate($mapping->salesforce_object_type, $params);
       }
     }
-    catch(SalesforceException $e) {
-      watchdog_exception('salesforce_push', $e);
-      salesforce_set_message(t('Salesforce Exception during @event : @exception', array('@event' => 'push', '@exception' => $e->getMessage())), 'error');
+    catch (SalesforceException $e) {
+      $exception_message = t('Salesforce Exception during @event attempting @op : @exception');
+      $message_vars = array(
+        '@event' => 'push',
+        '@op' => $op,
+        '@exception' => $e->getMessage(),
+      );
+      watchdog_exception('salesforce_push', $e, $exception_message, $message_vars);
+      salesforce_set_message(format_string($exception_message, $message_vars), 'error');
 
       module_invoke_all('salesforce_push_fail', $op, $sfapi->response, $synced_entity);
       return;
@@ -259,14 +271,21 @@ function salesforce_push_sync_rest($entity_type, $entity, $mapping, $sf_sync_tri
       )));
       module_invoke_all('salesforce_push_success', $op, $sfapi->response, $synced_entity);
     }
-    catch(SalesforceException $e) {
-      watchdog_exception('salesforce_push', $e);
-      salesforce_set_message(t('Error syncing @type @id to Salesforce record @sfid. Error message: "@msg".', array(
+    catch (SalesforceException $e) {
+      $exception_message = t('Error syncing @type @id to Salesforce record @sfid. Error message: "@msg". @extra');
+      $message_vars = array(
         '@type' => $mapping_object->entity_type,
         '@id' => $mapping_object->entity_id,
         '@sfid' => $mapping_object->salesforce_id,
         '@msg' => $e->getMessage(),
-      )), 'error');
+        '@extra' => '',
+      );
+      if (in_array($e->getMessage(), array("invalid cross reference id", "Not Found"))) {
+        $message_vars['@extra'] = "Are you trying to sync with an object from a different Salesforce instance?";
+      }
+      watchdog_exception('salesforce_push', $e, $exception_message, $message_vars);
+      salesforce_set_message(format_string($exception_message, $message_vars), 'error');
+
       $mapping_object->last_sync_message = truncate_utf8($e->getMessage(), 255, FALSE, TRUE);
       $mapping_object->last_sync_status = SALESFORCE_MAPPING_STATUS_ERROR;
       module_invoke_all('salesforce_push_fail', $op, $sfapi->response, $synced_entity);
