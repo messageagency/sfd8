@@ -298,6 +298,19 @@ function salesforce_push_sync_rest($entity_type, $entity, $mapping, $sf_sync_tri
 }
 
 /**
+ * Implements hook_queue_info().
+ *
+ * Provided for integration with 3rd party queue-monitoring tools (Drush,
+ * Queue UI, etc.)
+ */
+function salesforce_push_queue_info() {
+  $queues[SALESFORCE_PUSH_QUEUE] = array(
+    'title' => t('Salesforce push queue'),
+  );
+  return $queues;
+}
+
+/**
  * Implements hook_cron().
  */
 function salesforce_push_cron() {
