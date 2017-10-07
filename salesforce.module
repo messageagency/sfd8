@@ -164,6 +164,11 @@ function salesforce_flush_caches() {
  *   The Salesforce authorization form.
  */
 function salesforce_oauth_form() {
+  // Overlay doesn't work. See https://www.drupal.org/node/2268401.
+  if (module_exists('overlay') && overlay_get_mode() == 'child') {
+    $current_path = current_path();
+    overlay_close_dialog($current_path);
+  }
   $form = array();
 
   $consumer_key = variable_get('salesforce_consumer_key', FALSE);
