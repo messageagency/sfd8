@@ -196,12 +196,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       }
     }
     catch (\Exception $e) {
-      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e, 'Failed to update entity %label from Salesforce object %sfobjectid.', ['%label' => (isset($entity)) ? $entity->label() : "Unknown", '%sfobjectid' => (string) $sf_object->id()]));
-
-      if ($e instanceof PullException) {
-        // Throwing a new exception to keep current item in queue in Cron.
-        throw $e;
-      }
+      $this->eventDispatcher->dispatch(SalesforceEvents::WARNING, new SalesforceErrorEvent($e, 'Failed to update entity %label from Salesforce object %sfobjectid.', ['%label' => (isset($entity)) ? $entity->label() : "Unknown", '%sfobjectid' => (string) $sf_object->id()]));
+      // Throwing a new exception keeps current item in cron queue.
+      throw $e;
     }
   }
 
@@ -284,11 +281,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       return MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE;
     }
     catch (\Exception $e) {
-      $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent($e, 'Pull-create failed for Salesforce Object ID: %sfobjectid', ['%sfobjectid' => (string) $sf_object->id()]));
-      if ($e instanceof PullException) {
-        // Throwing a new exception to keep current item in queue in Cron.
-        throw $e;
-      }
+      $this->eventDispatcher->dispatch(SalesforceEvents::WARNING, new SalesforceNoticeEvent($e, 'Pull-create failed for Salesforce Object ID: %sfobjectid', ['%sfobjectid' => (string) $sf_object->id()]));
+      // Throwing a new exception to keep current item in cron queue.
+      throw $e;
     }
   }
 

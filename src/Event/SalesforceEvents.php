@@ -14,7 +14,7 @@ class SalesforceEvents {
    * The event listener method receives a
    * \Drupal\salesforce_mapping\Event\SalesforcePushOpEvent instance.
    *
-   * Event listeners should throw an exception to prevent push.
+   * Event listeners should call $event->disallowPush() to prevent push.
    *
    * @Event
    *
@@ -92,11 +92,15 @@ class SalesforceEvents {
    * example, to alter SF object retrieved from Salesforce or to assign a
    * different Drupal entity.
    *
-   * Listeners should throw an exception to prevent an item from being pulled.
+   * Listeners should throw an exception to prevent an item from being pulled,
+   * per Drupal\Core\Queue\QueueWorkerInterface
+   *
+   * @see \Drupal\Core\Queue\QueueWorkerInterface
    *
    * @Event
    *
    * @var string
+   *
    */
   const PULL_PREPULL = 'salesforce.pull_prepull';
 

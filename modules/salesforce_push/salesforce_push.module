@@ -122,11 +122,14 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
     $mapped_object = current($mapped_objects);
   }
 
-  // Event subscribers should throw an exception to prevent push.
-  \Drupal::service('event_dispatcher')->dispatch(
+  // Event subscribers should call $event->disallowPush() to prevent push.
+  $event = \Drupal::service('event_dispatcher')->dispatch(
     SalesforceEvents::PUSH_ALLOWED,
-    new SalesforcePushOpEvent($mapped_object, $op)
+    new SalesforcePushAllowedEvent($mapped_object, $op)
   );
+  if ($event->isPushAllowed() === FALSE) {
+    return FALSE;
+  }
 
   // Enqueue async push if the mapping is configured to do so, and quit.
   if ($mapping->async) {
@@ -141,7 +144,6 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
 
   // Attempt real-time push. Enqueue async push on failure.
   try {
-    // @TODO this doesn't really seem distinct from PUSH_ALLOWED anymore. Do we still have a use case for this event?
     \Drupal::service('event_dispatcher')->dispatch(
       SalesforceEvents::PUSH_MAPPING_OBJECT,
       new SalesforcePushOpEvent($mapped_object, $op)

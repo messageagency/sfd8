@@ -388,7 +388,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
         // Getting a Requeue here is weird for a group of items, but we'll
         // deal with it.
         $this->releaseItems($items);
-        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
+        $this->eventDispatcher->dispatch(SalesforceEvents::WARNING, new SalesforceErrorEvent($e));
         continue;
       }
       catch (SuspendQueueException $e) {
@@ -396,7 +396,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
         // or authorization error. Release items and move on to the next
         // mapping in this case.
         $this->releaseItems($items);
-        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
+        $this->eventDispatcher->dispatch(SalesforceEvents::WARNING, new SalesforceErrorEvent($e));
         return $i;
       }
       catch (\Exception $e) {
