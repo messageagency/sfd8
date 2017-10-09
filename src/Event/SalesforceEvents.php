@@ -12,7 +12,7 @@ class SalesforceEvents {
   /**
    * Previously hook_salesforce_push_mapping_object_alter
    * The event listener method receives a
-   * \Drupal\salesforce_mapping\Event\SalesforcePushOpEvent instance.
+   * \Drupal\salesforce_mapping\Event\SalesforcePushAllowedEvent instance.
    *
    * Event listeners should call $event->disallowPush() to prevent push.
    *
