@@ -1,0 +1,8 @@
+salesforce_logger.settings:
+  path: '/admin/config/salesforce/logger'
+  defaults:
+    _form: '\Drupal\salesforce_logger\Form\SettingsForm'
+    _title: 'Salesforce Logger'
+    _description: 'Manage Salesforce Logger module settings.'
+  requirements:
+    _permission: 'administer salesforce'

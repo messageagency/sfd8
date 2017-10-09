@@ -1,0 +1,5 @@
+salesforce_logger.settings:
+  route_name: salesforce_logger.settings
+  parent: salesforce.admin_config_salesforce
+  title: Salesforce Logger
+  description: 'Manage Salesforce Logger module settings.'

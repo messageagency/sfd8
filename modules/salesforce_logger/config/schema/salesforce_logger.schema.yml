@@ -1,0 +1,7 @@
+salesforce_logger.settings:
+  type: config_object
+  label: 'Salesforce Logger Settings'
+  mapping:
+    log_level:
+      type: string
+      label: 'Salesforce Logger minimum log level'

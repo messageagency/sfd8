@@ -1,0 +1,12 @@
+<?php
+
+use Drupal\salesforce\Event\SalesforceEvents;
+
+/**
+ * Install Salesforce Logger default log level.
+ */
+function salesforce_logger_update_8001() {
+  $settings = \Drupal::configFactory()->getEditable('salesforce_logger.settings');
+  $settings->set('log_level', SalesforceEvents::NOTICE);
+  $settings->save();
+}

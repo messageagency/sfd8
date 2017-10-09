@@ -162,6 +162,6 @@ class SalesforceEvents {
    *
    * @var string
    */
-  const NOTICE = 'salesforce.error';
+  const NOTICE = 'salesforce.notice';
 
 }
