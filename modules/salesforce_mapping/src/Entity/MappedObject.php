@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Entity;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -108,6 +109,54 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       $this->created = $this->getRequestTime();
     }
     return parent::save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    if ($update) {
+      $this->pruneRevisions($storage);
+    }
+    return parent::postSave($storage, $update);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function pruneRevisions(EntityStorageInterface $storage) {
+    $limit = $this
+      ->config('salesforce.settings')
+      ->get('limit_mapped_object_revisions');
+    if ($limit <= 0) {
+      // limit 0 means no limit.
+      return;
+    }
+    $count = $storage
+      ->getQuery()
+      ->allRevisions()
+      ->condition('id', $this->id())
+      ->count()
+      ->execute();
+
+    // Query for any revision id beyond the limit
+    if ($count <= $limit) {
+      return;
+    }
+    $vids_to_delete = $storage
+      ->getQuery()
+      ->allRevisions()
+      ->condition('id', $this->id())
+      ->range($limit, $count)
+      ->sort('changed', 'DESC')
+      ->execute();
+    if (empty($vids_to_delete)) {
+      return;
+    }
+    foreach ($vids_to_delete as $vid => $dummy) {
+      $storage->deleteRevision($vid);      
+    }
+    return $this;
   }
 
   /**
@@ -302,6 +351,10 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public function eventDispatcher() {
     return \Drupal::service('event_dispatcher');
+  }
+
+  public function config($name) {
+    return \Drupal::service('config.factory')->get($name);
   }
 
   /**

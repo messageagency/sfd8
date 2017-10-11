@@ -4,22 +4,32 @@ salesforce.settings:
   mapping:
     global_push_limit:
       type: integer
-      label: 'Salesforce push queue global limit'
+      label: 'Global push queue limit'
+      description: 'Set the maximum number of records to be processed during each push queue process. Use 0 for no limit.'
     pull_max_queue_size:
       type: integer
-      label: 'Salesforce pull queue max size'
+      label: 'Pull queue max size'
+      description: 'Set the maximum number of items which can be enqueued for pull at any given time. Note this setting is not exactly analogous to the push queue limit, since Drupal Cron API does not offer such granularity. Use 0 for no limit.'
     standalone:
       type: boolean
-      label: 'Provide standalone push queue processing endpoint.'
+      label: 'Provide standalone push queue processing endpoint'
+      description: 'Enable standalone push processing, and do not process push mappings during cron. Note: when enabled, you must set up your own service to query this endpoint.'
     show_all_objects:
       type: boolean
       label: 'Show all Salesforce objects in mapping UI, including system and non-writeable tables'
+      description: 'Expose all Salesforce objects to the Mapping interface. By default, Salesforce objects like custom settings, read-only objects, non-triggerable objects, etc. are hidden from the Salesforce Mapping interface to improve usability.'
     use_latest:
       type: boolean
-      label: 'Use latest REST API Version by default'
+      label: 'Use latest REST API Version (recommended)'
+      description: 'Always use the latest Rest API version when connecting to Salesforce. In general, Rest API is backwards-compatible for many years. Unless you have a very specific reason, you should probably just use the latest version.'
+    limit_mapped_object_revisions:
+      type: integer
+      label: 'Limit mapped object revisions'
+      description: 'Specify a maximum number of revisions to retain for Mapped Object content. Use 0 for no limit.'
     rest_api_version:
       type: mapping
       label: 'REST API Version'
+      description: 'A specific version of REST API to use, if not using latest'
       mapping:
         label:
           type: string

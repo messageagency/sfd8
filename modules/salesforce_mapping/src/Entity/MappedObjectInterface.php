@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\salesforce\SObject;
 
 /**
@@ -81,5 +82,13 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
    * @return $this
    */
   public function pull();
+
+
+  /**
+   * Based on the Mapped Object revision limit, delete old revisions.
+   *
+   * @return $this
+   */
+  public function pruneRevisions(EntityStorageInterface $storage);
 
 }

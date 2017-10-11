@@ -77,11 +77,13 @@ class SettingsForm extends ConfigFormBase {
     // We're not actually doing anything with this, but may figure out
     // something that makes sense.
     $config = $this->config('salesforce.settings');
+    $definition = \Drupal::service('config.typed')->getDefinition('salesforce.settings');
+    $definition = $definition['mapping'];
 
     $form['use_latest'] = [
-      '#title' => $this->t('Use Latest Rest API version (recommended)'),
+      '#title' => $this->t($definition['use_latest']['label']),
       '#type' => 'checkbox',
-      '#description' => $this->t('Always use the latest Rest API version when connecting to Salesforce. In general, Rest API is backwards-compatible for many years. Unless you have a very specific reason, you should probably just use the latest version.'),
+      '#description' => $this->t($definition['use_latest']['description']),
       '#default_value' => $config->get('use_latest'),
     ];
     $versions = [];
@@ -94,7 +96,8 @@ class SettingsForm extends ConfigFormBase {
     }
 
     $form['rest_api_version'] = [
-      '#title' => $this->t('Select a specific Rest API version'),
+      '#title' => $this->t($definition['rest_api_version']['label']),
+      '#description' => $this->t($definition['rest_api_version']['description']),
       '#type' => 'select',
       '#options' => $versions,
       '#tree' => TRUE,
@@ -107,33 +110,42 @@ class SettingsForm extends ConfigFormBase {
     ];
 
     $form['global_push_limit'] = [
-      '#title' => $this->t('Global push limit'),
+      '#title' => $this->t($definition['global_push_limit']['label']),
       '#type' => 'number',
-      '#description' => $this->t('Set the maximum number of records to be processed during each push queue process. Enter 0 for no limit.'),
+      '#description' => $this->t($definition['global_push_limit']['description']),
       '#required' => TRUE,
       '#default_value' => $config->get('global_push_limit'),
       '#min' => 0,
     ];
 
     $form['pull_max_queue_size'] = [
-      '#title' => $this->t('Pull queue max size'),
+      '#title' => $this->t($definition['pull_max_queue_size']['label']),
       '#type' => 'number',
-      '#description' => $this->t('Set the maximum number of items which can be enqueued for pull at any given time. Note this setting is not exactly analogous to the push queue limit, since Drupal Cron API does not offer such granularity. Enter 0 for no limit.'),
+      '#description' => $this->t($definition['pull_max_queue_size']['description']),
       '#required' => TRUE,
       '#default_value' => $config->get('pull_max_queue_size'),
       '#min' => 0,
     ];
 
+    $form['limit_mapped_object_revisions'] = [
+      '#title' => $this->t($definition['limit_mapped_object_revisions']['label']),
+      '#description' => $this->t($definition['limit_mapped_object_revisions']['description']),
+      '#type' => 'number',
+      '#required' => TRUE,
+      '#default_value' => $config->get('limit_mapped_object_revisions'),
+      '#min' => 0,
+    ];
+
     $form['show_all_objects'] = [
-      '#title' => $this->t('Show all objects'),
-      '#description' => $this->t('Check this box to expose all Salesforce objects to the Mapping interface. By default, Salesforce objects like custom settings, read-only objects, non-triggerable objects, etc. are hidden from the Salesforce Mapping interface to improve usability.'),
+      '#title' => $this->t($definition['show_all_objects']['label']),
+      '#description' => $this->t($definition['show_all_objects']['description']),
       '#type' => 'checkbox',
       '#default_value' => $config->get('show_all_objects'),
     ];
 
     $form['standalone'] = [
-      '#title' => $this->t('Standalone Push Processing'),
-      '#description' => $this->t('Enable standalone push processing, and do not process push mappings during cron. Note: when enabled, you must set up your own service to query this endpoint.'),
+      '#title' => $this->t($definition['standalone']['label']),
+      '#description' => $this->t($definition['standalone']['description']),
       '#type' => 'checkbox',
       '#default_value' => $config->get('standalone'),
     ];
@@ -169,6 +181,7 @@ class SettingsForm extends ConfigFormBase {
     $config->set('standalone', $form_state->getValue('standalone'));
     $config->set('global_push_limit', $form_state->getValue('global_push_limit'));
     $config->set('pull_max_queue_size', $form_state->getValue('pull_max_queue_size'));
+    $config->set('limit_mapped_object_revisions', $form_state->getValue('limit_mapped_object_revisions'));
     $use_latest = $form_state->getValue('use_latest');
     $config->set('use_latest', $use_latest);
     if (!$use_latest) {

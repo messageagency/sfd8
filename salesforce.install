@@ -165,3 +165,12 @@ function salesforce_update_8001() {
   $settings->set('use_latest', TRUE);
   $settings->save();
 }
+
+/**
+ * Install new "Limit revisions" setting; defaults to 10
+ */
+function salesforce_update_8002() {
+  $settings = \Drupal::configFactory()->getEditable('salesforce.settings');
+  $settings->set('limit_mapped_object_revisions', 10);
+  $settings->save();
+}

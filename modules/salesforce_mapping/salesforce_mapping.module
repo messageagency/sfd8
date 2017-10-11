@@ -7,11 +7,9 @@
 
 use Drupal\Core\Entity\EntityInterface;
 
-// Not sure if we'll actually need these, since entity API seems to provide everything:
 /**
  * Implements hook_entity_type_alter().
  */
-
 function salesforce_mapping_entity_type_alter(array &$entity_types) {
   /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
   foreach ($entity_types as $entity_type_id => $entity_type) {
