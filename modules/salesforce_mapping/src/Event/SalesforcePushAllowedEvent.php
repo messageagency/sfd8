@@ -28,7 +28,7 @@ class SalesforcePushAllowedEvent extends SalesforcePushOpEvent {
    *       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE.
    */
   public function __construct(MappedObjectInterface $mapped_object, $op) {
-    parent::__construct($mapped_object);
+    parent::__construct($mapped_object, $op);
     $this->op = $op;
   }
 

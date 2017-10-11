@@ -47,11 +47,11 @@ class SalesforceLoggerSubscriber implements EventSubscriberInterface {
     $log_level_setting = \Drupal::configFactory()->get('salesforce_logger.settings')->get('log_level');
     $event_level = $event->getLevel();
     // Only log events whose log level is greater or equal to min log level setting.
-    if ($log_level != SalesforceEvents::NOTICE) {
-      if ($log_level == SalesforceEvents::ERROR && $event_level != SalesforceEvents::ERROR) {
+    if ($log_level_setting != SalesforceEvents::NOTICE) {
+      if ($log_level_setting == SalesforceEvents::ERROR && $event_level != SalesforceEvents::ERROR) {
         return;
       }
-      if ($log_level == SalesforceEvents::WARNING && $event_level == SalesforceEvents::NOTICE) {
+      if ($log_level_setting == SalesforceEvents::WARNING && $event_level == SalesforceEvents::NOTICE) {
         return;
       }
     }
