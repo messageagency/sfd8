@@ -108,10 +108,9 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     $referenced_mappings = $this->mapped_object_storage->loadBySfid($value);
     if (!empty($referenced_mappings)) {
       $mapped_object = reset($referenced_mappings);
-      return $mapped_object->getMappedEntity()->id();
-    }
-    else {
-      throw new SalesforceException('No Drupal entity mapped to the Salesforce Id.');
+      return $mapped_object->getMappedEntity()
+        ? $mapped_object->getMappedEntity()->id()
+        : NULL;
     }
   }
 
