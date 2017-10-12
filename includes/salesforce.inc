@@ -547,7 +547,7 @@ class Salesforce {
   public function queryAll(SalesforceSelectQuery $query) {
     drupal_alter('salesforce_query', $query);
     // Casting $query as a string calls SalesforceSelectQuery::__toString().
-    $result = $this->apiCall('query?q=' . (string) $query);
+    $result = $this->apiCall('queryAll?q=' . (string) $query);
     return $result;
   }
 
