@@ -678,15 +678,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Use SOQL to get objects based on query string.
-   *
-   * @param \Drupal\salesforce\SelectQuery $query
-   *   The constructed SOQL query.
-   *
-   * @return \Drupal\salesforce\SelectQueryResult
-   *   Query result object.
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function query(SelectQuery $query) {
     // $this->moduleHandler->alter('salesforce_query', $query);
@@ -695,13 +687,14 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Given a select query result, fetch the next results set, if it exists.
-   *
-   * @param \Drupal\salesforce\SelectQueryResult $results
-   *   The query result which potentially has more records.
-   *
-   * @return \Drupal\salesforce\SelectQueryResult
-   *   If there are no more results, $results->records will be empty.
+   * {@inheritdoc}
+   */
+  public function queryAll(SelectQuery $query) {
+    return new SelectQueryResult($this->apiCall('queryAll?q=' . (string) $query));
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function queryMore(SelectQueryResult $results) {
     if ($results->done()) {

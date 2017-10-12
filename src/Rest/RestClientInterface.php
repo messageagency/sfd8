@@ -250,6 +250,18 @@ interface RestClientInterface {
   public function query(SelectQuery $query);
 
   /**
+   * Same as ::query(), but also returns deleted or archived records.
+   *
+   * @param \Drupal\salesforce\SelectQuery $query
+   *   The constructed SOQL query.
+   *
+   * @return \Drupal\salesforce\SelectQueryResult
+   *
+   * @addtogroup salesforce_apicalls
+   */
+  public function queryAll(SelectQuery $query);
+
+  /**
    * Given a select query result, fetch the next results set, if it exists.
    *
    * @param \Drupal\salesforce\SelectQueryResult $results
