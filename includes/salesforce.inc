@@ -534,6 +534,24 @@ class Salesforce {
   }
 
   /**
+   * Same as ::query() but also returns deleted or archived records.
+   *
+   * @param SalesforceSelectQuery $query
+   *   The constructed SOQL query.
+   *
+   * @return array
+   *   Array of Salesforce objects that match the query.
+   *
+   * @addtogroup salesforce_apicalls
+   */
+  public function queryAll(SalesforceSelectQuery $query) {
+    drupal_alter('salesforce_query', $query);
+    // Casting $query as a string calls SalesforceSelectQuery::__toString().
+    $result = $this->apiCall('query?q=' . (string) $query);
+    return $result;
+  }
+
+  /**
    * Retreieve all the metadata for an object.
    *
    * @param string $name
