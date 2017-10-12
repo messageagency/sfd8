@@ -7,6 +7,8 @@
 
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\Core\Entity\ContentEntityStorageInterface;
 
 /**
  * Implements hook_drush_command().
@@ -15,6 +17,34 @@ function salesforce_mapping_drush_command() {
   $items['sf-prune-revisions'] = [
     'description' => 'Delete old revisions of Mapped Objects, based on revision limit settings. Useful if you have recently changed settings, or if you have just updated to a version with prune support.',
     'aliases' => ['sfprune'],
+  ];
+  $items['sf-purge-drupal'] = [
+    'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Drupal entities.',
+    'aliases' => ['sfpd'],
+    'options' => [
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+    ],
+  ];
+  $items['sf-purge-salesforce'] = [
+    'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Salesforce records.',
+    'aliases' => ['sfpsf'],
+    'options' => [
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+    ],
+  ];
+  $items['sf-purge-mapping'] = [
+    'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Mappings.',
+    'aliases' => ['sfpmap'],
+    'options' => [
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+    ],
+  ];
+  $items['sf-purge-all'] = [
+    'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Mappings, Entities, or Salesforce records.',
+    'aliases' => ['sfpall'],
+    'options' => [
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+    ],
   ];
   return $items;
 }
@@ -64,3 +94,190 @@ function drush_salesforce_mapping_sf_prune_revisions() {
   }
   
 }
+
+function drush_salesforce_mapping_sf_purge_drupal() {
+  $etm = \Drupal::service('entity_type.manager');
+  $mapped_obj_storage = $etm->getStorage('salesforce_mapped_object');
+  $mapped_obj_table = $etm
+    ->getDefinition('salesforce_mapped_object')
+    ->getBaseTable();
+
+  $query = \Drupal::service('database')
+    ->select($mapped_obj_table, 'm')
+    ->fields('m', ['drupal_entity__target_type'])
+    ->distinct();
+  if ($mapping_id = drush_get_option('mapping')) {
+    $query->condition('salesforce_mapping', $mapping_id);
+  }
+  $entity_type_ids = $query
+    ->execute()
+    ->fetchCol();
+  if (empty($entity_type_ids)) {
+    drush_log('No orphaned mapped objects found by Drupal entities.', 'ok');
+    return;
+  }
+
+  foreach ($entity_type_ids as $et_id) {
+    $query = \Drupal::service('database')
+      ->select($mapped_obj_table, 'm')
+      ->fields('m', ['id'])
+      ->condition('drupal_entity__target_type', $et_id);
+
+    $entity_type = $etm->getDefinition($et_id);
+    if ($entity_type) {
+      $id_key = $entity_type->getKey('id');
+      $query->addJoin("LEFT", $entity_type->getBaseTable(), 'et', "et.$id_key = m.drupal_entity__target_id_int");
+      $query->isNull("et.$id_key");
+    }
+    $mapped_obj_ids = $query->execute()->fetchCol();
+    if (empty($mapped_obj_ids)) {
+      drush_log('No orphaned mapped objects found for ' . $et_id . '.', 'ok');
+      continue;
+    }
+    _drush_salesforce_mapping_confirm_and_delete($mapped_obj_ids, $mapped_obj_storage, 'entity type: ' . $et_id);
+  }
+}
+
+function drush_salesforce_mapping_sf_purge_salesforce() {
+  $etm = \Drupal::service('entity_type.manager');
+  $client = \Drupal::service('salesforce.client');
+  $object_types = _drush_salesforce_mapping_object_types_by_prefix($client);
+
+  $mapped_obj_storage = $etm->getStorage('salesforce_mapped_object');
+  $mapped_obj_table = $etm
+    ->getDefinition('salesforce_mapped_object')
+    ->getBaseTable();
+
+  $query = \Drupal::service('database')
+    ->select($mapped_obj_table, 'm');
+  $query->addExpression('distinct substr(salesforce_id, 1, 3)');
+  $mapping_id = FALSE;
+  if ($mapping_id = drush_get_option('mapping')) {
+    $query->condition('salesforce_mapping', $mapping_id);
+  }
+  $sfid_prefixes = $query
+    ->execute()
+    ->fetchCol();
+
+  foreach ($sfid_prefixes as $prefix) {
+    if (empty($object_types[$prefix]['name'])) {
+      $mapped_obj_ids = \Drupal::service('database')
+        ->select($mapped_obj_table, 'm')
+        ->fields('m', ['salesforce_id', 'id'])
+        ->condition('salesforce_id', $prefix . '%', 'LIKE')
+        ->execute()
+        ->fetchAllKeyed();
+      if (empty($mapped_obj_ids)) {
+        continue;
+      }
+      drush_log('Unknown object type for Salesforce ID prefix ' . $prefix);
+      _drush_salesforce_mapping_confirm_and_delete($mapped_obj_ids, $mapped_obj_storage, 'prefix ' . $prefix);
+      continue;
+    }
+    $query = \Drupal::service('database')
+      ->select($mapped_obj_table, 'm')
+      ->fields('m', ['salesforce_id', 'id']);
+    if ($mapping_id) {
+      $query->condition('salesforce_mapping', $mapping_id);
+    }
+    else {
+      $query->condition('salesforce_id', $prefix . '%', 'LIKE');
+    }
+    $sfids = $query
+      ->execute()
+      ->fetchAllKeyed();
+    $to_delete = $sfids;
+    // SOQL queries are limited to 4000-characters in where statements. 
+    // Chunkify in case we have more than ~200 sfids.
+    foreach (array_chunk($sfids, 200, TRUE) as $chunk) {
+      $soql_query = new SelectQuery($object_types[$prefix]['name']);
+      $soql_query->fields[] = 'Id';
+      $soql_query->addCondition('Id', array_keys($chunk));
+      $results = $client->query($soql_query);
+      foreach ($results->records() as $record) {
+        unset($to_delete[(string)$record->id()]);
+      }
+    }
+    if (empty($to_delete)) {
+      drush_log('No orphaned mapped objects found for SObject type ' . $object_types[$prefix]['name'], 'ok');
+      continue;
+    }
+    _drush_salesforce_mapping_confirm_and_delete(array_values($to_delete), $mapped_obj_storage, 'SObject type *' . $object_types[$prefix]['name'] . '*');
+  }
+}
+
+function drush_salesforce_mapping_sf_purge_mapping() {
+  $etm = \Drupal::service('entity_type.manager');
+  $mapped_obj_storage = $etm->getStorage('salesforce_mapped_object');
+  $mapped_obj_table = $etm
+    ->getDefinition('salesforce_mapped_object')
+    ->getBaseTable();
+
+  $query = \Drupal::service('database')
+    ->select($mapped_obj_table, 'm')
+    ->fields('m', ['salesforce_mapping'])
+    ->distinct();
+  if ($mapping_id = drush_get_option('mapping')) {
+    $query->condition('salesforce_mapping', $mapping_id);
+  }
+  $mapping_ids = $query
+    ->execute()
+    ->fetchCol();
+  if (empty($entity_type_ids)) {
+    drush_log('No orphaned mapped objects found by mapping.', 'ok');
+    return;
+  }
+
+  foreach ($mapping_ids as $mapping_id) {
+    $mapping = $etm
+      ->getStorage('salesforce_mapping')
+      ->load($mapping_id);
+    // If mapping loads successsfully, we assume the mapped object is OK.
+    if ($mapping) {
+      continue;
+    }
+    $mapped_obj_ids = \Drupal::service('database')
+      ->select($mapped_obj_table, 'm')
+      ->fields('m', ['id'])
+      ->condition('salesforce_mapping', $mapping_id)
+      ->distinct()
+      ->execute()
+      ->fetchCol();
+      
+    _drush_salesforce_mapping_confirm_and_delete($mapped_obj_ids, $mapped_obj_storage, 'missing mapping: ' . $mapping_id);
+  }
+}
+
+function drush_salesforce_mapping_sf_purge_all() {
+  drush_salesforce_mapping_sf_purge_mapping();
+  drush_salesforce_mapping_sf_purge_drupal();
+  drush_salesforce_mapping_sf_purge_salesforce();
+}
+
+function _drush_salesforce_mapping_object_types_by_prefix(RestClientInterface $client) {
+  $ret = [];
+  $describe = $client->objects();
+  foreach ($describe as $object) {
+    $ret[$object['keyPrefix']] = $object;
+  }
+  return $ret;
+}
+
+function _drush_salesforce_mapping_confirm_and_delete($object_ids, ContentEntityStorageInterface $storage, $extra = '') {
+  if (empty($object_ids)) {
+    return;
+  }
+  $message = 'Delete ' . count($object_ids) . ' orphaned mapped objects';
+  if ($extra) {
+    $message .= ' for ' . $extra;
+  }
+  $message .= '?';
+  if (!drush_confirm($message)) {
+    return;
+  }
+
+  // Still have to *load* entities in order to delete them. **UGH**
+  $mapped_objs = $storage->loadMultiple($object_ids);
+  $storage->delete($mapped_objs);
+}
+
