@@ -83,7 +83,7 @@ function salesforce_drush_command() {
   );
   $items['sf-execute-query'] = array(
     'description' => 'Execute a SOQL query.',
-    'aliases' => array('sfeq'),
+    'aliases' => array('sfeq', 'soql'),
     'arguments' => array(
       'query' => 'The query to execute.',
     ),
