@@ -149,8 +149,8 @@ class QueueHandler {
       // @TODO Replace this with a better implementation when available,
       // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
       $mapping->setLastPullTime($this->time->getRequestTime());
+      return $results->size();
     }
-    return $results->size();
   }
 
   /**
