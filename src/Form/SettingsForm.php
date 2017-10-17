@@ -109,61 +109,69 @@ class SettingsForm extends ConfigFormBase {
       ],
     ];
 
-    $form['global_push_limit'] = [
-      '#title' => $this->t($definition['global_push_limit']['label']),
-      '#type' => 'number',
-      '#description' => $this->t($definition['global_push_limit']['description']),
-      '#required' => TRUE,
-      '#default_value' => $config->get('global_push_limit'),
-      '#min' => 0,
-    ];
+    if (\Drupal::moduleHandler()->moduleExists('salesforce_push')) {
+      $form['global_push_limit'] = [
+        '#title' => $this->t($definition['global_push_limit']['label']),
+        '#type' => 'number',
+        '#description' => $this->t($definition['global_push_limit']['description']),
+        '#required' => TRUE,
+        '#default_value' => $config->get('global_push_limit'),
+        '#min' => 0,
+      ];
+    }
 
-    $form['pull_max_queue_size'] = [
-      '#title' => $this->t($definition['pull_max_queue_size']['label']),
-      '#type' => 'number',
-      '#description' => $this->t($definition['pull_max_queue_size']['description']),
-      '#required' => TRUE,
-      '#default_value' => $config->get('pull_max_queue_size'),
-      '#min' => 0,
-    ];
+    if (\Drupal::moduleHandler()->moduleExists('salesforce_pull')) {
+      $form['pull_max_queue_size'] = [
+        '#title' => $this->t($definition['pull_max_queue_size']['label']),
+        '#type' => 'number',
+        '#description' => $this->t($definition['pull_max_queue_size']['description']),
+        '#required' => TRUE,
+        '#default_value' => $config->get('pull_max_queue_size'),
+        '#min' => 0,
+      ];
+    }
 
-    $form['limit_mapped_object_revisions'] = [
-      '#title' => $this->t($definition['limit_mapped_object_revisions']['label']),
-      '#description' => $this->t($definition['limit_mapped_object_revisions']['description']),
-      '#type' => 'number',
-      '#required' => TRUE,
-      '#default_value' => $config->get('limit_mapped_object_revisions'),
-      '#min' => 0,
-    ];
+    if (\Drupal::moduleHandler()->moduleExists('salesforce_mapping')) {
+      $form['limit_mapped_object_revisions'] = [
+        '#title' => $this->t($definition['limit_mapped_object_revisions']['label']),
+        '#description' => $this->t($definition['limit_mapped_object_revisions']['description']),
+        '#type' => 'number',
+        '#required' => TRUE,
+        '#default_value' => $config->get('limit_mapped_object_revisions'),
+        '#min' => 0,
+      ];
 
-    $form['show_all_objects'] = [
-      '#title' => $this->t($definition['show_all_objects']['label']),
-      '#description' => $this->t($definition['show_all_objects']['description']),
-      '#type' => 'checkbox',
-      '#default_value' => $config->get('show_all_objects'),
-    ];
+      $form['show_all_objects'] = [
+        '#title' => $this->t($definition['show_all_objects']['label']),
+        '#description' => $this->t($definition['show_all_objects']['description']),
+        '#type' => 'checkbox',
+        '#default_value' => $config->get('show_all_objects'),
+      ];
+    }
 
-    $form['standalone'] = [
-      '#title' => $this->t($definition['standalone']['label']),
-      '#description' => $this->t($definition['standalone']['description']),
-      '#type' => 'checkbox',
-      '#default_value' => $config->get('standalone'),
-    ];
+    if (\Drupal::moduleHandler()->moduleExists('salesforce_push')) {
+      $form['standalone'] = [
+        '#title' => $this->t($definition['standalone']['label']),
+        '#description' => $this->t($definition['standalone']['description']),
+        '#type' => 'checkbox',
+        '#default_value' => $config->get('standalone'),
+      ];
 
-    $standalone_url = Url::fromRoute(
-        'salesforce_push.endpoint',
-        ['key' => \Drupal::state()->get('system.cron_key')],
-        ['absolute' => TRUE]);
-    $form['standalone_url'] = [
-      '#type' => 'item',
-      '#title' => $this->t('Standalone URL'),
-      '#markup' => $this->t('<a href="@url">@url</a>', ['@url' => $standalone_url->toString()]),
-      '#states' => [
-        'visible' => [
-          ':input#edit-standalone' => ['checked' => TRUE],
+      $standalone_url = Url::fromRoute(
+          'salesforce_push.endpoint',
+          ['key' => \Drupal::state()->get('system.cron_key')],
+          ['absolute' => TRUE]);
+      $form['standalone_url'] = [
+        '#type' => 'item',
+        '#title' => $this->t('Standalone URL'),
+        '#markup' => $this->t('<a href="@url">@url</a>', ['@url' => $standalone_url->toString()]),
+        '#states' => [
+          'visible' => [
+            ':input#edit-standalone' => ['checked' => TRUE],
+          ],
         ],
-      ],
-    ];
+      ];
+    }
 
     $form = parent::buildForm($form, $form_state);
     $form['creds']['actions'] = $form['actions'];
