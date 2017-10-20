@@ -106,6 +106,18 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_entity_delete().
+ * Delete any corresponding Mapped Objects when an entity is deleted. 
+ *
+ * @param EntityInterface $entity
+ */
+function salesforce_mapping_entity_delete(EntityInterface $entity) {
+  $storage = \Drupal::entityTypeManager()
+    ->getStorage('salesforce_mapped_object');
+  $storage->delete($storage->loadByEntity($entity));
+}
+
+/**
  * Implements hook_field_formatter_info_alter().
  */
 function salesforce_mapping_field_formatter_info_alter(array &$info) {
