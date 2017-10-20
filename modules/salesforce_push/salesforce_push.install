@@ -10,7 +10,6 @@ use Drupal\salesforce_push\PushQueue;
  * Implements hook_install().
  */
 function salesforce_push_install() {
-  \Drupal::state()->set('salesforce.mapping_push_limit', PushQueue::MAPPING_CRON_PUSH_LIMIT);
   \Drupal::state()->set('salesforce.push_queue_processor', PushQueue::DEFAULT_QUEUE_PROCESSOR);
   \Drupal::state()->set('salesforce.push_queue_max_fails', PushQueue::DEFAULT_MAX_FAILS);
 }
@@ -20,7 +19,6 @@ function salesforce_push_install() {
  */
 function salesforce_push_uninstall() {
   $delete = [
-    'salesforce.push_limit',
     'salesforce.push_queue_processor',
     'salesforce.push_queue_max_fails',
     'salesforce.mapping_push_info',
