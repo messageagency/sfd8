@@ -378,11 +378,8 @@ function hook_salesforce_pull_entity_update($entity, $sf_object, $sf_mapping) {
  *   Array of Salesforce merge fields.
  */
 function hook_salesforce_pull_entity_merge_fields_alter(&$merge_fields) {
-  $merge_fields['old_contact'] = 'Old_Contact__c';
   $merge_fields['old_contact_key'] = 'Old_Contact__c';
-  $merge_fields['merged_contact'] = 'Contact__c';
   $merge_fields['merged_contact_key'] = 'Contact__c';
-  $merge_fields['merged_entity'] = 'Contact__c';
   $merge_fields['type'] = 'Merged_Contact__c';
   $merge_fields['modified_date'] = 'LastModifiedDate';
 }
