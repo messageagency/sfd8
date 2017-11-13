@@ -64,7 +64,7 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
   if ($entity_type = $entity->getEntityTypeId()) {
     $properties['drupal_entity_type'] = $entity_type;
   }
-  if ($bundle = $entity->getEntityTypeId()) {
+  if ($bundle = $entity->bundle()) {
     $properties['drupal_bundle'] = $bundle;
   }
   $mappings = \Drupal::service('entity.manager')
