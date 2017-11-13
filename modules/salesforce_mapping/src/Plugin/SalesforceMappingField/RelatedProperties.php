@@ -164,36 +164,4 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     return $options;
   }
 
-  /**
-   * {@inheritdoc}
-   *
-   * @return array
-   *   Field config upon which this mapping depends
-   */
-  public function getDependencies(SalesforceMappingInterface $mapping) {
-    $deps = [];
-    list($field_name, $referenced_field_name) = explode(':', $this->config('drupal_field_value'), 2);
-    $field_config = FieldConfig::loadByName($mapping->get('drupal_entity_type'), $mapping->get('drupal_bundle'), $field_name);
-    if (empty($field_config)) {
-      return $deps;
-    }
-    $deps[] = [
-      'config' => [$field_config->getConfigDependencyName()],
-    ];
-    $field_settings = $field_config->getSettings();
-
-    if (empty($field_settings['target_type'])) {
-      return $deps;
-    }
-
-    $fields = $this->entityFieldManager->getBaseFieldDefinitions($field_settings['target_type']);
-    if (empty($fields[$referenced_field_name])) {
-      return $deps;
-    }
-
-    $deps['config'][] = $fields[$referenced_field_name]->getConfigDependencyName();
-
-    return $deps;
-  }
-
 }
