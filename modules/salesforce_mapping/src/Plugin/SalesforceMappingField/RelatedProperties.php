@@ -4,7 +4,6 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\Field;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
@@ -59,9 +58,9 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     // causes an exception during entity save. Probably a bug, but I haven't
     // found it in the issue queue. So, just check first to make sure the field
     // exists.
-    $instances = Field::fieldInfo()->getBundleInstances(
-      get_class($entity),
-      $entity->bundle()
+    $instances = $this->entityFieldManager->getFieldDefinitions(
+      $mapping->get('drupal_entity_type'),
+      $mapping->get('drupal_bundle')
     );
     if (empty($instances[$field_name])) {
       return;
