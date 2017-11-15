@@ -67,34 +67,30 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     }
 
     $field = $entity->get($field_name);
-    if (empty($field->value)) {
+    if (empty($field->entity)) {
       // This reference field is blank.
       return;
     }
 
-    // Now we can actually fetch the referenced entity.
-    $field_settings = $field->getFieldDefinition()->getFieldSettings();
     try {
-      $referenced_entity = $this
-        ->entityTypeManager
-        ->getStorage($field_settings['target_type'])
-        ->load($field->value);
+      $describe = $this
+        ->salesforceClient
+        ->objectDescribe($mapping->getSalesforceObjectType());
+      $field_definition = $describe->getField($this->config('salesforce_field'));
+      if ($field_definition['type'] == 'multipicklist') {
+        $values = [];
+        foreach ($field as $ref_entity) {
+          $values[] = $ref_entity->entity->get($referenced_field_name)->value;
+        }
+        return implode(';', $values);
+      }
+      else {
+        return $field->entity->get($referenced_field_name)->value;
+      }
     }
     catch (\Exception $e) {
-      // @TODO something about this exception
-      \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-      return;
+      return NULL;
     }
-
-    // Again, try to avoid some complicated fatal further downstream.
-    $referenced_instances = $this->entityFieldManager->getFieldDefinitions(
-      get_class($referenced_entity),
-      $referenced_entity->bundle()
-    );
-    if (empty($referenced_instances[$referenced_field_name])) {
-      return;
-    }
-    return $referenced_entity->get($referenced_field_name)->value;
   }
 
   /**
