@@ -148,7 +148,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
       }
 
       foreach ($properties as $key => $property) {
-        $options[$instance->getLabel()][$instance->getName() . ':' . $key] = $property->getLabel();
+        $options[(string)$instance->getLabel()][$instance->getName() . ':' . $key] = $property->getLabel();
       }
     }
 
