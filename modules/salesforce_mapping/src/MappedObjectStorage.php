@@ -4,7 +4,7 @@ namespace Drupal\salesforce_mapping;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\salesforce\SFID;
@@ -74,13 +74,13 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   /**
    * Load MappedObjects by Drupal Entity
    *
-   * @param ContentEntityInterface $entity
+   * @param EntityInterface $entity
    *
    * @return array
    *
    * @see loadByProperties()
    */
-  public function loadByEntity(ContentEntityInterface $entity) {
+  public function loadByEntity(EntityInterface $entity) {
     return $this->loadByProperties([
       'drupal_entity__target_type' => $entity->getEntityTypeId(),
       'drupal_entity__target_id' => $entity->id(),
@@ -90,13 +90,13 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   /**
    * Load a single MappedObject by Drupal Entity and Mapping
    *
-   * @param ContentEntityInterface $entity
+   * @param EntityInterface $entity
    *
    * @return MappedObjectInterface|null
    *
    * @see loadByProperties()
    */
-  public function loadByEntityAndMapping(ContentEntityInterface $entity, SalesforceMappingInterface $mapping) {
+  public function loadByEntityAndMapping(EntityInterface $entity, SalesforceMappingInterface $mapping) {
      $result = $this->loadByProperties([
       'drupal_entity__target_type' => $entity->getEntityTypeId(),
       'drupal_entity__target_id' => $entity->id(),
@@ -121,7 +121,7 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   /**
    * Load a single MappedObject by Mapping and SFID
    *
-   * @param ContentEntityInterface $entity
+   * @param EntityInterface $entity
    *
    * @return MappedObjectInterface|null
    *
