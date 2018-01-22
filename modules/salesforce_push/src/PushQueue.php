@@ -341,21 +341,26 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     return $this;
   }
 
+
   /**
    * Given a salesforce mapping, process all its push queue entries.
    *
-   * @param SalesforceMapping $mapping
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Salesforce mapping.
    *
    * @return int
    *   The number of items procesed, or -1 if there was any error, And also
    *   dispatches a SalesforceEvents::ERROR event.
    */
   public function processQueue(SalesforceMappingInterface $mapping) {
+    if (!$this->connection->schema()->tableExists(static::TABLE_NAME)) {
+      return 0;
+    }
     $this->garbageCollection();
     static $queue_processor = FALSE;
     // Check mapping frequency before proceeding.
     if ($mapping->getNextPushTime() > $this->time->getRequestTime()) {
-      return;
+      return 0;
     }
 
     if (!$queue_processor) {
