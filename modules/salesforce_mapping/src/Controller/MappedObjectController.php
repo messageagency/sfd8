@@ -5,11 +5,32 @@ namespace Drupal\salesforce_mapping\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Access\AccessResult;
 
 /**
  * Returns responses for devel module routes.
  */
 class MappedObjectController extends ControllerBase {
+
+  public function access(AccountInterface $account) {
+    if (!\Drupal::currentUser()->hasPermission('administer salesforce')) {
+      return AccessResult::forbidden();
+    }
+
+    // There must be a better way to get the entity from a route match.
+    $param = current(\Drupal::routeMatch()->getParameters()->all());
+    $implements = class_implements($param);
+    if (empty($implements['Drupal\Core\Entity\EntityInterface'])) {
+      return AccessResult::forbidden();
+    }
+    // Only allow access for entities with mappings
+    return \Drupal::entityTypeManager()
+      ->getStorage('salesforce_mapping')
+      ->loadByEntity($param)
+        ? AccessResult::allowed()
+        : AccessResult::forbidden();
+  }
 
   /**
    * Helper function to get entity from router path

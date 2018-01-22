@@ -7,6 +7,7 @@ use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
+use Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface;
 
 /**
  * Listens to the dynamic route events.
@@ -19,12 +20,20 @@ class RouteSubscriber extends RouteSubscriberBase {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
+  /**
+   * The mappable entity types service.
+   *
+   * @var SalesforceMappableEntityTypesInterface
+   */
+  protected $mappable;
 
   /**
    * Constructs a new RouteSubscriber object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity type manager.
+   * @param \Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface $mappable
+   *   The mappable entity types interface.
    */
   public function __construct(EntityTypeManagerInterface $entity_manager) {
     $this->entityTypeManager = $entity_manager;
@@ -35,10 +44,11 @@ class RouteSubscriber extends RouteSubscriberBase {
    */
   protected function alterRoutes(RouteCollection $collection) {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
-      // Note the empty operation, so we get the nice clean route "entity.entity-type.salesforce".
+      // If the entity didn't get a salesforce link template added by hook_entity_types_alter, skip it.
       if (!($path = $entity_type->getLinkTemplate('salesforce'))) {
         continue;
       }
+
       // Create the "listing" route to show all the mapped objects for this entity.
       $route = new Route($path);
       $route
@@ -47,7 +57,7 @@ class RouteSubscriber extends RouteSubscriberBase {
           '_title' => "Salesforce mapped objects",
         ])
         ->addRequirements([
-          '_permission' => 'administer salesforce',
+          '_custom_access' => '\Drupal\salesforce_mapping\Controller\MappedObjectController::access',
         ])
         ->setOption('_admin_route', TRUE)
         ->setOption('_salesforce_entity_type_id', $entity_type_id)

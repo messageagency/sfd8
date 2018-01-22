@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Class MappedObjectStorage.
@@ -72,6 +73,16 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
    */
   public function loadByDrupal($entity_type_id) {
     return $this->loadByProperties(["drupal_entity_type" => $entity_type_id]);
+  }
+
+  /**
+   * Pass-through for loadMultipleMapping() including bundle
+   */
+  public function loadByEntity(EntityInterface $entity) {
+    return $this->loadByProperties([
+      'drupal_entity_type' => $entity->getEntityTypeId(),
+      'drupal_bundle' => $entity->bundle(),
+    ]);
   }
 
   /**

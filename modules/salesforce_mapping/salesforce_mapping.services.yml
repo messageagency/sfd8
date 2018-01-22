@@ -3,6 +3,10 @@ services:
     class: Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager
     arguments: ['@container.namespaces', '@cache.default', '@module_handler']
 
+  salesforce_mapping.mappable_entity_types:
+    class: Drupal\salesforce_mapping\SalesforceMappableEntityTypes
+    arguments: ['@entity_type.manager']
+
   salesforce_mapping.route_subscriber:
     class: Drupal\salesforce_mapping\Routing\RouteSubscriber
     arguments: ['@entity_type.manager']

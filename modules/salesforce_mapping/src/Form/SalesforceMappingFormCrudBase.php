@@ -465,18 +465,9 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected function get_entity_type_options() {
     $options = [];
-    $entity_info = $this->entityTypeManager->getDefinitions();
-
-    // For now, let's only concern ourselves with fieldable entities. This is an
-    // arbitrary restriction, but otherwise there would be dozens of entities,
-    // making this options list unwieldy.
-    foreach ($entity_info as $info) {
-      if (
-        !in_array('Drupal\Core\Entity\ContentEntityTypeInterface', class_implements($info)) ||
-        $info->id() == 'salesforce_mapped_object'
-      ) {
-        continue;
-      }
+    $mappable_entity_types = $this->mappableEntityTypes
+      ->getMappableEntityTypes();
+    foreach ($mappable_entity_types as $entity_type_id => $info) {
       $options[$info->id()] = $info->getLabel();
     }
     uasort($options, function ($a, $b) {

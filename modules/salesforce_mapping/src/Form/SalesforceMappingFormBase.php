@@ -3,6 +3,7 @@
 namespace Drupal\salesforce_mapping\Form;
 
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
+use Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Rest\RestClientInterface;
@@ -15,6 +16,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
 
   protected $mappingFieldPluginManager;
   protected $client;
+  protected $mappableEntityTypes;
 
   /**
    * Constructs a \Drupal\system\ConfigFormBase object.
@@ -23,12 +25,14 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *   Need this to fetch the appropriate field mapping
    * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
    *   Need this to fetch the mapping field plugins
+   * @param SalesforceMappableEntityTypesInterface
    *
    * @throws RuntimeException
    */
-  public function __construct(SalesforceMappingFieldPluginManager $mappingFieldPluginManager, RestClientInterface $client) {
+  public function __construct(SalesforceMappingFieldPluginManager $mappingFieldPluginManager, RestClientInterface $client, SalesforceMappableEntityTypesInterface $mappableEntityTypes) {
     $this->mappingFieldPluginManager = $mappingFieldPluginManager;
     $this->client = $client;
+    $this->mappableEntityTypes = $mappableEntityTypes;
   }
 
   /**
@@ -37,7 +41,8 @@ abstract class SalesforceMappingFormBase extends EntityForm {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('plugin.manager.salesforce_mapping_field'),
-      $container->get('salesforce.client')
+      $container->get('salesforce.client'),
+      $container->get('salesforce_mapping.mappable_entity_types')
     );
   }
 
