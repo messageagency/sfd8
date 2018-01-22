@@ -96,7 +96,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
   /**
    *
    */
-  private function getConfigurationOptions($mapping) {
+  protected function getConfigurationOptions($mapping) {
     $instances = $this->entityFieldManager->getFieldDefinitions(
       $mapping->get('drupal_entity_type'),
       $mapping->get('drupal_bundle')
@@ -109,19 +109,14 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
 
     // Loop over every field on the mapped entity. For reference fields, expose
     // all properties of the referenced entity.
-    $fieldMap = $this->entityFieldManager->getFieldMap();
     foreach ($instances as $instance) {
-      // @TODO replace this with EntityFieldManagerInterface::getFieldMapByFieldType
-      if ($instance->getType() != 'entity_reference') {
+      if (!$this->instanceOfEntityReference($instance)) {
         continue;
       }
-
-      $settings = $instance->getSettings();
-      // We must have an entity type.
-      if (empty($settings['target_type'])) {
-        continue;
-      }
-
+      $settings = $this
+        ->selectionPluginManager()
+        ->getSelectionHandler($instance)
+        ->getConfiguration();
       $entity_type = $settings['target_type'];
       $properties = [];
 
@@ -130,11 +125,15 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
       try {
         if (!empty($settings['handler_settings']['target_bundles'])) {
           foreach ($settings['handler_settings']['target_bundles'] as $bundle) {
-            $properties += $this->entityFieldManager->getFieldDefinitions($entity_type, $bundle);
+            $properties += $this
+              ->entityFieldManager
+              ->getFieldDefinitions($entity_type, $bundle);
           }
         }
         else {
-          $properties += $this->entityFieldManager->getBaseFieldDefinitions($entity_type);
+          $properties += $this
+            ->entityFieldManager
+            ->getBaseFieldDefinitions($entity_type);
         }
       }
       catch (\LogicException $e) {

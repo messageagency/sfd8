@@ -9,6 +9,8 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
@@ -475,6 +477,30 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    */
   public function getDependencies(SalesforceMappingInterface $mapping) {
     return [];
+  }
+
+  /**
+   * Given a field definition, return TRUE if it uses an entity reference
+   * handler.
+   * @param FieldDefinitionInterface $instance
+   * @return bool
+   */
+  protected function instanceOfEntityReference(FieldDefinitionInterface $instance) {
+    $handler = $instance->getSetting('handler');
+    // We must have a handler.
+    if (empty($handler)) {
+      return FALSE;
+    }
+    // If the handler is a selection interface, return TRUE.
+    $plugin = $this->selectionPluginManager()->getSelectionHandler($instance);
+    return $plugin instanceof SelectionInterface;
+  }
+
+  /**
+   * @TODO DIC this and update extenders.
+   */
+  protected function selectionPluginManager() {
+    return \Drupal::service('plugin.manager.entity_reference_selection');
   }
 
 }

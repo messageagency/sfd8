@@ -124,7 +124,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     );
     $options = [];
     foreach ($instances as $name => $instance) {
-      if ($instance->getType() != 'entity_reference') {
+      if (!$this->instanceOfEntityReference($instance)) {
         continue;
       }
       // @TODO exclude config entities?

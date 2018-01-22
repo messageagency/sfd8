@@ -87,19 +87,18 @@ class Properties extends SalesforceMappingFieldPluginBase {
    *
    */
   private function getConfigurationOptions(SalesforceMappingInterface $mapping) {
-    $properties = $this->entityFieldManager->getFieldDefinitions(
+    $instances = $this->entityFieldManager->getFieldDefinitions(
       $mapping->get('drupal_entity_type'),
       $mapping->get('drupal_bundle')
     );
 
     $options = [];
-    foreach ($properties as $key => $property) {
+    foreach ($instances as $key => $instance) {
       // Entity reference fields are handled elsewhere.
-      // @TODO: is this type still a thing even?
-      if ($property->getType() == 'field_item:entity_reference') {
+      if ($this->instanceOfEntityReference($instance)) {
         continue;
       }
-      $options[$key] = $property->getLabel();
+      $options[$key] = $instance->getLabel();
     }
     asort($options);
     return $options;
