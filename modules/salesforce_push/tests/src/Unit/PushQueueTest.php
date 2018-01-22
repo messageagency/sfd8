@@ -7,6 +7,7 @@ use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Update;
+use Drupal\Core\Database\Schema;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -37,9 +38,18 @@ class PushQueueTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp() {
+    $this->schema = $this->getMockBuilder(Schema::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->schema->expects($this->any())
+      ->method('tableExists')
+      ->willReturn(TRUE);
     $this->database = $this->getMockBuilder(Connection::class)
       ->disableOriginalConstructor()
       ->getMock();
+    $this->database->expects($this->any())
+      ->method('schema')
+      ->willReturn($this->schema);
     $this->state = $this->getMock(StateInterface::class);
     $this->push_queue_processor_plugin_manager =
       $this->getMockBuilder(PushQueueProcessorPluginManager::class)
