@@ -34,6 +34,7 @@ use Drupal\salesforce_mapping\MappingConstants;
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label",
+ *     "weight" = "weight",
  *   },
  *   links = {
  *     "edit-form" = "/admin/structure/salesforce/mappings/manage/{salesforce_mapping}",
