@@ -26,7 +26,7 @@ class SalesforceQueryEvent extends SalesforceBaseEvent {
   }
 
   /**
-   * @return EntityInterface (from PushParams)
+   * @return SelectQuery
    */
   public function getQuery() {
     return $this->query;

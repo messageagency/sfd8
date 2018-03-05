@@ -52,6 +52,13 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
   public function getSalesforceUrl();
 
   /**
+   * Get the mapped Salesforce record.
+   *
+   * @return \Drupal\salesforce\SObject
+   */
+  public function getSalesforceRecord();
+
+    /**
    * @return string
    *   SFID
    */

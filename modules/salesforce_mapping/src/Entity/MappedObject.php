@@ -154,7 +154,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       return;
     }
     foreach ($vids_to_delete as $vid => $dummy) {
-      $storage->deleteRevision($vid);      
+      $storage->deleteRevision($vid);
     }
     return $this;
   }
@@ -497,9 +497,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
-   * Get the mapped Salesforce record.
-   *
-   * @return \Drupal\salesforce\SObject
+   * {@inheritdoc}
    */
   public function getSalesforceRecord() {
     return $this->sf_object;

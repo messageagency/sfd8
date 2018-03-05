@@ -601,6 +601,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     if (!empty($this->pull_where_clause)) {
       $soql->conditions[] = [$this->pull_where_clause];
     }
+    $soql->order[$this->getPullTriggerDate()] = 'ASC';
     return $soql;
   }
 
