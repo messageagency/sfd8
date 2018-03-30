@@ -196,7 +196,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   /**
    * Get refresh token.
    */
-  protected function getRefreshToken() {
+  public function getRefreshToken() {
     $token = $this->getDecrypted('salesforce.refresh_token');
     return $token;
   }
@@ -207,14 +207,14 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
    * @param string $token
    *   Refresh token from Salesforce.
    */
-  protected function setRefreshToken($token) {
+  public function setRefreshToken($token) {
     return $this->setEncrypted('salesforce.refresh_token', $token);
   }
 
   /**
    *
    */
-  protected function setIdentity($data) {
+  public function setIdentity($data) {
     try {
       $profile_id = $this->getEncryptionProfile();
     }
