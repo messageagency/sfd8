@@ -294,7 +294,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * {@inheritdoc}
    */
   public function getChanged() {
-    return $this->get('entity_updated');
+    return $this->get('entity_updated')->value;
   }
 
   /**
