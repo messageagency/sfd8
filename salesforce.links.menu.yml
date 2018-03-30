@@ -15,9 +15,18 @@ salesforce.global_settings:
   parent: salesforce.admin_config_salesforce
   title: Salesforce Settings
   description: 'Manage global settings for Salesforce Suite.'
+  weight: -100
 
 salesforce.authorize:
   route_name: salesforce.authorize
   parent: salesforce.admin_config_salesforce
   title: Salesforce Authorization
   description: 'Manage OAuth consumer key and secret and authorize. View existing authorization details.'
+  weight: 99
+
+salesforce.revoke:
+  route_name: salesforce.revoke
+  parent: salesforce.admin_config_salesforce
+  title: Revoke Salesforce Authorization
+  description: 'Revoke OAuth tokens.'
+  weight: 100

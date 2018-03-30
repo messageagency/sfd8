@@ -47,7 +47,7 @@ class AuthorizeForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
-   * @param \Drupal\salesforce\RestClient $salesforce_client
+   * @param \Drupal\salesforce\Rest\RestClientInterface $salesforce_client
    *   The factory for configuration objects.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
@@ -144,7 +144,8 @@ class AuthorizeForm extends ConfigFormBase {
           ];
         }
       }
-      catch (RequestException $e) {
+      catch (\Exception $e) {
+        // Do not allow any exceptions to interfere with displaying this page.
         drupal_set_message($e->getMessage(), 'warning');
         $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       }

@@ -6,4 +6,4 @@ core: 8.x
 configure: entity.salesforce_mapping.list
 dependencies:
   - salesforce
-  - dynamic_entity_reference
+  - dynamic_entity_reference (2.x)

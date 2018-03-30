@@ -143,6 +143,11 @@ interface RestClientInterface {
   public function getInstanceUrl();
 
   /**
+   * Set the SF instance URL.
+   */
+  public function setInstanceUrl($url);
+
+    /**
    * Get the access token.
    */
   public function getAccessToken();
@@ -154,6 +159,14 @@ interface RestClientInterface {
    *   Access token from Salesforce.
    */
   public function setAccessToken($token);
+
+  /**
+   * Set the refresh token.
+   *
+   * @param string $token
+   *   Refresh token from Salesforce.
+   */
+  public function setRefreshToken($token);
 
   /**
    * Refresh access token based on the refresh token.
@@ -190,6 +203,11 @@ interface RestClientInterface {
    *   Returns FALSE is no identity has been stored.
    */
   public function getIdentity();
+
+  /**
+   * Set the Salesforce identity, which is stored in a variable.
+   */
+  public function setIdentity($data);
 
   /**
    * Helper to build the redirect URL for OAUTH workflow.

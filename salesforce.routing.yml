@@ -14,6 +14,15 @@ salesforce.authorize:
   requirements:
     _permission: 'authorize salesforce'
 
+salesforce.revoke:
+  path: '/admin/config/salesforce/revoke'
+  defaults:
+    _form: '\Drupal\salesforce\Form\RevokeAuthorizationForm'
+    _title: 'Revoke Salesforce Authorization'
+    _description: 'Revoke OAuth tokens.'
+  requirements:
+    _permission: 'authorize salesforce'
+
 salesforce.global_settings:
   path: '/admin/config/salesforce/settings'
   defaults:

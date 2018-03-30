@@ -307,12 +307,15 @@ class RestClient implements RestClientInterface {
    *   E.g., rest, partner, enterprise.
    *
    * @return string
-   *   Complete URL endpoint for API access.
+   *   Complete URL endpoint for API access, or FALSE if no identity is set.
    */
   public function getApiEndPoint($api_type = 'rest') {
     $url = &drupal_static(__FUNCTION__ . $api_type);
     if (!isset($url)) {
       $identity = $this->getIdentity();
+      if (empty($identity)) {
+        return FALSE;
+      }
       if (is_string($identity)) {
         $url = $identity;
       }
@@ -413,7 +416,7 @@ class RestClient implements RestClientInterface {
    * @param string $url
    *   URL to set.
    */
-  protected function setInstanceUrl($url) {
+  public function setInstanceUrl($url) {
     $this->state->set('salesforce.instance_url', $url);
     return $this;
   }
@@ -450,7 +453,7 @@ class RestClient implements RestClientInterface {
    * @param string $token
    *   Refresh token from Salesforce.
    */
-  protected function setRefreshToken($token) {
+  public function setRefreshToken($token) {
     $this->state->set('salesforce.refresh_token', $token);
     return $this;
   }
@@ -539,7 +542,7 @@ class RestClient implements RestClientInterface {
    *
    * @return $this
    */
-  protected function setIdentity($data) {
+  public function setIdentity($data) {
     $this->state->set('salesforce.identity', $data);
     return $this;
   }
@@ -596,7 +599,8 @@ class RestClient implements RestClientInterface {
    *   Whether to reset cache.
    *
    * @return array
-   *   Array of all available Salesforce versions.
+   *   Array of all available Salesforce versions, or empty array if version
+   *   info is not available.
    */
   public function getVersions($reset = FALSE) {
     if (!$reset && ($cache = $this->cache->get('salesforce:versions'))) {
@@ -605,13 +609,18 @@ class RestClient implements RestClientInterface {
 
     $versions = [];
     $id = $this->getIdentity();
-    $url = str_replace('v{version}/', '', $id['urls']['rest']);
-    $response = new RestResponse($this->httpRequest($url));
-    foreach ($response->data as $version) {
-      $versions[$version['version']] = $version;
+    if (!empty($identity)) {
+      $url = str_replace('v{version}/', '', $id['urls']['rest']);
+      $response = new RestResponse($this->httpRequest($url));
+      foreach ($response->data as $version) {
+        $versions[$version['version']] = $version;
+      }
+      $this->cache->set('salesforce:versions', $versions, $this->getRequestTime() + self::LONGTERM_CACHE_LIFETIME, ['salesforce']);
+      return $versions;
     }
-    $this->cache->set('salesforce:versions', $versions, $this->getRequestTime() + self::LONGTERM_CACHE_LIFETIME, ['salesforce']);
-    return $versions;
+    else {
+      return [];
+    }
   }
 
   /**
