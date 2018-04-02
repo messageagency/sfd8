@@ -609,7 +609,7 @@ class RestClient implements RestClientInterface {
 
     $versions = [];
     $id = $this->getIdentity();
-    if (!empty($identity)) {
+    if (!empty($id)) {
       $url = str_replace('v{version}/', '', $id['urls']['rest']);
       $response = new RestResponse($this->httpRequest($url));
       foreach ($response->data as $version) {
