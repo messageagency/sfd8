@@ -42,9 +42,9 @@ interface RestClientInterface {
    *   Defaults to FALSE for backwards compatibility.
    *
    * @return mixed
-   *   Reponce object or response data.
+   *   Response object or response data.
    *
-   * @throws GuzzleHttp\Exception\RequestException
+   * @throws \GuzzleHttp\Exception\RequestException
    */
   public function apiCall($path, array $params = [], $method = 'GET', $returnObject = FALSE);
 
@@ -171,14 +171,14 @@ interface RestClientInterface {
   /**
    * Refresh access token based on the refresh token.
    *
-   * @throws Exception
+   * @throws \Exception
    */
   public function refreshToken();
 
   /**
    * Helper callback for OAuth handshake, and refreshToken()
    *
-   * @param GuzzleHttp\Psr7\Response $response
+   * @param \GuzzleHttp\Psr7\Response $response
    *   Response object from refreshToken or authToken endpoints.
    *
    * @see SalesforceController::oauthCallback()
@@ -192,7 +192,7 @@ interface RestClientInterface {
    * @param string $id
    *   Identity URL.
    *
-   * @throws Exception
+   * @throws \Exception
    */
   public function initializeIdentity($id);
 
@@ -215,7 +215,7 @@ interface RestClientInterface {
    * @return string
    *   Redirect URL.
    *
-   * @see Drupal\salesforce\Controller\SalesforceController
+   * @see \Drupal\salesforce\Controller\SalesforceController
    */
   public function getAuthCallbackUrl();
 
@@ -291,14 +291,14 @@ interface RestClientInterface {
   public function queryMore(SelectQueryResult $results);
 
   /**
-   * Retreieve all the metadata for an object.
+   * Retrieve all the metadata for an object.
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account, etc.
    * @param bool $reset
    *   Whether to reset the cache and retrieve a fresh version from Salesforce.
    *
-   * @return RestResponse_Describe
+   * @return \Drupal\salesforce\Rest\RestResponse_Describe
    *
    * @addtogroup salesforce_apicalls
    */
@@ -312,7 +312,7 @@ interface RestClientInterface {
    * @param array $params
    *   Values of the fields to set for the object.
    *
-   * @return Drupal\salesforce\SFID
+   * @return \Drupal\salesforce\SFID
    *
    * @addtogroup salesforce_apicalls
    */
@@ -334,7 +334,7 @@ interface RestClientInterface {
    * @param array $params
    *   Values of the fields to set for the object.
    *
-   * @return Drupal\salesforce\SFID or NULL
+   * @return \Drupal\salesforce\SFID|null
    *
    * @addtogroup salesforce_apicalls
    */
@@ -365,7 +365,7 @@ interface RestClientInterface {
    * @param string $id
    *   Salesforce id of the object.
    *
-   * @return SObject
+   * @return \Drupal\salesforce\SObject
    *   Object of the requested Salesforce object.
    *
    * @addtogroup salesforce_apicalls
@@ -382,7 +382,7 @@ interface RestClientInterface {
    * @param string $value
    *   Value of external id.
    *
-   * @return SObject
+   * @return \Drupal\salesforce\SObject
    *   Object of the requested Salesforce object.
    *
    * @addtogroup salesforce_apicalls
@@ -397,7 +397,6 @@ interface RestClientInterface {
    *   Object type name, E.g., Contact, Account.
    * @param string $id
    *   Salesforce id of the object.
-   *
    * @pararm bool $throw_exception
    *   (optional) If TRUE, 404 response code will cause RequestException to be
    *   thrown. Otherwise, hide those errors. Default is FALSE.
@@ -427,7 +426,7 @@ interface RestClientInterface {
   /**
    * Return a list of available resources for the configured API version.
    *
-   * @return Drupal\salesforce\Rest\RestResponse_Resources
+   * @return \Drupal\salesforce\Rest\RestResponse_Resources
    *
    * @addtogroup salesforce_apicalls
    */
@@ -439,11 +438,9 @@ interface RestClientInterface {
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account.
-   *
    * @param int $start
    *   Unix timestamp for older timeframe for updates.
    *   Defaults to "-29 days" if empty.
-   *
    * @param int $end
    *   unix timestamp for end of timeframe for updates.
    *   Defaults to now if empty.
@@ -488,7 +485,7 @@ interface RestClientInterface {
    * @return \Drupal\salesforce\SFID
    *   The Salesforce ID of the given Record Type, or null.
    *
-   * @throws Exception if record type not found
+   * @throws \Exception if record type not found
    */
   public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE);
 
@@ -499,7 +496,7 @@ interface RestClientInterface {
    *
    * @return string
    *
-   * @throws Exception if SFID doesn't match any object type
+   * @throws \Exception if SFID doesn't match any object type
    */
   public function getObjectTypeName(SFID $id);
 

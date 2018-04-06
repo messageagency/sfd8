@@ -3,7 +3,9 @@
 namespace Drupal\salesforce;
 
 /**
+ * Class SObject.
  *
+ * @package Drupal\salesforce
  */
 class SObject {
   protected $type;
@@ -11,7 +13,11 @@ class SObject {
   protected $id;
 
   /**
+   * SObject constructor.
    *
+   * @param array $data
+   *
+   * @throws \Exception
    */
   public function __construct(array $data = []) {
     if (!isset($data['id']) && !isset($data['Id'])) {
@@ -39,14 +45,14 @@ class SObject {
   }
 
   /**
-   *
+   * @return \Drupal\salesforce\SFID
    */
   public function id() {
     return $this->id;
   }
 
   /**
-   *
+   * @return mixed
    */
   public function type() {
     return $this->type;
@@ -62,7 +68,8 @@ class SObject {
   /**
    * Given $key, return corresponding field value.
    *
-   * @throws Exception if $key is not found
+   * @return mixed
+   * @throws \Exception if $key is not found
    */
   public function field($key) {
     if (!array_key_exists($key, $this->fields)) {

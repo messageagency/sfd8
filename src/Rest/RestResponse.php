@@ -6,14 +6,16 @@ use Drupal\Component\Serialization\Json;
 use GuzzleHttp\Psr7\Response;
 
 /**
+ * Class RestResponse.
  *
+ * @package Drupal\salesforce\Rest
  */
 class RestResponse extends Response {
 
   /**
    * The original Response used to build this object.
    *
-   * @var GuzzleHttp\Psr7\Response
+   * @var \GuzzleHttp\Psr7\Response
    * @see __get()
    */
   protected $response;
@@ -29,7 +31,7 @@ class RestResponse extends Response {
   /**
    * {@inheritdoc}
    *
-   * @throws RestException if body cannot be json-decoded
+   * @throws \Drupal\salesforce\Rest\RestException if body cannot be json-decoded
    */
   public function __construct(Response $response) {
     $this->response = $response;
@@ -44,7 +46,7 @@ class RestResponse extends Response {
    *
    * @return mixed
    *
-   * @throws Exception if $key is not a property
+   * @throws \Exception if $key is not a property
    */
   public function __get($key) {
     if (!property_exists($this, $key)) {
@@ -58,20 +60,20 @@ class RestResponse extends Response {
    *
    * @return $this
    *
-   * @throws Drupal\salesforce\RestException
+   * @throws \Drupal\salesforce\Rest\RestException
    */
   private function handleJsonResponse() {
     $this->data = '';
     $response_body = $this->getBody()->getContents();
     if (empty($response_body)) {
-      return;
+      return NULL;
     }
 
     // Allow any exceptions here to bubble up:
     try {
       $data = Json::decode($response_body);
     }
-    catch (UnexpectedValueException $e) {
+    catch (\Exception $e) {
       throw new RestException($this, $e->getMessage(), $e->getCode(), $e);
     }
 

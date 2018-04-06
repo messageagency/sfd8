@@ -3,7 +3,9 @@
 namespace Drupal\salesforce;
 
 /**
+ * Class SelectQueryResult
  *
+ * @package Drupal\salesforce
  */
 class SelectQueryResult {
 
@@ -13,7 +15,9 @@ class SelectQueryResult {
   protected $nextRecordsUrl;
 
   /**
+   * SelectQueryResult constructor.
    *
+   * @param array $results
    */
   public function __construct(array $results) {
     $this->totalSize = $results['totalSize'];
@@ -28,35 +32,38 @@ class SelectQueryResult {
   }
 
   /**
-   *
+   * @return mixed
    */
   public function nextRecordsUrl() {
     return $this->nextRecordsUrl;
   }
 
   /**
-   *
+   * @return mixed
    */
   public function size() {
     return $this->totalSize;
   }
 
   /**
-   *
+   * @return mixed
    */
   public function done() {
     return $this->done;
   }
 
   /**
-   *
+   * @return array
    */
   public function records() {
     return $this->records;
   }
 
   /**
+   * @param \Drupal\salesforce\SFID $id
    *
+   * @return mixed
+   * @throws \Exception
    */
   public function record(SFID $id) {
     if (!isset($this->records[(string) $id])) {

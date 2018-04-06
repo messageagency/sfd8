@@ -3,7 +3,9 @@
 namespace Drupal\salesforce\Rest;
 
 /**
+ * Class RestResponse_Describe.
  *
+ * @package Drupal\salesforce\Rest
  */
 class RestResponse_Describe extends RestResponse {
 
@@ -31,7 +33,7 @@ class RestResponse_Describe extends RestResponse {
   /**
    * See https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_sobject_describe.htm.
    *
-   * @param RestResponse $response
+   * @param \Drupal\salesforce\Rest\RestResponse $response
    */
   public function __construct(RestResponse $response) {
     parent::__construct($response->response);
@@ -53,7 +55,7 @@ class RestResponse_Describe extends RestResponse {
   }
 
   /**
-   *
+   * @return string
    */
   public function getName() {
     return $this->name;
@@ -61,6 +63,8 @@ class RestResponse_Describe extends RestResponse {
 
   /**
    * Getter.
+   *
+   * @return array
    */
   public function getFields() {
     return $this->fields;
@@ -128,7 +132,7 @@ class RestResponse_Describe extends RestResponse {
    *
    * @return array field definition
    *
-   * @throws Exception if field_name is not defined for this SObject type
+   * @throws \Exception if field_name is not defined for this SObject type
    */
   public function getField($field_name) {
     if (empty($this->fields[$field_name])) {

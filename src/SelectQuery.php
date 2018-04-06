@@ -3,7 +3,9 @@
 namespace Drupal\salesforce;
 
 /**
+ * Class SelectQuery.
  *
+ * @package Drupal\salesforce
  */
 class SelectQuery {
 
@@ -14,7 +16,7 @@ class SelectQuery {
   public $conditions = [];
 
   /**
-   * Constructor which sets the query object type.
+   * SelectQuery constructor.
    *
    * @param string $object_type
    *   Salesforce object type to query.
@@ -34,6 +36,8 @@ class SelectQuery {
    *   must enclose the value in quotes as needed by the SF API.
    * @param string $operator
    *   Conditional operator. One of '=', '!=', '<', '>', 'LIKE, 'IN', 'NOT IN'.
+   *
+   * @return $this
    */
   public function addCondition($field, $value, $operator = '=') {
     if (is_array($value)) {

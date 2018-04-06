@@ -3,7 +3,9 @@
 namespace Drupal\salesforce;
 
 /**
+ * Class SFID
  *
+ * @package Drupal\salesforce
  */
 class SFID {
 
@@ -11,7 +13,11 @@ class SFID {
   const MAX_LENGTH = 18;
 
   /**
+   * SFID constructor.
    *
+   * @param $id
+   *
+   * @throws \Exception
    */
   public function __construct($id) {
     if (strlen($id) != 15 && strlen($id) != self::MAX_LENGTH) {
@@ -24,7 +30,7 @@ class SFID {
   }
 
   /**
-   *
+   * @return string
    */
   public function __toString() {
     return (string) $this->id;

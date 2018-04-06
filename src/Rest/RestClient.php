@@ -25,7 +25,7 @@ use Drupal\Component\Datetime\TimeInterface;
 class RestClient implements RestClientInterface {
 
   /**
-   * Reponse object.
+   * Response object.
    *
    * @var \GuzzleHttp\Psr7\Response
    */
@@ -48,7 +48,7 @@ class RestClient implements RestClientInterface {
   /**
    * Salesforce API URL.
    *
-   * @var Drupal\Core\Url
+   * @var \Drupal\Core\Url
    */
   protected $url;
 
@@ -69,7 +69,7 @@ class RestClient implements RestClientInterface {
   /**
    * The cache service.
    *
-   * @var Drupal\Core\Cache\CacheBackendInterface
+   * @var \Drupal\Core\Cache\CacheBackendInterface
    */
   protected $cache;
 
@@ -186,8 +186,11 @@ class RestClient implements RestClientInterface {
    * @param string $method
    *   Method to initiate the call, such as GET or POST.  Defaults to GET.
    *
-   * @return GuzzleHttp\Psr7\Response
+   * @return \GuzzleHttp\Psr7\Response
    *   Response object.
+   *
+   * @throws \Exception
+   * @throws \GuzzleHttp\Exception\RequestException
    */
   protected function apiHttpRequest($url, array $params, $method) {
     if (!$this->getAccessToken()) {
@@ -211,6 +214,7 @@ class RestClient implements RestClientInterface {
    *
    * @param string $url
    * @return mixed
+   * @throws \Exception
    */
   public function httpRequestRaw($url) {
     if (!$this->getAccessToken()) {
@@ -236,11 +240,11 @@ class RestClient implements RestClientInterface {
    * @param string $method
    *   Method to initiate the call, such as GET or POST.  Defaults to GET.
    *
-   * @throws RequestException
-   *   Request exception.
-   *
-   * @return GuzzleHttp\Psr7\Response
+   * @return \GuzzleHttp\Psr7\Response
    *   Response object.
+   *
+   * @throws \GuzzleHttp\Exception\RequestException
+   *   Request exception.
    */
   protected function httpRequest($url, $data = NULL, array $headers = [], $method = 'GET') {
     // Build the request, including path and headers. Internal use.
@@ -344,6 +348,9 @@ class RestClient implements RestClientInterface {
    *
    * @param bool $use_latest
    * @param int $version
+   *
+   * @throws \Exception
+   * @throws \GuzzleHttp\Exception\RequestException
    */
   public function setApiVersion($use_latest = TRUE, $version = NULL) {
     if ($use_latest) {
@@ -352,7 +359,7 @@ class RestClient implements RestClientInterface {
     else {
       $versions = $this->getVersions();
       if (empty($versions[$version])) {
-        throw new Exception("Version $version is not available.");
+        throw new \Exception("Version $version is not available.");
       }
       $version = $versions[$version];
       $this->config->set('rest_api_version', $version);
@@ -415,6 +422,8 @@ class RestClient implements RestClientInterface {
    *
    * @param string $url
    *   URL to set.
+   *
+   * @return $this
    */
   public function setInstanceUrl($url) {
     $this->state->set('salesforce.instance_url', $url);
@@ -434,6 +443,8 @@ class RestClient implements RestClientInterface {
    *
    * @param string $token
    *   Access token from Salesforce.
+   *
+   * @return $this
    */
   public function setAccessToken($token) {
     $this->state->set('salesforce.access_token', $token);
@@ -452,6 +463,8 @@ class RestClient implements RestClientInterface {
    *
    * @param string $token
    *   Refresh token from Salesforce.
+   *
+   * @return $this
    */
   public function setRefreshToken($token) {
     $this->state->set('salesforce.refresh_token', $token);
@@ -488,8 +501,12 @@ class RestClient implements RestClientInterface {
   /**
    * Helper callback for OAuth handshake, and refreshToken()
    *
-   * @param GuzzleHttp\Psr7\Response $response
+   * @param \GuzzleHttp\Psr7\Response $response
    *   Response object from refreshToken or authToken endpoints.
+   *
+   * @return $this
+   *
+   * @throws \Exception
    *
    * @see SalesforceController::oauthCallback()
    * @see self::refreshToken()
@@ -519,7 +536,10 @@ class RestClient implements RestClientInterface {
    * @param string $id
    *   Identity URL.
    *
-   * @throws Exception
+   * @return $this
+   *
+   * @throws \Exception
+   * @throws \GuzzleHttp\Exception\RequestException
    */
   public function initializeIdentity($id) {
     $headers = [
@@ -563,7 +583,7 @@ class RestClient implements RestClientInterface {
    * @return string
    *   Redirect URL.
    *
-   * @see Drupal\salesforce\Controller\SalesforceController
+   * @see \Drupal\salesforce\Controller\SalesforceController
    */
   public function getAuthCallbackUrl() {
     return Url::fromRoute('salesforce.oauth_callback', [], [
@@ -595,12 +615,14 @@ class RestClient implements RestClientInterface {
   /**
    * Wrapper for "Versions" resource to list information about API releases.
    *
-   * @param $reset
+   * @param bool $reset
    *   Whether to reset cache.
    *
    * @return array
    *   Array of all available Salesforce versions, or empty array if version
    *   info is not available.
+   *
+   * @throws \GuzzleHttp\Exception\RequestException
    */
   public function getVersions($reset = FALSE) {
     if (!$reset && ($cache = $this->cache->get('salesforce:versions'))) {
@@ -726,8 +748,10 @@ class RestClient implements RestClientInterface {
    * @param bool $reset
    *   Whether to reset the cache and retrieve a fresh version from Salesforce.
    *
-   * @return RestResponse_Describe
+   * @return \Drupal\salesforce\Rest\RestResponse_Describe
    *   Salesforce object description object.
+   *
+   * @throws \Exception
    *
    * @addtogroup salesforce_apicalls
    */
@@ -754,7 +778,7 @@ class RestClient implements RestClientInterface {
    * @param array $params
    *   Values of the fields to set for the object.
    *
-   * @return Drupal\salesforce\SFID
+   * @return \Drupal\salesforce\SFID
    *   Salesforce ID object.
    *
    * @addtogroup salesforce_apicalls
@@ -781,8 +805,7 @@ class RestClient implements RestClientInterface {
    * @param array $params
    *   Values of the fields to set for the object.
    *
-   * @return mixed
-   *   Drupal\salesforce\SFID or NULL.
+   * @return \Drupal\salesforce\SFID|null
    *
    * @addtogroup salesforce_apicalls
    */
@@ -876,6 +899,8 @@ class RestClient implements RestClientInterface {
    *   (optional) If TRUE, 404 response code will cause RequestException to be
    *   thrown. Otherwise, hide those errors. Default is FALSE.
    *
+   * @throws \Exception
+   *
    * @addtogroup salesforce_apicalls
    */
   public function objectDelete($name, $id, $throw_exception = FALSE) {
@@ -909,7 +934,7 @@ class RestClient implements RestClientInterface {
   /**
    * Return a list of available resources for the configured API version.
    *
-   * @return Drupal\salesforce\Rest\RestResponse_Resources
+   * @return \Drupal\salesforce\Rest\RestResponse_Resources
    *
    * @addtogroup salesforce_apicalls
    */
@@ -965,6 +990,8 @@ class RestClient implements RestClientInterface {
    * @return array
    *   If $name is given, an array of record types indexed by developer name.
    *   Otherwise, an array of record type arrays, indexed by object type name.
+   *
+   * @throws \Exception
    */
   public function getRecordTypes($name = NULL, $reset = FALSE) {
     if (!$reset && ($cache = $this->cache->get('salesforce:record_types'))) {
@@ -999,11 +1026,12 @@ class RestClient implements RestClientInterface {
    *   Object type name, E.g., Contact, Account.
    * @param string $devname
    *   RecordType DeveloperName, e.g. Donation, Membership, etc.
+   * @param bool $reset
    *
    * @return \Drupal\salesforce\SFID
    *   The Salesforce ID of the given Record Type, or null.
    *
-   * @throws Exception if record type not found
+   * @throws \Exception if record type not found
    */
   public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE) {
     $record_types = $this->getRecordTypes();
@@ -1022,7 +1050,7 @@ class RestClient implements RestClientInterface {
    * @return string
    *   Object type's name.
    *
-   * @throws Exception
+   * @throws \Exception
    *   If SFID doesn't match any object type.
    */
   public function getObjectTypeName(SFID $id) {
