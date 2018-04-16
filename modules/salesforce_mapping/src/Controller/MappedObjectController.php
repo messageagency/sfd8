@@ -20,6 +20,9 @@ class MappedObjectController extends ControllerBase {
 
     // There must be a better way to get the entity from a route match.
     $param = current(\Drupal::routeMatch()->getParameters()->all());
+    if (!is_object($param)) {
+      return AccessResult::forbidden();
+    }
     $implements = class_implements($param);
     if (empty($implements['Drupal\Core\Entity\EntityInterface'])) {
       return AccessResult::forbidden();
