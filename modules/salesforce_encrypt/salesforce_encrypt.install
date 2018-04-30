@@ -12,6 +12,7 @@ use Drupal\salesforce\EntityNotFoundException;
  * Throw a runtime error if Salesforce encryption profile is not selected.
  */
 function salesforce_encrypt_requirements($phase) {
+  $requirements = [];
   if ($phase == 'runtime') {
     $profile_id = NULL;
     try {
