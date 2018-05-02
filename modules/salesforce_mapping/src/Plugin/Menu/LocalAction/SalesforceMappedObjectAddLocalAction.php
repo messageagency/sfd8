@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Plugin\Menu\LocalAction;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Menu\LocalActionDefault;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  *
@@ -14,7 +15,7 @@ class SalesforceMappedObjectAddLocalAction extends LocalActionDefault {
   /**
    * {@inheritdoc}
    */
-  public function getTitle() {
+  public function getTitle(Request $request = NULL) {
     // @TODO unclear how to translate this, but needs to be translated:
     return 'Create Mapped Object';
   }
