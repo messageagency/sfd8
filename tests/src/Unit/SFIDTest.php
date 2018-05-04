@@ -34,7 +34,7 @@ class SFIDTest extends UnitTestCase {
    * @expectedException Exception
    */
   public function testBadID() {
-    $sfid = new SFID('1234567890');
+    new SFID('1234567890');
   }
 
   /**

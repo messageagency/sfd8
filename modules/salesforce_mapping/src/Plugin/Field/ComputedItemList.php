@@ -20,9 +20,9 @@ class ComputedItemList extends FieldItemList {
   /**
    * {@inheritdoc}
    */
-  public function getValue($include_computed = TRUE) {
+  public function getValue() {
     $this->ensurePopulated();
-    return parent::getValue($include_computed);
+    return parent::getValue();
   }
 
   /**

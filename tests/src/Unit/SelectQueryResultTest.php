@@ -52,7 +52,7 @@ class SelectQueryResultTest extends UnitTestCase {
    */
   public function testNoID() {
     $sfid = new SFID('1234567890abcdg');
-    $id = $this->sqr->record($sfid);
+    $this->sqr->record($sfid);
   }
 
 }

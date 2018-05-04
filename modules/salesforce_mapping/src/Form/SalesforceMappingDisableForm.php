@@ -3,6 +3,7 @@
 namespace Drupal\salesforce_mapping\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
+use Drupal\Core\Url;
 
 /**
  * Salesforce Mapping Disable Form .
@@ -26,10 +27,8 @@ class SalesforceMappingDisableForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelRoute() {
-    return [
-      'route_name' => 'entity.salesforce_mapping.list',
-    ];
+  public function getCancelUrl() {
+    return new Url('entity.salesforce_mapping.list');
   }
 
   /**

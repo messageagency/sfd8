@@ -105,7 +105,6 @@ class MappedObjectForm extends ContentEntityForm {
 
     // Allow exception to bubble up here, because we shouldn't have got here if
     // there isn't a mapping.
-    $mappings = [];
     // If entity is not set, entity types are dependent on available mappings.
     $mappings = $this
       ->mappingStorage
@@ -146,7 +145,6 @@ class MappedObjectForm extends ContentEntityForm {
    */
   public function validatePush(array &$form, FormStateInterface $form_state) {
     $drupal_entity_array = $form_state->getValue(['drupal_entity', 0]);
-    $entity = FALSE;
 
     // Verify entity was given - required for push.
     if (empty($drupal_entity_array['target_id'])) {

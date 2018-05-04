@@ -226,7 +226,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
           '#description' => t('Poll Salesforce for updated records based on the given date field. Defaults to "Last Modified Date".'),
           '#required' => $mapping->salesforce_object_type,
           '#default_value' => $mapping->pull_trigger_date,
-          '#options' => $this->get_pull_trigger_options($salesforce_object_type),
+          '#options' => $this->get_pull_trigger_options(),
         ];
       }
 
@@ -385,7 +385,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
 
     if ($this->entity->doesPull()) {
       try {
-        $testQuery = $this->client->query($this->entity->getPullQuery());
+        $this->client->query($this->entity->getPullQuery());
       }
       catch (\Exception $e) {
         $form_state->setError($form['pull']['pull_where_clause'], $this->t('Test pull query returned an error. Please check logs for error details.'));
@@ -408,7 +408,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * Submit handler for "reset delete timestamp" button.
    */
   public function lastDeleteReset(array $form, FormStateInterface $form_state) {
-    $mapping = $this->entity->setLastDeleteTime(NULL);
+    $this->entity->setLastDeleteTime(NULL);
   }
 
   /**
@@ -538,7 +538,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    *
    * @return array
    */
-  private function get_pull_trigger_options($name) {
+  private function get_pull_trigger_options() {
     $options = [];
     try {
       $describe = $this->get_salesforce_object();
@@ -561,12 +561,12 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected function get_push_plugin_options() {
     return [];
-    // $field_plugins = $this->pushPluginManager->getDefinitions();
-    $field_type_options = [];
-    foreach ($field_plugins as $field_plugin) {
-      $field_type_options[$field_plugin['id']] = $field_plugin['label'];
-    }
-    return $field_type_options;
+    // Example:
+    //    $field_type_options = [];
+    //    foreach ($field_plugins as $field_plugin) {
+    //      $field_type_options[$field_plugin['id']] = $field_plugin['label'];
+    //    }
+    //    return $field_type_options;
   }
 
 }

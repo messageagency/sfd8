@@ -103,8 +103,6 @@ class MappedObjectList extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    /* @var $entity \Drupal\salesforce_mapping\MappedObject */
-    $mapping = $entity->getMapping();
     $row['id'] = $entity->id();
     $row['mapped_entity']['data'] = $entity->drupal_entity->first()->view();
     $row['salesforce_link']['data'] = $entity->salesforce_link->first()->view();

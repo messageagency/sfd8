@@ -5,7 +5,7 @@
  * Drush integration for Salesforce.
  */
 
-use Drupal\salesforce\SFID;
+
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
@@ -61,9 +61,6 @@ function drush_salesforce_mapping_sf_prune_revisions() {
   $etm = \Drupal::service('entity_type.manager');
   $storage = $etm
     ->getStorage('salesforce_mapped_object');
-  $table = $etm
-    ->getDefinition('salesforce_mapped_object')
-    ->getBaseTable();
   $revision_table = $etm
     ->getDefinition('salesforce_mapped_object')
     ->getRevisionTable();

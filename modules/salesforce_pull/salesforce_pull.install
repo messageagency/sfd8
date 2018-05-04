@@ -76,7 +76,8 @@ function salesforce_pull_update_8003() {
  * Refactor pull timestamps, again, into per-mapping timestamps.
  */
 function salesforce_pull_update_8004() {
-  $pull_info = \Drupal::state()->get('salesforce.sobject_pull_info', $pull_info);
+  $mapping_pull_info = [];
+  $pull_info = \Drupal::state()->get('salesforce.sobject_pull_info', []);
   $mappings = \Drupal::entityTypeManager()->getStorage('salesforce_mapping')->loadMultiple();
   $new_pull_info = [];
   foreach ($mappings as $mapping) {

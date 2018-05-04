@@ -93,7 +93,6 @@ class AuthorizeForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     // We're not actually doing anything with this, but may figure out
     // something that makes sense.
-    $config = $this->config('salesforce.settings');
     $url = new Url('salesforce.oauth_callback', [], ['absolute' => TRUE]);
     drupal_set_message($this->t('Callback URL: :url', [':url' => str_replace('http:', 'https:', $url->toString())]));
 

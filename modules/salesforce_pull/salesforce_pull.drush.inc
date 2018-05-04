@@ -29,7 +29,6 @@ function salesforce_pull_drush_command() {
       'force-pull' => 'if given, force all queried records to be pulled regardless of updated timestamps. If omitted, only Salesforce records which are newer than linked Drupal records will be pulled.',
     ],
     'examples' => [
-      'drush sfpq' => 'Interactively select a mapping for which to queue records.',
       'drush sfpq user' => 'Query and queue all records for "user" Salesforce mapping.',
       'drush sfpq user --where="Email like \'%foo%\' AND (LastName = \'bar\' OR FirstName = \'bar\')"' => 'Query and queue all records for "user" Salesforce mapping with Email field containing the string "foo" and First or Last name equal to "bar"',
       'drush sfpq' => 'Fetch and process all pull queue items',
@@ -244,19 +243,6 @@ function _salesforce_pull_load_single_mapping_array_or_all_pull_mappings($name =
       ->getStorage('salesforce_mapping')
       ->loadPullMappings();
   }
-}
-
-/**
- * @TODO allow caller to specify query start window
- */
-function drush_salesforce_pull_sf_pull_queue($name = NULL) {
-
-  $queue_handler = \Drupal::service('salesforce_pull.queue_handler');
-  foreach ($mappings as $mapping) {
-    $count = $queue_handler->getUpdatedRecordsForMapping($mapping, $force_pull, $start, $stop);
-    drush_log("Enqueued $count record for mapping " . $mapping->id());
-  }
-  drush_queue_run('cron_salesforce_pull');
 }
 
 /**

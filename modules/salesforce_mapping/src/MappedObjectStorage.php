@@ -12,7 +12,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\dynamic_entity_reference\Plugin\Field\FieldType\DynamicEntityReferenceItem;
+
 
 /**
  * Class MappedObjectStorage.
@@ -144,7 +144,7 @@ class MappedObjectStorage extends SqlContentEntityStorage {
    * @return $this
    */
   public function setForcePull(SalesforceMappingInterface $mapping) {
-    $query = $this->database->update($this->baseTable)
+    $this->database->update($this->baseTable)
       ->condition('salesforce_mapping', $mapping->id())
       ->fields(array('force_pull' => 1))
       ->execute();

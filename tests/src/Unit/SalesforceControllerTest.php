@@ -7,7 +7,7 @@ use Drupal\Core\Render\MetadataBubblingUrlGenerator;
 use Drupal\salesforce\Controller\SalesforceController;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\Tests\UnitTestCase;
-use GuzzleHttp\Client;
+
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\RedirectResponse;

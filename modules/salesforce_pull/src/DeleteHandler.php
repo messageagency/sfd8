@@ -10,7 +10,7 @@ use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
-use Drupal\salesforce_mapping\MappedObjectStorage;
+
 use Drupal\salesforce_mapping\MappingConstants;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -170,47 +170,46 @@ class DeleteHandler {
         $mapped_object->delete();
         return;
       }
-    }
 
-    // The mapping entity is an Entity reference field on mapped object, so we
-    // need to get the id value this way.
-    $sf_mapping = $mapped_object->getMapping();
-    if (!$sf_mapping) {
-      $message = 'No mapping exists for mapped object %id with Salesforce Object ID: %sfid';
-      $args = [
-        '%id' => $mapped_object->id(),
-        '%sfid' => $record['id'],
-      ];
-      $this->eventDispatcher->dispatch(SalesforceEvents::WARNING, new SalesforceWarningEvent(NULL, $message, $args));
-      // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
-      // $mapped_object->delete();
-      return;
-    }
+      // The mapping entity is an Entity reference field on mapped object, so we
+      // need to get the id value this way.
+      $sf_mapping = $mapped_object->getMapping();
+      if (!$sf_mapping) {
+        $message = 'No mapping exists for mapped object %id with Salesforce Object ID: %sfid';
+        $args = [
+          '%id' => $mapped_object->id(),
+          '%sfid' => $record['id'],
+        ];
+        $this->eventDispatcher->dispatch(SalesforceEvents::WARNING, new SalesforceWarningEvent(NULL, $message, $args));
+        // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
+        // $mapped_object->delete();
+        return;
+      }
 
-    if (!$sf_mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
-      return;
-    }
+      if (!$sf_mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE])) {
+        return;
+      }
 
-    try {
-      // Flag this entity to avoid duplicate processing.
-      $entity->salesforce_pull = TRUE;
+      try {
+        // Flag this entity to avoid duplicate processing.
+        $entity->salesforce_pull = TRUE;
 
-      $entity->delete();
-      $message = 'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid';
-      $args = [
-        '%label' => $entity->label(),
-        '%id' => $mapped_object->entity_id,
-        '%sfid' => $record['id'],
-      ];
-      $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
-    }
-    catch (\Exception $e) {
-      $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-      // If mapped entity couldn't be deleted, do not delete the mapped object.
-      return;
-    }
+        $entity->delete();
+        $message = 'Deleted entity %label with ID: %id associated with Salesforce Object ID: %sfid';
+        $args = [
+          '%label' => $entity->label(),
+          '%id' => $mapped_object->entity_id,
+          '%sfid' => $record['id'],
+        ];
+        $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
+      } catch (\Exception $e) {
+        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
+        // If mapped entity couldn't be deleted, do not delete the mapped object.
+        return;
+      }
 
-    $mapped_object->delete();
+      $mapped_object->delete();
+    }
   }
 
 }

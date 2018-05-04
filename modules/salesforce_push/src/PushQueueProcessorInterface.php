@@ -22,12 +22,12 @@ interface PushQueueProcessorInterface extends ContainerFactoryPluginInterface {
    *
    * @return null
    *
-   * @throws Drupal\Core\Queue\SuspendQueueException
+   * @throws \Drupal\Core\Queue\SuspendQueueException
    *   Indicate that processing for this queue should not continue.
    *   Move on to the next queue.
    *   Items should be released.
    *
-   * @throws Drupal\Core\Queue\RequeueException
+   * @throws \Drupal\Core\Queue\RequeueException
    *   Indicate that processing for this set of items failed.
    *   Processing for this queue should continue.
    *   Items should be released.

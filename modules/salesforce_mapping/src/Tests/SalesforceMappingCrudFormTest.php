@@ -42,7 +42,7 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
    * Tests webform admin settings.
    */
   public function testMappingCrudForm() {
-    global $base_path, $base_url;
+    global $base_path;
     $mappingStorage = \Drupal::entityTypeManager()->getStorage('salesforce_mapping');
     $this->drupalLogin($this->adminSalesforceUser);
 

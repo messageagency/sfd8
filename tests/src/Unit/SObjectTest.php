@@ -35,7 +35,7 @@ class SObjectTest extends UnitTestCase {
    * @expectedException Exception
    */
   public function testObjectNoID() {
-    $sobject = new SObject(['attributes' => ['type' => 'dummy']]);
+    new SObject(['attributes' => ['type' => 'dummy']]);
   }
 
   /**
@@ -44,7 +44,7 @@ class SObjectTest extends UnitTestCase {
    * @expectedException Exception
    */
   public function testObjectBadID() {
-    $sobject = new SObject(['id' => '1234567890', 'attributes' => ['type' => 'dummy']]);
+    new SObject(['id' => '1234567890', 'attributes' => ['type' => 'dummy']]);
   }
 
   /**
@@ -53,7 +53,7 @@ class SObjectTest extends UnitTestCase {
    * @expectedException Exception
    */
   public function testObjectNoType() {
-    $sobject = new SObject(['id' => '1234567890abcde']);
+    new SObject(['id' => '1234567890abcde']);
   }
 
   /**
@@ -63,7 +63,7 @@ class SObjectTest extends UnitTestCase {
    */
   public function testFieldNotExists() {
     $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'dummy']]);
-    $field = $sobject->field('key');
+    $sobject->field('key');
   }
 
   /**

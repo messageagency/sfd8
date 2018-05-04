@@ -11,7 +11,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 class PullQueueItem {
 
   /**
-   * @var Drupal\salesforce\SObject
+   * @var \Drupal\salesforce\SObject
    */
   public $sobject;
 

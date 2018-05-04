@@ -339,7 +339,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   /**
    * Wrapper for salesforce.client.
    *
-   * @return Drupal\salesforce\Rest\RestClient service
+   * @return \Drupal\salesforce\Rest\RestClient service
    *   Salesforce REST client service.
    */
   public function client() {
@@ -482,7 +482,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   /**
    *
    */
-  public function getDrupalEntityStub(EntityInterface $entity = NULL) {
+  public function getDrupalEntityStub() {
     return $this->drupal_entity_stub;
   }
 
@@ -525,7 +525,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
           $mapping->getKeyField(),
           $mapping->getKeyValue($this->getMappedEntity())
         );
-        $this->set('salesforce_id', (string) $sf_object->id());
+        $this->set('salesforce_id', (string) $this->sf_object->id());
       }
     }
 
@@ -567,7 +567,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         $message = 'Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v';
         $args = [
           '@sfobj' => $mapping->getSalesforceObjectType(),
-          '@sffield' => $sf_field,
+          '@sffield' => $field,
           '@sfid' => $this->sfid(),
           '@dobj' => $drupal_entity->getEntityTypeId(),
           '@dprop' => $drupal_field,

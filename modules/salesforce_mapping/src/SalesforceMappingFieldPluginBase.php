@@ -30,8 +30,8 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  * Extenders need to implement SalesforceMappingFieldPluginInterface::value() and
  * PluginFormInterface::buildConfigurationForm().
  *
- * @see Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
- * @see Drupal\Core\Plugin\PluginFormInterface
+ * @see \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
+ * @see \Drupal\Core\Plugin\PluginFormInterface
  */
 abstract class SalesforceMappingFieldPluginBase extends PluginBase implements SalesforceMappingFieldPluginInterface, PluginFormInterface, ConfigurablePluginInterface, ContainerFactoryPluginInterface {
 

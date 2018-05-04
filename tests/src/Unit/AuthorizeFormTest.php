@@ -70,6 +70,7 @@ class AuthorizeFormTest extends UnitTestCase {
     $form = AuthorizeForm::create(\Drupal::getContainer());
     $form_array = [];
     $form->submitForm($form_array, $form_state);
+    /** @var \Drupal\Core\Routing\TrustedRedirectResponse $response */
     $response = $form_state->getResponse();
     $this->assertTrue($response instanceof TrustedRedirectResponse);
     $this->assertEquals($this->example_url . '?redirect_uri=' . urlencode($this->example_url) . '&response_type=code&client_id=' . $form_state->getValue('consumer_key'), $response->getTargetUrl());

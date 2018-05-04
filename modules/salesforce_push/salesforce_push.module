@@ -95,7 +95,6 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
  * @return void
  */
 function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
-  $mapped_objects = [];
   $mapped_object = NULL;
 
   // Look for existing mapped object or create a new one (except for deletes).

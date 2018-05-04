@@ -37,7 +37,7 @@ class QueueHandler {
   protected $queue;
 
   /**
-   * @var arrayof\Drupal\salesforce_mapping\Entity\SalesforceMapping
+   * @var array of \Drupal\salesforce_mapping\Entity\SalesforceMapping
    */
   protected $mappings;
 
@@ -94,7 +94,7 @@ class QueueHandler {
   public function getUpdatedRecords($force_pull = FALSE, $start = 0, $stop = 0) {
     // Avoid overloading the processing queue and pass this time around if it's
     // over a configurable limit.
-    $max_size = $this->config->get('pull_max_queue_size', static::PULL_MAX_QUEUE_SIZE);
+    $max_size = $this->config->get('pull_max_queue_size') ?: static::PULL_MAX_QUEUE_SIZE;
     if ($max_size && $this->queue->numberOfItems() > $max_size) {
       $message = 'Pull Queue contains %noi items, exceeding the max size of %max items. Pull processing will be blocked until the number of items in the queue is reduced to below the max size.';
       $args = [
@@ -143,7 +143,7 @@ class QueueHandler {
       return FALSE;
     }
 
-    $results = $this->doSfoQuery($mapping);
+    $results = $this->doSfoQuery($mapping, [], $start, $stop);
     if ($results) {
       $this->enqueueAllResults($mapping, $results, $force_pull);
       // @TODO Replace this with a better implementation when available,

@@ -13,7 +13,7 @@ use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQueryResult;
-use Drupal\salesforce_mapping\Entity\MappedObject;
+
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappingConstants;

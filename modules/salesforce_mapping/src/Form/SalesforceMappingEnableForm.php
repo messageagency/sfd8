@@ -22,14 +22,12 @@ class SalesforceMappingEnableForm extends EntityConfirmFormBase {
   public function getDescription() {
     return $this->t('Enabling a mapping will restart any automatic synchronization.');
   }
-
+  
   /**
    * {@inheritdoc}
    */
-  public function getCancelRoute() {
-    return [
-      'route_name' => 'entity.salesforce_mapping.list',
-    ];
+  public function getCancelUrl() {
+    return new Url('entity.salesforce_mapping.list');
   }
 
   /**

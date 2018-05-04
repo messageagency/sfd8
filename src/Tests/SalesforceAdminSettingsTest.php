@@ -39,7 +39,7 @@ class SalesforceAdminSettingsTest extends WebTestBase {
    * Tests webform admin settings.
    */
   public function testAdminSettings() {
-    global $base_path, $base_url;
+    global $base_url;
 
     $this->drupalLogin($this->adminSalesforceUser);
 

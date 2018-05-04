@@ -40,7 +40,7 @@ interface EncryptedRestClientInterface extends RestClientInterface {
    * Returns the EncryptionProfileInterface assigned to Salesforce Encrypt, or
    * NULL if no profile is assigned.
    *
-   * @throws Drupal\salesforce\EntityNotFoundException
+   * @throws \Drupal\salesforce\EntityNotFoundException
    *   if a profile is assigned, but cannot be loaded.
    *
    * @return \Drupal\encrypt\EncryptionProfileInterface | NULL

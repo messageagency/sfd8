@@ -16,7 +16,7 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * @param array $values
    * @param string $entity_type
    */
-  public function __construct(array $values = [], $entity_type);
+  public function __construct(array $values, $entity_type);
 
   /**
    * @param  string $key

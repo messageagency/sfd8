@@ -4,7 +4,7 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\Entity\FieldConfig;
+
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;

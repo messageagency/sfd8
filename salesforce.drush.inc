@@ -218,6 +218,7 @@ function drush_salesforce_sf_describe_object($object_name = NULL) {
         return;
       }
       drush_print_r($field_data);
+      return;
 
     default:
       if ($output != 'info') {

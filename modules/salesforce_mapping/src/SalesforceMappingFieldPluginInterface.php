@@ -84,7 +84,7 @@ interface SalesforceMappingFieldPluginInterface {
    *
    * @return bool
    *
-   * @see Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Broken
+   * @see \Drupal\salesforce_mapping\Plugin\SalesforceMappingField\Broken
    */
   public static function isAllowed(SalesforceMappingInterface $mapping);
 

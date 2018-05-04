@@ -181,12 +181,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    */
   private function get_row(FieldPluginInterface $field_plugin = NULL, $form, FormStateInterface $form_state) {
     $input = $form_state->getUserInput();
-    if ($field_plugin != NULL) {
-      $field_type = $field_plugin->getPluginId();
-      $field_plugin_definition = $this->get_field_plugin($field_type);
-    }
-    else {
-      $field_plugin_definition = $field_type = NULL;
+    if ($field_plugin == NULL) {
       $field_type = $input['field_type'];
       $field_plugin_definition = $this->get_field_plugin($field_type);
       $field_plugin = $this->mappingFieldPluginManager->createInstance(

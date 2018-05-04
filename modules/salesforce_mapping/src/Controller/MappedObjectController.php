@@ -14,7 +14,7 @@ use Drupal\Core\Access\AccessResult;
 class MappedObjectController extends ControllerBase {
 
   public function access(AccountInterface $account) {
-    if (!\Drupal::currentUser()->hasPermission('administer salesforce')) {
+    if (!$account->hasPermission('administer salesforce')) {
       return AccessResult::forbidden();
     }
 

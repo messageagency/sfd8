@@ -36,7 +36,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   /**
    * The SF REST client.
    *
-   * @var Drupal\salesforce\Rest\RestClientInterface
+   * @var \Drupal\salesforce\Rest\RestClientInterface
    */
   protected $client;
 
@@ -112,7 +112,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
       return $this->updateEntity($mapping, $mapped_object, $sf_object, $item->force_pull);
     }
     else {
-      return $this->createEntity($mapping, $sf_object, $item->force_pull);
+      return $this->createEntity($mapping, $sf_object);
     }
 
   }
@@ -211,7 +211,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *   Current Salesforce record array.
    * @param bool $force_pull
    */
-  protected function createEntity(SalesforceMappingInterface $mapping, SObject $sf_object, $force_pull = FALSE) {
+  protected function createEntity(SalesforceMappingInterface $mapping, SObject $sf_object) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE])) {
       return;
     }

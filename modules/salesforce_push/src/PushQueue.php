@@ -72,7 +72,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
   protected $time;
 
   /**
-   * @var Drupal\Core\Config\Config
+   * @var \Drupal\Core\Config\Config
    */
   protected $config;
 
@@ -93,7 +93,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     $this->time = $time;
 
     $this->config = $config->get('salesforce.settings');
-    $this->global_limit = $this->config->get('global_push_limit', static::DEFAULT_GLOBAL_LIMIT);
+    $this->global_limit = $this->config->get('global_push_limit') ?: static::DEFAULT_GLOBAL_LIMIT;
     if (empty($this->global_limit)) {
       $this->global_limit = static::DEFAULT_GLOBAL_LIMIT;
     }

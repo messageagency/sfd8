@@ -132,7 +132,7 @@ class RestClientTest extends UnitTestCase {
       ->method('httpRequest')
       ->willReturn($response);
 
-    $result = $this->client->apiCall('');
+    $this->client->apiCall('');
   }
 
   /**
@@ -154,7 +154,7 @@ class RestClientTest extends UnitTestCase {
       ->method('httpRequest')
       ->willReturn($response_200);
 
-    $result = $this->client->apiCall('');
+    $this->client->apiCall('');
   }
 
   /**
@@ -386,7 +386,7 @@ class RestClientTest extends UnitTestCase {
   /**
    * @covers ::objectDelete
    *
-   * @expectedException GuzzleHttp\Exception\RequestException
+   * @expectedException \GuzzleHttp\Exception\RequestException
    */
   public function testObjectDelete() {
     $this->initClient(array_merge($this->methods, [
