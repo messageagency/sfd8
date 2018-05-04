@@ -2,6 +2,18 @@ salesforce.settings:
   type: config_object
   label: 'Salesforce Settings'
   mapping:
+    consumer_key:
+      type: string
+      label: 'Salesforce consumer key'
+      description: 'Consumer key of the Salesforce remote application you want to grant access to.'
+    consumer_secret:
+      type: string
+      label: 'Salesforce consumer secret'
+      description: 'Consumer secret of the Salesforce remote application you want to grant access to.'
+    login_url:
+      type: string
+      label: 'Login URL'
+      description: 'API login URL, either https://login.salesforce.com or https://test.salesforce.com.'
     global_push_limit:
       type: integer
       label: 'Global push queue limit'

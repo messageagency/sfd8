@@ -43,10 +43,11 @@ class SalesforceAdminSettingsTest extends WebTestBase {
 
     $this->drupalLogin($this->adminSalesforceUser);
 
-    /* Salesforce Settings */
-    $this->assertNull(\Drupal::state()->get('salesforce.consumer_key'));
-    $this->assertNull(\Drupal::state()->get('salesforce.consumer_secret'));
-    $this->assertNull(\Drupal::state()->get('salesforce.login_url'));
+    // Salesforce config.
+    $config = \Drupal::config('salesforce.settings');
+    $this->assertNull($config->get('consumer_key'));
+    $this->assertNull($config->get('consumer_secret'));
+    $this->assertNull($config->get('login_url'));
 
     $key = $this->randomMachineName();
     $secret = rand(100000, 10000000);
@@ -68,10 +69,11 @@ class SalesforceAdminSettingsTest extends WebTestBase {
     $this->assertEqual('code', $query['response_type']);
     $this->assertEqual(str_replace('http://', 'https://', $base_url) . '/salesforce/oauth_callback', $query['redirect_uri']);
 
-    // Check that our state was updated:
-    $this->assertEqual($key, \Drupal::state()->get('salesforce.consumer_key'));
-    $this->assertEqual($secret, \Drupal::state()->get('salesforce.consumer_secret'));
-    $this->assertEqual($url, \Drupal::state()->get('salesforce.login_url'));
+    // Check that our config was updated:
+    $config = \Drupal::config('salesforce.settings');
+    $this->assertEqual($key, $config->get('consumer_key'));
+    $this->assertEqual($secret, $config->get('consumer_secret'));
+    $this->assertEqual($url, $config->get('login_url'));
 
   }
 

@@ -29,6 +29,7 @@ class AuthorizeFormTest extends UnitTestCase {
     parent::setUp();
 
     $this->example_url = 'https://example.com';
+    $this->consumer_key = $this->randomMachineName();
 
     $this->config_factory = $this->prophesize(ConfigFactoryInterface::class);
     $this->state = $this->prophesize(StateInterface::class);
@@ -41,6 +42,7 @@ class AuthorizeFormTest extends UnitTestCase {
 
     $this->client->getAuthCallbackUrl()->willReturn($this->example_url);
     $this->client->getAuthEndpointUrl()->willReturn($this->example_url);
+    $this->client->getConsumerKey()->willReturn($this->consumer_key);
 
     $this->client->setConsumerKey(Argument::any())->willReturn(NULL);
     $this->client->setConsumerSecret(Argument::any())->willReturn(NULL);
@@ -62,7 +64,7 @@ class AuthorizeFormTest extends UnitTestCase {
   public function testSubmitForm() {
     $form_state = new FormState();
     $form_state->setValues([
-      'consumer_key' => $this->randomMachineName(),
+      'consumer_key' => $this->consumer_key,
       'consumer_secret' => $this->randomMachineName(),
       'login_url' => $this->example_url,
     ]);

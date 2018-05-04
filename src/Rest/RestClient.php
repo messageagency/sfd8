@@ -53,11 +53,18 @@ class RestClient implements RestClientInterface {
   protected $url;
 
   /**
-   * Salesforce config entity.
+   * Salesforce mutable config object.  Useful for sets.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $mutableConfig;
+
+  /**
+   * Salesforce immutable config object.  Useful for gets.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
    */
-  protected $config;
+  protected $immutableConfig;
 
   /**
    * The state service.
@@ -102,7 +109,8 @@ class RestClient implements RestClientInterface {
   public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
-    $this->config = $this->configFactory->getEditable('salesforce.settings');
+    $this->mutableConfig = $this->configFactory->getEditable('salesforce.settings');
+    $this->immutableConfig = $this->configFactory->get('salesforce.settings');
     $this->state = $state;
     $this->cache = $cache;
     $this->json = $json;
@@ -335,12 +343,12 @@ class RestClient implements RestClientInterface {
    * Wrapper for config rest_api_version.version.
    */
   public function getApiVersion() {
-    if ($this->config->get('use_latest')) {
+    if ($this->immutableConfig->get('use_latest')) {
       $versions = $this->getVersions();
       $version = end($versions);
       return $version['version'];
     }
-    return $this->config->get('rest_api_version.version');
+    return $this->immutableConfig->get('rest_api_version.version');
   }
 
   /**
@@ -354,7 +362,7 @@ class RestClient implements RestClientInterface {
    */
   public function setApiVersion($use_latest = TRUE, $version = NULL) {
     if ($use_latest) {
-      $this->config->set('use_latest', $use_latest);
+      $this->mutableConfig->set('use_latest', $use_latest);
     }
     else {
       $versions = $this->getVersions();
@@ -362,52 +370,85 @@ class RestClient implements RestClientInterface {
         throw new \Exception("Version $version is not available.");
       }
       $version = $versions[$version];
-      $this->config->set('rest_api_version', $version);
+      $this->mutableConfig->set('rest_api_version', $version);
     }
-    $this->config->save();
+    $this->mutableConfig->save();
   }
 
   /**
-   * Getter for consumer_key.
+   * Gets the Saleforce connected app consumer key.
+   *
+   * @return string
+   *   The consumer key.
    */
   public function getConsumerKey() {
-    return $this->state->get('salesforce.consumer_key');
+    return $this->immutableConfig->get('consumer_key');
   }
 
   /**
-   * Setter for consumer_key.
+   * Sets the Saleforce connected app consumer key.
+   *
+   * @param string $value
+   *   The consumer key.
+   *
+   * @return $this
+   *   The RestClient object.
    */
   public function setConsumerKey($value) {
-    return $this->state->set('salesforce.consumer_key', $value);
+    $this->mutableConfig->set('consumer_key', $value)->save();
+    return $this;
   }
 
   /**
+   * Gets the Saleforce connected app consumer secret.
    *
+   * @return string
+   *   The consumer secret.
    */
   public function getConsumerSecret() {
-    return $this->state->get('salesforce.consumer_secret');
+    return $this->immutableConfig->get('consumer_secret');
   }
 
   /**
+   * Sets the Saleforce connected app consumer secret.
    *
+   * @param string $value
+   *   The consumer secret.
+   *
+   * @return $this
+   *   The RestClient object.
    */
   public function setConsumerSecret($value) {
-    return $this->state->set('salesforce.consumer_secret', $value);
+    $this->mutableConfig->set('consumer_secret', $value)->save();
+    return $this;
   }
 
   /**
+   * Gets the Saleforce connected app login URL.
    *
+   * If the login URL is not set, a default of "https://login.salesforce.com" is
+   * returned.
+   *
+   * @return string
+   *   The login URL.
    */
   public function getLoginUrl() {
-    $login_url = $this->state->get('salesforce.login_url');
+    $login_url = $this->immutableConfig->get('login_url');
     return empty($login_url) ? 'https://login.salesforce.com' : $login_url;
   }
 
   /**
+   * Sets the Saleforce connected app login URL.
    *
+   * @param string $value
+   *   The login URL.
+   *
+   * @return $this
+   *   The RestClient object.
    */
   public function setLoginUrl($value) {
-    return $this->state->set('salesforce.login_url', $value);
+    $this->mutableConfig->set('login_url', $value)->save();
+    return $this;
   }
 
   /**

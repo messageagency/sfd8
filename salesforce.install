@@ -11,9 +11,6 @@ use Drupal\Component\Serialization\Json;
  */
 function salesforce_uninstall() {
   $delete = [
-    'salesforce.consumer_key',
-    'salesforce.consumer_secret',
-    'salesforce.login_url',
     'salesforce.instance_url',
     'salesforce.access_token',
     'salesforce.refresh_token',
@@ -173,4 +170,30 @@ function salesforce_update_8002() {
   $settings = \Drupal::configFactory()->getEditable('salesforce.settings');
   $settings->set('limit_mapped_object_revisions', 10);
   $settings->save();
+}
+
+/**
+ * Move API credentials from state to config.
+ */
+function salesforce_update_8003() {
+  // Populate config from state.
+  $config = \Drupal::configFactory()->getEditable('salesforce.settings');
+  if ($consumer_key = \Drupal::state()->get('salesforce.consumer_key', FALSE)) {
+    $config->set('consumer_key', $consumer_key);
+  }
+  if ($consumer_secret = \Drupal::state()->get('salesforce.consumer_secret', FALSE)) {
+    $config->set('consumer_secret', $consumer_secret);
+  }
+  if ($login_url = \Drupal::state()->get('salesforce.login_url', FALSE)) {
+    $config->set('login_url', $login_url);
+  }
+  $config->save();
+
+  // Delete deprecated state variables.
+  $delete = [
+    'salesforce.consumer_key',
+    'salesforce.consumer_secret',
+    'salesforce.login_url',
+  ];
+  \Drupal::state()->deleteMultiple($delete);
 }

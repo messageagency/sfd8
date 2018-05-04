@@ -30,6 +30,13 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   protected $encryptionProfileId;
 
   /**
+   * The encryption profile to use when encrypting and decrypting data.
+   *
+   * @var \Drupal\encrypt\EncryptionProfileInterface
+   */
+  protected $encryptionProfile;
+
+  /**
    * Construct a new Encrypted Rest Client.
    *
    * @param \GuzzleHttp\ClientInterface $http_client
@@ -52,8 +59,9 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
     parent::__construct($http_client, $config_factory, $state, $cache, $json, $time);
     $this->encryption = $encryption;
-    $this->encryptionProfileId = $state->get('salesforce_encrypt.profile');
+    $this->encryptionProfileId = $this->state->get('salesforce_encrypt.profile');
     $this->encryptionProfileManager = $encryptionProfileManager;
+    $this->encryptionProfile = NULL;
     $this->lock = $lock;
   }
 
@@ -106,6 +114,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
     $consumerSecret = $this->getConsumerSecret();
 
     $this->encryptionProfileId = $profile == NULL ? NULL : $profile->id();
+    $this->encryptionProfile = $profile;
     $this->state->set('salesforce_encrypt.profile', $this->encryptionProfileId);
 
     $this->setAccessToken($access_token);
@@ -121,153 +130,155 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
    * {@inheritdoc}
    */
   public function getEncryptionProfile() {
-    if (empty($this->encryptionProfileId)) {
+    if ($this->encryptionProfile) {
+      return $this->encryptionProfile;
+    }
+    elseif (empty($this->encryptionProfileId)) {
       return NULL;
     }
-    $profile = $this
-      ->encryptionProfileManager
-      ->getEncryptionProfile($this->encryptionProfileId);
-    if (empty($profile)) {
-      throw new EntityNotFoundException(['id' => $this->encryptionProfileId], 'encryption_profile');
+    else {
+      $this->encryptionProfile = $this->encryptionProfileManager
+        ->getEncryptionProfile($this->encryptionProfileId);
+      if (empty($this->encryptionProfile)) {
+        throw new EntityNotFoundException(['id' => $this->encryptionProfileId], 'encryption_profile');
+      }
+      return $this->encryptionProfile;
     }
+  }
+
+  /**
+   * Exception-handling wrapper around getEncryptionProfile().
+   *
+   * getEncryptionProfile() will throw an EntityNotFoundException exception
+   * if it has an encryption profile ID but cannot load it.  In this wrapper
+   * we handle that exception by setting a helpful error message and allow
+   * execution to proceed.
+   *
+   * @return \Drupal\encrypt\EncryptionProfileInterface | NULL
+   *   The encryption profile if it can be loaded, otherwise NULL.
+   */
+  protected function _getEncryptionProfile() {
+    try {
+      $profile = $this->getEncryptionProfile();
+    }
+    catch (EntityNotFoundException $e) {
+      drupal_set_message($this->t('Error while loading encryption profile. You will need to <a href=":encrypt">assign a new encryption profile</a>, then <a href=":oauth">re-authenticate to Salesforce</a>.', [':encrypt' => Url::fromRoute('salesforce_encrypt.settings')->toString(), ':oauth' => Url::fromRoute('salesforce.authorize')->toString()]), 'error');
+    }
+
     return $profile;
   }
 
   /**
+   * Encrypts values.
    *
+   * @param string $value
+   *   The value to encrypt.
+   *
+   * @return string
+   *   The encrypted value.
    */
-  protected function getDecrypted($key) {
-    $value = $this->state->get($key);
-    try {
-      $profile = $this->getEncryptionProfile();
-    }
-    catch (EntityNotFoundException $e) {
-      drupal_set_message($this->t('Error while loading encryption profile. You will need to <a href=":encrypt">assign a new encryption profile</a>, then <a href=":oauth">re-authenticate to Salesforce</a>.', [':encrypt' => Url::fromRoute('salesforce_encrypt.settings')->toString(), ':oauth' => Url::fromRoute('salesforce.authorize')->toString()]), 'error');
+  protected function encrypt($value) {
+    if (empty($this->_getEncryptionProfile())) {
       return $value;
     }
-
-    if (empty($profile)) {
-      return $value;
+    else {
+      return $this->encryption->encrypt($value, $this->_getEncryptionProfile());
     }
-    if (!empty($value) && Unicode::strlen($value) !== 0) {
-      $decrypted = $this->encryption->decrypt($value, $profile);
-      return $decrypted;
-    }
-    return FALSE;
   }
 
   /**
+   * Decrypts values.
    *
+   * @param string $value
+   *   The value to decrypt.
+   *
+   * @return string
+   *   The decrypted value.
    */
-  protected function setEncrypted($key, $value) {
-    try {
-      $profile = $this->getEncryptionProfile();
+  protected function decrypt($value) {
+    if (empty($this->_getEncryptionProfile()) || empty($value) || Unicode::strlen($value) === 0) {
+      return $value;
     }
-    catch (EntityNotFoundException $e) {
-      drupal_set_message($this->t('Error while loading encryption profile. You will need to <a href=":encrypt">assign a new encryption profile</a>, then <a href=":oauth">re-authenticate to Salesforce</a>.', [':encrypt' => Url::fromRoute('salesforce_encrypt.settings')->toString(), ':oauth' => Url::fromRoute('salesforce.authorize')->toString()]), 'error');
+    else {
+      return $this->encryption->decrypt($value, $this->_getEncryptionProfile());
     }
-
-    if (empty($profile)) {
-      $this->state->set($key, $value);
-      return $this;
-    }
-    $encrypted = $this->encryption->encrypt($value, $profile);
-    $this->state->set($key, $encrypted);
-    return $this;
   }
 
   /**
-   * Get the access token.
+   * {@inheritdoc}
    */
   public function getAccessToken() {
-    return $this->getDecrypted('salesforce.access_token');
+    return $this->decrypt(parent::getAccessToken());
   }
 
   /**
-   * Set the access token.
-   *
-   * @param string $token
-   *   Access token from Salesforce.
+   * {@inheritdoc}
    */
   public function setAccessToken($token) {
-    return $this->setEncrypted('salesforce.access_token', $token);
+    return parent::setAccessToken($this->encrypt($token));
   }
 
   /**
-   * Get refresh token.
+   * {@inheritdoc}
    */
   public function getRefreshToken() {
-    $token = $this->getDecrypted('salesforce.refresh_token');
-    return $token;
+    return $this->decrypt(parent::getRefreshToken());
   }
 
   /**
-   * Set refresh token.
-   *
-   * @param string $token
-   *   Refresh token from Salesforce.
+   * {@inheritdoc}
    */
   public function setRefreshToken($token) {
-    return $this->setEncrypted('salesforce.refresh_token', $token);
+    return parent::setRefreshToken($this->encrypt($token));
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function setIdentity($data) {
-    try {
-      $profile_id = $this->getEncryptionProfile();
-    }
-    catch (EntityNotFoundException $e) {
-      // Noop.
-    }
-    if (!empty($profile_id) && is_array($data)) {
+    if (is_array($data)) {
       $data = serialize($data);
     }
-    $this->setEncrypted('salesforce.identity', $data);
-    return $this;
+    return parent::setIdentity($this->encrypt($data));
   }
 
   /**
-   * Return the Salesforce identity, which is stored in a variable.
-   *
-   * @return array
-   *   Returns FALSE is no identity has been stored.
+   * {@inheritdoc}
    */
   public function getIdentity() {
-    $value = $this->getDecrypted('salesforce.identity');
-    if (!empty($value) && !is_array($value)) {
-      $value = unserialize($value);
+    $data = $this->decrypt(parent::getIdentity());
+    if (!empty($data) && !is_array($data)) {
+      $data = unserialize($data);
     }
-    return $value;
+    return $data;
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function getConsumerKey() {
-    return $this->getDecrypted('salesforce.consumer_key');
+    return $this->decrypt(parent::getConsumerKey());
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function setConsumerKey($value) {
-    return $this->setEncrypted('salesforce.consumer_key', $value);
+    return parent::setConsumerKey($this->encrypt($value));
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function getConsumerSecret() {
-    return $this->getDecrypted('salesforce.consumer_secret');
+    return $this->decrypt(parent::getConsumerSecret());
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function setConsumerSecret($value) {
-    return $this->setEncrypted('salesforce.consumer_secret', $value);
+    return parent::setConsumerSecret($this->encrypt($value));
   }
 
 }

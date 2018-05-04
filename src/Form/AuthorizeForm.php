@@ -91,8 +91,7 @@ class AuthorizeForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // We're not actually doing anything with this, but may figure out
-    // something that makes sense.
+    $config = $this->config('salesforce.settings');
     $url = new Url('salesforce.oauth_callback', [], ['absolute' => TRUE]);
     drupal_set_message($this->t('Callback URL: :url', [':url' => str_replace('http:', 'https:', $url->toString())]));
 
@@ -119,7 +118,7 @@ class AuthorizeForm extends ConfigFormBase {
     $form['creds']['login_url'] = [
       '#title' => $this->t('Login URL'),
       '#type' => 'textfield',
-      '#default_value' => $this->sf_client->getLoginUrl(),
+      '#default_value' => empty($config->get('login_url')) ? 'https://login.salesforce.com' : $config->get('login_url'),
       '#description' => $this->t('Enter a login URL, either https://login.salesforce.com or https://test.salesforce.com.'),
       '#required' => TRUE,
     ];
@@ -196,7 +195,7 @@ class AuthorizeForm extends ConfigFormBase {
       $query = [
         'redirect_uri' => $this->sf_client->getAuthCallbackUrl(),
         'response_type' => 'code',
-        'client_id' => $values['consumer_key'],
+        'client_id' => $this->sf_client->getConsumerKey(),
       ];
 
       // Send the user along to the Salesforce OAuth login form. If successful,

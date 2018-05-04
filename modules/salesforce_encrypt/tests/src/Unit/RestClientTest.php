@@ -49,44 +49,40 @@ class RestClientTest extends UnitTestCase {
     $this->encryptionProfile = $this->getMock(EncryptionProfileInterface::CLASS);
     $this->json = $this->getMock(Json::CLASS);
     $this->time = $this->getMock(TimeInterface::CLASS);
-    $this->client = $this->getMock(RestClient::CLASS, ['getEncryptionProfile'], [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->time, $this->encryption, $this->profileManager, $this->lock]);
+    $this->client = $this->getMock(RestClient::CLASS, ['_getEncryptionProfile'], [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->time, $this->encryption, $this->profileManager, $this->lock]);
   }
 
   /**
-   * @covers ::getDecrypted
+   * @covers ::encrypt
    *
-   * getDecrypted is protected, so we get at it through ::getAccessToken
+   * encrypt is protected, so we get at it through ::getAccessToken
    * This test covers the case where access token is NULL.
    */
-  public function testGetDecryptedNull() {
+  public function testEncryptNull() {
     // Test unencrypted.
     $this->state->expects($this->any())
       ->method('get')
       ->willReturn(NULL);
-    $this->client->expects($this->at(0))
-      ->method('getEncryptionProfile')
-      ->willReturn(FALSE);
-    $this->client->expects($this->at(1))
-      ->method('getEncryptionProfile')
-      ->willReturn(TRUE);
-    $this->assertNull($this->client->getAccessToken());
+    $this->client->expects($this->any())
+      ->method('_getEncryptionProfile')
+      ->willReturn(NULL);
     $this->assertFalse($this->client->getAccessToken());
   }
 
   /**
-   * @covers ::getDecrypted
+   * @covers ::encrypt
    *
    * This test covers the case where access token is not NULL.
    */
-  public function testGetDecryptedNotNull() {
+  public function testEncryptNotNull() {
     // Test unencrypted.
-    $this->state->expects($this->once())
+    $this->state->expects($this->any())
       ->method('get')
       ->willReturn('not null');
-    $this->client->expects($this->once())
-      ->method('getEncryptionProfile')
+    $this->client->expects($this->any())
+      ->method('_getEncryptionProfile')
       ->willReturn($this->encryptionProfile);
-    $this->encryption->expects($this->once())
+    $this->encryption->expects($this->any())
       ->method('decrypt')
       ->willReturn($this->accessToken);
     $this->assertEquals($this->accessToken, $this->client->getAccessToken());
