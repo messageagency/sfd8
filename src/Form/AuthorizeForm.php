@@ -128,7 +128,6 @@ class AuthorizeForm extends ConfigFormBase {
     if ($this->sf_client->isAuthorized()) {
       $form['creds']['#open'] = FALSE;
       $form['creds']['#description'] = $this->t('Your Salesforce salesforce instance is currently authorized. Enter credentials here only to change credentials.');
-      unset($_SESSION['messages']['salesforce_oauth_error error']);
       try {
         $resources = $this->sf_client->listResources();
         foreach ($resources->resources as $key => $path) {
@@ -148,10 +147,10 @@ class AuthorizeForm extends ConfigFormBase {
         $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       }
     }
-    else {
-      drupal_set_message(t('Salesforce needs to be authorized to connect to this website.'), 'salesforce_oauth_error error');
+    elseif (!$form_state->getUserInput()) {
+      // Don't set this message if the form was submitted.
+      drupal_set_message(t('Salesforce needs to be authorized to connect to this website.'), 'error');
     }
-
     $form = parent::buildForm($form, $form_state);
     $form['creds']['actions'] = $form['actions'];
     unset($form['actions']);
