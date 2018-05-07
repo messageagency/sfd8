@@ -82,6 +82,10 @@ class RevokeAuthorizationForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    if (!$this->sf_client->isAuthorized()) {
+      drupal_set_message($this->t('Drupal is not authenticated to Salesforce.'), 'warning');
+      return;
+    }
     $form = parent::buildForm($form, $form_state);
     $form['actions']['#title'] = 'Are you sure you want to revoke authorization?';
     $form['actions']['#type'] = 'details';
