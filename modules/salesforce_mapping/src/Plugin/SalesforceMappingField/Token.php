@@ -55,7 +55,7 @@ class Token extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $pluginForm = parent::buildConfigurationForm($form, $form_state);
@@ -79,18 +79,19 @@ class Token extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
-    // Even though everything is an entity, some token functions expect to
-    // receive the entity keyed by entity type.
     $text = $this->config('drupal_field_value');
-    $data = ['entity' => $entity, get_class($entity) => $entity];
-    return $this->token->replace($text, $data);
+    $data = [$entity->getEntityTypeId() => $entity];
+    $options = ['clear' => TRUE];
+    $result = $this->token->replace($text, $data, $options);
+    // If we have something, return it.  Otherwise return NULL.
+    return (trim($result) != '') ? $result : NULL;
   }
 
   /**
-   *
+   * Pull-token doesn't make sense. This is a no-op.
    */
   public function pull() {
     return FALSE;
