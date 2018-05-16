@@ -92,6 +92,7 @@ class AuthorizeForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('salesforce.settings');
+    $encrypted = is_subclass_of($this->sf_client, 'Drupal\salesforce_encrypt\Rest\EncryptedRestClientInterface');
     $url = new Url('salesforce.oauth_callback', [], ['absolute' => TRUE]);
     drupal_set_message($this->t('Callback URL: :url', [':url' => str_replace('http:', 'https:', $url->toString())]));
 
@@ -106,14 +107,14 @@ class AuthorizeForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#description' => $this->t('Consumer key of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
-      '#default_value' => $this->sf_client->getConsumerKey(),
+      '#default_value' => $encrypted ? $this->sf_client->decrypt($config->get('consumer_key')) : $config->get('consumer_key'),
     ];
     $form['creds']['consumer_secret'] = [
       '#title' => $this->t('Salesforce consumer secret'),
       '#type' => 'textfield',
       '#description' => $this->t('Consumer secret of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
-      '#default_value' => $this->sf_client->getConsumerSecret(),
+      '#default_value' => $encrypted ? $this->sf_client->decrypt($config->get('consumer_secret')) : $config->get('consumer_secret'),
     ];
     $form['creds']['login_url'] = [
       '#title' => $this->t('Login URL'),

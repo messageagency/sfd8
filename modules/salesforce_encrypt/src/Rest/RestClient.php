@@ -169,15 +169,9 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   * Encrypts values.
-   *
-   * @param string $value
-   *   The value to encrypt.
-   *
-   * @return string
-   *   The encrypted value.
+   * {@inheritdoc}
    */
-  protected function encrypt($value) {
+  public function encrypt($value) {
     if (empty($this->_getEncryptionProfile())) {
       return $value;
     }
@@ -187,15 +181,9 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   * Decrypts values.
-   *
-   * @param string $value
-   *   The value to decrypt.
-   *
-   * @return string
-   *   The decrypted value.
+   * {@inheritdoc}
    */
-  protected function decrypt($value) {
+  public function decrypt($value) {
     if (empty($this->_getEncryptionProfile()) || empty($value) || Unicode::strlen($value) === 0) {
       return $value;
     }
