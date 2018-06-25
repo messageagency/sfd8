@@ -186,7 +186,7 @@ function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
     $sfids = [];
     foreach ($chunk as $j => $row) {
       if (empty($row) || empty($row[0])) {
-        drush_log(dt('Skipping row !n, no SFID found.', ['!n' => $base $j 1]), 'warning');
+        drush_log(dt('Skipping row !n, no SFID found.', ['!n' => $j]), 'warning');
         continue;
       }
       try {
@@ -199,7 +199,7 @@ function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
         }
       }
       catch (\Exception $e) {
-        drush_log(dt('Skipping row !n, no SFID found.', ['!n' => $base $j 1]), 'warning');
+        drush_log(dt('Skipping row !n, no SFID found.', ['!n' => $j]), 'warning');
         continue;
       }
       $sfid = (string) $sfid;
