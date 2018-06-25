@@ -146,9 +146,6 @@ class QueueHandler {
     $results = $this->doSfoQuery($mapping, [], $start, $stop);
     if ($results) {
       $this->enqueueAllResults($mapping, $results, $force_pull);
-      // @TODO Replace this with a better implementation when available,
-      // see https://www.drupal.org/node/2820345, https://www.drupal.org/node/2785211
-      $mapping->setLastPullTime($this->time->getRequestTime());
       return $results->size();
     }
   }
@@ -228,10 +225,17 @@ class QueueHandler {
    *   there are additional records to be queried.
    */
   public function enqueueResultSet(SalesforceMappingInterface $mapping, SelectQueryResult $results, $force_pull = FALSE) {
+    $max_time = 0;
+    $triggerField = $mapping->getPullTriggerDate();
     try {
       foreach ($results->records() as $record) {
         // @TODO? Pull Queue Enqueue Event
         $this->enqueueRecord($mapping, $record, $force_pull);
+        $record_time = strtotime($record->field($triggerField));
+        if ($max_time < $record_time) {
+          $max_time = $record_time;
+          $mapping->setLastPullTime($max_time);
+        }
       }
       return $results->done();
     }

@@ -66,6 +66,23 @@ function salesforce_pull_drush_command() {
     ],
   ];
 
+  $items['sf-pull-set'] = [
+    'category' => 'salesforce',
+    'description' => 'Set pull timestamp on a single Salesforce Mappings to a specific point in history (or now).',
+    'arguments' => [
+      'name' => [
+        'description' => 'Machine name of the Salesforce Mapping for which to reset pull timestamps.',
+      ],
+      'time' => [
+        'description' => 'Timestamp to set the value to. Defaults to the runtime.',
+      ],
+    ],
+    'examples' => [
+      'drush sf-pull-set foo' => 'Set pull timestamps for mapping "foo" to "now"',
+      'drush sf-pull-set foo 1517416761' => 'Set pull timestamps for mapping "foo" to Jan 31, 2018, around 8:40am time in Portland, OR',
+    ],
+  ];
+
   return $items;
 }
 
@@ -169,7 +186,7 @@ function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
     $sfids = [];
     foreach ($chunk as $j => $row) {
       if (empty($row) || empty($row[0])) {
-        drush_log(dt('Skipping row !n, no SFID found.', ['!n' => $base + $j + 1]), 'warning');
+        drush_log(dt('Skipping row !n, no SFID found.', ['!n' => $base $j 1]), 'warning');
         continue;
       }
       try {
@@ -182,7 +199,7 @@ function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
         }
       }
       catch (\Exception $e) {
-        drush_log(dt('Skipping row !n, no SFID found.', ['!n' => $base + $j + 1]), 'warning');
+        drush_log(dt('Skipping row !n, no SFID found.', ['!n' => $base $j 1]), 'warning');
         continue;
       }
       $sfid = (string) $sfid;
@@ -255,6 +272,19 @@ function drush_salesforce_pull_sf_pull_reset($name = NULL) {
   }
   foreach ($mappings as $mapping) {
     $mapping->setLastPullTime(NULL);
+    \Drupal::entityTypeManager()
+      ->getStorage('salesforce_mapped_object')
+      ->setForcePull($mapping);
+  }
+}
+
+function drush_salesforce_pull_sf_pull_set($name, $time = NULL) {
+  if (is_null($time)) {
+    $time = time();
+  }
+  $mapping = _salesforce_drush_get_mapping($name);
+  if ($mapping) {
+    $mapping->setLastPullTime($time);
     \Drupal::entityTypeManager()
       ->getStorage('salesforce_mapped_object')
       ->setForcePull($mapping);
