@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\Token as TokenService;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
@@ -31,11 +32,19 @@ class Token extends SalesforceMappingFieldPluginBase {
   protected $token;
 
   /**
+   * The renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityManagerInterface $entity_manager, EntityTypeManagerInterface $etm, DateFormatterInterface $dateFormatter, EventDispatcherInterface $event_dispatcher, TokenService $token) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityManagerInterface $entity_manager, EntityTypeManagerInterface $etm, DateFormatterInterface $dateFormatter, EventDispatcherInterface $event_dispatcher, TokenService $token, RendererInterface $renderer) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_bundle_info, $entity_field_manager, $rest_client, $entity_manager, $etm, $dateFormatter, $event_dispatcher);
     $this->token = $token;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -50,7 +59,8 @@ class Token extends SalesforceMappingFieldPluginBase {
       $container->get('entity_type.manager'),
       $container->get('date.formatter'),
       $container->get('event_dispatcher'),
-      $container->get('token')
+      $container->get('token'),
+      $container->get('renderer')
     );
   }
 
@@ -61,12 +71,23 @@ class Token extends SalesforceMappingFieldPluginBase {
     $pluginForm = parent::buildConfigurationForm($form, $form_state);
 
     // @TODO expose token options on mapping form: clear, callback, sanitize
-    // @TODO expose token tree / selector
     // @TODO add token validation
+
+    $token_browser = [
+      'token_browser' => [
+        '#theme' => 'token_tree_link',
+        '#token_types' => [$form['#entity']->getDrupalEntityType()],
+        '#global_types' => TRUE,
+        '#click_insert' => TRUE,
+      ],
+    ];
+
     $pluginForm['drupal_field_value'] += [
       '#type' => 'textfield',
       '#default_value' => $this->config('drupal_field_value'),
-      '#description' => $this->t('Enter a token to map a Salesforce field..'),
+      '#description' => $this->t('Enter a token to map a Salesforce field. @token_browser', [
+        '@token_browser' => $this->renderer->render($token_browser),
+      ]),
     ];
 
     // @TODO: "Constant" as it's implemented now should only be allowed to be set to "Push". In the future: create "Pull" logic for constant, which pulls a constant value to a Drupal field. Probably a separate mapping field plugin.
