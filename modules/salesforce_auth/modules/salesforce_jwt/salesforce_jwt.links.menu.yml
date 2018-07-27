@@ -1,0 +1,13 @@
+entity.salesforce_jwt_auth_config.collection:
+  route_name: entity.salesforce_jwt_auth_config.collection
+  parent: salesforce_auth.providers
+  title: Salesforce JWT Auth Configs
+  description: 'Salesforce JWT Auth Configs'
+  weight: 99
+
+entity.salesforce_jwt_auth_config.add_form:
+  route_name: entity.salesforce_jwt_auth_config.add_form
+  parent: entity.salesforce_jwt_auth_config.collection
+  title: Create new JWT Auth Config
+  description: 'Create new JWT Auth Config'
+

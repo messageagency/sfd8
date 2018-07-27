@@ -4,6 +4,7 @@ namespace Drupal\salesforce\Rest;
 
 use Drupal\Component\Serialization\Json;
 use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class RestResponse.
@@ -33,7 +34,7 @@ class RestResponse extends Response {
    *
    * @throws \Drupal\salesforce\Rest\RestException if body cannot be json-decoded
    */
-  public function __construct(Response $response) {
+  public function __construct(ResponseInterface $response) {
     $this->response = $response;
     parent::__construct($response->getStatusCode(), $response->getHeaders(), $response->getBody(), $response->getProtocolVersion(), $response->getReasonPhrase());
     $this->handleJsonResponse();

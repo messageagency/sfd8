@@ -1,28 +1,3 @@
-salesforce.oauth_callback:
-  path: '/salesforce/oauth_callback'
-  defaults:
-    _controller: '\Drupal\salesforce\Controller\SalesforceController::oauthCallback'
-  requirements:
-    _permission: 'authorize salesforce'
-
-salesforce.authorize:
-  path: '/admin/config/salesforce/authorize'
-  defaults:
-    _form: '\Drupal\salesforce\Form\AuthorizeForm'
-    _title: 'Salesforce Authorization'
-    _description: 'Manage Salesforce OAuth consumer key and secret and authorize. View existing Salesforce authorization details.'
-  requirements:
-    _permission: 'authorize salesforce'
-
-salesforce.revoke:
-  path: '/admin/config/salesforce/revoke'
-  defaults:
-    _form: '\Drupal\salesforce\Form\RevokeAuthorizationForm'
-    _title: 'Revoke Salesforce Authorization'
-    _description: 'Revoke OAuth tokens.'
-  requirements:
-    _permission: 'authorize salesforce'
-
 salesforce.global_settings:
   path: '/admin/config/salesforce/settings'
   defaults:

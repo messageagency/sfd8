@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\salesforce\Unit;
+namespace Drupal\Tests\salesforce_oauth\Unit;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Render\MetadataBubblingUrlGenerator;
@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Component\Datetime\TimeInterface;
 
 /**
- * @coversDefaultClass \Drupal\salesforce\Controller\SalesforceController
+ * @coversDefaultClass \Drupal\salesforce_oauth\Controller\SalesforceOAuthController
  * @group salesforce
  */
 class SalesforceControllerTest extends UnitTestCase {
@@ -73,7 +73,7 @@ class SalesforceControllerTest extends UnitTestCase {
 
     $this->url_generator = $this->prophesize(MetadataBubblingUrlGenerator::class);
     $this->url_generator->generateFromRoute(
-      'salesforce.authorize',
+      'salesforce_auth.index',
       [],
       ["absolute" => TRUE],
       FALSE

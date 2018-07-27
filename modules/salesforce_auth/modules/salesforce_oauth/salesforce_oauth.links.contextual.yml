@@ -1,0 +1,14 @@
+entity.salesforce_oauth_config.edit_form:
+  route_name: entity.salesforce_oauth_config.edit_form
+  group: salesforce_oauth_config
+  title: Edit
+
+entity.salesforce_oauth_config.delete_form:
+  route_name: entity.salesforce_oauth_config.delete_form
+  group: salesforce_oauth_config
+  title: Delete
+
+entity.salesforce_oauth_config.revoke:
+  route_name: entity.salesforce_oauth_config.revoke
+  group: salesforce_oauth_config
+  title: Revoke

@@ -1,0 +1,11 @@
+salesforce_auth.config:
+  route_name: salesforce_auth.config
+  parent: salesforce.admin_config_salesforce
+  title: Salesforce Authorization
+  description: 'Salesforce Authorization.'
+
+entity.salesforce_auth.collection:
+  route_name: entity.salesforce_auth.collection
+  parent: salesforce_auth.config
+  title: Salesforce Authorization Providers
+  description: 'Salesforce Authorization Providers.'

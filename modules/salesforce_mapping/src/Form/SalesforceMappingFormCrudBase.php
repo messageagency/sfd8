@@ -35,7 +35,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $object_type_options = $this->get_salesforce_object_type_options();
     }
     catch (\Exception $e) {
-      $href = new Url('salesforce.authorize');
+      dpm($e);
+      $href = new Url('salesforce.admin_config_salesforce');
       drupal_set_message($this->t('Error when connecting to Salesforce. Please <a href="@href">check your credentials</a> and try again: %message', ['@href' => $href->toString(), '%message' => $e->getMessage()]), 'error');
       return $form;
     }

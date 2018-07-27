@@ -1,0 +1,4 @@
+authorize salesforce:
+  title: 'authorize salesforce'
+  description: 'Access Salesforce OAuth consumer key, secret, and identify information'
+  restrict access: TRUE

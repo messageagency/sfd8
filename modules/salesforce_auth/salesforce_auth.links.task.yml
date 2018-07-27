@@ -1,0 +1,9 @@
+salesforce_auth.config:
+  route_name: salesforce_auth.config
+  base_route: salesforce_auth.config
+  title: 'Authorization'
+
+entity.salesforce_auth.collection:
+  route_name: entity.salesforce_auth.collection
+  base_route: salesforce_auth.config
+  title: 'Providers'

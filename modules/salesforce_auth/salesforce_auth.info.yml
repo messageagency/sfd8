@@ -1,0 +1,9 @@
+name: Salesforce Authorization Manager
+type: module
+description: Manages various auth methods and tokens
+package: Salesforce
+core: 8.x
+configure: salesforce.auth_index
+dependencies:
+  - encrypt
+  - salesforce

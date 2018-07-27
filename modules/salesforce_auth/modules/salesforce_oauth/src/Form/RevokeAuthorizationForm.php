@@ -1,25 +1,29 @@
 <?php
 
-namespace Drupal\salesforce\Form;
+namespace Drupal\salesforce_oauth\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
 
+use Drupal\salesforce_oauth\AuthProvider;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
-class RevokeAuthorizationForm extends ConfigFormBase {
+class RevokeAuthorizationForm extends EntityForm {
 
   /**
    * The Salesforce REST client.
    *
    * @var \Drupal\salesforce\Rest\RestClientInterface
    */
-  protected $sf_client;
+  protected $oauth;
 
   /**
    * The sevent dispatcher service..
@@ -33,7 +37,14 @@ class RevokeAuthorizationForm extends ConfigFormBase {
    *
    * @var \Drupal\Core\State\StateInterface
    */
-  protected $state;
+  protected $messenger;
+
+  /**
+   * The config entity.
+   *
+   * @var \Drupal\salesforce_oauth\Entity\OAuthConfig
+   */
+  protected $entity;
 
   /**
    * Constructs a \Drupal\system\ConfigFormBase object.
@@ -45,10 +56,10 @@ class RevokeAuthorizationForm extends ConfigFormBase {
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, RestClientInterface $salesforce_client, EventDispatcherInterface $event_dispatcher) {
-    parent::__construct($config_factory);
-    $this->sf_client = $salesforce_client;
+  public function __construct(EventDispatcherInterface $event_dispatcher, AuthProvider $oauth, MessengerInterface $messenger) {
     $this->eventDispatcher = $event_dispatcher;
+    $this->oauth = $oauth;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -56,41 +67,21 @@ class RevokeAuthorizationForm extends ConfigFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('config.factory'),
-      $container->get('salesforce.client'),
-      $container->get('event_dispatcher')
+      $container->get('event_dispatcher'),
+      $container->get('salesforce_oauth.auth_provider'),
+      $container->get('messenger')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
-    return 'salesforce_oauth';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getEditableConfigNames() {
-    return [
-      'salesforce.settings',
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    if (!$this->sf_client->isAuthorized()) {
-      drupal_set_message($this->t('Drupal is not authenticated to Salesforce.'), 'warning');
-      return;
-    }
     $form = parent::buildForm($form, $form_state);
     $form['actions']['#title'] = 'Are you sure you want to revoke authorization?';
     $form['actions']['#type'] = 'details';
     $form['actions']['#open'] = TRUE;
-    $form['actions']['#description'] = t('Revoking authorization will destroy Salesforce OAuth and refresh tokens. Drupal will no longer be authorized to communicate with Salesforce.');
+    $form['actions']['#description'] = t('Revoking authorization will destroy Salesforce OAuth and refresh tokens. Drupal will no longer be authorized to communicate with Salesforce using this config.');
     $form['actions']['submit']['#value'] = t('Revoke authorization');
 
     // By default, render the form using system-config-form.html.twig.
@@ -103,11 +94,9 @@ class RevokeAuthorizationForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->sf_client->setAccessToken('');
-    $this->sf_client->setRefreshToken('');
-    $this->sf_client->setInstanceUrl('');
-    $this->sf_client->setIdentity(FALSE);
-    drupal_set_message($this->t('Salesforce OAuth tokens have been revoked.'));
+    /** @var \Drupal\salesforce_oauth\Entity\OAuthConfig*/
+    $this->oauth->revokeAuthorization($this->entity);
+    $this->messenger->addStatus($this->t('Salesforce OAuth tokens have been revoked.'));
     $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, "Salesforce OAuth tokens revoked."));
   }
 

@@ -64,7 +64,7 @@ class SettingsForm extends FormBase {
     }
     catch (EntityNotFoundException $e) {
       drupal_set_message($e->getFormattableMessage(), 'error');
-      drupal_set_message($this->t('Error while loading encryption profile. You will need to <a href=":encrypt">assign a new encryption profile</a>, then <a href=":oauth">re-authenticate to Salesforce</a>.', [':encrypt' => Url::fromRoute('salesforce_encrypt.settings')->toString(), ':oauth' => Url::fromRoute('salesforce.authorize')->toString()]), 'error');
+      drupal_set_message($this->t('Error while loading encryption profile. You will need to <a href=":encrypt">assign a new encryption profile</a>, then <a href=":oauth">re-authenticate to Salesforce</a>.', [':encrypt' => Url::fromRoute('salesforce_encrypt.settings')->toString(), ':oauth' => Url::fromRoute('salesforce.admin_config_salesforce')->toString()]), 'error');
     }
 
     $form['profile'] = [

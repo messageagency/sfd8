@@ -1,0 +1,6 @@
+services:
+  salesforce_jwt.auth_provider:
+    class: Drupal\salesforce_jwt\AuthProvider
+    arguments: ['@http_client', '@state', '@datetime.time', '@key.repository', '@event_dispatcher']
+    tags:
+      - { name: salesforce_auth_provider }

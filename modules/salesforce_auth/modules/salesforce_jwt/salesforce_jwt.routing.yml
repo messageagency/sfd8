@@ -1,0 +1,44 @@
+entity.salesforce_jwt_auth_config.collection:
+  path: '/admin/config/salesforce/authorize/jwt'
+  defaults:
+    _entity_list: 'salesforce_jwt_auth_config'
+    _title: 'Salesforce JWT Auth Configs'
+  requirements:
+    _permission: 'authorize salesforce'
+  options:
+    no_cache: TRUE
+
+entity.salesforce_jwt_auth_config.edit_form:
+  path: '/admin/config/salesforce/authorize/jwt/{salesforce_jwt_auth_config}'
+  defaults:
+    _entity_form: 'salesforce_jwt_auth_config.default'
+  requirements:
+    _entity_access: 'salesforce_jwt_auth_config.update'
+  options:
+    no_cache: TRUE
+
+entity.salesforce_jwt_auth_config.add_form:
+  path: '/admin/config/salesforce/authorize/jwt/add'
+  defaults:
+    _entity_form: 'salesforce_jwt_auth_config.default'
+  requirements:
+    _entity_create_access: 'salesforce_jwt_auth_config'
+  options:
+    no_cache: TRUE
+
+entity.salesforce_jwt_auth_config.revoke:
+  path: '/admin/config/salesforce/authorize/jwt/{salesforce_jwt_auth_config}/revoke'
+  defaults:
+    _entity_form: 'salesforce_jwt_auth_config.revoke'
+  requirements:
+    _permission: 'authorize salesforce'
+
+
+entity.salesforce_jwt_auth_config.delete_form:
+  path: '/admin/config/salesforce/authorize/jwt/{salesforce_jwt_auth_config}/delete'
+  defaults:
+    _entity_form: 'salesforce_jwt_auth_config.delete'
+  requirements:
+    _entity_access: 'salesforce_jwt_auth_config.update'
+  options:
+    no_cache: TRUE

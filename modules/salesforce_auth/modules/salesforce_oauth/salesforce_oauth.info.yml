@@ -1,0 +1,8 @@
+name: Salesforce OAuth auth provider
+type: module
+description: Provides OAuth authentication method.
+package: Salesforce
+core: 8.x
+dependencies:
+  - encrypt
+  - salesforce

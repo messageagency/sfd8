@@ -36,7 +36,7 @@ class RestClientTest extends UnitTestCase {
       'getConsumerSecret',
       'getRefreshToken',
       'getAccessToken',
-      'refreshToken',
+      'refresh_token',
       'getApiEndPoint',
       'httpRequest',
     ];

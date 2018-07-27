@@ -1,0 +1,14 @@
+salesforce_jwt_auth_config.add_action:
+  route_name: entity.salesforce_jwt_auth_config.add_form
+  title: 'Add JWT Auth Config'
+  appears_on:
+    - entity.salesforce_jwt_auth_config.collection
+    - entity.salesforce_jwt_auth_config.edit_form
+
+salesforce_mapping.list_action:
+  route_name: entity.salesforce_mapping.list
+  title: 'List Auth Configs'
+  appears_on:
+    - entity.salesforce_jwt_auth_config.add_form
+    - entity.salesforce_jwt_auth_config.edit_form
+    - entity.salesforce_jwt_auth_config.collection

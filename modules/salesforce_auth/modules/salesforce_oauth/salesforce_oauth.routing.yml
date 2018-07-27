@@ -1,0 +1,51 @@
+salesforce_oauth.oauth_callback:
+  path: '/salesforce/oauth_callback'
+  defaults:
+    _controller: '\Drupal\salesforce_oauth\Controller\SalesforceOAuthController::oauthCallback'
+  requirements:
+    _permission: 'authorize salesforce'
+
+entity.salesforce_oauth_config.collection:
+  path: '/admin/config/salesforce/authorize/oauth'
+  defaults:
+    _entity_list: 'salesforce_oauth_config'
+    _title: 'Salesforce OAuth Configs'
+  requirements:
+    _permission: 'authorize salesforce'
+  options:
+    no_cache: TRUE
+
+entity.salesforce_oauth_config.edit_form:
+  path: '/admin/config/salesforce/authorize/oauth/{salesforce_oauth_config}'
+  defaults:
+    _entity_form: 'salesforce_oauth_config.default'
+  requirements:
+    _permission: 'authorize salesforce'
+  options:
+    no_cache: TRUE
+
+entity.salesforce_oauth_config.add_form:
+  path: '/admin/config/salesforce/authorize/oauth/add'
+  defaults:
+    _entity_form: 'salesforce_oauth_config.default'
+  requirements:
+    _permission: 'authorize salesforce'
+  options:
+    no_cache: TRUE
+
+entity.salesforce_oauth_config.delete_form:
+  path: '/admin/config/salesforce/authorize/oauth/{salesforce_oauth_config}/delete'
+  defaults:
+    _entity_form: 'salesforce_oauth_config.delete'
+  requirements:
+    _permission: 'authorize salesforce'
+  options:
+    no_cache: TRUE
+
+entity.salesforce_oauth_config.revoke:
+  path: '/admin/config/salesforce/authorize/oauth/{salesforce_oauth_config}/revoke'
+  defaults:
+    _entity_form: 'salesforce_oauth_config.revoke'
+  requirements:
+    _permission: 'authorize salesforce'
+

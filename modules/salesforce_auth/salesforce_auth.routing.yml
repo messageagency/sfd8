@@ -1,0 +1,54 @@
+salesforce_auth.config:
+  path: '/admin/config/salesforce/authorize'
+  defaults:
+    _form: '\Drupal\salesforce_auth\Form\SalesforceAuthConfig'
+    _title: 'Salesforce Authorization Config'
+  requirements:
+    _permission: 'authorize salesforce'
+
+entity.salesforce_auth.collection:
+  path: '/admin/config/salesforce/authorize/list'
+  defaults:
+    _entity_list: 'salesforce_auth'
+    _title: 'Salesforce Authorization Config'
+  requirements:
+    _permission: 'authorize salesforce'
+  options:
+    no_cache: TRUE
+
+entity.salesforce_auth.edit_form:
+  path: '/admin/config/salesforce/authorize/edit/{salesforce_auth}'
+  defaults:
+    _entity_form: 'salesforce_auth.default'
+  requirements:
+    _entity_access: 'salesforce_auth.update'
+  options:
+    no_cache: TRUE
+
+entity.salesforce_auth.add_form:
+  path: '/admin/config/salesforce/authorize/add'
+  defaults:
+    _entity_form: 'salesforce_auth.default'
+  requirements:
+    _entity_create_access: 'salesforce_auth'
+  options:
+    no_cache: TRUE
+
+entity.salesforce_auth.revoke:
+  path: '/admin/config/salesforce/authorize/revoke/{salesforce_auth}'
+  defaults:
+    _entity_form: 'salesforce_auth.revoke'
+  requirements:
+    _permission: 'authorize salesforce'
+  options:
+    no_cache: TRUE
+
+
+entity.salesforce_auth.delete:
+  path: '/admin/config/salesforce/authorize/delete/{salesforce_auth}'
+  defaults:
+    _entity_form: 'salesforce_auth.delete'
+  requirements:
+    _permission: 'authorize salesforce'
+  options:
+    no_cache: TRUE

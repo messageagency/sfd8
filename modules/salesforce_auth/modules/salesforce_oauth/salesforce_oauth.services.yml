@@ -1,0 +1,6 @@
+services:
+  salesforce_oauth.auth_provider:
+    class: Drupal\salesforce_oauth\AuthProvider
+    arguments: ['@http_client', '@state', '@datetime.time', '@key.repository', '@event_dispatcher']
+    tags:
+      - { name: salesforce_auth_provider }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\salesforce\Unit;
+namespace Drupal\Tests\salesforce_oauth\Unit;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormState;

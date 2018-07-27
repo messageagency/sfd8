@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce\Form;
+namespace Drupal\salesforce_oauth\Form;
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -52,9 +52,8 @@ class AuthorizeForm extends ConfigFormBase {
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, RestClientInterface $salesforce_client, StateInterface $state, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(ConfigFactoryInterface $config_factory, StateInterface $state, EventDispatcherInterface $event_dispatcher) {
     parent::__construct($config_factory);
-    $this->sf_client = $salesforce_client;
     $this->state = $state;
     $this->eventDispatcher = $event_dispatcher;
   }
@@ -65,7 +64,6 @@ class AuthorizeForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('salesforce.client'),
       $container->get('state'),
       $container->get('event_dispatcher')
     );
@@ -93,7 +91,7 @@ class AuthorizeForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('salesforce.settings');
     $encrypted = is_subclass_of($this->sf_client, 'Drupal\salesforce_encrypt\Rest\EncryptedRestClientInterface');
-    $url = new Url('salesforce.oauth_callback', [], ['absolute' => TRUE]);
+    $url = new Url('salesforce_oauth.oauth_callback', [], ['absolute' => TRUE]);
     drupal_set_message($this->t('Callback URL: :url', [':url' => str_replace('http:', 'https:', $url->toString())]));
 
     $form['creds'] = [
@@ -124,34 +122,34 @@ class AuthorizeForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
-    // If fully configured, attempt to connect to Salesforce and return a list
-    // of resources.
-    if ($this->sf_client->isAuthorized()) {
-      $form['creds']['#open'] = FALSE;
-      $form['creds']['#description'] = $this->t('Your Salesforce salesforce instance is currently authorized. Enter credentials here only to change credentials.');
-      try {
-        $resources = $this->sf_client->listResources();
-        foreach ($resources->resources as $key => $path) {
-          $items[] = $key . ': ' . $path;
-        }
-        if (!empty($items)) {
-          $form['resources'] = [
-            '#title' => $this->t('Your Salesforce instance is authorized and has access to the following resources:'),
-            '#items' => $items,
-            '#theme' => 'item_list',
-          ];
-        }
-      }
-      catch (\Exception $e) {
-        // Do not allow any exceptions to interfere with displaying this page.
-        drupal_set_message($e->getMessage(), 'warning');
-        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-      }
-    }
-    elseif (!$form_state->getUserInput()) {
-      // Don't set this message if the form was submitted.
-      drupal_set_message(t('Salesforce needs to be authorized to connect to this website.'), 'error');
-    }
+//    // If fully configured, attempt to connect to Salesforce and return a list
+//    // of resources.
+//    if ($this->sf_client->isAuthorized()) {
+//      $form['creds']['#open'] = FALSE;
+//      $form['creds']['#description'] = $this->t('Your Salesforce salesforce instance is currently authorized. Enter credentials here only to change credentials.');
+//      try {
+//        $resources = $this->sf_client->listResources();
+//        foreach ($resources->resources as $key => $path) {
+//          $items[] = $key . ': ' . $path;
+//        }
+//        if (!empty($items)) {
+//          $form['resources'] = [
+//            '#title' => $this->t('Your Salesforce instance is authorized and has access to the following resources:'),
+//            '#items' => $items,
+//            '#theme' => 'item_list',
+//          ];
+//        }
+//      }
+//      catch (\Exception $e) {
+//        // Do not allow any exceptions to interfere with displaying this page.
+//        drupal_set_message($e->getMessage(), 'warning');
+//        $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
+//      }
+//    }
+//    elseif (!$form_state->getUserInput()) {
+//      // Don't set this message if the form was submitted.
+//      drupal_set_message(t('Salesforce needs to be authorized to connect to this website.'), 'error');
+//    }
     $form = parent::buildForm($form, $form_state);
     $form['creds']['actions'] = $form['actions'];
     unset($form['actions']);

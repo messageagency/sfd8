@@ -20,7 +20,7 @@ function salesforce_help($route_name, RouteMatchInterface $route_match) {
       }
       $client = \Drupal::service('salesforce.client');
       if (!$client->isAuthorized()) {
-        $output .= '<p>' . t('You must <a href=":authorize">authorize your account with Salesforce</a> in order to configure Salesforce Mappings.', [':authorize' => (new Url('salesforce.authorize'))->toString()]) . '</p>';
+        $output .= '<p>' . t('You must <a href=":authorize">authorize your account with Salesforce</a> in order to configure Salesforce Mappings.', [':authorize' => (new Url('salesforce.admin_config_salesforce'))->toString()]) . '</p>';
       }
       return $output;
 
@@ -45,7 +45,7 @@ function salesforce_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<ul>';
       $output .= '<li>' . t('In Salesforce go to Your Name > Setup > Create > Apps then create a new Connected App. (Depending on your Salesforce instance, you may need to go to Your Name > Setup > Develop > Remote Access.)') . '</li>';
       $output .= '<li>' . t('Set the callback URL to: :url (SSL is required)',
-      [':url' => str_replace('http:', 'https:', (new Url('salesforce.oauth_callback', [], ['absolute' => TRUE]))->toString())]) . '</li>';
+      [':url' => str_replace('http:', 'https:', (new Url('<front>', [], ['absolute' => TRUE]))->toString())] . '/salesforce/oauth_callback') . '</li>';
       $output .= '<li>' . t('Select at least "Perform requests on your behalf at any time" for OAuth Scope
   as well as the appropriate other scopes for your application. Note that "Full access" does not include the "Perform requests on your behalf at any time" scope! <a href=":url">Additional Information</a>.', [':url' => 'https://help.salesforce.com/help/doc/en/remoteaccess_about.htm']) . '</li>';
       $output .= '<li>' . t('For more help see <a href=":url">the salesforce.com documentation</a>.', [':url' => 'https://www.salesforce.com/us/developer/docs/api_rest/Content/quickstart_oauth.htm']) . '</li>';

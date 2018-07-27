@@ -7,7 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**
- * Salesforce Mapping Delete Form .
+ * Salesforce Mapping Delete Form.
  */
 class SalesforceMappingDeleteForm extends EntityConfirmFormBase {
 
