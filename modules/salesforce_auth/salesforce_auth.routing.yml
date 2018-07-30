@@ -1,7 +1,7 @@
 salesforce_auth.config:
   path: '/admin/config/salesforce/authorize'
   defaults:
-    _form: '\Drupal\salesforce_auth\Form\SalesforceAuthConfig'
+    _form: '\Drupal\salesforce_auth\Form\SalesforceAuthSettings'
     _title: 'Salesforce Authorization Config'
   requirements:
     _permission: 'authorize salesforce'
@@ -44,7 +44,7 @@ entity.salesforce_auth.revoke:
     no_cache: TRUE
 
 
-entity.salesforce_auth.delete:
+entity.salesforce_auth.delete_form:
   path: '/admin/config/salesforce/authorize/delete/{salesforce_auth}'
   defaults:
     _entity_form: 'salesforce_auth.delete'

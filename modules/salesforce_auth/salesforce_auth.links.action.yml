@@ -11,4 +11,3 @@ salesforce_auth.list_action:
   appears_on:
     - entity.salesforce_auth.add_form
     - entity.salesforce_auth.edit_form
-    - entity.salesforce_auth.collection

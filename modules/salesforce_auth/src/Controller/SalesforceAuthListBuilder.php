@@ -15,7 +15,6 @@ class SalesforceAuthListBuilder extends ConfigEntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     $row['label'] = $entity->label();
-    $row['user'] = $entity->getLoginUser();
     $row['url'] = $entity->getLoginUrl();
     return $row + parent::buildRow($entity);
   }
@@ -26,9 +25,6 @@ class SalesforceAuthListBuilder extends ConfigEntityListBuilder {
   public function buildHeader() {
     $header['label'] = [
       'data' => $this->t('Label'),
-    ];
-    $header['user'] = [
-      'data' => $this->t('Login User'),
     ];
     $header['url'] = [
       'data' => $this->t('Login URL'),

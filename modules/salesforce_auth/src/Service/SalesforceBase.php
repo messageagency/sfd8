@@ -2,10 +2,11 @@
 
 namespace Drupal\salesforce_auth\Service;
 
+use Drupal\salesforce_auth\AuthProviderInterface;
 use OAuth\OAuth2\Service\Salesforce;
 use OAuth\Common\Http\Uri\Uri;
 
-abstract class SalesforceBase extends Salesforce {
+abstract class SalesforceBase extends Salesforce implements AuthProviderInterface {
 
   /**
    * @var \Drupal\salesforce_auth\Consumer\SalesforceCredentials
@@ -33,17 +34,6 @@ abstract class SalesforceBase extends Salesforce {
    */
   public function getAccessTokenEndpoint() {
     return new Uri($this->credentials->getLoginUrl() . '/services/oauth2/token');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function service() {
-    // @todo get the service name from config
-    // get class name without backslashes
-    $classname = get_class($this);
-
-    return preg_replace('/^.*\\\\/', '', $classname);
   }
 
 }

@@ -10,7 +10,7 @@ use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce_auth\SalesforceAuth;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class SalesforceAuthConfig extends ConfigFormBase {
+class SalesforceAuthSettings extends ConfigFormBase {
 
   protected $salesforceAuth;
 
@@ -60,26 +60,19 @@ class SalesforceAuthConfig extends ConfigFormBase {
     $config = $this->config('salesforce_auth.settings');
     $form = parent::buildForm($form, $form_state);
     $options = [];
-    /** @var \Drupal\salesforce_auth\AuthProviderInterface $provider */
+    /** @var \Drupal\salesforce_auth\Entity\SalesforceAuth $provider **/
     foreach(\Drupal::service('salesforce_auth')->getProviders() as $provider) {
-      /** @var \Drupal\salesforce_auth\Entity\AuthConfigInterface $conf */
-      foreach ($provider->getConfigs() as $conf) {
-        $options[$provider->id() . '--' . $conf->id()] = $provider->label() . ': ' . $conf->label();
-        $form['#provider_configs'][$provider->id() . '--' . $conf->id()] = [
-          'provider' => $provider->id(),
-          'config' => $conf->id(),
-        ];
-      }
+      $options[$provider->id()] = $provider->label() . ' (' . $provider->getAuthProvider()->label() . ')';
     }
     if (empty($options)) {
-      return ['#markup'=> 'No auth configs found. Please add an auth config before continuing.'];
+      return ['#markup'=> 'No auth providers found. Please add an auth provider before continuing.'];
     }
-    $form['provider_config'] = [
+    $options = ['' => '- None -'] + $options;
+    $form['provider'] = [
       '#type' => 'radios',
-      '#title' => $this->t('Choose a default provider config'),
+      '#title' => $this->t('Choose a default auth provider'),
       '#options' => $options,
-      '#empty_option' => 'N/A',
-      '#default_value' => $config->get('provider') ? $config->get('provider') . '--' . $config->get('config') : NULL,
+      '#default_value' => $config->get('provider') ? $config->get('provider') : '',
     ];
     $form['#theme'] = 'system_config_form';
     return $form;
@@ -89,15 +82,12 @@ class SalesforceAuthConfig extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $kv = $form_state->getValue('provider_config');
-    $provider_config = $form['#provider_configs'][$kv];
     $this->config('salesforce_auth.settings')
-      ->set('provider', $provider_config['provider'])
-      ->set('config', $provider_config['config'])
+      ->set('provider', $form_state->getValue('provider') ? $form_state->getValue('provider') : NULL)
       ->save();
 
     $this->messenger()->addStatus($this->t('Authorization settings have been saved.'));
-    \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, "Authorization provider changed to %provider.", ['%provider' => $form_state->getValue('provider_config')]));
+    \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, "Authorization provider changed to %provider.", ['%provider' => $form_state->getValue('provider')]));
   }
 
 }

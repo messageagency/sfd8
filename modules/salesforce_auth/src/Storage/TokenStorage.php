@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_auth\Storage;
 
+use Drupal\Core\State\StateInterface;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
 use OAuth\Common\Storage\Exception\AuthorizationStateNotFoundException;
 use OAuth\Common\Storage\TokenStorageInterface;
@@ -14,8 +15,8 @@ class TokenStorage implements TokenStorageInterface {
 
   protected $state;
 
-  public function __construct() {
-    $this->state = \Drupal::state();
+  public function __construct(StateInterface $state) {
+    $this->state = $state;
   }
 
   protected static function getTokenStorageId($service) {

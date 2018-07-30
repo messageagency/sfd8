@@ -51,7 +51,16 @@ class SalesforceAuth extends ConfigEntityBase {
   /**
    * @var \Drupal\salesforce_auth\Plugin\SalesforceAuthProviderPluginInterface
    */
-  protected $plugin;
+  protected $provider;
+
+  protected $provider_settings = [];
+
+  /**
+   * Auth manager.
+   *
+   * @var \Drupal\salesforce_auth\SalesforceAuthProviderPluginManager
+   */
+  protected $manager;
 
   /**
    * Id getter.
@@ -70,18 +79,23 @@ class SalesforceAuth extends ConfigEntityBase {
   /**
    * Plugin getter.
    *
-   * @return \Drupal\salesforce_auth\Plugin\SalesforceAuthProviderPluginInterface
+   * @return \Drupal\salesforce_auth\SalesforceAuthProviderPluginInterface
    */
   public function getPlugin() {
-    return $this->plugin;
+    return $this->provider ? $this->authManager()->createInstance($this->provider, $this->provider_settings ?: []) : NULL;
   }
 
   public function getPluginId() {
-    return $this->plugin ? $this->plugin->id() : NULL;
+    return $this->provider ?: NULL;
   }
 
+  /**
+   * Auth service getter.
+   *
+   * @return \Drupal\salesforce_auth\AuthProviderInterface
+   */
   public function getAuthProvider() {
-
+    return $this->getPlugin()->service();
   }
 
   public function getAccessToken() {
@@ -92,8 +106,27 @@ class SalesforceAuth extends ConfigEntityBase {
 
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getLoginUrl() {
+    return $this->getPlugin() ? $this->getPlugin()->getLoginUrl() : '';
+  }
 
+  public function getLoginUser() {
+
+  }
+
+  /**
+   * Auth manager wrapper.
+   *
+   * @return \Drupal\salesforce_auth\SalesforceAuthProviderPluginManager|mixed
+   */
+  public function authManager() {
+    if (!$this->manager) {
+      $this->manager = \Drupal::service("plugin.manager.salesforce_auth.providers");
+    }
+    return $this->manager;
   }
 
   /**
@@ -106,10 +139,8 @@ class SalesforceAuth extends ConfigEntityBase {
    *   The list of plugins, indexed by ID.
    */
   public function getPluginsAsOptions() {
-    $manager = \Drupal::service("plugin.manager.salesforce_auth.providers");
-
-    $options = [];
-    foreach ($manager->getDefinitions() as $id => $definition) {
+    $options = ['' => t('- Select -')];
+    foreach ($this->authManager()->getDefinitions() as $id => $definition) {
       $options[$id] = ($definition['label']);
     }
 

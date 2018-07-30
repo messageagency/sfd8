@@ -1,8 +1,14 @@
 <?php
 
-namespace Drupal\salesforce_auth\Plugin;
+namespace Drupal\salesforce_auth\Plugin\SalesforceAuthProvider;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\salesforce_auth\Consumer\OAuthCredentials;
+use Drupal\salesforce_auth\SalesforceAuthProviderBase;
+use Drupal\salesforce_auth\SalesforceAuthProviderPluginInterface;
+use Drupal\salesforce_auth\Service\SalesforceOAuth as SalesforceOAuthService;
+use Drupal\salesforce_auth\Storage\TokenStorage;
+use OAuth\Common\Http\Client\CurlClient;
 
 /**
  * @SalesforceAuthProvider(
@@ -10,7 +16,28 @@ use Drupal\Core\Form\FormStateInterface;
  *   label = @Translation("Salesforce OAuth User-Agent")
  * )
  */
-class SalesforceOAuth extends SalesforceBase implements SalesforceAuthProviderPluginInterface {
+class SalesforceOAuth extends SalesforceAuthProviderBase implements SalesforceAuthProviderPluginInterface {
+
+  /**
+   * The auth provider service.
+   * @var \Drupal\salesforce_auth\Service\SalesforceOAuthService
+   */
+  protected $service;
+
+
+  /**
+   * Service wrapper.
+   *
+   * @return \Drupal\salesforce_auth\Service\SalesforceOAuthService
+   *   The auth service.
+   */
+  public function service() {
+    if (!$this->service) {
+      $cred = new OAuthCredentials($this->configuration['consumer_key'], $this->configuration['login_url'], $this->configuration['consumer_secret']);
+      $this->service = new SalesforceOAuthService($cred, new CurlClient(), new TokenStorage());
+    }
+    return $this->service;
+  }
 
   /**
    * {@inheritdoc}
@@ -21,7 +48,7 @@ class SalesforceOAuth extends SalesforceBase implements SalesforceAuthProviderPl
       '#type' => 'textfield',
       '#description' => t('Consumer key of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
-      '#default_value' => $this->getConfiguration()['consumer_key'],
+      '#default_value' => $this->getConfiguration('consumer_key'),
     ];
 
     $form['consumer_secret'] = [
@@ -29,17 +56,16 @@ class SalesforceOAuth extends SalesforceBase implements SalesforceAuthProviderPl
       '#type' => 'textfield',
       '#description' => $this->t('Consumer secret of the Salesforce remote application.'),
       '#required' => TRUE,
-      '#default_value' => $this->getConfiguration()['consumer_secret'],
+      '#default_value' => $this->getConfiguration('consumer_secret'),
     ];
 
     $form['login_url'] = [
       '#title' => t('Login URL'),
       '#type' => 'textfield',
-      '#default_value' => $this->getConfiguration()['login_url'] ?: 'https://test.salesforce.com',
+      '#default_value' => $this->getConfiguration('login_url') ?: 'https://test.salesforce.com',
       '#description' => t('Enter a login URL, either https://login.salesforce.com or https://test.salesforce.com.'),
       '#required' => TRUE,
     ];
-
     return $form;
   }
 

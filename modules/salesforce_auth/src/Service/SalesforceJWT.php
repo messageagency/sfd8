@@ -40,6 +40,14 @@ class SalesforceJWT extends SalesforceBase {
     parent::__construct($credentials, $httpClient, $storage, [], new Uri($credentials->getLoginUrl()));
   }
 
+  public function id() {
+    return 'jwt';
+  }
+
+  public function label() {
+    return 'JWT';
+  }
+
   /**
    * {@inheritdoc}
    */

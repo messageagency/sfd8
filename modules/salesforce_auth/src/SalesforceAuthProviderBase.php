@@ -1,16 +1,26 @@
 <?php
 
-namespace Drupal\salesforce_auth\Plugin;
+namespace Drupal\salesforce_auth;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginBase;
 
-abstract class SalesforceBase extends PluginBase implements SalesforceAuthProviderPluginInterface {
+abstract class SalesforceAuthProviderBase extends PluginBase implements SalesforceAuthProviderPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public function getConfiguration() {
+  public function getConfiguration($key = NULL) {
+    if ($key !== NULL) {
+      return !empty($this->configuration[$key]) ? $this->configuration[$key] : NULL;
+    }
     return $this->configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLoginUrl() {
+    return $this->configuration['login_url'];
   }
 
   /**

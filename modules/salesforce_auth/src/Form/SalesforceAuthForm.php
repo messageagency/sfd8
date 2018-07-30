@@ -24,7 +24,6 @@ class SalesforceAuthForm extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $auth = $this->entity;
-
     $form['label'] = [
       '#title' => $this->t('Label'),
       '#type' => 'textfield',
@@ -44,18 +43,12 @@ class SalesforceAuthForm extends EntityForm {
 
     // This is the element that contains all of the dynamic parts of the form.
     $form['settings'] = [
-      '#type' => 'container',
-      '#prefix' => '<div id="auth-settings">',
-      '#suffix' => '</div>',
-    ];
-
-    // Key type section.
-    $form['settings']['provider_section'] = [
       '#type' => 'details',
       '#title' => $this->t('Settings'),
       '#open' => TRUE,
     ];
-    $form['settings']['provider_section']['auth_provider'] = [
+
+    $form['settings']['provider'] = [
       '#type' => 'select',
       '#title' => $this->t('Auth provider'),
       '#options' => $auth->getPluginsAsOptions(),
@@ -67,18 +60,26 @@ class SalesforceAuthForm extends EntityForm {
         'wrapper' => 'auth-settings',
       ],
     ];
-    $form['settings']['provider_section']['key_provider_settings'] = [
+    $default = [
       '#type' => 'container',
       '#title' => $this->t('Auth provider settings'),
       '#title_display' => FALSE,
       '#tree' => TRUE,
+      '#prefix' => '<div id="auth-settings">',
+      '#suffix' => '</div>',
     ];
-
+    $form['settings']['provider_settings'] = $default;
     if ($auth->getPlugin()) {
-      $form['settings']['provider_section']['key_provider_settings'] += $auth->getPlugin()
+      $form['settings']['provider_settings'] += $auth->getPlugin()
         ->buildConfigurationForm([], $form_state);
     }
-
+    elseif ($form_state->getValue('provider')) {
+      $plugin = $this->entity->authManager()->createInstance($form_state->getValue('provider'));
+      $form['settings']['provider_settings'] += $plugin->buildConfigurationForm([], $form_state);
+    }
+    else {
+      $form['settings']['provider_settings'] = $default;
+    }
     return parent::form($form, $form_state);
   }
 
@@ -94,7 +95,7 @@ class SalesforceAuthForm extends EntityForm {
    *   The element to update in the form.
    */
   public function ajaxUpdateSettings(array &$form, FormStateInterface $form_state) {
-    return $form['settings'];
+    return $form['settings']['provider_settings'];
   }
 
   /**

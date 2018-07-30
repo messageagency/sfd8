@@ -6,7 +6,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
-class SalesforceAuthManager extends DefaultPluginManager {
+class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
 
   /**
    * Constructs a KeyPluginManager.
@@ -22,9 +22,9 @@ class SalesforceAuthManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/SalesforceAuthProvider', $namespaces, $module_handler, 'Drupal\salesforce_auth\SalesforceAuthProviderInterface', 'Drupal\salesforce_auth\Annotation\SalesforceAuthProvider');
+    parent::__construct('Plugin/SalesforceAuthProvider', $namespaces, $module_handler, 'Drupal\salesforce_auth\SalesforceAuthProviderPluginInterface', 'Drupal\salesforce_auth\Annotation\SalesforceAuthProvider');
     $this->alterInfo('salesforce_auth_provider_info');
-    $this->setCacheBackend($cache_backend, $type);
+    $this->setCacheBackend($cache_backend, 'salesforce_auth_provider');
   }
 
 }

@@ -2,6 +2,8 @@
 
 namespace Drupal\salesforce_auth;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+
 /**
  * Class SalesforceAuth for salesforce_auth service.
  *
@@ -11,17 +13,37 @@ class SalesforceAuth {
 
   protected $providers;
   protected $config;
+  protected $storage;
+
+  /**
+   * Entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $etm;
+
+  /**
+   * Salesforce Auth storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected $authStorage;
+
+  public function __construct(EntityTypeManagerInterface $etm) {
+    $this->etm = $etm;
+    $this->authStorage = $etm->getStorage('salesforce_auth');
+  }
 
   public function addHandler(AuthProviderInterface $provider) {
     $this->providers[$provider->id()] = $provider;
   }
 
   public function getProviders() {
-    return $this->providers;
+    return $this->authStorage->loadMultiple();
   }
 
   public function hasProviders() {
-    return !empty($this->providers);
+    return $this->authStorage->hasData();
   }
 
   /**
@@ -34,7 +56,7 @@ class SalesforceAuth {
     if (empty($provider_id)) {
       return NULL;
     }
-    return !empty($this->providers[$provider_id]) ? $this->providers[$provider_id] : NULL;
+    return $this->authStorage->load($provider_id);
   }
 
   /**
