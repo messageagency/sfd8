@@ -2,16 +2,15 @@
 
 namespace Drupal\salesforce_auth;
 
-use Drupal\salesforce_jwt\Entity\JWTAuthConfig;
 use OAuth\Common\Token\TokenInterface;
 use OAuth\OAuth2\Service\ServiceInterface;
 
 /**
- * Class AuthProvider.
+ * Class SalesforceAuthProvider.
  *
  * @package salesforce_jwt
  */
-interface AuthProviderInterface extends ServiceInterface {
+interface SalesforceAuthProviderInterface extends ServiceInterface {
 
   const AUTH_TOKEN_PATH = '/services/oauth2/token';
   const AUTH_ENDPOINT_PATH = '/services/oauth2/authorize';
@@ -34,5 +33,15 @@ interface AuthProviderInterface extends ServiceInterface {
   public function label();
 
   public function refreshAccessToken(TokenInterface $token);
+
+  /**
+   * @return \OAuth\OAuth2\Token\TokenInterface
+   * @throws \OAuth\Common\Storage\Exception\TokenNotFoundException
+   */
+  public function getAccessToken();
+
+  public function getIdentity();
+
+  public function hasAccessToken();
 
 }

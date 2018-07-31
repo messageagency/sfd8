@@ -8,7 +8,7 @@ use Drupal\Core\Plugin\PluginFormInterface;
 interface SalesforceAuthProviderPluginInterface extends PluginFormInterface, PluginInspectionInterface {
 
   /**
-   * @return \Drupal\salesforce_auth\AuthProviderInterface
+   * @return \Drupal\salesforce_auth\SalesforceAuthProviderInterface
    */
   public function service();
 

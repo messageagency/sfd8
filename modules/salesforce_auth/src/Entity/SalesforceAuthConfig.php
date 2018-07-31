@@ -3,13 +3,15 @@
 namespace Drupal\salesforce_auth\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 
 /**
  * Defines a Salesforce Auth entity.
  *
  * @ConfigEntityType(
  *   id = "salesforce_auth",
- *   label = @Translation("Salesforce Auth"),
+ *   label = @Translation("Salesforce Auth Config"),
  *   module = "salesforce_auth",
  *   entity_keys = {
  *     "id" = "id",
@@ -32,7 +34,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   admin_permission = "authorize salesforce",
  * )
  */
-class SalesforceAuth extends ConfigEntityBase {
+class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
 
   /**
    * Auth id. e.g. "full_sandbox".
@@ -49,7 +51,7 @@ class SalesforceAuth extends ConfigEntityBase {
   protected $label;
 
   /**
-   * @var \Drupal\salesforce_auth\Plugin\SalesforceAuthProviderPluginInterface
+   * @var \Drupal\salesforce_auth\SalesforceAuthProviderPluginInterface
    */
   protected $provider;
 
@@ -82,7 +84,9 @@ class SalesforceAuth extends ConfigEntityBase {
    * @return \Drupal\salesforce_auth\SalesforceAuthProviderPluginInterface
    */
   public function getPlugin() {
-    return $this->provider ? $this->authManager()->createInstance($this->provider, $this->provider_settings ?: []) : NULL;
+    $settings = $this->provider_settings ?: [];
+    $settings += ['id' => $this->id()];
+    return $this->provider ? $this->authManager()->createInstance($this->provider, $settings) : NULL;
   }
 
   public function getPluginId() {
@@ -92,18 +96,10 @@ class SalesforceAuth extends ConfigEntityBase {
   /**
    * Auth service getter.
    *
-   * @return \Drupal\salesforce_auth\AuthProviderInterface
+   * @return \Drupal\salesforce_auth\SalesforceAuthProviderInterface
    */
   public function getAuthProvider() {
     return $this->getPlugin()->service();
-  }
-
-  public function getAccessToken() {
-
-  }
-
-  public function refreshToken() {
-
   }
 
   /**
@@ -111,10 +107,6 @@ class SalesforceAuth extends ConfigEntityBase {
    */
   public function getLoginUrl() {
     return $this->getPlugin() ? $this->getPlugin()->getLoginUrl() : '';
-  }
-
-  public function getLoginUser() {
-
   }
 
   /**

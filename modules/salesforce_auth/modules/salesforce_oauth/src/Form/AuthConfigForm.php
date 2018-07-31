@@ -5,7 +5,7 @@ namespace Drupal\salesforce_oauth\Form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
-use Drupal\salesforce_auth\AuthProviderInterface;
+use Drupal\salesforce_auth\SalesforceAuthProviderInterface;
 use Drupal\salesforce_auth\Form\AuthConfigFormBase;
 use Drupal\salesforce_oauth\Entity\OAuthConfig;
 
@@ -51,7 +51,7 @@ class AuthConfigForm extends AuthConfigFormBase {
 //    $this->sf_client->setLoginUrl($values['login_url']);
 
     try {
-      $path = $form_state->getValue('login_url') . AuthProviderInterface::AUTH_ENDPOINT_PATH;
+      $path = $form_state->getValue('login_url') . SalesforceAuthProviderInterface::AUTH_ENDPOINT_PATH;
       $query = [
         'redirect_uri' => Url::fromRoute('salesforce_oauth.oauth_callback', [], [
           'absolute' => TRUE,

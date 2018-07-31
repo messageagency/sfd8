@@ -2,17 +2,17 @@
 
 namespace Drupal\salesforce_auth;
 
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Plugin\DefaultPluginManager;
-
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use \Drupal\salesforce_auth\Entity\SalesforceAuthConfig as SalesforceAuthEntity;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
 use OAuth\OAuth2\Token\StdOAuth2Token;
 
-
-class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
+/**
+ * Class SalesforceAuthManager for salesforce_auth service.
+ *
+ * @package Drupal\salesforce_auth
+ */
+class SalesforceAuthManager {
 
   protected $providers;
   protected $config;
@@ -32,41 +32,9 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
    */
   protected $authStorage;
 
-
-  /**
-   * Constructs a KeyPluginManager.
-   *
-   * @param string $type
-   *   The plugin type.
-   * @param \Traversable $namespaces
-   *   An object that implements \Traversable which contains the root paths
-   *   keyed by the corresponding namespace to look for plugin implementations.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
-   *   Cache backend instance to use.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $etm) {
-    parent::__construct('Plugin/SalesforceAuthProvider', $namespaces, $module_handler, 'Drupal\salesforce_auth\SalesforceAuthProviderInterface', 'Drupal\salesforce_auth\Annotation\SalesforceAuthProvider');
-    $this->alterInfo('salesforce_auth_provider_info');
-    $this->setCacheBackend($cache_backend, 'salesforce_auth_provider');
+  public function __construct(EntityTypeManagerInterface $etm) {
     $this->etm = $etm;
     $this->authStorage = $etm->getStorage('salesforce_auth');
-
-  }
-
-  public function createInstance($plugin_id, array $configuration = []) {
-    //    if (!$this->service) {
-    //      $cred = new JWTCredentials($this->configuration['consumer_key'], $this->configuration['login_url'], $this->configuration['login_user'], $this->configuration['encrypt_key']);
-    //      $this->service = new SalesforceJWTService($this->configuration['id'], $cred, \Drupal::service('salesforce_auth.http_client_wrapper'), \Drupal::service('salesforce_auth.token_storage'));
-    //      // If we haven't requested an access token yet, do it now.
-    //      if (!$this->service->hasAccessToken()) {
-    //        $this->service->refreshAccessToken(new StdOAuth2Token());
-    //      }
-    //    }
-    //    return $this->service;
-
-    return parent::createInstance($plugin_id, $configuration);
   }
 
   public function getProviders() {

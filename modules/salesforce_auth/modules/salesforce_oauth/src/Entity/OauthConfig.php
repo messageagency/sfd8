@@ -2,7 +2,7 @@
 
 namespace Drupal\salesforce_oauth\Entity;
 
-use Drupal\salesforce_auth\AuthProviderInterface;
+use Drupal\salesforce_auth\SalesforceAuthProviderInterface;
 use Drupal\salesforce_auth\Entity\AuthConfigBase;
 
 /**

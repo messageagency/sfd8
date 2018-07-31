@@ -7,7 +7,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
-use Drupal\salesforce_auth\SalesforceAuth;
+use Drupal\salesforce_auth\SalesforceAuthManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SalesforceAuthSettings extends ConfigFormBase {
@@ -20,7 +20,7 @@ class SalesforceAuthSettings extends ConfigFormBase {
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, SalesforceAuth $salesforceAuth) {
+  public function __construct(ConfigFactoryInterface $config_factory, SalesforceAuthProviderPluginManager $salesforceAuth) {
     parent::__construct($config_factory);
     $this->salesforceAuth = $salesforceAuth;
   }
@@ -31,7 +31,7 @@ class SalesforceAuthSettings extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('salesforce_auth')
+      $container->get('plugin.manager.salesforce_auth.providers')
     );
   }
 
@@ -60,8 +60,8 @@ class SalesforceAuthSettings extends ConfigFormBase {
     $config = $this->config('salesforce_auth.settings');
     $form = parent::buildForm($form, $form_state);
     $options = [];
-    /** @var \Drupal\salesforce_auth\Entity\SalesforceAuth $provider **/
-    foreach(\Drupal::service('salesforce_auth')->getProviders() as $provider) {
+    /** @var \Drupal\salesforce_auth\Entity\SalesforceAuthConfig $provider **/
+    foreach(\Drupal::service('plugin.manager.salesforce_auth.providers')->getProviders() as $provider) {
       $options[$provider->id()] = $provider->label() . ' (' . $provider->getAuthProvider()->label() . ')';
     }
     if (empty($options)) {

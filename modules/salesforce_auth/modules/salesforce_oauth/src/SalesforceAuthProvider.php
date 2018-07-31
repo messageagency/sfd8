@@ -5,7 +5,7 @@ namespace Drupal\salesforce_oauth;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\salesforce\Rest\RestResponse;
-use Drupal\salesforce_auth\AuthProviderInterface;
+use Drupal\salesforce_auth\SalesforceAuthProviderInterface;
 use Drupal\salesforce_auth\AuthTokenInterface;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\State\StateInterface;
@@ -20,11 +20,11 @@ use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
   /**
-   * Class AuthProvider.
+   * Class SalesforceAuthProvider.
    *
    * @package salesforce_oauth
    */
-class AuthProvider implements AuthProviderInterface {
+class SalesforceAuthProvider implements SalesforceAuthProviderInterface {
 
   /**
    * The HTTP cclient.
@@ -62,7 +62,7 @@ class AuthProvider implements AuthProviderInterface {
   protected $eventDispatcher;
 
   /**
-   * AuthProvider constructor.
+   * SalesforceAuthProvider constructor.
    *
    * @param \GuzzleHttp\ClientInterface $http_client
    *   The Guzzle http client.

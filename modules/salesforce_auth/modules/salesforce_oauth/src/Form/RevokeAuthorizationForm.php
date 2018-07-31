@@ -12,7 +12,7 @@ use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
 
-use Drupal\salesforce_oauth\AuthProvider;
+use Drupal\salesforce_oauth\SalesforceAuthProvider;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -56,7 +56,7 @@ class RevokeAuthorizationForm extends EntityForm {
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
    */
-  public function __construct(EventDispatcherInterface $event_dispatcher, AuthProvider $oauth, MessengerInterface $messenger) {
+  public function __construct(EventDispatcherInterface $event_dispatcher, SalesforceAuthProvider $oauth, MessengerInterface $messenger) {
     $this->eventDispatcher = $event_dispatcher;
     $this->oauth = $oauth;
     $this->messenger = $messenger;

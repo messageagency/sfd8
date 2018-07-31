@@ -1,16 +1,16 @@
 services:
   plugin.manager.salesforce_auth.providers:
     class: Drupal\salesforce_auth\SalesforceAuthProviderPluginManager
-    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler']
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@entity_type.manager']
 
   salesforce_auth.http_client_wrapper:
     class: Drupal\salesforce_auth\Client\HttpClientWrapper
     arguments: ['@http_client']
 
   salesforce_auth.token_storage:
-    class: Drupal\salesforce_auth\Storage\TokenStorage
+    class: Drupal\salesforce_auth\Storage\SalesforceAuthTokenStorage
     arguments: ['@state']
 
   salesforce_auth:
-    class: Drupal\salesforce_auth\SalesforceAuth
+    class: Drupal\salesforce_auth\SalesforceAuthManager
     arguments: ['@entity_type.manager']

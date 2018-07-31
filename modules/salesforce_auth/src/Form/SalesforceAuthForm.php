@@ -15,7 +15,7 @@ class SalesforceAuthForm extends EntityForm {
   /**
    * The config entity.
    *
-   * @var \Drupal\salesforce_auth\Entity\SalesforceAuth
+   * @var \Drupal\salesforce_auth\Entity\SalesforceAuthConfig
    */
   protected $entity;
 

@@ -4,14 +4,13 @@ namespace Drupal\salesforce_auth\Storage;
 
 use Drupal\Core\State\StateInterface;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
-use OAuth\Common\Storage\Exception\AuthorizationStateNotFoundException;
-use OAuth\Common\Storage\TokenStorageInterface;
 use OAuth\Common\Token\TokenInterface;
 
-class TokenStorage implements TokenStorageInterface {
+class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface {
 
   const TOKEN_STORAGE_PREFIX = "salesforce_auth.tokens";
   const AUTH_STATE_STORAGE_PREFIX = "salesforce_auth.auth_state";
+  const IDENTITY_STORAGE_PREFIX = "salesforce_auth.identity";
 
   protected $state;
 
@@ -25,6 +24,10 @@ class TokenStorage implements TokenStorageInterface {
 
   protected static function getAuthStateStorageId($service) {
     return self::AUTH_STATE_STORAGE_PREFIX . '.' . $service;
+  }
+
+  protected static function getIdentityStorageId($service) {
+    return self::IDENTITY_STORAGE_PREFIX . '.' . $service;
   }
 
   /**
@@ -108,6 +111,36 @@ class TokenStorage implements TokenStorageInterface {
    */
   public function clearAllAuthorizationStates() {
     // noop. only here to satisfy interface. Use clearAuthorizationState().
+  }
+
+  /**
+   *{@inheritdoc}
+   */
+  public function storeIdentity($service, $identity) {
+    $this->state->set(self::getIdentityStorageId($service), $identity);
+    return $this;
+  }
+
+  /**
+   *{@inheritdoc}
+   */
+  public function hasIdentity($service) {
+    return !empty($this->retrieveIdentity($service));
+  }
+
+  /**
+   *{@inheritdoc}
+   */
+  public function retrieveIdentity($service) {
+    return $this->state->get(self::getIdentityStorageId($service));
+  }
+
+  /**
+   *{@inheritdoc}
+   */
+  public function clearIdentity($service) {
+    $this->state->delete(self::getIdentityStorageId($service));
+    return $this;
   }
 
 }

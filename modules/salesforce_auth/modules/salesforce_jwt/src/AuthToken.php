@@ -2,7 +2,7 @@
 
 namespace Drupal\salesforce_jwt;
 
-use Drupal\salesforce_auth\AuthProviderInterface;
+use Drupal\salesforce_auth\SalesforceAuthProviderInterface;
 use Drupal\salesforce_auth\AuthTokenInterface;
 use Drupal\salesforce_jwt\Entity\JWTAuthConfig;
 
@@ -108,7 +108,7 @@ class AuthToken implements AuthTokenInterface {
    * Endpoint getter.
    */
   public function getEndpoint($class_name) {
-    return $this->getInstanceUrl() . AuthProviderInterface::SOAP_CLASS_PATH . $class_name;
+    return $this->getInstanceUrl() . SalesforceAuthProviderInterface::SOAP_CLASS_PATH . $class_name;
   }
 
 }

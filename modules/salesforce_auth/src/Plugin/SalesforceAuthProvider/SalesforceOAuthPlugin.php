@@ -4,10 +4,11 @@ namespace Drupal\salesforce_auth\Plugin\SalesforceAuthProvider;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_auth\Consumer\OAuthCredentials;
-use Drupal\salesforce_auth\SalesforceAuthProviderBase;
+use Drupal\salesforce_auth\SalesforceAuthProviderPluginBase;
 use Drupal\salesforce_auth\SalesforceAuthProviderPluginInterface;
-use Drupal\salesforce_auth\Service\SalesforceOAuth as SalesforceOAuthService;
-use Drupal\salesforce_auth\Storage\TokenStorage;
+use Drupal\salesforce_auth\Service\SalesforceAuthServiceBase;
+use Drupal\salesforce_auth\Service\SalesforceAuthServiceOAuth as SalesforceOAuthService;
+use Drupal\salesforce_auth\Storage\SalesforceAuthTokenStorage;
 use OAuth\Common\Http\Client\CurlClient;
 
 /**
@@ -16,7 +17,7 @@ use OAuth\Common\Http\Client\CurlClient;
  *   label = @Translation("Salesforce OAuth User-Agent")
  * )
  */
-class SalesforceOAuth extends SalesforceAuthProviderBase implements SalesforceAuthProviderPluginInterface {
+class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase {
 
   /**
    * The auth provider service.
@@ -34,7 +35,7 @@ class SalesforceOAuth extends SalesforceAuthProviderBase implements SalesforceAu
   public function service() {
     if (!$this->service) {
       $cred = new OAuthCredentials($this->configuration['consumer_key'], $this->configuration['login_url'], $this->configuration['consumer_secret']);
-      $this->service = new SalesforceOAuthService($cred, new CurlClient(), new TokenStorage());
+      $this->service = new SalesforceOAuthService($cred, new CurlClient(), new SalesforceAuthTokenStorage());
     }
     return $this->service;
   }

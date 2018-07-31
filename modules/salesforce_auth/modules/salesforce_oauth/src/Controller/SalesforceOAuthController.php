@@ -9,7 +9,7 @@ use Drupal\Core\Render\MetadataBubblingUrlGenerator;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\salesforce\Rest\RestResponse;
-use Drupal\salesforce_oauth\AuthProvider;
+use Drupal\salesforce_oauth\SalesforceAuthProvider;
 use Drupal\salesforce_oauth\Entity\OAuthConfig;
 use GuzzleHttp\Client;
 use Psr\Http\Message\ResponseInterface;
@@ -32,7 +32,7 @@ class SalesforceOAuthController extends ControllerBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(Client $http_client, StateInterface $state, ConfigFactoryInterface $configFactory, AuthProvider $oauth) {
+  public function __construct(Client $http_client, StateInterface $state, ConfigFactoryInterface $configFactory, SalesforceAuthProvider $oauth) {
     $this->http_client = $http_client;
     $this->state = $state;
     $this->configFactory = $configFactory;

@@ -9,7 +9,7 @@ use Drupal\key\KeyRepositoryInterface;
 use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Rest\RestResponse;
-use Drupal\salesforce_auth\AuthProviderInterface;
+use Drupal\salesforce_auth\SalesforceAuthProviderInterface;
 use Drupal\salesforce_auth\AuthTokenInterface;
 use Drupal\salesforce_jwt\Entity\JWTAuthConfig;
 use GuzzleHttp\ClientInterface;
@@ -17,11 +17,11 @@ use GUzzleHttp\Exception\GuzzleException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
- * Class AuthProvider.
+ * Class SalesforceAuthProvider.
  *
  * @package salesforce_jwt
  */
-class AuthProvider implements AuthProviderInterface {
+class SalesforceAuthProvider implements SalesforceAuthProviderInterface {
 
   /**
    * The HTTP cclient.
@@ -59,7 +59,7 @@ class AuthProvider implements AuthProviderInterface {
   protected $eventDispatcher;
 
   /**
-   * AuthProvider constructor.
+   * SalesforceAuthProvider constructor.
    *
    * @param \GuzzleHttp\ClientInterface $http_client
    *   The Guzzle http client.
