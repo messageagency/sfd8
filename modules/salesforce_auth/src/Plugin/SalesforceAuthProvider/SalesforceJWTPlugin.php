@@ -3,40 +3,23 @@
 namespace Drupal\salesforce_auth\Plugin\SalesforceAuthProvider;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\salesforce_auth\Consumer\JWTCredentials;
-use Drupal\salesforce_auth\SalesforceAuthProviderInterface;
 use Drupal\salesforce_auth\SalesforceAuthProviderPluginBase;
-use Drupal\salesforce_auth\SalesforceAuthProviderPluginInterface;
-use Drupal\salesforce_auth\Service\SalesforceAuthServiceJWT as SalesforceJWTService;
-use Drupal\salesforce_auth\Storage\SalesforceAuthTokenStorage;
-use OAuth\Common\Http\Client\CurlClient;
 use OAuth\OAuth2\Token\StdOAuth2Token;
-use Drupal\Component\Utility\UrlHelper;
-use OAuth\Common\Consumer\CredentialsInterface;
 use OAuth\Common\Http\Exception\TokenResponseException;
 use OAuth\Common\Http\Uri\Uri;
 use Drupal\salesforce_auth\Storage\SalesforceAuthTokenStorageInterface;
 use OAuth\Common\Http\Client\ClientInterface;
-use OAuth\Common\Http\Uri\UriInterface;
-use OAuth\OAuth2\Service\Exception\InvalidScopeException;
 use OAuth\Common\Token\TokenInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * @SalesforceAuthProvider(
+ * @Plugin(
  *   id = "jwt",
  *   label = @Translation("Salesforce JWT OAuth")
  * )
  */
 class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
-
-  /**
-   * The auth provider service.
-   *
-   * @var \Drupal\salesforce_auth\Service\SalesforceAuthServiceJWT
-   */
-  protected $service;
 
   /** @var \Drupal\salesforce_auth\Consumer\JWTCredentials */
   protected $credentials;
@@ -60,35 +43,21 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
   }
 
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $configuration = array_merge(self::defaultConfiguration(), $configuration);
     $cred = new JWTCredentials($configuration['consumer_key'], $configuration['login_url'], $configuration['login_user'], $configuration['encrypt_key']);
     return new static($configuration['id'], $cred, $container->get('salesforce_auth.http_client_wrapper'), $container->get('salesforce_auth.token_storage'));
   }
 
-  /**
-   * Service wrapper.
-   *
-   * @return \Drupal\salesforce_auth\Service\SalesforceAuthServiceJWT
-   *   The auth service.
-   */
-  public function service() {
-    if (!$this->hasAccessToken()) {
-      $this->refreshAccessToken(new StdOAuth2Token());
-    }
-    return $this;
-
-//    if (!$this->service) {
-//      $cred = new JWTCredentials($this->configuration['consumer_key'], $this->configuration['login_url'], $this->configuration['login_user'], $this->configuration['encrypt_key']);
-//      $this->service = new SalesforceJWTService($this->configuration['id'], $cred, \Drupal::service('salesforce_auth.http_client_wrapper'), \Drupal::service('salesforce_auth.token_storage'));
-//      // If we haven't requested an access token yet, do it now.
-//      if (!$this->service->hasAccessToken()) {
-//        $this->service->refreshAccessToken(new StdOAuth2Token());
-//      }
-//    }
-//    return $this->service;
+  public static function defaultConfiguration() {
+    $defaults = parent::defaultConfiguration();
+    return array_merge($defaults, [
+      'login_user' => '',
+      'encrypt_key' => '',
+    ]);
   }
 
   public function getLoginUrl() {
-    return $this->getConfiguration('login_url');
+    return $this->credentials->getLoginUrl();
   }
 
   /**
@@ -100,7 +69,7 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
       '#type' => 'textfield',
       '#description' => t('Consumer key of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
-      '#default_value' => $this->getConfiguration('consumer_key'),
+      '#default_value' => $this->credentials->getConsumerKey(),
     ];
 
     $form['login_user'] = [
@@ -108,13 +77,13 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
       '#type' => 'textfield',
       '#description' => $this->t('User account to issue token to'),
       '#required' => TRUE,
-      '#default_value' => $this->getConfiguration('login_user'),
+      '#default_value' => $this->credentials->getLoginUser(),
     ];
 
     $form['login_url'] = [
       '#title' => t('Login URL'),
       '#type' => 'textfield',
-      '#default_value' => $this->getConfiguration('login_url') ?: 'https://test.salesforce.com',
+      '#default_value' => $this->credentials->getLoginUrl(),
       '#description' => t('Enter a login URL, either https://login.salesforce.com or https://test.salesforce.com.'),
       '#required' => TRUE,
     ];
@@ -125,7 +94,7 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
       '#type' => 'select',
       '#options' => \Drupal::service('key.repository')->getKeyNamesAsOptions(['type' => 'authentication']),
       '#required' => TRUE,
-      '#default_value' => $this->getConfiguration('encrypt_key'),
+      '#default_value' => $this->credentials->getEncryptKeyId(),
     ];
 
     return $form;
@@ -135,13 +104,21 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // TODO: Implement validateConfigurationForm() method.
+    parent::validateConfigurationForm($form, $form_state);
+    try {
+      $this->requestAccessToken('');
+      \Drupal::messenger()->addStatus(t('Successfully connected to Salesforce as user %name.', ['%name' => $this->getIdentity()['display_name']]));
+    }
+    catch (\Exception $e) {
+      $form_state->setError($form, $this->t('Failed to connect to Salesforce: %message', ['%message' => $e->getMessage()]));
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    parent::submitConfigurationForm($form, $form_state);
     $this->setConfiguration($form_state->getValues());
   }
 
@@ -172,26 +149,6 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
     return $token;
   }
 
-  protected function parseIdentityResponse($responseBody) {
-    $data = json_decode($responseBody, true);
-
-    if (null === $data || !is_array($data)) {
-      throw new TokenResponseException('Unable to parse response.');
-    } elseif (isset($data['error'])) {
-      throw new TokenResponseException('Error in retrieving token: "' . $data['error'] . '"');
-    }
-    return $data;
-  }
-
-  /**
-   * Accessor to the storage adapter to be able to retrieve tokens
-   *
-   * @return SalesforceAuthTokenStorageInterface
-   */
-  public function getStorage() {
-    return $this->storage;
-  }
-
   /**
    * Refreshes an OAuth2 access token.
    *
@@ -205,10 +162,6 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
   public function refreshAccessToken(TokenInterface $token) {
     $token = $this->requestAccessToken('');
     return $token;
-  }
-
-  protected function getAuthTokenUrl() {
-    return $this->credentials->getLoginUrl() . '/services/oauth2/token';
   }
 
   /**
@@ -250,7 +203,7 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    */
   private function generateAssertionClaim() {
     $claim = new \stdClass();
-    $claim->iss = $this->credentials->getConsumerId();
+    $claim->iss = $this->credentials->getConsumerKey();
     $claim->sub = $this->credentials->getLoginUser();
     $claim->aud = $this->credentials->getLoginUrl();
     $claim->exp = \Drupal::time()->getCurrentTime() + 60;

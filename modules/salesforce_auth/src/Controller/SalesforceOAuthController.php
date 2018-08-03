@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce_oauth\Controller;
+namespace Drupal\salesforce_auth\Controller;
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -9,6 +9,7 @@ use Drupal\Core\Render\MetadataBubblingUrlGenerator;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\salesforce\Rest\RestResponse;
+use Drupal\salesforce_auth\Entity\SalesforceAuthConfig;
 use Drupal\salesforce_oauth\SalesforceAuthProvider;
 use Drupal\salesforce_oauth\Entity\OAuthConfig;
 use GuzzleHttp\Client;
@@ -32,7 +33,7 @@ class SalesforceOAuthController extends ControllerBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(Client $http_client, StateInterface $state, ConfigFactoryInterface $configFactory, SalesforceAuthProvider $oauth) {
+  public function __construct(Client $http_client, StateInterface $state, ConfigFactoryInterface $configFactory, SalesforceAuthMa) {
     $this->http_client = $http_client;
     $this->state = $state;
     $this->configFactory = $configFactory;
@@ -49,7 +50,7 @@ class SalesforceOAuthController extends ControllerBase {
       $container->get('http_client'),
       $container->get('state'),
       $container->get('config.factory'),
-      $container->get('salesforce_oauth.auth_provider')
+      $container->get('salesforce_auth')
     );
   }
 
@@ -76,26 +77,28 @@ class SalesforceOAuthController extends ControllerBase {
     /** @var \Drupal\Core\TempStore\PrivateTempStore $tempstore */
     $tempstore = \Drupal::service('user.private_tempstore')->get('salesforce_oauth');
     $configId = $tempstore->get('config_id');
-    if (empty($configId) || !($config = OAuthConfig::load($configId))) {
+    if (empty($configId) || !($config = SalesforceAuthConfig::load($configId))) {
       \Drupal::messenger()->addError('No OAuth config found. Please try again.');
       return new RedirectResponse(Url::fromRoute('entity.salesforce_oauth_config.collection'));
     }
 
+    /** @var \Drupal\salesforce_auth\Plugin\SalesforceAuthProvider\SalesforceOAuthPlugin $oauth */
+    $oauth = $config->getPlugin();
     $form_params = [
       'code' => $this->request()->get('code'),
       'grant_type' => 'authorization_code',
-      'client_id' => $config->getConsumerKey(),
-      'client_secret' => $config->getConsumerSecret(),
+      'client_id' => $oauth->getConsumerKey(),
+      'client_secret' => $oauth->getConsumerSecret(),
       'redirect_uri' => $this->getAuthCallbackUrl(),
     ];
-    $url = $config->getAuthTokenUrl();
+    $url = $config->getPlugin()->getAccessTokenEndpoint();
     $headers = [
       // This is an undocumented requirement on SF's end.
       'Content-Type' => 'application/x-www-form-urlencoded',
     ];
 
     $response = $this->http_client->post($url, ['headers' => $headers, 'form_params' => $form_params]);
-    $this->oauth->handleAuthResponse($response, $this->oauth->getToken($configId));
+    $config->getPlugin()->handleAuthResponse($response, $this->oauth->getToken($configId));
     \Drupal::messenger()->addStatus(t('Successfully connected to Salesforce.'));
     return new RedirectResponse($config->toUrl('edit-form')->toString());
   }

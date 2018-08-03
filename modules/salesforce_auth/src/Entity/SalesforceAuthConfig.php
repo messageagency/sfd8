@@ -81,7 +81,7 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
   /**
    * Plugin getter.
    *
-   * @return \Drupal\salesforce_auth\SalesforceAuthProviderPluginInterface
+   * @return \Drupal\salesforce_auth\SalesforceAuthProviderInterface
    */
   public function getPlugin() {
     $settings = $this->provider_settings ?: [];
@@ -91,15 +91,6 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
 
   public function getPluginId() {
     return $this->provider ?: NULL;
-  }
-
-  /**
-   * Auth service getter.
-   *
-   * @return \Drupal\salesforce_auth\SalesforceAuthProviderInterface
-   */
-  public function getAuthProvider() {
-    return $this->getPlugin()->service();
   }
 
   /**

@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce_auth\SalesforceAuthManager;
+use Drupal\salesforce_auth\SalesforceAuthProviderPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SalesforceAuthSettings extends ConfigFormBase {
@@ -62,7 +63,7 @@ class SalesforceAuthSettings extends ConfigFormBase {
     $options = [];
     /** @var \Drupal\salesforce_auth\Entity\SalesforceAuthConfig $provider **/
     foreach(\Drupal::service('plugin.manager.salesforce_auth.providers')->getProviders() as $provider) {
-      $options[$provider->id()] = $provider->label() . ' (' . $provider->getAuthProvider()->label() . ')';
+      $options[$provider->id()] = $provider->label() . ' (' . $provider->getPlugin()->label() . ')';
     }
     if (empty($options)) {
       return ['#markup'=> 'No auth providers found. Please add an auth provider before continuing.'];

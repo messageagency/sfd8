@@ -14,8 +14,11 @@ class SalesforceAuthListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
+    /** @var \Drupal\salesforce_auth\SalesforceAuthProviderInterface $plugin */
+    $plugin = $entity->getPlugin();
     $row['label'] = $entity->label();
-    $row['url'] = $entity->getLoginUrl();
+    $row['url'] = $plugin->getLoginUrl();
+    $row['type'] = $plugin->label();
     return $row + parent::buildRow($entity);
   }
 
@@ -25,6 +28,9 @@ class SalesforceAuthListBuilder extends ConfigEntityListBuilder {
   public function buildHeader() {
     $header['label'] = [
       'data' => $this->t('Label'),
+    ];
+    $header['type'] = [
+      'data' => $this->t('Auth Type'),
     ];
     $header['url'] = [
       'data' => $this->t('Login URL'),

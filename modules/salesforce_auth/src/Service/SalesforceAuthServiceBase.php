@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_auth\Service;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\salesforce_auth\SalesforceAuthProviderInterface;
 use Drupal\salesforce_auth\Consumer\JWTCredentials;
@@ -11,7 +12,7 @@ use OAuth\Common\Storage\Exception\TokenNotFoundException;
 use OAuth\OAuth2\Service\Salesforce;
 use OAuth\Common\Http\Uri\Uri;
 
-abstract class SalesforceAuthServiceBase extends Salesforce implements SalesforceAuthProviderInterface, ContainerFactoryPluginInterface {
+abstract class SalesforceAuthServiceBase extends Salesforce implements SalesforceAuthProviderInterface {
 
   /**
    * @var \Drupal\salesforce_auth\Consumer\SalesforceCredentials

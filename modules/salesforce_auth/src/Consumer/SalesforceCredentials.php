@@ -8,9 +8,15 @@ use OAuth\Common\Consumer\Credentials;
 abstract class SalesforceCredentials extends Credentials {
 
   protected $loginUrl;
-  public function __construct($consumerId, $loginUrl) {
-    parent::__construct($consumerId, NULL, NULL);
+  protected $consumerKey;
+  public function __construct($consumerKey, $loginUrl) {
+    parent::__construct($consumerKey, NULL, NULL);
     $this->loginUrl = $loginUrl;
+    $this->consumerKey = $consumerKey;
+  }
+
+  public function getConsumerKey() {
+    return $this->consumerKey;
   }
 
   public function getLoginUrl() {

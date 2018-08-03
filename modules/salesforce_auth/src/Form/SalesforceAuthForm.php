@@ -101,8 +101,22 @@ class SalesforceAuthForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+
+    if (!$form_state->isSubmitted()) {
+      return;
+    }
+
+    $this->entity->getPlugin()->validateConfigurationForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
+    $this->entity->getPlugin()->submitConfigurationform($form, $form_state);
     $form_state->setRedirectUrl($this->entity->toUrl('collection'));
   }
 

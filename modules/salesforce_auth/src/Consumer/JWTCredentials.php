@@ -5,8 +5,8 @@ namespace Drupal\salesforce_auth\Consumer;
 class JWTCredentials extends SalesforceCredentials {
   protected $loginUser;
   protected $encryptKeyId;
-  public function __construct($consumerId, $loginUrl, $loginUser, $encryptKeyId) {
-    parent::__construct($consumerId, $loginUrl);
+  public function __construct($consumerKey, $loginUrl, $loginUser, $encryptKeyId) {
+    parent::__construct($consumerKey, $loginUrl);
     $this->loginUser = $loginUser;
     $this->encryptKeyId = $encryptKeyId;
   }

@@ -47,26 +47,12 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $etm) {
-    parent::__construct('Plugin/SalesforceAuthProvider', $namespaces, $module_handler, 'Drupal\salesforce_auth\SalesforceAuthProviderInterface', 'Drupal\salesforce_auth\Annotation\SalesforceAuthProvider');
+    parent::__construct('Plugin/SalesforceAuthProvider', $namespaces, $module_handler, 'Drupal\salesforce_auth\SalesforceAuthProviderInterface');
     $this->alterInfo('salesforce_auth_provider_info');
     $this->setCacheBackend($cache_backend, 'salesforce_auth_provider');
     $this->etm = $etm;
     $this->authStorage = $etm->getStorage('salesforce_auth');
 
-  }
-
-  public function createInstance($plugin_id, array $configuration = []) {
-    //    if (!$this->service) {
-    //      $cred = new JWTCredentials($this->configuration['consumer_key'], $this->configuration['login_url'], $this->configuration['login_user'], $this->configuration['encrypt_key']);
-    //      $this->service = new SalesforceJWTService($this->configuration['id'], $cred, \Drupal::service('salesforce_auth.http_client_wrapper'), \Drupal::service('salesforce_auth.token_storage'));
-    //      // If we haven't requested an access token yet, do it now.
-    //      if (!$this->service->hasAccessToken()) {
-    //        $this->service->refreshAccessToken(new StdOAuth2Token());
-    //      }
-    //    }
-    //    return $this->service;
-
-    return parent::createInstance($plugin_id, $configuration);
   }
 
   public function getProviders() {

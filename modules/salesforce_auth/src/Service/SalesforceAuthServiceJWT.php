@@ -150,7 +150,7 @@ class SalesforceAuthServiceJWT extends SalesforceAuthServiceBase {
    */
   private function generateAssertionClaim() {
     $claim = new \stdClass();
-    $claim->iss = $this->credentials->getConsumerId();
+    $claim->iss = $this->credentials->getConsumerKey();
     $claim->sub = $this->credentials->getLoginUser();
     $claim->aud = $this->credentials->getLoginUrl();
     $claim->exp = \Drupal::time()->getCurrentTime() + 60;

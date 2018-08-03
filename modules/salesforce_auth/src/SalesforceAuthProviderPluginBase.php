@@ -2,17 +2,18 @@
 
 namespace Drupal\salesforce_auth;
 
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\salesforce_auth\Service\SalesforceAuthServiceBase;
+use OAuth\Common\Http\Exception\TokenResponseException;
 use OAuth\Common\Http\Uri\Uri;
 use OAuth\OAuth2\Service\Salesforce;
 
-abstract class SalesforceAuthProviderPluginBase extends Salesforce implements SalesforceAuthProviderInterface, ContainerFactoryPluginInterface {
+abstract class SalesforceAuthProviderPluginBase extends Salesforce implements SalesforceAuthProviderInterface {
 
   use StringTranslationTrait;
+  use DependencySerializationTrait;
 
   /**
    * @var \Drupal\salesforce_auth\Consumer\SalesforceCredentials
@@ -27,6 +28,13 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
 
   /** @var string */
   protected $id;
+
+  public static function defaultConfiguration() {
+    return [
+      'consumer_key' => '',
+      'login_url' => 'https://test.salesforce.com',
+    ];
+  }
 
   /**
    * {@inheritdoc}
@@ -56,7 +64,14 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // TODO: Implement validateConfigurationForm() method.
+
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+
   }
 
   public function id() {
@@ -64,11 +79,11 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
   }
 
   public function type() {
-    return self::SERVICE_TYPE;
+    return static::SERVICE_TYPE;
   }
 
   public function label() {
-    return self::LABEL;
+    return static::LABEL;
   }
 
   /**
@@ -88,15 +103,22 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
   /**
    * {@inheritdoc}
    */
+  public function hasAccessToken() {
+    return $this->storage->hasAccessToken($this->id());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getAccessToken() {
-    return $this->storage->retrieveAccessToken($this->service());
+    return $this->storage->retrieveAccessToken($this->id());
   }
 
   /**
    * {@inheritdoc}
    */
   public function getIdentity() {
-    return $this->storage->retrieveIdentity($this->service());
+    return $this->storage->retrieveIdentity($this->id());
   }
 
   /**
@@ -106,12 +128,24 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
     return $this->id();
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function hasAccessToken() {
-    return $this->storage->hasAccessToken($this->service());
+  protected function parseIdentityResponse($responseBody) {
+    $data = json_decode($responseBody, true);
+
+    if (null === $data || !is_array($data)) {
+      throw new TokenResponseException('Unable to parse response.');
+    } elseif (isset($data['error'])) {
+      throw new TokenResponseException('Error in retrieving token: "' . $data['error'] . '"');
+    }
+    return $data;
   }
 
+  /**
+   * Accessor to the storage adapter to be able to retrieve tokens
+   *
+   * @return \Drupal\salesforce_auth\Storage\SalesforceAuthTokenStorageInterface
+   */
+  public function getStorage() {
+    return $this->storage;
+  }
 
 }
