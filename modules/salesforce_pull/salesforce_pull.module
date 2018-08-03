@@ -374,6 +374,13 @@ function salesforce_pull_process_updated_records($sf_object) {
     foreach ($sf_mappings as $sf_mapping) {
       // Mapping object exists?
       $mapping_object = salesforce_mapping_object_load_by_sfid($sf_object['Id']);
+      // Trigger a hook to allow other modules to prevent this object from
+      // creating or updating an entity.
+      foreach (module_implements('salesforce_pull_allow_sf_object') as $module) {
+        if (module_invoke($module, 'salesforce_pull_allow_sf_object', $sf_object, $mapping_object, $sf_mapping) === FALSE) {
+          continue 2;
+        }
+      }
       // Allow other modules to define or alter the mapping object.
       drupal_alter('salesforce_pull_mapping_object', $mapping_object, $sf_object, $sf_mapping);
       $exists = $mapping_object ? TRUE : FALSE;

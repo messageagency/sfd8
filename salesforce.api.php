@@ -155,6 +155,22 @@ function hook_salesforce_push_entity_allowed($entity_type, $entity, $sf_sync_tri
 }
 
 /**
+ * Prevent a pull from updating/creating an entity.
+ *
+ * @param array $sf_object
+ *   A Salesforce object array loaded during a pull.
+ * @param object $mapping_object
+ *   The mapping object for this SF Object, or FALSE if none exists.
+ * @param object $sf_mapping
+ *   The mapping that pulled this object in the first place.
+ *
+ * @return bool
+ *   FALSE if the entity should be ignored.
+ */
+function hook_salesforce_pull_allow_sf_object($sf_object, $mapping_object, $sf_mapping) {
+}
+
+/**
  * Alter the value being mapped to an entity property from a Salesforce object.
  *
  * @param string $value
