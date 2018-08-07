@@ -75,11 +75,7 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
       'salesforce_object_type' => 'Contact',
     ];
     $this->drupalPostForm('admin/structure/salesforce/mappings/manage/' . $mapping_name, $post, t('Save'));
-
-    $mappingStorage->resetCache();
-    // Make sure the mapping was created and updated:
-    $mapping = $mappingStorage->load($mapping_name);
-    $this->assertEqual($mapping->label(), $post['label']);
+    $this->assertFieldByName('label', $post['label']);
 
     /* Salesforce Mapping Fields Form */
     // Test simply adding a field plugin of every possible type.
