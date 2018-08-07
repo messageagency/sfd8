@@ -83,7 +83,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
     if (!$this->getConfig()) {
       return NULL;
     }
-    return $this->getConfig()->getAuthProvider();
+    return $this->getConfig()->getPlugin();
   }
 
   /**
@@ -95,7 +95,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
     if (!$config = $this->getConfig()) {
       return NULL;
     }
-    if (!$provider = $config->getAuthProvider()) {
+    if (!$provider = $config->getPlugin()) {
       return NULL;
     }
     try {
@@ -115,7 +115,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
     if (!$config = $this->getConfig()) {
       return NULL;
     }
-    if (!$provider = $config->getAuthProvider()) {
+    if (!$provider = $config->getPlugin()) {
       return NULL;
     }
     $token = $this->getToken() ?: new StdOAuth2Token();

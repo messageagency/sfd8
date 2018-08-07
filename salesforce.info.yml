@@ -4,3 +4,5 @@ description: Modules to integrate Drupal and Salesforce
 package: Salesforce
 core: 8.x
 configure: salesforce.admin_config_salesforce
+dependencies:
+  - salesforce_auth

@@ -1,7 +1,0 @@
-name: Salesforce JWT Auth
-type: module
-description: Provides JWT Auth for Salesforce.
-package: Salesforce
-core: 8.x
-dependencies:
-  - salesforce_auth

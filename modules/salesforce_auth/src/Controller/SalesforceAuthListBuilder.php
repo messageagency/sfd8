@@ -18,6 +18,7 @@ class SalesforceAuthListBuilder extends ConfigEntityListBuilder {
     $plugin = $entity->getPlugin();
     $row['label'] = $entity->label();
     $row['url'] = $plugin->getLoginUrl();
+    $row['key'] = substr($plugin->getConsumerKey(), 0, 16) . '...';
     $row['type'] = $plugin->label();
     return $row + parent::buildRow($entity);
   }
@@ -29,11 +30,14 @@ class SalesforceAuthListBuilder extends ConfigEntityListBuilder {
     $header['label'] = [
       'data' => $this->t('Label'),
     ];
-    $header['type'] = [
-      'data' => $this->t('Auth Type'),
-    ];
     $header['url'] = [
       'data' => $this->t('Login URL'),
+    ];
+    $header['key'] = [
+      'data' => $this->t('Consumer Key'),
+    ];
+    $header['type'] = [
+      'data' => $this->t('Auth Type'),
     ];
 
     return $header + parent::buildHeader();

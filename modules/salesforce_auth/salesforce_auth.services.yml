@@ -10,7 +10,3 @@ services:
   salesforce_auth.token_storage:
     class: Drupal\salesforce_auth\Storage\SalesforceAuthTokenStorage
     arguments: ['@state']
-
-  salesforce_auth:
-    class: Drupal\salesforce_auth\SalesforceAuthManager
-    arguments: ['@entity_type.manager']

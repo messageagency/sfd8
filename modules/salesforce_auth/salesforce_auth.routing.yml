@@ -56,6 +56,6 @@ entity.salesforce_auth.delete_form:
 salesforce_auth.oauth_callback:
   path: '/salesforce/oauth_callback'
   defaults:
-    _controller: '\Drupal\salesforce_auth\Plugin\SalesforceAuthProvider\SalesforceOAuthPlugin::oauthCallback'
+    _controller: '\Drupal\salesforce_auth\Controller\SalesforceOAuthController::oauthCallback'
   requirements:
     _permission: 'authorize salesforce'

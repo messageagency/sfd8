@@ -17,6 +17,7 @@ use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_auth\SalesforceAuthProviderInterface;
 use Drupal\salesforce_auth\SalesforceAuthManager;
+use Drupal\salesforce_auth\SalesforceAuthProviderPluginManager;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
@@ -117,7 +118,7 @@ class RestClient implements RestClientInterface {
    * @param \Drupal\Component\Serialization\Json $json
    *   The JSON serializer service.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, SalesforceAuthManager $auth) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, SalesforceAuthProviderPluginManager $auth) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
     $this->mutableConfig = $this->configFactory->getEditable('salesforce.settings');
@@ -337,7 +338,6 @@ class RestClient implements RestClientInterface {
     $url = &drupal_static(__FUNCTION__ . $api_type);
     if (!isset($url)) {
       $identity = $this->getIdentity();
-      dpm($identity, __LINE__);
       if (empty($identity)) {
         return FALSE;
       }
@@ -349,7 +349,6 @@ class RestClient implements RestClientInterface {
       }
       $url = str_replace('{version}', $this->getApiVersion(), $url);
     }
-    dpm($url);
     return $url;
   }
 
@@ -373,8 +372,11 @@ class RestClient implements RestClientInterface {
    *
    * @throws \Exception
    * @throws \GuzzleHttp\Exception\RequestException
+   *
+   * @deprecated this method is deprecated and will be removed before the next stable release.
    */
   public function setApiVersion($use_latest = TRUE, $version = NULL) {
+    trigger_error(__CLASS__.'::'.__FUNCTION__ . ' is deprecated and will be removed before the next stable release of Salesforce module. Please update your callers.', E_DEPRECATED);
     if ($use_latest) {
       $this->mutableConfig->set('use_latest', $use_latest);
     }

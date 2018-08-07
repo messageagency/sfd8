@@ -5,7 +5,7 @@ namespace Drupal\salesforce_auth\Consumer;
 use Drupal\salesforce_auth\SalesforceAuthProviderInterface;
 use OAuth\Common\Consumer\Credentials;
 
-abstract class SalesforceCredentials extends Credentials {
+abstract class SalesforceCredentials extends Credentials implements SalesforceCredentialsInterface {
 
   protected $loginUrl;
   protected $consumerKey;

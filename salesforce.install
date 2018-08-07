@@ -197,3 +197,10 @@ function salesforce_update_8003() {
   ];
   \Drupal::state()->deleteMultiple($delete);
 }
+
+function salesforce_update_8004() {
+  \Drupal::service('module_installer')->install(["salesforce_auth"]);
+  // Convert existing state and config to new auth entities.
+  // Delete existing state and config.
+}
+

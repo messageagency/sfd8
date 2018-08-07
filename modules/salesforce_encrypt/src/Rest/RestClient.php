@@ -15,6 +15,7 @@ use Drupal\encrypt\EncryptionProfileInterface;
 use Drupal\encrypt\EncryptionProfileManagerInterface;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Rest\RestClient as SalesforceRestClient;
+use Drupal\salesforce_auth\SalesforceAuthProviderPluginManager;
 use GuzzleHttp\ClientInterface;
 use Drupal\Component\Datetime\TimeInterface;
 
@@ -56,8 +57,8 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
    * @param \Drupal\Core\Lock\LockBackendInterface $lock
    *   The lock backend service.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
-    parent::__construct($http_client, $config_factory, $state, $cache, $json, $time);
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, SalesforceAuthProviderPluginManager $auth, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
+    parent::__construct($http_client, $config_factory, $state, $cache, $json, $time, $auth);
     $this->encryption = $encryption;
     $this->encryptionProfileId = $this->state->get('salesforce_encrypt.profile');
     $this->encryptionProfileManager = $encryptionProfileManager;

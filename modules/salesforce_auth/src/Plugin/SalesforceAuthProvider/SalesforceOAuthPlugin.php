@@ -15,8 +15,8 @@ use OAuth\Common\Http\Client\ClientInterface;
 use OAuth\Common\Http\Uri\Uri;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Zend\Diactoros\Response\RedirectResponse;
 
 /**
  * @Plugin(
@@ -98,7 +98,6 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase {
     parent::submitConfigurationForm($form, $form_state);
     $this->setConfiguration($form_state->getValues());
     $settings = $form_state->getValue('provider_settings');
-    dpm($settings);
     // Write the config id to private temp store, so that we can use the same
     // callback URL for all OAuth applications in Salesforce.
     /** @var \Drupal\Core\TempStore\PrivateTempStore $tempstore */
@@ -142,41 +141,13 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase {
     return $this->credentials->getConsumerSecret();
   }
 
-  public static function oauthCallback() {
-    if (empty(\Drupal::request()->get('code'))) {
-      throw new AccessDeniedHttpException();
-    }
-    /** @var \Drupal\Core\TempStore\PrivateTempStore $tempstore */
-    $tempstore = \Drupal::service('user.private_tempstore')->get('salesforce_oauth');
-    $configId = $tempstore->get('config_id');
-    if (empty($configId) || !($config = SalesforceAuthConfig::load($configId)) || !($config->getPlugin() instanceof SalesforceOAuthPlugin)) {
-      \Drupal::messenger()->addError('No OAuth config found. Please try again.');
-      return new RedirectResponse(Url::fromRoute('entity.salesforce_oauth_config.collection'));
-    }
-
-    /** @var \Drupal\salesforce_auth\Plugin\SalesforceAuthProvider\SalesforceOAuthPlugin $oauth */
-    $oauth = $config->getPlugin();
-    return $oauth->finalizeOauth();
-  }
-
+  /**
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   * @throws \OAuth\Common\Http\Exception\TokenResponseException
+   * @see \Drupal\salesforce_auth\Controller\SalesforceOAuthController
+   */
   public function finalizeOauth() {
-    $form_params = [
-      'code' => \Drupal::request()->get('code'),
-      'grant_type' => 'authorization_code',
-      'client_id' => $this->getConsumerKey(),
-      'client_secret' => $this->getConsumerSecret(),
-      'redirect_uri' => self::getAuthCallbackUrl(),
-    ];
-    $url = $this->getAccessTokenEndpoint();
-    $headers = [
-      // This is an undocumented requirement on SF's end.
-      'Content-Type' => 'application/x-www-form-urlencoded',
-    ];
-
-    $response = $this->httpClient->retrieveResponse($url, ['headers' => $headers, 'form_params' => $form_params]);
-    $token = $this->parseAccessTokenResponse($response);
-    $this->storage->storeAccessToken($this->service(), $token);
-
+    $token = $this->requestAccessToken(\Drupal::request()->get('code'));
 
     // Initialize identity.
     $headers = [

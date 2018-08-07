@@ -50,7 +50,11 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
    * {@inheritdoc}
    */
   public function getLoginUrl() {
-    return $this->configuration['login_url'];
+    return $this->credentials->getLoginUrl();
+  }
+
+  public function getConsumerKey() {
+    return $this->credentials->getConsumerKey();
   }
 
   /**
