@@ -476,7 +476,7 @@ class RestClient implements RestClientInterface {
    */
   public function getAccessToken() {
     $access_token = $this->state->get('salesforce.access_token');
-    return isset($access_token) && Unicode::strlen($access_token) !== 0 ? $access_token : FALSE;
+    return isset($access_token) && mb_strlen($access_token) !== 0 ? $access_token : FALSE;
   }
 
   /**

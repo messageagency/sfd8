@@ -23,6 +23,16 @@ class RestClientTest extends UnitTestCase {
 
   static $modules = ['key', 'encrypt', 'salesforce', 'salesforce_encrypt'];
 
+  protected $httpClient;
+  protected $configFactory;
+  protected $state;
+  protected $cache;
+  protected $json;
+  protected $time;
+  protected $encryption;
+  protected $profileManager;
+  protected $lock;
+
   /**
    *
    */
@@ -41,15 +51,18 @@ class RestClientTest extends UnitTestCase {
       $this->getMockBuilder(State::CLASS)
         ->disableOriginalConstructor()
         ->getMock();
-    $this->cache = $this->getMock(CacheBackendInterface::CLASS);
-    $this->json = $this->getMock('Drupal\Component\Serialization\Json');
-    $this->encryption = $this->getMock(EncryptServiceInterface::CLASS);
-    $this->profileManager = $this->getMock(EncryptionProfileManagerInterface::CLASS);
-    $this->lock = $this->getMock(LockBackendInterface::CLASS);
-    $this->encryptionProfile = $this->getMock(EncryptionProfileInterface::CLASS);
-    $this->json = $this->getMock(Json::CLASS);
-    $this->time = $this->getMock(TimeInterface::CLASS);
-    $this->client = $this->getMock(RestClient::CLASS, ['_getEncryptionProfile'], [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->time, $this->encryption, $this->profileManager, $this->lock]);
+    $this->cache = $this->createMock(CacheBackendInterface::CLASS);
+    $this->json = $this->createMock('Drupal\Component\Serialization\Json');
+    $this->encryption = $this->createMock(EncryptServiceInterface::CLASS);
+    $this->profileManager = $this->createMock(EncryptionProfileManagerInterface::CLASS);
+    $this->lock = $this->createMock(LockBackendInterface::CLASS);
+    $this->encryptionProfile = $this->createMock(EncryptionProfileInterface::CLASS);
+    $this->json = $this->createMock(Json::CLASS);
+    $this->time = $this->createMock(TimeInterface::CLASS);
+    $this->client = $this->getMockBuilder(RestClient::CLASS)
+      ->setMethods(['_getEncryptionProfile'])
+      ->setConstructorArgs([$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->time, $this->encryption, $this->profileManager, $this->lock])
+      ->getMock();
   }
 
   /**
