@@ -10,6 +10,8 @@ use Drupal\salesforce\SelectQuery;
 
 /**
  * Implements hook_drush_command().
+ *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function salesforce_drush_command() {
   $items['sf-rest-version'] = [
@@ -146,8 +148,11 @@ raw: Display the complete, raw describe response.",
  * List the resources available for the specified API version.
  *
  * This command provides the name and URI of each resource.
+ *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_sf_list_resources() {
+  _drush_salesforce_deprecated();
   $salesforce = \Drupal::service('salesforce.client');
   $resources = $salesforce->listResources();
   if ($resources) {
@@ -172,8 +177,12 @@ function drush_salesforce_sf_list_resources() {
  *
  * @param string $object_name
  *   The name of a Salesforce object to query.
+ *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_sf_describe_object($object_name = NULL) {
+  _drush_salesforce_deprecated();
+
   if (!$object_name) {
     return drush_log('Please specify an object as an argument.', 'error');
   }
@@ -249,8 +258,12 @@ function drush_salesforce_sf_describe_object($object_name = NULL) {
 
 /**
  * Displays information about the REST API version the site is using.
+ *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_sf_rest_version() {
+  _drush_salesforce_deprecated();
+
   $salesforce = \Drupal::service('salesforce.client');
   $version_id = $salesforce->getApiVersion();
   $versions = $salesforce->getVersions();
@@ -270,10 +283,14 @@ function drush_salesforce_sf_rest_version() {
  *
  * This command lists Salesforce objects that are available in your organization
  * and available to the logged-in user.
+ *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_sf_list_objects() {
+  _drush_salesforce_deprecated();
   $salesforce = \Drupal::service('salesforce.client');
   if ($objects = $salesforce->objects()) {
+    print_r($objects);
     drush_print('The following objects are available in your organization and available to the logged-in user.');
     $rows[] = ['Name', 'Label', 'Label Plural'];
     foreach ($objects as $object) {
@@ -298,8 +315,11 @@ function drush_salesforce_sf_list_objects() {
  *   The object type name, e.g. Account
  * @param $id
  *   The Salesforce ID
+ *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_sf_read_object($id) {
+  _drush_salesforce_deprecated();
   $salesforce = \Drupal::service('salesforce.client');
   try {
     $name = $salesforce->getObjectTypeName(new SFID($id));
@@ -323,8 +343,11 @@ function drush_salesforce_sf_read_object($id) {
  *   The object type name, e.g. Account
  * @param $data
  *   The object data, or '-' to read from stdin
+ *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_sf_create_object($name, $data) {
+  _drush_salesforce_deprecated();
 
   if ($data == '-') {
     $data = stream_get_contents(STDIN);
@@ -360,8 +383,11 @@ function drush_salesforce_sf_create_object($name, $data) {
  *
  * @param $name
  *   The object type name, e.g. Account
+ *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_sf_query_object($name) {
+  _drush_salesforce_deprecated();
   $salesforce = \Drupal::service('salesforce.client');
 
   $query = new SelectQuery($name);
@@ -419,8 +445,11 @@ function drush_salesforce_sf_query_object($name) {
  *
  * @param $query
  *   The query to execute
+ *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_sf_execute_query($query = NULL) {
+  _drush_salesforce_deprecated();
   if (!$query) {
     return drush_log('Please specify a query as an argument.', 'error');
   }
@@ -441,8 +470,11 @@ function drush_salesforce_sf_execute_query($query = NULL) {
  * @param string $name
  *
  * @return SalesforceMappingInterface
+ *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function _salesforce_drush_get_mapping($name = NULL) {
+  _drush_salesforce_deprecated();
   $mapping_storage = \Drupal::service('entity_type.manager')
     ->getStorage('salesforce_mapping');
 
@@ -464,4 +496,8 @@ function _salesforce_drush_get_mapping($name = NULL) {
     drush_log(dt('Mapping !name not found.', ['!name' => $name]), 'error');
   }
   return $mapping;
+}
+
+function _drush_salesforce_deprecated() {
+  trigger_error('Salesforce module support for Drush 8 is deprecated and will be removed in a future release', E_DEPRECATED);
 }

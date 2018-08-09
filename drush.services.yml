@@ -1,0 +1,6 @@
+services:
+  salesforce.commands:
+    class: \Drupal\salesforce\Commands\SalesforceCommands
+    arguments: ['@salesforce.client']
+    tags:
+      - { name: drush.command }
