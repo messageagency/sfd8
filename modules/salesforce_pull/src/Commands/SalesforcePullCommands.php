@@ -65,7 +65,7 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
       return;
     }
 
-    return $this->interactPullMappings($input, $output, $message = 'Choose a Salesforce mapping', FALSE);
+    return $this->interactPullMappings($input, $output);
   }
 
   /**
