@@ -2,22 +2,17 @@
 
 namespace Drupal\salesforce\Commands;
 
-use Consolidation\OutputFormatters\Formatters\TableFormatter;
-use Consolidation\OutputFormatters\Formatters\VarDumpFormatter;
-use Consolidation\OutputFormatters\Options\FormatterOptions;
 use Consolidation\OutputFormatters\StructuredData\PropertyList;
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
-use Consolidation\OutputFormatters\StructuredData\RowsOfFieldsWithMetadata;
-use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\Rest\RestException;
 use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\SelectQueryRaw;
 use Drupal\salesforce\SFID;
-use Drush\Commands\DrushCommands;
 use Drush\Exceptions\UserAbortException;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Output\Output;
-use Symfony\Component\Translation\Util\ArrayConverter;
 
 /**
  * A Drush commandfile.
@@ -30,14 +25,7 @@ use Symfony\Component\Translation\Util\ArrayConverter;
  *   - http://cgit.drupalcode.org/devel/tree/src/Commands/DevelCommands.php
  *   - http://cgit.drupalcode.org/devel/tree/drush.services.yml
  */
-class SalesforceCommands extends DrushCommands {
-
-  /** @var \Drupal\salesforce\Rest\RestClient */
-  protected $client;
-
-  public function __construct(RestClient $client) {
-    $this->client = $client;
-  }
+class SalesforceCommands extends SalesforceCommandsBase {
 
   /**
    * Display information about the current REST API version.
@@ -148,23 +136,11 @@ class SalesforceCommands extends DrushCommands {
   }
 
   /**
-   * If there's a way to attach multiple hooks to one method, please do it here!
-   */
-  protected function interactObject(Input $input, Output $output, $message = 'Enter a Salesforce object to describe') {
-    if (!$input->getArgument('object')) {
-      if (!$answer = $this->io()->ask($message)) {
-        throw new UserAbortException();
-      }
-      $input->setArgument('object', $answer);
-    }
-  }
-
-  /**
    * Retrieve all the metadata for an object, including information about each field, URLs, and child relationships.
    *
    * @param $object
    *   The object name in Salesforce.
-    * @param array $options An associative array of options whose values come from cli, aliases, config, etc.
+   * @param array $options An associative array of options whose values come from cli, aliases, config, etc.
    * @option output
    *   Specify an output type.
    *   Options are:
@@ -193,13 +169,15 @@ class SalesforceCommands extends DrushCommands {
   /**
    * Dump the raw describe response for given object.
    *
+   * @todo create a proper StructuredData return value for this.
+   *
    * @command salesforce:dump-object
    * @aliases sf-dump-object
    */
   public function dumpObject($object) {
     $objectDescription = $this->client->objectDescribe($object);
     if (!is_object($objectDescription)) {
-      throw new \Exception(dt('Could not load data for object !object', ['!object' => $object]));
+      $this->logger()->error(dt('Could not load data for object !object', ['!object' => $object]));
     }
     $this->output()->writeln(print_r($objectDescription->data, 1));
   }
@@ -230,7 +208,8 @@ class SalesforceCommands extends DrushCommands {
   public function describeRecordTypes($object) {
     $objectDescription = $this->client->objectDescribe($object);
     if (!is_object($objectDescription)) {
-      throw new \Exception(dt('Could not load data for object !object', ['!object' => $object]));
+      $this->logger()->error(dt('Could not load data for object !object', ['!object' => $object]));
+      return;
     }
     $data = $objectDescription->data['recordTypeInfos'];
     // Return if we cannot load any data.
@@ -290,7 +269,8 @@ class SalesforceCommands extends DrushCommands {
   public function describeMetadata($object) {
     $objectDescription = $this->client->objectDescribe($object);
     if (!is_object($objectDescription)) {
-      throw new \Exception(dt('Could not load data for object !object', ['!object' => $object]));
+      $this->logger()->error(dt('Could not load data for object !object', ['!object' => $object]));
+      return;
     }
     $data = $objectDescription->data;
     // Return if we cannot load any data.
@@ -391,7 +371,8 @@ class SalesforceCommands extends DrushCommands {
     $objectDescription = $this->client->objectDescribe($object);
     // Return if we cannot load any data.
     if (!is_object($objectDescription)) {
-      throw new \Exception(dt('Could not load data for object !object', ['!object' => $object]));
+      $this->logger()->error(dt('Could not load data for object !object', ['!object' => $object]));
+      return;
     }
 
     foreach ($objectDescription->getFields() as $field => $data) {
@@ -433,7 +414,7 @@ class SalesforceCommands extends DrushCommands {
       $this->output()->writeln("The following resources are available:");
       return new RowsOfFields($rows);
     }
-    throw new \Exception('Could not obtain a list of resources!');
+    $this->logger()->error('Could not obtain a list of resources!');
   }
 
   /**
@@ -450,6 +431,8 @@ class SalesforceCommands extends DrushCommands {
 
   /**
    * Retrieve all the data for an object with a specific ID.
+   *
+   * @todo create a proper StructuredData return value
    *
    * @command salesforce:read-object
    * @aliases sfro,sf-read-object
@@ -470,13 +453,13 @@ class SalesforceCommands extends DrushCommands {
    * @hook interact salesforce:create-object
    */
   public function interactCreateObject(Input $input, Output $output) {
-    $format = $input->getOption('format');
+    $format = $input->getOption('encoding');
     if (empty($format)) {
-      $input->setOption('format', 'query');
+      $input->setOption('encoding', 'query');
       $format = 'query';
     }
-    elseif (!in_array($input->getOption('format'), ['query', 'json'])) {
-      throw new \Exception('Invalid format');
+    elseif (!in_array($input->getOption('encoding'), ['query', 'json'])) {
+      throw new \Exception('Invalid encoding');
     }
 
     $this->interactObject($input, $output, 'Enter the object type to be created');
@@ -512,16 +495,36 @@ class SalesforceCommands extends DrushCommands {
    * @param array $data
    *   The data to use when creating the object (default is JSON format). Use '-' to read the data from STDIN.
    * @param array $options An associative array of options whose values come from cli, aliases, config, etc.
-   * @option format
+   * @option encoding
    *   Format to parse the object. Use  "json" for JSON (default) or "query" for data formatted like a query string, e.g. 'Company=Foo&LastName=Bar'.
-   *   Defaults to query.
+   *   Defaults to "query".
+   *
+   * @field-labels
+   *   status: Status
+   *   id: Id
+   *   errors: Errors
+   * @default-fields status,id,errors
+   *
+   * @return \Consolidation\OutputFormatters\StructuredData\PropertyList
    *
    * @command salesforce:create-object
    * @aliases sfco,sf-create-object
    */
-  public function createObject($object, $data, array $options = ['format' => 'query']) {
-    if ($result = $this->client->objectCreate($object, $data)) {
-      $this->output->writeln(dt('Successfully created !object with id !id', ['!object' => $object, '!id' => (string)$result]));
+  public function createObject($object, $data, array $options = ['encoding' => 'query']) {
+    try {
+      $result = $this->client->objectCreate($object, $data);
+      return new PropertyList([
+        'status' => 'Success',
+        'id' => (string)$result,
+        'errors' => '',
+      ]);
+    }
+    catch (RestException $e) {
+      return new PropertyList([
+        'status' => 'Fail',
+        'id' => '',
+        'errors' => $e->getMessage(),
+      ]);
     }
   }
 
@@ -537,8 +540,6 @@ class SalesforceCommands extends DrushCommands {
    * @param $object
    *   The object type name in Salesforce (e.g. Account).
     * @param array $options An associative array of options whose values come from cli, aliases, config, etc.
-   * @option format
-   *   Format to output the objects. Use "print_r" for print_r (default), "export" for var_export, and "json" for JSON.
    * @option where
    *   A WHERE clause to add to the SOQL query
    * @option fields
@@ -548,10 +549,12 @@ class SalesforceCommands extends DrushCommands {
    * @option order
    *   Comma-separated fields by which to sort results. Make sure to enclose in quotes for any whitespace.
    *
+   * @return \Drupal\salesforce\Commands\QueryResult
+   *
    * @command salesforcef:query-object
    * @aliases sfqo,sf-query-object
    */
-  public function queryObject($object, array $options = ['format' => null, 'where' => null, 'fields' => null, 'limit' => null, 'order' => null]) {
+  public function queryObject($object, array $options = ['format' => 'table', 'where' => null, 'fields' => null, 'limit' => null, 'order' => null]) {
     $query = new SelectQuery($object);
 
     if (!$options['fields']) {
@@ -580,21 +583,7 @@ class SalesforceCommands extends DrushCommands {
         $query->order[$field] = $dir;
       }
     }
-
-    $result = $this->client->query($query);
-    foreach ($result->records() as $sfid => $record) {
-      $this->output()->writeln(print_r($record->fields(), 1));
-    }
-    $pretty_query = str_replace('+', ' ', (string) $query);
-    if (!$options['fields']) {
-      $fields = implode(',', $query->fields);
-      $pretty_query = str_replace($fields, ' * ', $pretty_query);
-    }
-    $this->output()->writeln(dt("Showing !size of !total records for query:\n!query", [
-      '!size' => count($result->records()),
-      '!total' => $result->size(),
-      '!query' => $pretty_query,
-    ]));
+    return $this->returnQueryResult(new QueryResult($query, $this->client->query($query)));
   }
 
   /**
@@ -603,11 +592,14 @@ class SalesforceCommands extends DrushCommands {
    * @param string $query
    *   The query to execute.
    *
+   * @return \Drupal\salesforce\Commands\QueryResult
+   *
    * @command salesforce:execute-query
    * @aliases sfeq,soql,sf-execute-query
    */
-  public function executeQuery($query) {
-    $this->output()->writeln(print_r($this->client->apiCall('query?q=' . urlencode($query)), 1));
+  public function executeQuery($query, array $options = ['format' => 'table']) {
+    $query = new SelectQueryRaw($query);
+    return $this->returnQueryResult(new QueryResult($query, $this->client->query($query)));
   }
 
 }

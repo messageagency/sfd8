@@ -1,0 +1,6 @@
+services:
+  salesforce_pull.commands:
+    class: \Drupal\salesforce_pull\Commands\SalesforcePullCommands
+    arguments: ['@salesforce.client', '@entity_type.manager', '@salesforce_pull.queue_handler', '@event_dispatcher']
+    tags:
+      - { name: drush.command }
