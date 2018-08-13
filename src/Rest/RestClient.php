@@ -736,10 +736,13 @@ class RestClient implements RestClientInterface {
       $result = $this->apiCall('sobjects');
       $this->cache->set('salesforce:objects', $result, $this->getRequestTime() + self::CACHE_LIFETIME, ['salesforce']);
     }
-
+//print_r($result);
     $sobjects = [];
     // Filter the list by conditions, and assign SF table names as array keys.
     foreach ($result['sobjects'] as $key => $object) {
+      if (empty($object['name'])) {
+        print_r($object);
+      }
       if (!empty($conditions)) {
         foreach ($conditions as $condition => $value) {
           if ($object[$condition] == $value) {
