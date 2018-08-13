@@ -45,10 +45,7 @@ abstract class SalesforceCommandsBase extends DrushCommands {
     }
   }
 
-  /**
-   * Collect a salesforce mapping name, and set it to a "name" argument.
-   */
-  protected function interactPushMappings(Input $input, Output $output, $message = 'Choose a Salesforce mapping', $allOption = FALSE) {
+  protected function interactMapping(Input $input, Output $output, $message = 'Choose a Salesforce mapping', $allOption = FALSE, $dir = NULL) {
     if ($name = $input->getArgument('name')) {
       if (strtoupper($name) == 'ALL') {
         $input->setArgument('name', 'ALL');
@@ -59,44 +56,46 @@ abstract class SalesforceCommandsBase extends DrushCommands {
       if (!$mapping) {
         $this->logger()->error(dt('Mapping %name does not exist.', ['%name' => $name]));
       }
-      elseif (!$mapping->doesPush()) {
+      elseif ($dir == 'push' && !$mapping->doesPush()) {
+        $this->logger()->error(dt('Mapping %name does not push.', ['%name' => $name]));
+      }
+      elseif ($dir == 'pull' && !$mapping->doesPull()) {
         $this->logger()->error(dt('Mapping %name does not push.', ['%name' => $name]));
       }
       else {
         return;
       }
     }
-    $options = $this->mappingStorage->loadPushMappings();
+    if ($dir == 'pull') {
+      $options = $this->mappingStorage->loadPullMappings();
+    }
+    elseif ($dir == 'push') {
+      $options = $this->mappingStorage->loadPushMappings();
+    }
+    else {
+      $options = $this->mappingStorage->loadMultiple();
+    }
     $this->doMappingNameOptions($input, array_keys($options), $message, $allOption);
+
+  }
+
+  /**
+   * Collect a salesforce mapping name, and set it to a "name" argument.
+   */
+  protected function interactPushMappings(Input $input, Output $output, $message = 'Choose a Salesforce mapping', $allOption = FALSE) {
+    return $this->interactMapping($input, $output, $message, $allOption, 'push');
   }
 
   /**
    * Collect a salesforce mapping name, and set it to a "name" argument.
    */
   protected function interactPullMappings(Input $input, Output $output, $message = 'Choose a Salesforce mapping', $allOption = FALSE) {
-    if ($name = $input->getArgument('name')) {
-      if (strtoupper($name) == 'ALL') {
-        $input->setArgument('name', 'ALL');
-        return;
-      }
-      /** @var \Drupal\salesforce_mapping\Entity\SalesforceMapping $mapping */
-      $mapping = $this->mappingStorage->load($name);
-      if (!$mapping) {
-        $this->logger()
-          ->error(dt('Mapping %name does not exist.', ['%name' => $name]));
-      }
-      elseif (!$mapping->doesPull()) {
-        $this->logger()
-          ->error(dt('Mapping %name does not pull.', ['%name' => $name]));
-      }
-      else {
-        return;
-      }
-    }
-    $options = $this->mappingStorage->loadPullMappings();
-    $this->doMappingNameOptions($input, array_keys($options), $message, $allOption);
+    return $this->interactMapping($input, $output, $message, $allOption, 'pull');
   }
 
+  /**
+   * Helper method to collect the choice from user, given a set of options.
+   */
   protected function doMappingNameOptions(Input $input, array $options, $message, $allOption = FALSE) {
     $options = array_combine($options, $options);
     if ($allOption) {
@@ -109,20 +108,33 @@ abstract class SalesforceCommandsBase extends DrushCommands {
   }
 
   /**
-   * @param $name
-   *
-   * @return \Drupal\salesforce_mapping\Entity\SalesforceMapping[]
-   * @throws \Exception
+   * Given a mapping name (and option direction), get an array of mappings
+   * @param string $name
+   *   'ALL' to load all mappings, or a mapping id.
+   * @param string $dir
+   *   'push'|'pull'|NULL to load limit mappings by push or pull types.
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
    */
-  protected function getPushMappingsFromName($name) {
+  protected function getMappingsFromName($name, $dir = NULL) {
     $mappings = [];
     if ($name == 'ALL') {
-      $mappings = $this->mappingStorage->loadPullMappings();
+      if ($dir == 'pull') {
+        $mappings = $this->mappingStorage->loadPullMappings();
+      }
+      elseif ($dir == 'push') {
+        $mappings = $this->mappingStorage->loadPushMappings();
+      }
+      else {
+        $mappings = $this->mappingStorage->loadMultiple();
+      }
     }
     else {
       $mapping = $this->mappingStorage->load($name);
-      if (!$mapping->doesPush()) {
+      if ($dir == 'push' && !$mapping->doesPush()) {
         throw new \Exception(dt("Mapping !name does not push.", ['!name' => $name]));
+      }
+      elseif ($dir == 'pull' && !$mapping->doesPull()) {
+        throw new \Exception(dt("Mapping !name does not pull.", ['!name' => $name]));
       }
       $mappings = [$mapping];
     }
@@ -134,28 +146,23 @@ abstract class SalesforceCommandsBase extends DrushCommands {
   }
 
   /**
+   * @param $name
+   *
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMapping[]
+   * @throws \Exception
+   */
+  protected function getPushMappingsFromName($name) {
+    return $this->getMappingsFromName($name, 'push');
+  }
+
+  /**
    * @param string $name
    *
    * @return SalesforceMapping[]
    * @throws \Exception
    */
   protected function getPullMappingsFromName($name) {
-    $mappings = [];
-    if ($name == 'ALL') {
-      $mappings = $this->mappingStorage->loadPullMappings();
-    }
-    else {
-      $mapping = $this->mappingStorage->load($name);
-      if (!$mapping->doesPull()) {
-        throw new \Exception(dt("Mapping !name does not pull.", ['!name' => $name]));
-      }
-      $mappings = [$mapping];
-    }
-    $mappings = array_filter($mappings);
-    if (empty($mappings)) {
-      throw new \Exception(dt('No pull mappings loaded'));
-    }
-    return $mappings;
+    $this->getMappingsFromName($name, 'pull');
   }
 
   /**
