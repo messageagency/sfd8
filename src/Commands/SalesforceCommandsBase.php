@@ -2,7 +2,7 @@
 
 namespace Drupal\salesforce\Commands;
 
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drush\Commands\DrushCommands;
@@ -15,14 +15,14 @@ abstract class SalesforceCommandsBase extends DrushCommands {
 
   /** @var \Drupal\salesforce\Rest\RestClient */
   protected $client;
-  /** @var \Drupal\Core\Entity\EntityTypeManager */
+  /** @var \Drupal\Core\Entity\EntityTypeManagerInterface */
   protected $etm;
   /** @var \Drupal\salesforce_mapping\SalesforceMappingStorage */
   protected $mappingStorage;
   /** @var \Drupal\salesforce_mapping\MappedObjectStorage */
   protected $mappedObjectStorage;
 
-  public function __construct(RestClient $client, EntityTypeManager $etm) {
+  public function __construct(RestClient $client, EntityTypeManagerInterface $etm) {
     $this->client = $client;
     $this->etm = $etm;
     $this->mappingStorage = $etm->getStorage('salesforce_mapping');

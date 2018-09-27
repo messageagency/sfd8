@@ -3,7 +3,7 @@
 namespace Drupal\salesforce_push\Commands;
 
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\salesforce\Commands\SalesforceCommandsBase;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_push\PushQueue;
@@ -28,7 +28,7 @@ class SalesforcePushCommands extends SalesforceCommandsBase {
   /** @var \Drupal\salesforce_push\PushQueue $pushQueue */
   protected $pushQueue;
 
-  public function __construct(RestClient $client, EntityTypeManager $etm, PushQueue $pushQueue, Connection $database) {
+  public function __construct(RestClient $client, EntityTypeManagerInterface $etm, PushQueue $pushQueue, Connection $database) {
     parent::__construct($client, $etm);
     $this->pushQueue = $pushQueue;
     $this->database = $database;

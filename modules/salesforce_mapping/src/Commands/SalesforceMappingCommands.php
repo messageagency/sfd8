@@ -4,7 +4,7 @@ namespace Drupal\salesforce_mapping\Commands;
 
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\salesforce\Commands\SalesforceCommandsBase;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SelectQuery;
@@ -27,7 +27,7 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
 
   protected $salesforceConfig;
   protected $database;
-  public function __construct(RestClient $client, EntityTypeManager $etm, ConfigFactory $configFactory, Connection $database) {
+  public function __construct(RestClient $client, EntityTypeManagerInterface $etm, ConfigFactory $configFactory, Connection $database) {
     parent::__construct($client, $etm);
     $this->database = $database;
     $this->salesforceConfig = $configFactory->get('salesforce.settings');

@@ -3,7 +3,7 @@
 namespace Drupal\salesforce_pull\Commands;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\salesforce\Commands\SalesforceCommandsBase;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Rest\RestClient;
@@ -36,10 +36,10 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
    * SalesforcePullCommands constructor.
    *
    * @param \Drupal\salesforce\Rest\RestClient $client
-   * @param \Drupal\Core\Entity\EntityTypeManager $etm
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    * @param \Drupal\salesforce_pull\QueueHandler $pullQueue
    */
-  public function __construct(RestClient $client, EntityTypeManager $etm, QueueHandler $pullQueue, ContainerAwareEventDispatcher $eventDispatcher) {
+  public function __construct(RestClient $client, EntityTypeManagerInterface $etm, QueueHandler $pullQueue, ContainerAwareEventDispatcher $eventDispatcher) {
     parent::__construct($client, $etm);
     $this->pullQueue = $pullQueue;
     $this->eventDispatcher = $eventDispatcher;
@@ -159,7 +159,7 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
    * Given a mapping, enqueue a list of object IDs to be pulled from a CSV file, e.g. a Salesforce report. The first column of the CSV file must be SFIDs. Additional columns will be ignored.
    *
    * @param $file
-   *   CSV file name of 15- or 18-character Salesforce ids to be pulled. 
+   *   CSV file name of 15- or 18-character Salesforce ids to be pulled.
    * @param $name
    *   Machine name of the Salesforce Mapping for which to queue pull records.
    *
