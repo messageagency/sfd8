@@ -33,9 +33,6 @@ class SalesforceMappingList extends DraggableListBuilder {
     $header['drupal_entity_type'] = $this->t('Drupal Entity');
     $header['drupal_bundle'] = $this->t('Drupal Bundle');
     $header['salesforce_object_type'] = $this->t('Salesforce Object');
-    // "status" means something new now.
-    // @TODO rename old "Status" field
-    $header['status'] = $this->t('Status');
     return $header + parent::buildHeader();
   }
 
@@ -48,14 +45,6 @@ class SalesforceMappingList extends DraggableListBuilder {
     $properties = ['drupal_entity_type', 'drupal_bundle', 'salesforce_object_type'];
     foreach ($properties as $property) {
       $row[$property] = ['#markup' => $entity->get($property)];
-    }
-
-    // If this mapping is disabled, denote it visually.
-    if (!$entity->status()) {
-      $row['status'] = ['#markup' => $this->t('Disabled')];
-    }
-    else {
-      $row['status'] = ['#markup' => $this->t('Enabled')];
     }
     return $row + parent::buildRow($entity);
   }

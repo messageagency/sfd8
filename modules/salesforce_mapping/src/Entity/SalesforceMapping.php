@@ -44,8 +44,6 @@ use Drupal\salesforce_mapping\MappingConstants;
  *    "id",
  *    "label",
  *    "weight",
- *    "locked",
- *    "status",
  *    "type",
  *    "key",
  *    "async",
@@ -105,20 +103,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * @var int
    */
   protected $weight = 0;
-
-  /**
-   * Status flag for the mapping.
-   *
-   * @var bool
-   */
-  protected $status = TRUE;
-
-  /**
-   * @TODO what does "locked" mean?
-   *
-   * @var bool
-   */
-  protected $locked = FALSE;
 
   /**
    * Whether to push asychronous only:

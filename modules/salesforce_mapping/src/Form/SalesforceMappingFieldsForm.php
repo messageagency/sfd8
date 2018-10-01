@@ -242,9 +242,6 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       if ($field_plugin->config('salesforce_field') == $key) {
         $key_mapped = TRUE;
       }
-
-      // @TODO what does "locked" even mean?
-      // $values['field_mappings'][$i]['locked'] = !empty($value['ops']['lock']);
     }
 
     if (!empty($key) && !$key_mapped) {

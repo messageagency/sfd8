@@ -13,12 +13,6 @@ salesforce_mapping.salesforce_mapping.*:
     weight:
       type: integer
       label: 'Weight'
-    locked:
-      type: boolean
-      label: 'Locked'
-    status:
-      type: boolean
-      label: 'Status'
     type:
       type: string
       label: 'Type'
@@ -93,9 +87,6 @@ salesforce_mapping.salesforce_mapping.*:
             drupal_field_value:
               type: string
               label: 'Fieldmap Value'
-            locked:
-              type: boolean
-              label: 'Locked'
             direction:
               type: string
               label: 'Direction'
@@ -104,6 +95,9 @@ salesforce_mapping.salesforce_mapping.*:
               label: 'Salesforce Field Name'
 
 # Schema / Config API requires that we add these:
+    status:
+      type: boolean
+      label: 'Status'
     langcode:
       type: string
       label: 'Default language'

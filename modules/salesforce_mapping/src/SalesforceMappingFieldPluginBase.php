@@ -322,7 +322,6 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
       'salesforce_field' => [],
       'drupal_field_type' => $this->getPluginId(),
       'drupal_field_value' => '',
-      'locked' => FALSE,
       'mapping_id' => '',
     ];
   }
