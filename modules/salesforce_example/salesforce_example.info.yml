@@ -4,6 +4,5 @@ description: Salesforce Examples
 core: 8.x
 package: Salesforce
 dependencies:
-  - salesforce
-  - salesforce_push
-  - salesforce_mapping
+  - salesforce:salesforce_push
+  - salesforce:salesforce_mapping

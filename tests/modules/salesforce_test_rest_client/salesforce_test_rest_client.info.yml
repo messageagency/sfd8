@@ -4,4 +4,4 @@ description: 'Provides a dummy Rest Client for functional tests.'
 package: Testing
 core: 8.x
 dependencies:
-  - salesforce
+  - salesforce:salesforce

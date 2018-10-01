@@ -5,4 +5,4 @@ package: Salesforce
 core: 8.x
 
 dependencies:
-  - salesforce_mapping
+  - salesforce:salesforce_mapping

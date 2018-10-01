@@ -4,4 +4,4 @@ description: Consolidated logging for Salesforce Log events.
 core: 8.x
 package: Salesforce
 dependencies:
-  - salesforce
+  - salesforce:salesforce
