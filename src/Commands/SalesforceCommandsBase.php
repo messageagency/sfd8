@@ -162,7 +162,7 @@ abstract class SalesforceCommandsBase extends DrushCommands {
    * @throws \Exception
    */
   protected function getPullMappingsFromName($name) {
-    $this->getMappingsFromName($name, 'pull');
+    return $this->getMappingsFromName($name, 'pull');
   }
 
   /**
