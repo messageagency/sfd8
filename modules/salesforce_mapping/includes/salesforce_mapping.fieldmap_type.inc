@@ -357,41 +357,43 @@ function salesforce_mapping_property_fieldmap_pull_value($entity_wrapper, $sf_ob
     $value = $sf_object[$field_map['salesforce_field']['name']];
   }
 
-  // Salesforce provides multipicklist values as a delimited string. If the
-  // destination field in Drupal accepts multiple values, explode the string
-  // into an array.
-  if ($entity_wrapper instanceof EntityListWrapper) {
-    $value = explode(SALESFORCE_MAPPING_ARRAY_DELIMITER, $value);
-  }
+  if (isset($value)) {
+    // Salesforce provides multipicklist values as a delimited string. If the
+    // destination field in Drupal accepts multiple values, explode the string
+    // into an array.
+    if ($entity_wrapper instanceof EntityListWrapper) {
+      $value = explode(SALESFORCE_MAPPING_ARRAY_DELIMITER, $value);
+    }
 
-  // Marshalling for data types that are formatted differently on Salesforce.
-  switch ($entity_wrapper->type()) {
-    case 'date':
-      if (isset($value) && ($field_map['salesforce_field']['type'] == 'date' || $field_map['salesforce_field']['type'] == 'datetime')) {
-        $value = strtotime($value);
-      }
-      break;
-
-    case 'integer':
-    case 'boolean':
-      $value = isset($value) ? (int) $value : 0;
-      break;
-
-    case 'text':
-      $value = (string) $value;
-      break;
-
-    case 'uri':
-      if (!empty($value) &&!valid_url($value, TRUE)) {
-        $parsed_value = parse_url($value);
-        // Salesforce tacks on an http:// to the front of URLs as necessary, but
-        // it still passes the naked version to the API, so we correct it.
-        if (!isset($parsed_value['scheme'])) {
-          $value = 'http://' . $value;
+    // Marshalling for data types that are formatted differently on Salesforce.
+    switch ($entity_wrapper->type()) {
+      case 'date':
+        if ($field_map['salesforce_field']['type'] == 'date' || $field_map['salesforce_field']['type'] == 'datetime') {
+          $value = strtotime($value);
         }
-      }
+        break;
 
-      break;
+      case 'integer':
+      case 'boolean':
+        $value = (int) $value;
+        break;
+
+      case 'text':
+        $value = (string) $value;
+        break;
+
+      case 'uri':
+        if (!empty($value) && !valid_url($value, TRUE)) {
+          $parsed_value = parse_url($value);
+          // Salesforce tacks on an http:// to the front of URLs as necessary,
+          // but it still passes the naked version to the API, so we correct it.
+          if (!isset($parsed_value['scheme'])) {
+            $value = 'http://' . $value;
+          }
+        }
+
+        break;
+    }
   }
 
   return $value;

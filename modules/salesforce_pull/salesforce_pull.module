@@ -904,29 +904,44 @@ function salesforce_pull_map_fields($field_maps, &$entity_wrapper, $sf_object) {
 
     // Allow this value to be altered before assigning to the entity.
     drupal_alter('salesforce_pull_entity_value', $value, $field_map, $sf_object);
-    if (isset($value)) {
-      // @TODO: might wrongly assumes an individual value wouldn't be an
-      // array.
-      try {
-        if ($parent instanceof EntityListWrapper && !is_array($value)) {
-          $parent->offsetSet(0, $value);
+
+    try {
+      if ($parent instanceof EntityListWrapper) {
+        if (empty($value)) {
+          $value = array();
         }
-        else {
-          $parent->set($value);
+        elseif (!is_array($value)) {
+          $value = array($value);
         }
       }
-      catch (Exception $e) {
-        $message = t('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', array(
-          '@sfobj' => $sf_object['attributes']['type'],
-          '@sffield' =>  $field_map['salesforce_field']['name'],
-          '@sfid' => $sf_object['Id'],
-          '@dobj' => $entity_wrapper->type(),
-          '@dprop' => $field_map['drupal_field']['fieldmap_value'],
-          '@did' => $entity_wrapper->getIdentifier(),
-          '@v' => $value,
-          '@e' => $e->getMessage()));
-        throw new Exception($message, $e->getCode(), $e);
+      if (empty($value) && count($drupal_fields_array) > 1
+        && empty($child_wrapper->info()['parent']->info()['required'])
+        && !empty($child_wrapper->info()['required'])) {
+        // When a field with multiple properties (like a link field) has a
+        // property that is required (url in the link field example) we cannot
+        // set the property/child value to null. We can however set the parent
+        // to null when it is not required. In case a field linked to a
+        // property gets cleared in Salesforce we assume it's fine to clear the
+        // parent of the property in Drupal.
+        $child_wrapper->info()['parent']->set($value);
       }
+      else {
+        $parent->set($value);
+      }
+    }
+
+    catch (Exception $e) {
+      $message = t('Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v: @e', array(
+        '@sfobj' => $sf_object['attributes']['type'],
+        '@sffield' => $field_map['salesforce_field']['name'],
+        '@sfid' => $sf_object['Id'],
+        '@dobj' => $entity_wrapper->type(),
+        '@dprop' => $field_map['drupal_field']['fieldmap_value'],
+        '@did' => $entity_wrapper->getIdentifier(),
+        '@v' => $value,
+        '@e' => $e->getMessage(),
+      ));
+      throw new Exception($message, $e->getCode(), $e);
     }
   }
 }
