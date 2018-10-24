@@ -1109,6 +1109,9 @@ function _salesforce_mapping_get_salesforce_field_options($salesforce_object_typ
     foreach ($sfobject['fields'] as $sf_field) {
       if ($type == NULL || $type == $sf_field['type']) {
         $sf_fields[$sf_field['name']] = $sf_field['label'] . ' - (' . $sf_field['name'] . ')';
+        if (!$sf_field['nillable'] && $sf_field['updateable'] && $sf_field['type'] != 'boolean') {
+          $sf_fields[$sf_field['name']] .= '*';
+        }
       }
     }
   }

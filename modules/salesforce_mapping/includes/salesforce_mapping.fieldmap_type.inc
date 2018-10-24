@@ -90,10 +90,16 @@ function salesforce_mapping_property_fieldmap_options($entity_type, $entity_bund
       if (isset($property['field']) && $property['field'] && !empty($property['property info'])) {
         foreach ($property['property info'] as $sub_key => $sub_prop) {
           $options[$property['label']][$key . ':' . $sub_key] = $sub_prop['label'];
+          if (isset($sub_prop['required']) && $sub_prop['required']) {
+            $options[$property['label']][$key . ':' . $sub_key] .= '*';
+          }
         }
       }
       else {
         $options[$key] = $property['label'];
+        if (isset($property['required']) && $property['required']) {
+          $options[$key] .= '*';
+        }
       }
     }
   }
