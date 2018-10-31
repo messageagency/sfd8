@@ -165,6 +165,12 @@ class MappedObjectTest extends UnitTestCase {
    */
   public function testPushUpsert() {
     // First pass: test upsert.
+    $this->mapped_object->expects($this->any())
+      ->method('sfid')
+      ->willReturn(NULL);
+    $this->mapping->expects($this->any())
+      ->method('alwaysUpsert')
+      ->willReturn(FALSE);
     $this->mapping->expects($this->any())
       ->method('hasKey')
       ->will($this->returnValue(TRUE));
@@ -179,12 +185,12 @@ class MappedObjectTest extends UnitTestCase {
    */
   public function testPushUpdate() {
     // Second pass: test update.
-    $this->mapping->expects($this->once())
-      ->method('hasKey')
-      ->willReturn(FALSE);
     $this->mapped_object->expects($this->any())
       ->method('sfid')
       ->willReturn($this->sfid);
+    $this->mapping->expects($this->any())
+      ->method('alwaysUpsert')
+      ->willReturn(FALSE);
     $this->client->expects($this->once())
       ->method('objectUpdate')
       ->willReturn(NULL);
@@ -202,6 +208,9 @@ class MappedObjectTest extends UnitTestCase {
     $this->mapped_object->expects($this->any())
       ->method('sfid')
       ->willReturn(FALSE);
+    $this->mapping->expects($this->any())
+      ->method('alwaysUpsert')
+      ->willReturn(FALSE);
     $this->client->expects($this->once())
       ->method('objectCreate')
       ->willReturn($this->sfid);
@@ -209,6 +218,26 @@ class MappedObjectTest extends UnitTestCase {
     $result = $this->mapped_object->push();
     $this->assertTrue($result instanceof SFID);
     $this->assertEquals($this->salesforce_id, (string) $result);
+  }
+
+  /**
+   * @covers ::push
+   */
+  public function testAlwaysUpsert() {
+    // Fourth pass: test always upsert
+    $this->mapped_object->expects($this->any())
+      ->method('sfid')
+      ->willReturn($this->sfid);
+    $this->mapping->expects($this->any())
+      ->method('alwaysUpsert')
+      ->willReturn(TRUE);
+    $this->mapping->expects($this->once())
+      ->method('hasKey')
+      ->will($this->returnValue(TRUE));
+    $this->client->expects($this->once())
+      ->method('objectUpsert')
+      ->willReturn(NULL);
+    $this->assertNull($this->mapped_object->push());
   }
 
   /**

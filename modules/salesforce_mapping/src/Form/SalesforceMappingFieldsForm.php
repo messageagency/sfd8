@@ -49,6 +49,12 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
         '#empty_option' => t('(none)'),
         '#empty_value' => '',
       ];
+      $form['key_wrapper']['always_upsert'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Always Upsert'),
+        '#default_value' => $this->entity->get('always_upsert'),
+        '#description' => t('If checked, always use "upsert" to push data to Salesforce. Otherwise, prefer a Salesforce ID if available. For example, given a user mapping with "email" set for upsert key, leave this checkbox off; otherwise, a new Salesforce record will be created whenever a user changes their email.'),
+      ];
     }
 
     $form['field_mappings_wrapper'] = [

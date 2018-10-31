@@ -19,6 +19,9 @@ salesforce_mapping.salesforce_mapping.*:
     key:
       type: string
       label: 'Upsert Key'
+    always_upsert:
+      type: boolean
+      label: 'Always Upsert'
     async:
       type: boolean
       label: 'Push async'
