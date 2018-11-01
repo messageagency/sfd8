@@ -16,3 +16,15 @@ salesforce.global_settings:
   title: Salesforce Settings
   description: 'Manage global settings for Salesforce Suite.'
   weight: -100
+
+salesforce.auth_config:
+  route_name: salesforce.auth_config
+  parent: salesforce.admin_config_salesforce
+  title: Salesforce Authorization
+  description: 'Salesforce Authorization.'
+
+entity.salesforce_auth.collection:
+  route_name: entity.salesforce_auth.collection
+  parent: salesforce.auth_config
+  title: Salesforce Authorization Providers
+  description: 'Salesforce Authorization Providers.'

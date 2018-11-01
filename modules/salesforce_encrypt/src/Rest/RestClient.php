@@ -15,7 +15,7 @@ use Drupal\encrypt\EncryptionProfileInterface;
 use Drupal\encrypt\EncryptionProfileManagerInterface;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Rest\RestClient as SalesforceRestClient;
-use Drupal\salesforce_auth\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use GuzzleHttp\ClientInterface;
 use Drupal\Component\Datetime\TimeInterface;
 

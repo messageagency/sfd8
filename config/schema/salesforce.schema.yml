@@ -52,3 +52,52 @@ salesforce.settings:
         version:
           type: string
           label: 'Version'
+
+salesforce.salesforce_auth.*:
+  type: config_entity
+  label: 'Salesforce Auth Provider'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+      translatable: true
+    provider:
+      type: string
+      label: 'Provider Plugin'
+    provider_settings:
+      type: salesforce.auth_provider_settings.[%parent.provider]
+      label: 'Provider Plugin Settings'
+
+salesforce.auth_provider_settings.jwt:
+  type: mapping
+  label: 'Salesforce JWT Provider Settings'
+  mapping:
+    consumer_key:
+      type: string
+      label: 'Consumer Key'
+    login_user:
+      type: string
+      label: 'Login User'
+    login_url:
+      type: uri
+      label: 'Login URL'
+    encrypt_key:
+      type: key.key.[%key]
+      label: 'Encryption Key ID'
+
+salesforce.auth_provider_settings.oauth:
+  type: mapping
+  label: 'Salesforce JWT Provider Settings'
+  mapping:
+    consumer_key:
+      type: string
+      label: 'Consumer Key'
+    consumer_secret:
+      type: string
+      label: 'Consumer Secret'
+    login_url:
+      type: uri
+      label: 'Login URL'

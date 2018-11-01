@@ -199,8 +199,6 @@ function salesforce_update_8003() {
 }
 
 function salesforce_update_8004() {
-  \Drupal::service('module_installer')->install(["salesforce_auth"]);
-  // Convert existing state and config to new auth entities.
-  // Delete existing state and config.
+  throw new \Exception('TODO: move oauth credentials to plugin config and set as default if no oauth plugin configs have been created.');
 }
 

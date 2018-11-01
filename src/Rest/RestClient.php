@@ -15,13 +15,14 @@ use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
-use Drupal\salesforce_auth\SalesforceAuthProviderInterface;
-use Drupal\salesforce_auth\SalesforceAuthManager;
-use Drupal\salesforce_auth\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\SalesforceAuthProviderInterface;
+use Drupal\salesforce\SalesforceAuthManager;
+use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
 use Drupal\Component\Datetime\TimeInterface;
+use OAuth\Common\Storage\Exception\TokenNotFoundException;
 use Zend\Diactoros\Exception\DeprecatedMethodException;
 
 /**
@@ -95,9 +96,30 @@ class RestClient implements RestClientInterface {
   /**
    * Auth provider manager.
    *
-   * @var SalesforceAuthManager
+   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManager
    */
-  protected $auth;
+  protected $authManager;
+
+  /**
+   * Active auth provider.
+   *
+   * @var \Drupal\salesforce\SalesforceAuthProviderInterface
+   */
+  protected $authProvider;
+
+  /**
+   * Active auth provider config.
+   *
+   * @var \Drupal\salesforce\Entity\SalesforceAuthConfig
+   */
+  protected $authConfig;
+
+  /**
+   * Active auth token.
+   *
+   * @var \OAuth\OAuth2\Token\TokenInterface
+   */
+  protected $authToken;
 
   protected $httpClientOptions;
 
@@ -118,7 +140,7 @@ class RestClient implements RestClientInterface {
    * @param \Drupal\Component\Serialization\Json $json
    *   The JSON serializer service.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, SalesforceAuthProviderPluginManager $auth) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, SalesforceAuthProviderPluginManager $authManager) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
     $this->mutableConfig = $this->configFactory->getEditable('salesforce.settings');
@@ -128,7 +150,11 @@ class RestClient implements RestClientInterface {
     $this->json = $json;
     $this->time = $time;
     $this->httpClientOptions = [];
-    $this->auth = $auth;
+    $this->authManager = $authManager;
+    $this->authProvider = $authManager->getProvider();
+    $this->authConfig = $authManager->getConfig();
+    $this->authToken = $authManager->getToken();
+    dpm($this->authProvider->getLoginUrl());
     return $this;
   }
 
@@ -136,19 +162,24 @@ class RestClient implements RestClientInterface {
    * Determine if this SF instance is fully configured.
    */
   public function isAuthorized() {
-    return $this->getConsumerKey() && $this->getConsumerSecret() && $this->getRefreshToken();
+    try {
+      return !is_null($this->authToken) && !empty($this->authToken->getAccessToken());
+    }
+    catch (TokenNotFoundException $e) {
+      return FALSE;
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function apiCall($path, array $params = [], $method = 'GET', $returnObject = FALSE) {
-    if (!$this->getAccessToken()) {
-      $this->refreshToken();
+    if (!$this->isAuthorized()) {
+      $this->authManager->refreshToken();
     }
 
     if (strpos($path, '/') === 0) {
-      $url = $this->getInstanceUrl() . $path;
+      $url = $this->authProvider->getInstanceUrl() . $path;
     }
     else {
       $url = $this->getApiEndPoint() . $path;
@@ -171,7 +202,7 @@ class RestClient implements RestClientInterface {
       // The session ID or OAuth token used has expired or is invalid: refresh
       // token. If refresh_token() throws an exception, or if apiHttpRequest()
       // throws anything but a RequestException, let it bubble up.
-      $this->refreshToken();
+      $this->authManager->refreshToken();
       try {
         $this->response = new RestResponse($this->apiHttpRequest($url, $params, $method));
       }
@@ -214,12 +245,12 @@ class RestClient implements RestClientInterface {
    * @throws \GuzzleHttp\Exception\RequestException
    */
   protected function apiHttpRequest($url, array $params, $method) {
-    if (!$this->getAccessToken()) {
+    if (!$this->isAuthorized()) {
       throw new \Exception('Missing OAuth Token');
     }
 
     $headers = [
-      'Authorization' => 'OAuth ' . $this->getAccessToken(),
+      'Authorization' => 'OAuth ' . $this->authToken->getAccessToken(),
       'Content-type' => 'application/json',
     ];
     $data = NULL;
@@ -238,11 +269,11 @@ class RestClient implements RestClientInterface {
    * @throws \Exception
    */
   public function httpRequestRaw($url) {
-    if (!$this->getAccessToken()) {
+    if (!$this->isAuthorized()) {
       throw new \Exception('Missing OAuth Token');
     }
     $headers = [
-      'Authorization' => 'OAuth ' . $this->getAccessToken(),
+      'Authorization' => 'OAuth ' . $this->authToken->getAccessToken(),
       'Content-type' => 'application/json',
     ];
     $response = $this->httpRequest($url, NULL, $headers);
@@ -337,7 +368,7 @@ class RestClient implements RestClientInterface {
   public function getApiEndPoint($api_type = 'rest') {
     $url = &drupal_static(__FUNCTION__ . $api_type);
     if (!isset($url)) {
-      $identity = $this->getIdentity();
+      $identity = $this->authProvider->getIdentity();
       if (empty($identity)) {
         return FALSE;
       }
@@ -373,7 +404,7 @@ class RestClient implements RestClientInterface {
    * @throws \Exception
    * @throws \GuzzleHttp\Exception\RequestException
    *
-   * @deprecated this method is deprecated and will be removed before the next stable release.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
    */
   public function setApiVersion($use_latest = TRUE, $version = NULL) {
     trigger_error(__CLASS__.'::'.__FUNCTION__ . ' is deprecated and will be removed before the next stable release of Salesforce module. Please update your callers.', E_DEPRECATED);
@@ -392,108 +423,108 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
    */
   public function getConsumerKey() {
-    return $this->auth->getConfig() ? $this->auth->getConfig()->getConsumerKey() : NULL;
+    return $this->authProvider ? $this->authProvider->getConsumerKey() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
    */
   public function setConsumerKey($value) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
    */
   public function getConsumerSecret() {
-    return $this->auth->getConfig() ? $this->auth->getConfig()->getConsumerSecret() : NULL;
+    return $this->authProvider ? $this->authProvider->getConsumerSecret() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
    */
   public function setConsumerSecret($value) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
    */
   public function getLoginUrl() {
-    return $this->auth->getConfig() ? $this->auth->getConfig()->getLoginUrl() : NULL;
+    return $this->authProvider ? $this->authProvider->getLoginUrl() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
    */
   public function setLoginUrl($value) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
    */
   public function getInstanceUrl() {
-    return $this->auth->getToken() ? $this->auth->getToken()->getInstanceUrl() : NULL;
+    return $this->authProvider ? $this->authProvider->getInstanceUrl() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
    */
   public function setInstanceUrl($url) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
    */
   public function getAccessToken() {
-    return $this->auth->getToken() ? $this->auth->getToken()->getAccessToken() : null;
+    return $this->authToken ? $this->authToken->getAccessToken() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
    */
   public function setAccessToken($token) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
    */
   protected function getRefreshToken() {
-    return $this->auth->getToken() ? $this->auth->getToken()->getRefreshToken() : NULL;
+    return $this->authToken ? $this->authToken->getRefreshToken() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
    */
   public function setRefreshToken($token) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getProvider() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getProvider() to access the current active auth configuration.
    */
   public function refreshToken() {
-    return $this->auth->refreshToken();
+    return $this->authManager->refreshToken();
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
    */
   public function setIdentity($data) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce_auth\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
    */
   public function getIdentity() {
-    return $this->auth->getProvider() ? $this->auth->getProvider()->getIdentity() : NULL;
+    return $this->authProvider ? $this->authProvider->getIdentity() : NULL;
   }
 
   /**
@@ -514,7 +545,7 @@ class RestClient implements RestClientInterface {
     }
 
     $versions = [];
-    $id = $this->getIdentity();
+    $id = $this->authProvider->getIdentity();
     if (!empty($id)) {
       $url = str_replace('v{version}/', '', $id['urls']['rest']);
       $response = new RestResponse($this->httpRequest($url));

@@ -18,5 +18,8 @@
   "support": {
     "issues": "https://drupal.org/project/issues/salesforce",
     "source": "http://cgit.drupalcode.org/salesforce"
+  },
+  "require": {
+    "lusitanian/oauth": "^0.8.11"
   }
 }
