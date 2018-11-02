@@ -49,16 +49,21 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
     $this->alterInfo('salesforce_auth_provider_info');
     $this->setCacheBackend($cache_backend, 'salesforce_auth_provider');
     $this->etm = $etm;
-    $this->authStorage = $etm->getStorage('salesforce_auth');
+  }
 
+  protected function authStorage() {
+    if (empty($this->authStorage)) {
+      $this->authStorage = $this->etm->getStorage('salesforce_auth');
+    }
+    return $this->authStorage;
   }
 
   public function getProviders() {
-    return $this->authStorage->loadMultiple();
+    return $this->authStorage()->loadMultiple();
   }
 
   public function hasProviders() {
-    return $this->authStorage->hasData();
+    return $this->authStorage()->hasData();
   }
 
   /**
@@ -113,11 +118,9 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
     if (!$config = $this->getConfig()) {
       return NULL;
     }
-    dpm($config);
     if (!$provider = $config->getPlugin()) {
       return NULL;
     }
-    dpm($provider);
     $token = $this->getToken() ?: new StdOAuth2Token();
     return $provider->refreshAccessToken($token);
   }

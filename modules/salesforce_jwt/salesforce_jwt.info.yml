@@ -1,0 +1,8 @@
+name: Salesforce JWT Auth Provider
+type: module
+description: Provides key-based Salesforce authentication.
+core: 8.x
+package: Salesforce
+dependencies:
+  - salesforce
+  - key

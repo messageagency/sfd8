@@ -1,11 +1,12 @@
 <?php
 
-namespace Drupal\salesforce\Plugin\SalesforceAuthProvider;
+namespace Drupal\salesforce_jwt\Plugin\SalesforceAuthProvider;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\salesforce\Consumer\JWTCredentials;
+use Drupal\Core\Url;
+use Drupal\salesforce_jwt\Consumer\JWTCredentials;
 use Drupal\salesforce\SalesforceAuthProviderPluginBase;
 use OAuth\OAuth2\Token\StdOAuth2Token;
 use OAuth\Common\Http\Exception\TokenResponseException;
@@ -23,10 +24,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
 
-  use StringTranslationTrait;
-  use MessengerTrait;
-
-  /** @var \Drupal\salesforce\Consumer\JWTCredentials */
+  /** @var \Drupal\salesforce_jwt\Consumer\JWTCredentials */
   protected $credentials;
 
   const SERVICE_TYPE = 'jwt';
@@ -36,7 +34,7 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    * SalesforceAuthServiceBase constructor.
    *
    * @param string $id
-   * @param \Drupal\salesforce\Consumer\JWTCredentials $credentials
+   * @param \Drupal\salesforce_jwt\Consumer\JWTCredentials $credentials
    * @param \OAuth\Common\Http\Client\ClientInterface $httpClient
    * @param \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface $storage
    *
@@ -71,6 +69,10 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     if (!$this->keyRepository()) {
       $this->messenger()->addError($this->t('JWT Auth requires <a href="https://drupal.org/project/key">Key</a> module. Please install before adding a JWT Auth config.'));
+      return $form;
+    }
+    if (!$this->keyRepository()->getKeyNamesAsOptions(['type' => 'authentication'])) {
+      $this->messenger()->addError($this->t('Please <a href="@href">add an authentication key</a> before creating a JWT Auth provider.', ['@href' => Url::fromRoute('entity.key.add_form')->toString()]));
       return $form;
     }
     $form['consumer_key'] = [
@@ -148,7 +150,6 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
       'assertion' => $assertion,
     ];
     $response = $this->httpClient->retrieveResponse(new Uri($login_url . static::AUTH_TOKEN_PATH), $data, ['Content-Type' => 'application/x-www-form-urlencoded']);
-    dpm($response);
     $token = $this->parseAccessTokenResponse($response);
     $this->storage->storeAccessToken($this->service(), $token);
 
@@ -180,6 +181,12 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
     return $token;
   }
 
+  /**
+   * Key repository wrapper.
+   *
+   * @return \Drupal\key\KeyRepository|FALSE
+   *   The key repo.
+   */
   protected function keyRepository() {
     if (!\Drupal::hasService('key.repository')) {
       return FALSE;

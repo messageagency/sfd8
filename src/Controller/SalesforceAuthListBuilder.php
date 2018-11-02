@@ -6,7 +6,7 @@ use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
- * List builder for JWT Auth Configs.
+ * List builder for salesforce_auth.
  */
 class SalesforceAuthListBuilder extends ConfigEntityListBuilder {
 

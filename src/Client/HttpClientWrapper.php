@@ -22,7 +22,6 @@ class HttpClientWrapper implements ClientInterface {
     array $extraHeaders = array(),
     $method = 'POST'
   ) {
-    dpm([$method, $endpoint->getAbsoluteUri(), ['headers' => $extraHeaders, 'form_params' => $requestBody]], __LINE__);
     $response = $this->httpClient->request($method, $endpoint->getAbsoluteUri(), ['headers' => $extraHeaders, 'form_params' => $requestBody]);
     return $response->getBody()->getContents();
   }

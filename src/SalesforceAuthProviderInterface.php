@@ -3,6 +3,7 @@
 namespace Drupal\salesforce;
 
 use Drupal\Component\Plugin\DependentPluginInterface;
+use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use OAuth\Common\Token\TokenInterface;
@@ -10,10 +11,8 @@ use OAuth\OAuth2\Service\ServiceInterface;
 
 /**
  * Class SalesforceAuthProvider.
- *
- * @package salesforce_jwt
  */
-interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormInterface, ContainerFactoryPluginInterface, DependentPluginInterface {
+interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormInterface, ContainerFactoryPluginInterface, PluginInspectionInterface {
 
   const AUTH_TOKEN_PATH = '/services/oauth2/token';
   const AUTH_ENDPOINT_PATH = '/services/oauth2/authorize';

@@ -153,7 +153,6 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase {
     $data = $token->getExtraParams();
     $response = $this->httpClient->retrieveResponse(new Uri($data['id']), [], $headers);
     $identity = $this->parseIdentityResponse($response);
-    dpm($identity);
     $this->storage->storeIdentity($this->service(), $identity);
 
     \Drupal::messenger()->addStatus(t('Successfully connected to Salesforce.'));

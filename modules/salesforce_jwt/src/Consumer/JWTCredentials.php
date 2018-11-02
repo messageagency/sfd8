@@ -1,6 +1,8 @@
 <?php
 
-namespace Drupal\salesforce\Consumer;
+namespace Drupal\salesforce_jwt\Consumer;
+
+use Drupal\salesforce\Consumer\SalesforceCredentials;
 
 class JWTCredentials extends SalesforceCredentials {
   protected $loginUser;

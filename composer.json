@@ -20,6 +20,7 @@
     "source": "http://cgit.drupalcode.org/salesforce"
   },
   "require": {
-    "lusitanian/oauth": "^0.8.11"
+    "lusitanian/oauth": "^0.8.11",
+    "drupal/key": "^1.7"
   }
 }

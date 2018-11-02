@@ -154,7 +154,6 @@ class RestClient implements RestClientInterface {
     $this->authProvider = $authManager->getProvider();
     $this->authConfig = $authManager->getConfig();
     $this->authToken = $authManager->getToken();
-    dpm($this->authProvider->getLoginUrl());
     return $this;
   }
 

@@ -8,7 +8,7 @@ use Drupal\salesforce\Plugin\SalesforceAuthProviderFormInterface;
 use Drupal\salesforce_oauth\Entity\OAuthConfig;
 
 /**
- * Entity form for JWT Auth Config.
+ * Entity form for salesforce_auth.
  */
 class SalesforceAuthForm extends EntityForm {
 

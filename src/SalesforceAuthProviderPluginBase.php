@@ -4,6 +4,7 @@ namespace Drupal\salesforce;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use OAuth\Common\Http\Exception\TokenResponseException;
 use OAuth\Common\Http\Uri\Uri;
@@ -13,6 +14,7 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
 
   use StringTranslationTrait;
   use DependencySerializationTrait;
+  use MessengerTrait;
 
   /**
    * @var \Drupal\salesforce\Consumer\SalesforceCredentials
@@ -33,6 +35,20 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
       'consumer_key' => '',
       'login_url' => 'https://test.salesforce.com',
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginId() {
+    return $this->getConfiguration('id');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginDefinition() {
+    return $this->getConfiguration();
   }
 
   /**
@@ -166,13 +182,6 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
    */
   public function getStorage() {
     return $this->storage;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function calculateDependencies() {
-    return [];
   }
 
 }
