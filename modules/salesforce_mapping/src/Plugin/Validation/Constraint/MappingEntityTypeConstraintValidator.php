@@ -15,6 +15,10 @@ class MappingEntityTypeConstraintValidator extends ConstraintValidator {
    */
   public function validate($entity, Constraint $constraint) {
     $drupal_entity = $entity->getMappedEntity() ?: $entity->getDrupalEntityStub();
+    if (!$drupal_entity) {
+      $this->context->addViolation('Validation failed. Please check your input and try again.');
+      return;
+    }
     if ($drupal_entity->getEntityTypeId() != $entity->getMapping()->getDrupalEntityType()) {
       $this->context->addViolation($constraint->message, [
         '%mapping' => $entity->getMapping()->label(),

@@ -37,8 +37,6 @@ class SalesforceMappingTest extends UnitTestCase {
       'uuid' => '3bb9ee60-bea5-4622-b89b-a63319d10b3a',
       'label' => 'Test Mapping',
       'weight' => 0,
-      'locked' => 0,
-      'status' => 1,
       'type' => 'salesforce_mapping',
       'key' => 'Drupal_id__c',
       'async' => 1,

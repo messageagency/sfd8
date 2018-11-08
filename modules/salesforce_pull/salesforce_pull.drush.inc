@@ -90,8 +90,10 @@ function salesforce_pull_drush_command() {
  * Queues records for pull from salesforce for the given mapping.
  *
  * @param string $name
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_pull_sf_pull_query($name) {
+  _drush_salesforce_deprecated();
   if (!($mapping = _salesforce_drush_get_mapping($name))) {
     return;
   }
@@ -142,8 +144,10 @@ function drush_salesforce_pull_sf_pull_query($name) {
  *
  * @param string $file
  * @param string $name
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
+  _drush_salesforce_deprecated();
   if (empty($file)) {
     drush_log("File argument is required.", 'error');
     drush_log("usage:\n  drush sf-pull-file file_name [mapping_id]", 'error');
@@ -242,7 +246,7 @@ function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
 }
 
 /**
- *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function _salesforce_pull_load_single_mapping_array_or_all_pull_mappings($name = NULL) {
   if ($name != NULL) {
@@ -263,7 +267,7 @@ function _salesforce_pull_load_single_mapping_array_or_all_pull_mappings($name =
 }
 
 /**
- *
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_pull_sf_pull_reset($name = NULL) {
   $mappings = _salesforce_pull_load_single_mapping_array_or_all_pull_mappings($name);
@@ -278,7 +282,11 @@ function drush_salesforce_pull_sf_pull_reset($name = NULL) {
   }
 }
 
+/**
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ */
 function drush_salesforce_pull_sf_pull_set($name, $time = NULL) {
+  _drush_salesforce_deprecated();
   if (is_null($time)) {
     $time = time();
   }

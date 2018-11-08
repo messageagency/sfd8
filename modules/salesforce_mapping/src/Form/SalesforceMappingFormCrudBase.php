@@ -350,20 +350,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#default_value' => $mapping->weight,
     ];
 
-    $form['meta']['status'] = [
-      '#title' => t('Status'),
-      '#type' => 'checkbox',
-      '#description' => t('Not yet in use.'),
-      '#default_value' => $mapping->status,
-    ];
-
-    $form['meta']['locked'] = [
-      '#title' => t('Locked'),
-      '#type' => 'checkbox',
-      '#description' => t('Not yet in use.'),
-      '#default_value' => $mapping->locked,
-    ];
-
     return $form;
   }
 

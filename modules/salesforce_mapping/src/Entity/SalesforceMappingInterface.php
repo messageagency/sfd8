@@ -107,7 +107,7 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
   public function checkTriggers(array $triggers);
 
   /**
-   * Whether or not this mapping has defined an upsert key.
+   * Return TRUE if an upsert key is set for this mapping.
    *
    * @return bool
    */
@@ -209,4 +209,10 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    */
   public function getNextPushTime();
 
+  /**
+   * Return TRUE if this mapping should always use upsert over create or update.
+   *
+   * @return bool
+   */
+  public function alwaysUpsert();
 }

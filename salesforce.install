@@ -254,6 +254,13 @@ function salesforce_update_8003() {
 }
 
 /**
+ * Clear salesforce:objects cache, whose structure has changed.
+ */
+function salesforce_update_8004() {
+  \Drupal::cache()->delete('salesforce:objects');
+}
+
+/**
  * Convert legacy oauth credentials to new auth plugin config.
  */
 function salesforce_update_8005() {
@@ -297,4 +304,3 @@ function salesforce_update_8005() {
   ]);
 
 }
-

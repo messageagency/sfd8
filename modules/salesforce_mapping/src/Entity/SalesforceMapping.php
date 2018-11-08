@@ -44,8 +44,6 @@ use Drupal\salesforce_mapping\MappingConstants;
  *    "id",
  *    "label",
  *    "weight",
- *    "locked",
- *    "status",
  *    "type",
  *    "key",
  *    "async",
@@ -61,6 +59,7 @@ use Drupal\salesforce_mapping\MappingConstants;
  *    "push_retries",
  *    "push_frequency",
  *    "pull_frequency",
+ *    "always_upsert"
  *   },
  *   lookup_keys = {
  *     "drupal_entity_type",
@@ -105,20 +104,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * @var int
    */
   protected $weight = 0;
-
-  /**
-   * Status flag for the mapping.
-   *
-   * @var bool
-   */
-  protected $status = TRUE;
-
-  /**
-   * @TODO what does "locked" mean?
-   *
-   * @var bool
-   */
-  protected $locked = FALSE;
 
   /**
    * Whether to push asychronous only:
@@ -180,6 +165,15 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * @var string
    */
   protected $key;
+
+  /**
+   * If TRUE, always use "upsert" to push data to Salesforce.
+   *
+   * Otherwise use "upsert" only if upsert key is set and SFID is not available.
+   *
+   * @var bool
+   */
+  protected $always_upsert;
 
   /**
    * @TODO documentation
@@ -603,6 +597,13 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     }
     $soql->order[$this->getPullTriggerDate()] = 'ASC';
     return $soql;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alwaysUpsert() {
+    return $this->hasKey() && !empty($this->always_upsert);
   }
 
   /**

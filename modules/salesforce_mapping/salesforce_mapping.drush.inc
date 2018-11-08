@@ -49,7 +49,12 @@ function salesforce_mapping_drush_command() {
   return $items;
 }
 
+/**
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ */
 function drush_salesforce_mapping_sf_prune_revisions() {
+  _drush_salesforce_deprecated();
+
   $limit =
     \Drupal::service('config.factory')
     ->get('salesforce.settings')
@@ -92,7 +97,11 @@ function drush_salesforce_mapping_sf_prune_revisions() {
   
 }
 
+/**
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ */
 function drush_salesforce_mapping_sf_purge_drupal() {
+  _drush_salesforce_deprecated();
   $etm = \Drupal::service('entity_type.manager');
   $mapped_obj_storage = $etm->getStorage('salesforce_mapped_object');
   $mapped_obj_table = $etm
@@ -135,7 +144,11 @@ function drush_salesforce_mapping_sf_purge_drupal() {
   }
 }
 
+/**
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ */
 function drush_salesforce_mapping_sf_purge_salesforce() {
+  _drush_salesforce_deprecated();
   $etm = \Drupal::service('entity_type.manager');
   $client = \Drupal::service('salesforce.client');
   $object_types = _drush_salesforce_mapping_object_types_by_prefix($client);
@@ -203,7 +216,11 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
   }
 }
 
+/**
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ */
 function drush_salesforce_mapping_sf_purge_mapping() {
+  _drush_salesforce_deprecated();
   $etm = \Drupal::service('entity_type.manager');
   $mapped_obj_storage = $etm->getStorage('salesforce_mapped_object');
   $mapped_obj_table = $etm
@@ -245,7 +262,11 @@ function drush_salesforce_mapping_sf_purge_mapping() {
   }
 }
 
+/**
+ * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ */
 function drush_salesforce_mapping_sf_purge_all() {
+  _drush_salesforce_deprecated();
   drush_salesforce_mapping_sf_purge_mapping();
   drush_salesforce_mapping_sf_purge_drupal();
   drush_salesforce_mapping_sf_purge_salesforce();

@@ -11,6 +11,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\salesforce\Exception;
+use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQuery;
@@ -595,7 +596,7 @@ class RestClient implements RestClientInterface {
    *   Whether to reset the cache and retrieve a fresh version from Salesforce.
    *
    * @return array
-   *   Available objects and metadata.
+   *   Available objects and metadata, indexed by object table name.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -608,24 +609,28 @@ class RestClient implements RestClientInterface {
       $result = $this->apiCall('sobjects');
       $this->cache->set('salesforce:objects', $result, $this->getRequestTime() + self::CACHE_LIFETIME, ['salesforce']);
     }
-
-    if (!empty($conditions)) {
-      foreach ($result['sobjects'] as $key => $object) {
+//print_r($result);
+    $sobjects = [];
+    // Filter the list by conditions, and assign SF table names as array keys.
+    foreach ($result['sobjects'] as $key => $object) {
+      if (empty($object['name'])) {
+        print_r($object);
+      }
+      if (!empty($conditions)) {
         foreach ($conditions as $condition => $value) {
-          if (!$object[$condition] == $value) {
-            unset($result['sobjects'][$key]);
+          if ($object[$condition] == $value) {
+            $sobjects[$object['name']] = $object;
           }
         }
       }
     }
-
-    return $result['sobjects'];
+    return $sobjects;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function query(SelectQuery $query) {
+  public function query(SelectQueryInterface $query) {
     // $this->moduleHandler->alter('salesforce_query', $query);
     // Casting $query as a string calls SelectQuery::__toString().
     return new SelectQueryResult($this->apiCall('query?q=' . (string) $query));
@@ -634,7 +639,7 @@ class RestClient implements RestClientInterface {
   /**
    * {@inheritdoc}
    */
-  public function queryAll(SelectQuery $query) {
+  public function queryAll(SelectQueryInterface $query) {
     return new SelectQueryResult($this->apiCall('queryAll?q=' . (string) $query));
   }
 

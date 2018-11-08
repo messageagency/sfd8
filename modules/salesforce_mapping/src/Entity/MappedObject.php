@@ -393,26 +393,26 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // @TODO is this the right place for this logic to live?
     // Cases:
-    // 1. upsert key is defined: use upsert
-    // 2. no upsert key, no sfid: use create
-    // 3. no upsert key, sfid: use update
+    // 1. Already mapped to an existing Salesforce object + always_upsert not set?  Update.
+    // 2. Not mapped, but upsert key is defined?  Upsert.
+    // 3. Not mapped & no upsert key?  Create.
     $result = FALSE;
     $action = '';
 
-    if ($mapping->hasKey()) {
+    if ($this->sfid() && !$mapping->alwaysUpsert()) {
+      $action = 'update';
+      $result = $this->client()->objectUpdate(
+        $mapping->getSalesforceObjectType(),
+        $this->sfid(),
+        $params->getParams()
+      );
+    }
+    elseif ($mapping->hasKey()) {
       $action = 'upsert';
       $result = $this->client()->objectUpsert(
         $mapping->getSalesforceObjectType(),
         $mapping->getKeyField(),
         $mapping->getKeyValue($drupal_entity),
-        $params->getParams()
-      );
-    }
-    elseif ($this->sfid()) {
-      $action = 'update';
-      $result = $this->client()->objectUpdate(
-        $mapping->getSalesforceObjectType(),
-        $this->sfid(),
         $params->getParams()
       );
     }

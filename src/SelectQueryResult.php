@@ -53,7 +53,7 @@ class SelectQueryResult {
   }
 
   /**
-   * @return array
+   * @return \Drupal\salesforce\SObject[]
    */
   public function records() {
     return $this->records;

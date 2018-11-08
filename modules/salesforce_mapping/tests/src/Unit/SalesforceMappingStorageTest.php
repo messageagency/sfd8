@@ -5,8 +5,10 @@ namespace Drupal\Tests\salesforce_mapping\Unit;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ConfigEntityType;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
@@ -46,10 +48,14 @@ class SalesforceMappingStorageTest extends UnitTestCase {
    */
   protected $configFactory;
 
-  /**
-   * The configuration manager.
-   */
-  protected $entity_manager;
+  /** @var \Drupal\Core\Entity\EntityTypeManagerInterface */
+  protected $etm;
+
+  /** @var \Drupal\Core\Entity\EntityTypeInterface */
+  protected $entity_type;
+
+  /** @var \PHPUnit\Framework\MockObject\MockObject */
+  protected $salesforceMappingStorage;
 
   /**
    * {@inheritdoc}
@@ -60,11 +66,6 @@ class SalesforceMappingStorageTest extends UnitTestCase {
     parent::setUp();
 
     $this->entityTypeId = 'test_entity_type';
-
-    // $mockedEntity = $this->getMockBuilder(SalesforceMapping::class)
-    //   ->setMethods(['__construct'])
-    //   ->disableOriginalConstructor()
-    //   ->getMock();
     $this->entity_type = new ConfigEntityType([
       'id' => $this->entityTypeId,
       'class' => SalesforceMapping::class,
@@ -78,14 +79,23 @@ class SalesforceMappingStorageTest extends UnitTestCase {
       'list_cache_tags' => [$this->entityTypeId . '_list'],
     ]);
 
-    $this->uuidService = $this->prophesize(UuidInterface::class);
-    $this->languageManager = $this->prophesize(LanguageManagerInterface::class);
-    $this->configFactory = $this->prophesize(ConfigFactoryInterface::class);
-    $this->entity_manager = $this->prophesize(EntityManagerInterface::class);
-    $this->entity_manager
-      ->getDefinition('test_entity_type')
+    $this->uuidService = $this->createMock(UuidInterface::class);
+    $this->languageManager = $this->createMock(LanguageManagerInterface::class);
+    $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
+    $this->etm = $this->getMockBuilder(EntityTypeManagerInterface::class)->disableOriginalConstructor()->getMock();
+    $this->etm->expects($this->any())
+      ->method('getDefinition')
+      ->with($this->equalTo('test_entity_type'))
       ->willReturn($this->entity_type);
+
+    $this->salesforceMappingStorage = $this->getMockBuilder(SalesforceMappingStorage::class)
+      ->setConstructorArgs([$this->entityTypeId, $this->configFactory, $this->uuidService, $this->languageManager, $this->etm])
+      ->disableOriginalConstructor()
+      ->setMethods(['loadByProperties'])
+      ->getMock();
   }
+
+
 
   /**
    * @covers ::loadByDrupal
@@ -93,7 +103,6 @@ class SalesforceMappingStorageTest extends UnitTestCase {
   public function testLoadByDrupal() {
     $config_object = $this->prophesize(SalesforceMapping::class);
 
-    $this->salesforceMappingStorage = $this->getMock(SalesforceMappingStorage::class, ['loadByProperties'], [$this->entityTypeId, $this->configFactory->reveal(), $this->uuidService->reveal(), $this->languageManager->reveal(), $this->entity_manager->reveal()]);
     $this->salesforceMappingStorage
       ->expects($this->at(0))
       ->method('loadByProperties')
@@ -133,8 +142,6 @@ class SalesforceMappingStorageTest extends UnitTestCase {
     // Zee does NOT push; make sure it's excluded from our load helper.
     $zee_config_object->doesPush()->willReturn(FALSE);
 
-    $this->salesforceMappingStorage = $this->getMock(SalesforceMappingStorage::class, ['loadByProperties'], [$this->entityTypeId, $this->configFactory->reveal(), $this->uuidService->reveal(), $this->languageManager->reveal(), $this->entity_manager->reveal()]);
-
     $this->salesforceMappingStorage
       ->expects($this->once())
       ->method('loadByProperties')
@@ -163,8 +170,6 @@ class SalesforceMappingStorageTest extends UnitTestCase {
     // Zee does NOT push; make sure it's excluded from our load helper.
     $zee_config_object->doesPull()->willReturn(FALSE);
 
-    $this->salesforceMappingStorage = $this->getMock(SalesforceMappingStorage::class, ['loadByProperties'], [$this->entityTypeId, $this->configFactory->reveal(), $this->uuidService->reveal(), $this->languageManager->reveal(), $this->entity_manager->reveal()]);
-
     $this->salesforceMappingStorage
       ->expects($this->once())
       ->method('loadByProperties')
@@ -192,7 +197,6 @@ class SalesforceMappingStorageTest extends UnitTestCase {
     $zee_config_object->id()->willReturn('zee');
     $zee_config_object->getSalesforceObjectType()->willReturn('Contact');
 
-    $this->salesforceMappingStorage = $this->getMock(SalesforceMappingStorage::class, ['loadByProperties'], [$this->entityTypeId, $this->configFactory->reveal(), $this->uuidService->reveal(), $this->languageManager->reveal(), $this->entity_manager->reveal()]);
     $this->salesforceMappingStorage
       ->expects($this->once())
       ->method('loadByProperties')

@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\salesforce_mapping\Entity\SalesforceMapping;
+
 /**
  * @file
  */
@@ -68,4 +70,17 @@ function salesforce_mapping_update_8002() {
   db_drop_field('salesforce_mapped_object', 'entity_type_id');
   db_drop_field('salesforce_mapped_object_revision', 'entity_id');
   db_drop_field('salesforce_mapped_object_revision', 'entity_type_id');
+}
+
+/**
+ * Add new "always_upsert" field to all existing mappings which have an upsert
+ * key, to preserve old behavior.
+ */
+function salesforce_mapping_update_8003() {
+  /** @var \Drupal\salesforce_mapping\Entity\SalesforceMapping $mapping */
+  foreach(SalesforceMapping::loadMultiple() as $mapping) {
+    if ($mapping->hasKey() && $mapping->get('always_upsert') !== FALSE) {
+      $mapping->set('always_upsert', TRUE)->save();
+    }
+  }
 }

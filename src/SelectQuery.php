@@ -7,7 +7,7 @@ namespace Drupal\salesforce;
  *
  * @package Drupal\salesforce
  */
-class SelectQuery {
+class SelectQuery implements SelectQueryInterface {
 
   public $fields = [];
   public $order = [];

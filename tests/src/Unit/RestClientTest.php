@@ -165,9 +165,11 @@ class RestClientTest extends UnitTestCase {
     $objects = [
       'sobjects' => [
         'Test' => [
+          'name' => 'Test',
           'updateable' => TRUE,
         ],
         'NonUpdateable' => [
+          'name' => 'NonUpdateable',
           'updateable' => FALSE,
         ],
       ],

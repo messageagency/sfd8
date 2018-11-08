@@ -67,6 +67,8 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
   if ($bundle = $entity->bundle()) {
     $properties['drupal_bundle'] = $bundle;
   }
+
+  /** @var \Drupal\salesforce_mapping\Entity\SalesforceMapping[] $mappings */
   $mappings = \Drupal::service('entity.manager')
     ->getStorage('salesforce_mapping')
     ->loadPushMappingsByProperties($properties);
@@ -75,6 +77,9 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
   }
 
   foreach ($mappings as $mapping) {
+    if (!$mapping->checkTriggers([$op])) {
+      continue;
+    }
     try {
       salesforce_push_entity_crud_mapping($entity, $op, $mapping);
     }

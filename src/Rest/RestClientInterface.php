@@ -2,8 +2,8 @@
 
 namespace Drupal\salesforce\Rest;
 
+use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce\SFID;
-use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
 use GuzzleHttp\Psr7\Response;
 
@@ -137,7 +137,7 @@ interface RestClientInterface {
    *
    * @addtogroup salesforce_apicalls
    */
-  public function query(SelectQuery $query);
+  public function query(SelectQueryInterface $query);
 
   /**
    * Same as ::query(), but also returns deleted or archived records.
@@ -149,7 +149,7 @@ interface RestClientInterface {
    *
    * @addtogroup salesforce_apicalls
    */
-  public function queryAll(SelectQuery $query);
+  public function queryAll(SelectQueryInterface $query);
 
   /**
    * Given a select query result, fetch the next results set, if it exists.
