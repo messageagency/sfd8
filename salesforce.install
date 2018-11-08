@@ -256,7 +256,12 @@ function salesforce_update_8003() {
 /**
  * Convert legacy oauth credentials to new auth plugin config.
  */
-function salesforce_update_8004() {
+function salesforce_update_8005() {
+  $change_list = \Drupal::entityDefinitionUpdateManager()->getChangeSummary();
+  if (!empty($change_list['salesforce_auth'])) {
+    throw new Exception('Please install entity updates (entup) to install Salesforce Auth Config before proceeding with database update.');
+  }
+  dpm($change_list);
   $config = \Drupal::configFactory()->getEditable('salesforce.settings');
   // If auth plugin providers have not been created already, convert existing
   // config to new plugin config system.
@@ -290,5 +295,6 @@ function salesforce_update_8004() {
     'salesforce.identity',
     'salesforce.instance_url',
   ]);
+
 }
 
