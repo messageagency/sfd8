@@ -4,24 +4,17 @@ namespace Drupal\salesforce\Rest;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Component\Utility\Unicode;
-use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
-use Drupal\Core\Url;
-use Drupal\salesforce\Exception;
 use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
-use Drupal\salesforce\SalesforceAuthProviderInterface;
-use Drupal\salesforce\SalesforceAuthManager;
 use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\Response;
 use Drupal\Component\Datetime\TimeInterface;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
 use Zend\Diactoros\Exception\DeprecatedMethodException;
@@ -404,7 +397,7 @@ class RestClient implements RestClientInterface {
    * @throws \Exception
    * @throws \GuzzleHttp\Exception\RequestException
    *
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function setApiVersion($use_latest = TRUE, $version = NULL) {
     trigger_error(__CLASS__.'::'.__FUNCTION__ . ' is deprecated and will be removed before the next stable release of Salesforce module. Please update your callers.', E_DEPRECATED);
@@ -423,105 +416,105 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function getConsumerKey() {
     return $this->authProvider ? $this->authProvider->getConsumerKey() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function setConsumerKey($value) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function getConsumerSecret() {
     return $this->authProvider ? $this->authProvider->getConsumerSecret() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function setConsumerSecret($value) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function getLoginUrl() {
     return $this->authProvider ? $this->authProvider->getLoginUrl() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function setLoginUrl($value) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getToken() to access the current active auth token.
    */
   public function getInstanceUrl() {
     return $this->authProvider ? $this->authProvider->getInstanceUrl() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getToken() to access the current active auth token.
    */
   public function setInstanceUrl($url) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getToken() to access the current active auth token.
    */
   public function getAccessToken() {
     return $this->authToken ? $this->authToken->getAccessToken() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getToken() to access the current active auth token.
    */
   public function setAccessToken($token) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getToken() to access the current active auth token.
    */
   protected function getRefreshToken() {
     return $this->authToken ? $this->authToken->getRefreshToken() : NULL;
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getToken() to access the current active auth token.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getToken() to access the current active auth token.
    */
   public function setRefreshToken($token) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getProvider() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getProvider() to access the current active auth configuration.
    */
   public function refreshToken() {
     return $this->authManager->refreshToken();
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function setIdentity($data) {
     throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
   }
 
   /**
-   * @deprecated use \Drupal\salesforce\SalesforceAuthManager::getConfig() to access the current active auth configuration.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function getIdentity() {
     return $this->authProvider ? $this->authProvider->getIdentity() : NULL;
