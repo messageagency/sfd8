@@ -5,6 +5,8 @@
  */
 
 use Drupal\Component\Serialization\Json;
+use Drupal\salesforce\Entity\SalesforceAuthConfig;
+use Drupal\salesforce\Token\SalesforceToken;
 
 /**
  * Purge Salesforce module state variables.
@@ -251,7 +253,42 @@ function salesforce_update_8003() {
   \Drupal::state()->deleteMultiple($delete);
 }
 
+/**
+ * Convert legacy oauth credentials to new auth plugin config.
+ */
 function salesforce_update_8004() {
-  throw new \Exception('TODO: move oauth credentials to plugin config and set as default if no oauth plugin configs have been created.');
+  $config = \Drupal::configFactory()->getEditable('salesforce.settings');
+  // If auth plugin providers have not been created already, convert existing
+  // config to new plugin config system.
+  if (!\Drupal::service('plugin.manager.salesforce.auth_providers')->hasProviders()) {
+    $values = [
+      'id' => 'oauth_default',
+      'label' => 'OAuth Default',
+      'provider' => 'oauth',
+      'provider_settings' => [
+        'consumer_key' => $config->get('consumer_key'),
+        'consumer_secret' => $config->get('consumer_secret'),
+        'login_url' => $config->get('login_url'),
+      ]
+    ];
+    $oauth = SalesforceAuthConfig::create($values);
+    $oauth->save();
+
+    // Convert existing token to new token storage.
+    $token = new SalesforceToken(\Drupal::state()
+      ->get('salesforce.access_token'), \Drupal::state()
+      ->get('salesforce.refresh_token'));
+    \Drupal::service('salesforce.auth_token_storage')
+      ->storeAccessToken('oauth_default', $token);
+  }
+
+  // Regardless of plugin conversion status, clean up the defunct values.
+  $config->delete();
+  \Drupal::state()->deleteMultiple([
+    'salesforce.access_token',
+    'salesforce.refresh_token',
+    'salesforce.identity',
+    'salesforce.instance_url',
+  ]);
 }
 
