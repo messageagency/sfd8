@@ -5,6 +5,9 @@
  */
 
 use Drupal\encrypt\EncryptionProfileInterface;
+use Drupal\salesforce_encrypt\Plugin\SalesforceAuthProvider\SalesforceEncryptedOAuthPlugin;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\salesforce\Entity\SalesforceAuthConfig;
 
 /**
  * Implements hook_encryption_profile_predelete()
@@ -12,4 +15,21 @@ use Drupal\encrypt\EncryptionProfileInterface;
  */
 function salesforce_encryption_profile_predelete(EncryptionProfileInterface $entity) {
   \Drupal::service('salesforce.client')->hookEncryptionProfileDelete($entity);
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function salesforce_encrypt_entity_presave(EntityInterface $entity) {
+  if (!$entity instanceof SalesforceAuthConfig) {
+    return;
+  }
+  // Encrypt credentials prior to saving the config entity.
+  if ($entity->getPlugin() instanceof SalesforceEncryptedOAuthPlugin) {
+    $plugin = $entity->getPlugin();
+    $settings = $entity->get('provider_settings');
+    $settings['consumer_key'] = $plugin->encrypt($settings['consumer_key']);
+    $settings['consumer_secret'] = $plugin->encrypt($settings['consumer_secret']);
+    $entity->set('provider_settings', $settings);
+  }
 }

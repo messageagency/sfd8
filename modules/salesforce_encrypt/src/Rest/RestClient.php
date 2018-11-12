@@ -21,6 +21,8 @@ use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
+ *
+ * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
  */
 class RestClient extends SalesforceRestClient implements EncryptedRestClientInterface {
 
@@ -57,7 +59,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
    * @param \Drupal\Core\Lock\LockBackendInterface $lock
    *   The lock backend service.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, SalesforceAuthProviderPluginManager $auth, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
+  public function __construct__construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, SalesforceAuthProviderPluginManager $auth, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
     parent::__construct($http_client, $config_factory, $state, $cache, $json, $time, $auth);
     $this->encryption = $encryption;
     $this->encryptionProfileId = $this->state->get('salesforce_encrypt.profile');
@@ -67,9 +69,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   * Encrypts all sensitive salesforce config values.
-   *
-   * @throws RuntimeException if Salesforce if encryption was not enabled.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function enableEncryption(EncryptionProfileInterface $profile) {
     if ($ret = $this->setEncryption($profile)) {
@@ -79,10 +79,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   * Inverse of ::enableEncryption. Decrypts all sensitive salesforce config
-   * values.
-   *
-   * @throws RuntimeException if Salesforce encryption can't be disabled
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function disableEncryption() {
     if ($ret = $this->setEncryption()) {
@@ -92,7 +89,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   *
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function hookEncryptionProfileDelete(EncryptionProfileInterface $profile) {
     if ($this->encryptionProfileId == $profile->id()) {
@@ -101,7 +98,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   *
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   protected function setEncryption(EncryptionProfileInterface $profile = NULL) {
     if (!$this->lock->acquire('salesforce_encrypt')) {
@@ -148,15 +145,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   * Exception-handling wrapper around getEncryptionProfile().
-   *
-   * getEncryptionProfile() will throw an EntityNotFoundException exception
-   * if it has an encryption profile ID but cannot load it.  In this wrapper
-   * we handle that exception by setting a helpful error message and allow
-   * execution to proceed.
-   *
-   * @return \Drupal\encrypt\EncryptionProfileInterface | NULL
-   *   The encryption profile if it can be loaded, otherwise NULL.
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   protected function _getEncryptionProfile() {
     try {
@@ -170,7 +159,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   * {@inheritdoc}
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function encrypt($value) {
     if (empty($this->_getEncryptionProfile())) {
@@ -182,7 +171,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   * {@inheritdoc}
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function decrypt($value) {
     if (empty($this->_getEncryptionProfile()) || empty($value) || mb_strlen($value) === 0) {
@@ -191,83 +180,6 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
     else {
       return $this->encryption->decrypt($value, $this->_getEncryptionProfile());
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getAccessToken() {
-    return $this->decrypt(parent::getAccessToken());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setAccessToken($token) {
-    return parent::setAccessToken($this->encrypt($token));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRefreshToken() {
-    return $this->decrypt(parent::getRefreshToken());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRefreshToken($token) {
-    return parent::setRefreshToken($this->encrypt($token));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setIdentity($data) {
-    if (is_array($data)) {
-      $data = serialize($data);
-    }
-    return parent::setIdentity($this->encrypt($data));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIdentity() {
-    $data = $this->decrypt(parent::getIdentity());
-    if (!empty($data) && !is_array($data)) {
-      $data = unserialize($data);
-    }
-    return $data;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getConsumerKey() {
-    return $this->decrypt(parent::getConsumerKey());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setConsumerKey($value) {
-    return parent::setConsumerKey($this->encrypt($value));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getConsumerSecret() {
-    return $this->decrypt(parent::getConsumerSecret());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setConsumerSecret($value) {
-    return parent::setConsumerSecret($this->encrypt($value));
   }
 
 }

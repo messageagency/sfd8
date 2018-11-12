@@ -164,12 +164,20 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
     return $this->id();
   }
 
+  /**
+   * @param $responseBody
+   *   JSON identity response from Salesforce.
+   *
+   * @return array
+   * @throws \OAuth\Common\Http\Exception\TokenResponseException
+   */
   protected function parseIdentityResponse($responseBody) {
     $data = json_decode($responseBody, true);
 
     if (null === $data || !is_array($data)) {
       throw new TokenResponseException('Unable to parse response.');
-    } elseif (isset($data['error'])) {
+    }
+    elseif (isset($data['error'])) {
       throw new TokenResponseException('Error in retrieving token: "' . $data['error'] . '"');
     }
     return $data;

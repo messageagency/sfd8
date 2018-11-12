@@ -9,6 +9,7 @@ use Drupal\salesforce\Rest\RestResponse;
 use Drupal\salesforce\Consumer\OAuthCredentials;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\salesforce\SalesforceAuthProviderPluginBase;
+use Drupal\salesforce\SalesforceOAuthPluginInterface;
 use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
 use Drupal\salesforce\Token\SalesforceToken;
 use OAuth\Common\Http\Client\ClientInterface;
@@ -24,7 +25,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  *   label = @Translation("Salesforce OAuth User-Agent")
  * )
  */
-class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase {
+class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements SalesforceOAuthPluginInterface {
 
   /** @var \Drupal\salesforce\Consumer\OAuthCredentials */
   protected $credentials;
@@ -121,7 +122,7 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase {
       return;
     }
     catch (\Exception $e) {
-      drupal_set_message(t("Error during authorization: %message", ['%message' => $e->getMessage()]), 'error');
+      $this->messenger()->addError(t("Error during authorization: %message", ['%message' => $e->getMessage()]));
       // $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     }
   }
@@ -138,7 +139,7 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase {
   }
 
   /**
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   * @return bool
    * @throws \OAuth\Common\Http\Exception\TokenResponseException
    * @see \Drupal\salesforce\Controller\SalesforceOAuthController
    */
@@ -154,9 +155,7 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase {
     $response = $this->httpClient->retrieveResponse(new Uri($data['id']), [], $headers);
     $identity = $this->parseIdentityResponse($response);
     $this->storage->storeIdentity($this->service(), $identity);
-
-    \Drupal::messenger()->addStatus(t('Successfully connected to Salesforce.'));
-    return new RedirectResponse(Url::fromRoute('entity.salesforce_auth.collection')->toString());
+    return TRUE;
   }
 
 }

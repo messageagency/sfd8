@@ -13,6 +13,7 @@ use Drupal\Core\Url;
 use Drupal\salesforce\Rest\RestResponse;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\salesforce\Plugin\SalesforceAuthProvider\SalesforceOAuthPlugin;
+use Drupal\salesforce\SalesforceOAuthPluginInterface;
 use Drupal\salesforce_oauth\SalesforceAuthProvider;
 use Drupal\salesforce_oauth\Entity\OAuthConfig;
 use GuzzleHttp\Client;
@@ -59,14 +60,21 @@ class SalesforceOAuthController extends ControllerBase {
       throw new AccessDeniedHttpException();
     }
     $configId = $this->tempStore->get('config_id');
-    if (empty($configId) || !($config = SalesforceAuthConfig::load($configId)) || !($config->getPlugin() instanceof SalesforceOAuthPlugin)) {
+
+    if (empty($configId) || !($config = SalesforceAuthConfig::load($configId)) || !($config->getPlugin() instanceof SalesforceOAuthPluginInterface)) {
       $this->messenger->addError('No OAuth config found. Please try again.');
       return new RedirectResponse(Url::fromRoute('entity.salesforce_auth.collection')->toString());
     }
 
-    /** @var \Drupal\salesforce\Plugin\SalesforceAuthProvider\SalesforceOAuthPlugin $oauth */
+    /** @var \Drupal\salesforce\SalesforceOAuthPluginInterface $oauth */
     $oauth = $config->getPlugin();
-    return $oauth->finalizeOauth();
+    if ($oauth->finalizeOauth()) {
+      $this->messenger()->addStatus(t('Successfully connected to Salesforce.'));
+    }
+    else {
+      $this->messenger()->addError(t('Salesforce auth failed.'));
+    }
+    return new RedirectResponse(Url::fromRoute('entity.salesforce_auth.collection')->toString());
   }
 
 }

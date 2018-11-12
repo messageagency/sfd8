@@ -7,7 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\encrypt\EncryptionProfileManagerInterface;
 use Drupal\salesforce\EntityNotFoundException;
-use Drupal\salesforce_encrypt\Rest\EncryptedRestClientInterface;
+use Drupal\salesforce_encrypt\SalesforceEncryptedAuthTokenStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Url;
 
@@ -19,15 +19,20 @@ class SettingsForm extends FormBase {
   protected $encryptionProfileManager;
 
   /**
+   * @var \Drupal\salesforce_encrypt\SalesforceEncryptedAuthTokenStorageInterface
+   */
+  protected $storage;
+
+  /**
    * Constructs a new key form base.
    *
    * @param \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage
    *   The key storage.
    */
-  public function __construct(StateInterface $state, EncryptionProfileManagerInterface $encryptionProfileManager, EncryptedRestClientInterface $client) {
+  public function __construct(StateInterface $state, EncryptionProfileManagerInterface $encryptionProfileManager, SalesforceEncryptedAuthTokenStorageInterface $storage) {
     $this->encryptionProfileManager = $encryptionProfileManager;
     $this->state = $state;
-    $this->client = $client;
+    $this->storage = $storage;
   }
 
   /**
@@ -37,7 +42,7 @@ class SettingsForm extends FormBase {
     return new static(
       $container->get('state'),
       $container->get('encrypt.encryption_profile.manager'),
-      $container->get('salesforce.client')
+      $container->get('salesforce.auth_token_storage')
     );
   }
 
@@ -57,14 +62,14 @@ class SettingsForm extends FormBase {
       ->getEncryptionProfileNamesAsOptions();
     $default = NULL;
     try {
-      $profile = $this->client->getEncryptionProfile();
+      $profile = $this->storage->getEncryptionProfile();
       if (!empty($profile)) {
         $default = $profile->id();
       }
     }
     catch (EntityNotFoundException $e) {
-      drupal_set_message($e->getFormattableMessage(), 'error');
-      drupal_set_message($this->t('Error while loading encryption profile. You will need to <a href=":encrypt">assign a new encryption profile</a>, then <a href=":oauth">re-authenticate to Salesforce</a>.', [':encrypt' => Url::fromRoute('salesforce_encrypt.settings')->toString(), ':oauth' => Url::fromRoute('salesforce.admin_config_salesforce')->toString()]), 'error');
+      $this->messenger()->addError($e->getFormattableMessage());
+      $this->messenger()->addError($this->t('Error while loading encryption profile. You will need to <a href=":encrypt">assign a new encryption profile</a>, then <a href=":oauth">re-authenticate to Salesforce</a>.', [':encrypt' => Url::fromRoute('salesforce_encrypt.settings')->toString(), ':oauth' => Url::fromRoute('salesforce.admin_config_salesforce')->toString()]));
     }
 
     $form['profile'] = [
@@ -73,7 +78,7 @@ class SettingsForm extends FormBase {
       '#description' => $this->t('Choose an encryption profile with which to encrypt Salesforce information.'),
       '#options' => $options,
       '#default_value' => $default,
-      '#empty_option' => $this->t('Do not use encryption'),
+      '#empty_option' => TRUE,
     ];
 
     $form['actions']['#type'] = 'actions';
@@ -113,19 +118,19 @@ class SettingsForm extends FormBase {
       ->getEncryptionProfile($profile_id);
     if (empty($profile_id)) {
       // New profile id empty: disable encryption.
-      $this->client->disableEncryption();
+      $this->storage->disableEncryption();
     }
     elseif (empty($old_profile_id)) {
       // Old profile id empty: enable encryption anew.
-      $this->client->enableEncryption($profile);
+      $this->storage->enableEncryption($profile);
     }
     else {
       // Changing encryption profiles: disable, then re-enable.
-      $this->client->disableEncryption();
-      $this->client->enableEncryption($profile);
+      $this->storage->disableEncryption();
+      $this->storage->enableEncryption($profile);
     }
     $this->state->resetCache();
-    drupal_set_message($this->t('The configuration options have been saved.'));
+    $this->messenger()->addStatus($this->t('The configuration options have been saved.'));
   }
 
 }

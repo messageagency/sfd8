@@ -22,6 +22,9 @@ class SalesforceEncryptServiceProvider extends ServiceProviderBase {
       ->addArgument(new Reference('encryption'))
       ->addArgument(new Reference('encrypt.encryption_profile.manager'))
       ->addArgument(new Reference('lock'));
+
+    $container->getDefinition('salesforce.auth_token_storage')
+      ->setClass(SalesforceEncryptedAuthTokenStorage::CLASS);
   }
 
 }
