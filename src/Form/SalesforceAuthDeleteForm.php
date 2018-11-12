@@ -31,6 +31,19 @@ class SalesforceAuthDeleteForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+    if ($form_state->getErrors()) {
+      return;
+    }
+    if (\Drupal::config('salesforce.settings')->get('salesforce_auth.provider') == $this->entity->id()) {
+      $form_state->setError($form, $this->t('You cannot delete the default auth provider. Please <a href="@href">assign a new auth provider</a> before deleting the active one.', ['@href' => Url::fromRoute('salesforce.auth_config')->toString()]));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->entity->delete();
 
