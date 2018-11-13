@@ -10,10 +10,12 @@ use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\SalesforceAuthManager;
 use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class SalesforceAuthSettings extends ConfigFormBase {
 
   protected $salesforceAuth;
+  protected $eventDispatcher;
 
   /**
    * Constructs a \Drupal\system\ConfigFormBase object.
@@ -21,9 +23,10 @@ class SalesforceAuthSettings extends ConfigFormBase {
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, SalesforceAuthProviderPluginManager $salesforceAuth) {
+  public function __construct(ConfigFactoryInterface $config_factory, SalesforceAuthProviderPluginManager $salesforceAuth, EventDispatcherInterface $eventDispatcher) {
     parent::__construct($config_factory);
     $this->salesforceAuth = $salesforceAuth;
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
@@ -32,7 +35,8 @@ class SalesforceAuthSettings extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('plugin.manager.salesforce.auth_providers')
+      $container->get('plugin.manager.salesforce.auth_providers'),
+      $container->get('event_dispatcher')
     );
   }
 
@@ -62,7 +66,7 @@ class SalesforceAuthSettings extends ConfigFormBase {
     $form = parent::buildForm($form, $form_state);
     $options = [];
     /** @var \Drupal\salesforce\Entity\SalesforceAuthConfig $provider **/
-    foreach(\Drupal::service('plugin.manager.salesforce.auth_providers')->getProviders() as $provider) {
+    foreach($this->salesforceAuth->getProviders() as $provider) {
       $options[$provider->id()] = $provider->label() . ' (' . $provider->getPlugin()->label() . ')';
     }
     if (empty($options)) {
@@ -88,7 +92,7 @@ class SalesforceAuthSettings extends ConfigFormBase {
       ->save();
 
     $this->messenger()->addStatus($this->t('Authorization settings have been saved.'));
-    \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, "Authorization provider changed to %provider.", ['%provider' => $form_state->getValue('provider')]));
+    $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, "Authorization provider changed to %provider.", ['%provider' => $form_state->getValue('provider')]));
   }
 
 }

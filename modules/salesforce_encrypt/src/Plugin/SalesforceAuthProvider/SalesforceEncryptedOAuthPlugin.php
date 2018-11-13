@@ -270,7 +270,6 @@ class SalesforceEncryptedOAuthPlugin extends SalesforceAuthProviderPluginBase im
       'Authorization' => 'OAuth ' . $token->getAccessToken(),
       'Content-type' => 'application/json',
     ];
-    dpm($headers);
     $data = $token->getExtraParams();
     $response = $this->httpClient->retrieveResponse(new Uri($data['id']), [], $headers);
     $identity = $this->parseIdentityResponse($response);

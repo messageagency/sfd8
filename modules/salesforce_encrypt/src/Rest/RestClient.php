@@ -2,22 +2,9 @@
 
 namespace Drupal\salesforce_encrypt\Rest;
 
-use Drupal\Component\Serialization\Json;
-use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Lock\LockBackendInterface;
-use Drupal\Core\State\StateInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\Url;
-use Drupal\encrypt\EncryptServiceInterface;
 use Drupal\encrypt\EncryptionProfileInterface;
-use Drupal\encrypt\EncryptionProfileManagerInterface;
-use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Rest\RestClient as SalesforceRestClient;
-use Drupal\salesforce\SalesforceAuthProviderPluginManager;
-use GuzzleHttp\ClientInterface;
-use Drupal\Component\Datetime\TimeInterface;
+use Zend\Diactoros\Exception\DeprecatedMethodException;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
@@ -25,5 +12,47 @@ use Drupal\Component\Datetime\TimeInterface;
  * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
  */
 class RestClient extends SalesforceRestClient implements EncryptedRestClientInterface {
+
+  /**
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
+   */
+  public function enableEncryption(EncryptionProfileInterface $profile) {
+    throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
+  }
+
+  /**
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
+   */
+  public function disableEncryption() {
+    throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
+  }
+
+  /**
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
+   */
+  public function getEncryptionProfile() {
+    throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
+  }
+
+  /**
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
+   */
+  public function hookEncryptionProfileDelete(EncryptionProfileInterface $profile) {
+    // noop
+  }
+
+  /**
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
+   */
+  public function encrypt($value) {
+    throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
+  }
+
+  /**
+   * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
+   */
+  public function decrypt($value) {
+    throw new DeprecatedMethodException(__CLASS__ . '::' . __FUNCTION__ . '() is deprecated. See release notes.');
+  }
 
 }

@@ -48,7 +48,7 @@ class SalesforceAuthDeleteForm extends EntityConfirmFormBase {
     $this->entity->delete();
 
     // Set a message that the entity was deleted.
-    drupal_set_message($this->t('Auth Config %label was deleted.', [
+    $this->messenger()->addStatus($this->t('Auth Config %label was deleted.', [
       '%label' => $this->entity->label(),
     ]));
 

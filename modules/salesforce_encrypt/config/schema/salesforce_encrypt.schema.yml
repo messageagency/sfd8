@@ -1,6 +1,6 @@
 salesforce.auth_provider_settings.oauth_encrypt:
   type: mapping
-  label: 'Salesforce JWT Provider Settings'
+  label: 'Salesforce OAuth, Encrypted, Provider Settings'
   mapping:
     consumer_key:
       type: string
