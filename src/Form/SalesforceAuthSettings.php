@@ -87,7 +87,7 @@ class SalesforceAuthSettings extends ConfigFormBase {
       ->set('salesforce_auth.provider', $form_state->getValue('provider') ? $form_state->getValue('provider') : NULL)
       ->save();
 
-    $this->messenger()->addStatus($this->t('Authorization settings have been saved. TODO set config_id here?'));
+    $this->messenger()->addStatus($this->t('Authorization settings have been saved.'));
     \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, "Authorization provider changed to %provider.", ['%provider' => $form_state->getValue('provider')]));
   }
 

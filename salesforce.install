@@ -276,7 +276,7 @@ function salesforce_update_8005() {
   // If auth plugin providers have not been created already, convert existing
   if (SalesforceAuthConfig::load('oauth_default')) {
     // If an auth config with our name already exists, we are done here.
-    $message = 'Existing auth provider config detected. Refused to convert legacy credentials.';
+    $message = 'Existing "oauth_default" provider config detected. Refused to set legacy credentials.';
   }
   else {
     $encryption_enabled = FALSE;
@@ -333,8 +333,6 @@ function salesforce_update_8005() {
     $config->set('salesforce_auth.provider', 'oauth_default');
     $message = 'Default OAuth provider created from legacy credentials.';
   }
-
-  throw new \Exception('FOO BAR');
 
   $config->clear('consumer_key')
     ->clear('consumer_secret')

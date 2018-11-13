@@ -40,11 +40,10 @@ class SalesforceEncryptedAuthTokenStorage extends SalesforceAuthTokenStorage imp
    */
   public function retrieveAccessToken($service_id) {
     $token = parent::retrieveAccessToken($service_id);
-    if (!$this->service($service_id) instanceof SalesforceEncryptedOAuthPlugin) {
+    if ($token instanceof TokenInterface || !$this->service($service_id) instanceof SalesforceEncryptedOAuthPlugin) {
       return $token;
     }
-    $token->setAccessToken($this->service($service_id)->decrypt($token->getAccessToken()));
-    $token->setRefreshToken($this->service($service_id)->decrypt($token->getRefreshToken()));
+    $token = unserialize($this->service($service_id)->decrypt($token));
     return $token;
   }
 
@@ -53,12 +52,10 @@ class SalesforceEncryptedAuthTokenStorage extends SalesforceAuthTokenStorage imp
    */
   public function storeAccessToken($service_id, TokenInterface $token) {
     if ($this->service($service_id) instanceof SalesforceEncryptedOAuthPlugin) {
-      $token->setAccessToken($this->service($service_id)
-        ->encrypt($token->getAccessToken()));
-      $token->setRefreshToken($this->service($service_id)
-        ->encrypt($token->getRefreshToken()));
+      $token = $this->service($service_id)->encrypt(serialize($token));
     }
-    return parent::storeAccessToken($service_id, $token);
+    $this->state->set(self::getTokenStorageId($service_id), $token);
+    return $this;
   }
 
   /**
@@ -71,7 +68,8 @@ class SalesforceEncryptedAuthTokenStorage extends SalesforceAuthTokenStorage imp
       }
       $identity = $this->service($service_id)->encrypt($identity);
     }
-    return parent::storeIdentity($service_id, $identity);
+    $this->state->set(self::getIdentityStorageId($service_id), $identity);
+    return $this;
   }
 
   /**
