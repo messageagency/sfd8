@@ -120,6 +120,11 @@ class SalesforceAuthForm extends EntityForm {
     $form_state->setRedirectUrl($this->entity->toUrl('collection'));
   }
 
+  public function save(array $form, FormStateInterface $form_state) {
+    parent::save($form, $form_state);
+    $this->entity->getPlugin()->save($form, $form_state);
+  }
+
   /**
    * Determines if the config already exists.
    *

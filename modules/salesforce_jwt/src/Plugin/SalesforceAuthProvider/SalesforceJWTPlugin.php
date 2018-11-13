@@ -15,6 +15,7 @@ use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
 use OAuth\Common\Http\Client\ClientInterface;
 use OAuth\Common\Token\TokenInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Firebase\JWT\JWT;
 
 /**
  * @Plugin(
@@ -119,11 +120,21 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
       $form_state->setError($form, $this->t('JWT Auth requires <a href="https://drupal.org/project/key">Key</a> module. Please install before adding a JWT Auth config.'));
       return;
     }
-
     parent::validateConfigurationForm($form, $form_state);
+    $this->setConfiguration($form_state->getValues());
     try {
-      $settings = $form_state->getValue('provider_settings');
-      $this->getToken($settings['login_url']);
+      $this->validateCredentials($this->getLoginUrl());
+    }
+    catch (\Exception $e) {
+      $form_state->setError($form, $e->getMessage());
+    }
+  }
+
+  public function save(array $form, FormStateInterface $form_state) {
+    parent::save($form, $form_state);
+    try {
+      $this->setConfiguration($form_state->getValues());
+      $this->getToken($this->getLoginUrl());
       \Drupal::messenger()->addStatus(t('Successfully connected to Salesforce as user %name.', ['%name' => $this->getIdentity()['display_name']]));
     }
     catch (\Exception $e) {
@@ -132,11 +143,21 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @param $login_url
+   *
+   * @return \OAuth\Common\Token\TokenInterface|\OAuth\OAuth2\Token\StdOAuth2Token
+   * @throws \OAuth\Common\Http\Exception\TokenResponseException
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    parent::submitConfigurationForm($form, $form_state);
-    $this->setConfiguration($form_state->getValues());
+  protected function validateCredentials($login_url) {
+    // Initialize access token.
+    $assertion = $this->generateAssertion();
+    $data = [
+      'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      'assertion' => $assertion,
+    ];
+    $response = $this->httpClient->retrieveResponse(new Uri($login_url . static::AUTH_TOKEN_PATH), $data, ['Content-Type' => 'application/x-www-form-urlencoded']);
+    $token = $this->parseAccessTokenResponse($response);
+    return $token;
   }
 
   /**
@@ -200,57 +221,25 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    * @return string
    *   JWT Assertion.
    */
-  private function generateAssertion() {
-    $header = $this->generateAssertionHeader();
-    $claim = $this->generateAssertionClaim();
-    $header_encoded = $this->b64UrlEncode($header);
-    $claim_encoded = $this->b64UrlEncode($claim);
-    $encoded_string = $header_encoded . '.' . $claim_encoded;
+  protected function generateAssertion() {
     $key = $this->keyRepository()->getKey($this->credentials->getEncryptKeyId())->getKeyValue();
-    openssl_sign($encoded_string, $signed, $key, 'sha256WithRSAEncryption');
-    $signed_encoded = $this->b64UrlEncode($signed);
-    $assertion = $encoded_string . '.' . $signed_encoded;
-    return $assertion;
-  }
-
-  /**
-   * Returns a JSON encoded JWT Header.
-   *
-   * @return string
-   *   The encoded header.
-   */
-  private function generateAssertionHeader() {
-    $header = new \stdClass();
-    $header->alg = 'RS256';
-    return json_encode($header);
+    $token = $this->generateAssertionClaim();
+    return JWT::encode($token, $key, 'RS256', '', '', '');
   }
 
   /**
    * Returns a JSON encoded JWT Claim.
    *
-   * @return string
-   *   The encoded claim.
+   * @return array
+   *   The claim array.
    */
-  private function generateAssertionClaim() {
-    $claim = new \stdClass();
-    $claim->iss = $this->credentials->getConsumerKey();
-    $claim->sub = $this->credentials->getLoginUser();
-    $claim->aud = $this->credentials->getLoginUrl();
-    $claim->exp = \Drupal::time()->getCurrentTime() + 60;
-    return json_encode($claim);
-  }
-
-  /**
-   * Base 64 URL Safe Encoding.
-   *
-   * @param string $data
-   *   String to encode.
-   *
-   * @return string
-   *   Encoded string.
-   */
-  private function b64UrlEncode($data) {
-    return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+  protected function generateAssertionClaim() {
+    return [
+      'iss' => $this->credentials->getConsumerKey(),
+      'sub' => $this->credentials->getLoginUser(),
+      'aud' => $this->credentials->getLoginUrl(),
+      'exp' => \Drupal::time()->getCurrentTime() + 60
+    ];
   }
 
 }

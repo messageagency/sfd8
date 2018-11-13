@@ -2,16 +2,8 @@
 
 namespace Drupal\salesforce_encrypt;
 
-use Drupal\Core\Lock\LockBackendInterface;
-use Drupal\Core\State\StateInterface;
-use Drupal\Core\Url;
-use Drupal\encrypt\EncryptionProfileInterface;
-use Drupal\encrypt\EncryptionProfileManagerInterface;
-use Drupal\encrypt\EncryptServiceInterface;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
-use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Storage\SalesforceAuthTokenStorage;
-use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
 use Drupal\salesforce_encrypt\Plugin\SalesforceAuthProvider\SalesforceEncryptedOAuthPlugin;
 use OAuth\Common\Token\TokenInterface;
 

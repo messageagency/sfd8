@@ -4,6 +4,7 @@ namespace Drupal\salesforce;
 
 use Drupal\Component\Plugin\DependentPluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use OAuth\Common\Token\TokenInterface;
@@ -65,5 +66,10 @@ interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormIn
    * @throws \OAuth\Common\Storage\Exception\TokenNotFoundException
    */
   public function getInstanceUrl();
+
+  /**
+   * Additional callback for configuration form, to be called after saving the config entity.
+   */
+  public function save(array $form, FormStateInterface $form_state);
 
 }
