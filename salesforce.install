@@ -265,15 +265,13 @@ function salesforce_update_8004() {
  * Convert legacy oauth credentials to new auth plugin config.
  */
 function salesforce_update_8005() {
-
-  throw new \Exception('TODO CHANGE ALL THIS BECAUSE OF SF ENCRYPT MODULE');
-
   $change_list = \Drupal::entityDefinitionUpdateManager()->getChangeSummary();
   if (!empty($change_list['salesforce_auth'])) {
     throw new UpdateException("** PENDING SCHEMA UPDATES ** \n** Please install entity updates (entup) to install Salesforce Auth Config before proceeding with database update.");
   }
 
   $config = \Drupal::configFactory()->getEditable('salesforce.settings');
+  $state = \Drupal::state();
   $message = '';
   // If auth plugin providers have not been created already, convert existing
   if (SalesforceAuthConfig::load('oauth_default')) {
@@ -281,16 +279,13 @@ function salesforce_update_8005() {
     $message = 'Existing auth provider config detected. Refused to convert legacy credentials.';
   }
   else {
+    $encryption_enabled = FALSE;
     $settings = [
+      // Get fresh values here from config, in case they were corrupted by failed decryption.
       'consumer_key' => $config->get('consumer_key'),
       'consumer_secret' => $config->get('consumer_secret'),
       'login_url' => $config->get('login_url'),
     ];
-    if (\Drupal::moduleHandler()->moduleExists('salesforce_encrypt')) {
-      foreach ($settings as $key => &$value) {
-        $value = \Drupal::service('salesforce.client')->decrypt($value);
-      }
-    }
     // config to new plugin config system.
     $values = [
       'id' => 'oauth_default',
@@ -298,29 +293,48 @@ function salesforce_update_8005() {
       'provider' => 'oauth',
       'provider_settings' => $settings,
     ];
-    $oauth = SalesforceAuthConfig::create($values);
-    $oauth->save();
 
     // Convert existing token to new token storage.
-    $access_token = \Drupal::state()->get('salesforce.access_token');
-    $refresh_token = \Drupal::state()->get('salesforce.refresh_token');
+    $access_token = $state->get('salesforce.access_token');
+    $refresh_token = $state->get('salesforce.refresh_token');
+
     if (\Drupal::moduleHandler()->moduleExists('salesforce_encrypt')) {
-      $refresh_token = \Drupal::service('salesforce.client')->decrypt($refresh_token);
-      $access_token = \Drupal::service('salesforce.client')->decrypt($access_token);
+      // Not sure how to recover from exceptions here.
+      // Allow them to bubble up and prevent update.
+      $encryption_profile = $state->get('salesforce_encrypt.profile');
+      $profile = \Drupal::service('encrypt.encryption_profile.manager')
+        ->getEncryptionProfile($encryption_profile);
+      /** @var \Drupal\encrypt\EncryptServiceInterface $encryption */
+      $encryption = \Drupal::service('encryption');
+      $values['provider_settings']['consumer_key'] =
+        $encryption->decrypt($config->get('consumer_key'), $profile);
+      $values['provider_settings']['consumer_secret'] =
+        $encryption->decrypt($config->get('consumer_secret'), $profile);
+      $refresh_token = $encryption->decrypt($refresh_token, $profile);
+      $access_token = $encryption->decrypt($access_token, $profile);
+      if ((empty($values['provider_settings']['consumer_key']) && !empty($config->get('consumer_key')))
+        || (empty($values['provider_settings']['consumer_secret']) && !empty($config->get('consumer_secret')))
+        || (empty($access_token) && !empty($state->get('salesforce.access_token')))
+        || empty($refresh_token) && !empty($state->get('salesforce.refresh_token'))) {
+        throw new \Exception('Decryption of legacy Salesforce credentials failed. Automated update to Auth Providers not possible. Please disable Salesforce Encrypt module and re-attempt db update.');
+      }
+      $values['provider_settings']['encryption_profile'] = $encryption_profile;
+      $values['provider'] = 'oauth_encrypted';
+      $values['label'] = 'OAuth Default, Encrypted';
     }
+
+    $oauth = SalesforceAuthConfig::create($values);
+    $oauth->save();
 
     $token = new SalesforceToken($access_token, $refresh_token);
     \Drupal::service('salesforce.auth_token_storage')
       ->storeAccessToken('oauth_default', $token);
 
-    if (!\Drupal::service('plugin.manager.salesforce.auth_providers')
-        ->hasProviders()
-      || empty($config->get('salesforce_auth.provider'))) {
-      // Assign as default provider
-      $config->set('salesforce_auth.provider', 'oauth_default');
-    }
+    $config->set('salesforce_auth.provider', 'oauth_default');
     $message = 'Default OAuth provider created from legacy credentials.';
   }
+
+  throw new \Exception('FOO BAR');
 
   $config->clear('consumer_key')
     ->clear('consumer_secret')
@@ -329,11 +343,12 @@ function salesforce_update_8005() {
 
   // Regardless of plugin conversion status, clean up the defunct values.
   
-  \Drupal::state()->deleteMultiple([
+  $state->deleteMultiple([
     'salesforce.access_token',
     'salesforce.refresh_token',
     'salesforce.identity',
     'salesforce.instance_url',
+    'salesforce_encrypt.profile',
   ]);
   return $message;
 }

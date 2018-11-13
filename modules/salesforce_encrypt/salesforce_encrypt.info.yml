@@ -1,6 +1,6 @@
 name: Salesforce Encrypted Keys
 type: module
-description: Supplants Salesforce RestClient service to provide encrypted stateful data.
+description: Encryption provider for Salesforce credentials.
 package: Salesforce
 core: 8.x
 dependencies:
