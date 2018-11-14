@@ -73,7 +73,7 @@ salesforce.salesforce_auth.*:
 
 salesforce.auth_provider_settings.oauth:
   type: mapping
-  label: 'Salesforce JWT Provider Settings'
+  label: 'Salesforce OAuth Provider Settings'
   mapping:
     consumer_key:
       type: string
