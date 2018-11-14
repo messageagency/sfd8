@@ -64,8 +64,8 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     }
 
     $field = $entity->get($field_name);
-    if (empty($field->getValue())) {
-      // This reference field is blank.
+    if (empty($field->getValue()) || is_null($field->entity)) {
+      // This reference field is blank or the referenced entity no longer exists.
       return;
     }
 
