@@ -38,6 +38,10 @@ salesforce.settings:
       type: integer
       label: 'Limit mapped object revisions'
       description: 'Specify a maximum number of revisions to retain for Mapped Object content. Use 0 for no limit.'
+    salesforce_auth_provider:
+      type: string
+      label: 'Default authorization provider id'
+      description: 'A salesforce_auth config entity id which provides API authorization.'
     rest_api_version:
       type: mapping
       label: 'REST API Version'

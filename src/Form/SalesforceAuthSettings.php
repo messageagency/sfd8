@@ -77,7 +77,7 @@ class SalesforceAuthSettings extends ConfigFormBase {
       '#type' => 'radios',
       '#title' => $this->t('Choose a default auth provider'),
       '#options' => $options,
-      '#default_value' => $config->get('salesforce_auth.provider') ? $config->get('salesforce_auth.provider') : '',
+      '#default_value' => $config->get('salesforce_auth_provider') ? $config->get('salesforce_auth_provider') : '',
     ];
     $form['#theme'] = 'system_config_form';
     return $form;
@@ -88,7 +88,7 @@ class SalesforceAuthSettings extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->config('salesforce.settings')
-      ->set('salesforce_auth.provider', $form_state->getValue('provider') ? $form_state->getValue('provider') : NULL)
+      ->set('salesforce_auth_provider', $form_state->getValue('provider') ? $form_state->getValue('provider') : NULL)
       ->save();
 
     $this->messenger()->addStatus($this->t('Authorization settings have been saved.'));

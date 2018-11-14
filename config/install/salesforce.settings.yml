@@ -8,6 +8,4 @@ pull_max_queue_size: 100000
 show_all_objects: false
 standalone: false
 limit_mapped_object_revisions: 10
-salesforce_auth:
-  provider: ''
-  config_id: ''
+salesforce_auth_provider: ''

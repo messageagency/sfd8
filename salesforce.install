@@ -330,7 +330,7 @@ function salesforce_update_8005() {
     \Drupal::service('salesforce.auth_token_storage')
       ->storeAccessToken('oauth_default', $token);
 
-    $config->set('salesforce_auth.provider', 'oauth_default');
+    $config->set('salesforce_auth_provider', 'oauth_default');
     $message = 'Default OAuth provider created from legacy credentials.';
   }
 

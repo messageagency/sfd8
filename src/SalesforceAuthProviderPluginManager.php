@@ -72,7 +72,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
    * @return \Drupal\salesforce\Entity\SalesforceAuthConfig
    */
   public function getConfig() {
-    $provider_id = $this->config()->get('salesforce_auth.provider');
+    $provider_id = $this->config()->get('salesforce_auth_provider');
     if (empty($provider_id)) {
       return NULL;
     }
