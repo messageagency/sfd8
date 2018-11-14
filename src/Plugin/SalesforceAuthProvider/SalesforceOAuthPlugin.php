@@ -108,7 +108,7 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
     try {
       $path = $this->getAuthorizationEndpoint();
       $query = [
-        'redirect_uri' => self::getAuthCallbackUrl(),
+        'redirect_uri' => $this->credentials->getCallbackUrl(),
         'response_type' => 'code',
         'client_id' => $settings['consumer_key'],
       ];
@@ -125,13 +125,6 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
       $this->messenger()->addError(t("Error during authorization: %message", ['%message' => $e->getMessage()]));
       // $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     }
-  }
-
-  public static function getAuthCallbackUrl() {
-    return Url::fromRoute('salesforce.oauth_callback', [], [
-      'absolute' => TRUE,
-      'https' => TRUE,
-    ])->toString();
   }
 
   public function getConsumerSecret() {

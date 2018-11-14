@@ -7,17 +7,26 @@ use Drupal\salesforce\Storage\SalesforceAuthTokenStorage;
 use Drupal\salesforce_encrypt\Plugin\SalesforceAuthProvider\SalesforceEncryptedOAuthPlugin;
 use OAuth\Common\Token\TokenInterface;
 
+/**
+ * Auth token storage, using encryption.
+ */
 class SalesforceEncryptedAuthTokenStorage extends SalesforceAuthTokenStorage implements SalesforceEncryptedAuthTokenStorageInterface {
 
   /**
+   * Auth plugin manager.
+   *
    * @var \Drupal\salesforce\SalesforceAuthProviderPluginManager
    */
   protected $authPluginManager;
 
   /**
-   * @param $service_id
+   * Given a service id, return the instantiated auth provider plugin.
+   *
+   * @param string $service_id
+   *   The service id.
    *
    * @return \Drupal\salesforce\SalesforceAuthProviderPluginInterface
+   *   The plugin.
    */
   protected function service($service_id) {
     if (!$this->authPluginManager) {
@@ -78,6 +87,5 @@ class SalesforceEncryptedAuthTokenStorage extends SalesforceAuthTokenStorage imp
     }
     return $identity;
   }
-
 
 }

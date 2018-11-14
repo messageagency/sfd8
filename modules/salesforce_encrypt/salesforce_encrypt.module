@@ -2,6 +2,7 @@
 
 /**
  * @file
+ * Encrypted credential provider for salesforce oauth.
  */
 
 use Drupal\encrypt\EncryptionProfileInterface;
@@ -10,11 +11,12 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 
 /**
- * Implements hook_encryption_profile_predelete()
+ * Implements hook_encryption_profile_predelete().
+ *
  * If the assigned Encryption profile gets deleted, reset encryption settings.
  */
 function salesforce_encryption_profile_predelete(EncryptionProfileInterface $entity) {
-  \Drupal::service('salesforce.client')->hookEncryptionProfileDelete($entity);
+  // @todo foreach oauth encrypted provider plugin, invoke its hookEncryptionProfileDelete method.
 }
 
 /**

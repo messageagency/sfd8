@@ -9,24 +9,17 @@ use Drupal\encrypt\EncryptionProfileInterface;
 use Drupal\encrypt\EncryptionProfileManagerInterface;
 use Drupal\encrypt\EncryptServiceInterface;
 use Drupal\salesforce\EntityNotFoundException;
-use Drupal\salesforce\Plugin\SalesforceAuthProvider\SalesforceOAuthPlugin;
-use Drupal\salesforce\Rest\RestResponse;
-use Drupal\salesforce\Consumer\OAuthCredentials;
-use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\salesforce\SalesforceAuthProviderPluginBase;
 use Drupal\salesforce\SalesforceOAuthPluginInterface;
-use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
-use Drupal\salesforce\Token\SalesforceToken;
 use Drupal\salesforce_encrypt\Consumer\OAuthEncryptedCredentials;
 use Drupal\salesforce_encrypt\SalesforceEncryptedAuthTokenStorageInterface;
 use OAuth\Common\Http\Client\ClientInterface;
 use OAuth\Common\Http\Uri\Uri;
-use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
+ * OAuth provider with encrypted credentials.
+ *
  * @Plugin(
  *   id = "oauth_encrypted",
  *   label = @Translation("Salesforce OAuth User-Agent, Encrypted")
@@ -34,37 +27,61 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  */
 class SalesforceEncryptedOAuthPlugin extends SalesforceAuthProviderPluginBase implements SalesforceOAuthPluginInterface {
 
-  /** @var \Drupal\salesforce\Consumer\OAuthCredentials */
+  /**
+   * OAuth credentials.
+   *
+   * @var \Drupal\salesforce\Consumer\OAuthCredentials
+   */
   protected $credentials;
 
   /**
+   * Encryption profile manager.
+   *
    * @var \Drupal\encrypt\EncryptionProfileManagerInterface
    */
   protected $encryptionProfileManager;
 
   /**
+   * Encryption service.
+   *
    * @var \Drupal\encrypt\EncryptServiceInterface
    */
   protected $encryption;
 
   /**
+   * Encryption profile.
+   *
    * @var \Drupal\encrypt\EncryptionProfileInterface
    */
   protected $encryptionProfile;
 
   /**
+   * Encryption profile id.
+   *
    * @var string
    */
   protected $encryptionProfileId;
 
+  /**
+   * {@inheritdoc}
+   */
   const SERVICE_TYPE = 'oauth_encrypted';
+
+  /**
+   * {@inheritdoc}
+   */
   const LABEL = 'OAuth Encrypted';
 
   /**
-   * @var SalesforceEncryptedAuthTokenStorageInterface
+   * Token storage;.
+   *
+   * @var \Drupal\salesforce_encrypt\SalesforceEncryptedAuthTokenStorageInterface
    */
   protected $storage;
 
+  /**
+   * {@inheritdoc}
+   */
   public function __construct($id, OAuthEncryptedCredentials $credentials, ClientInterface $httpClient, SalesforceEncryptedAuthTokenStorageInterface $storage, EncryptionProfileManagerInterface $encryptionProfileManager, EncryptServiceInterface $encrypt) {
     parent::__construct($credentials, $httpClient, $storage, [], new Uri($credentials->getLoginUrl()));
     $this->id = $id;
@@ -73,10 +90,13 @@ class SalesforceEncryptedOAuthPlugin extends SalesforceAuthProviderPluginBase im
     $this->encryptionProfileId = $credentials->getEncryptionProfileId();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $configuration = array_merge(self::defaultConfiguration(), $configuration);
     $storage = $container->get('salesforce.auth_token_storage');
-    /** @var EncryptServiceInterface $encrypt */
+    /** @var \Drupal\encrypt\EncryptServiceInterface $encrypt */
     $encrypt = $container->get('encryption');
     $encryptProfileMan = $container->get('encrypt.encryption_profile.manager');
     if ($configuration['encryption_profile']) {
@@ -94,6 +114,9 @@ class SalesforceEncryptedOAuthPlugin extends SalesforceAuthProviderPluginBase im
     return new static($configuration['id'], $cred, $container->get('salesforce.http_client_wrapper'), $storage, $encryptProfileMan, $encrypt);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function defaultConfiguration() {
     $defaults = parent::defaultConfiguration();
     return array_merge($defaults, [
@@ -110,6 +133,9 @@ class SalesforceEncryptedOAuthPlugin extends SalesforceAuthProviderPluginBase im
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function encryptionProfile() {
     if ($this->encryptionProfile) {
       return $this->encryptionProfile;
@@ -155,7 +181,7 @@ class SalesforceEncryptedOAuthPlugin extends SalesforceAuthProviderPluginBase im
       '#type' => 'textfield',
       '#description' => t('Consumer key of the Salesforce remote application you want to grant access to. VALUE WILL BE ENCRYPTED ON FORM SUBMISSION.'),
       '#required' => TRUE,
-      '#default_value' => $this->credentials->getConsumerKey()
+      '#default_value' => $this->credentials->getConsumerKey(),
     ];
 
     $form['consumer_secret'] = [
@@ -163,7 +189,7 @@ class SalesforceEncryptedOAuthPlugin extends SalesforceAuthProviderPluginBase im
       '#type' => 'textfield',
       '#description' => $this->t('Consumer secret of the Salesforce remote application. VALUE WILL BE ENCRYPTED ON FORM SUBMISSION.'),
       '#required' => TRUE,
-      '#default_value' => $this->credentials->getConsumerSecret()
+      '#default_value' => $this->credentials->getConsumerSecret(),
     ];
 
     $form['login_url'] = [
@@ -206,7 +232,7 @@ class SalesforceEncryptedOAuthPlugin extends SalesforceAuthProviderPluginBase im
     try {
       $path = $this->getAuthorizationEndpoint();
       $query = [
-        'redirect_uri' => self::getAuthCallbackUrl(),
+        'redirect_uri' => $this->credentials->getCallbackUrl(),
         'response_type' => 'code',
         'client_id' => $consumer_key,
       ];
@@ -221,45 +247,32 @@ class SalesforceEncryptedOAuthPlugin extends SalesforceAuthProviderPluginBase im
     }
     catch (\Exception $e) {
       $this->messenger()->addError(t("Error during authorization: %message", ['%message' => $e->getMessage()]));
-      // $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     }
   }
 
   /**
-   * @param string $value
-   *
-   * @return string
-   * @throws \Drupal\encrypt\Exception\EncryptException
+   * {@inheritdoc}
    */
   public function decrypt($value) {
     return $this->encryption->decrypt($value, $this->encryptionProfile());
   }
 
   /**
-   * @param string $value
-   *
-   * @return string
-   * @throws \Drupal\encrypt\Exception\EncryptException
+   * {@inheritdoc}
    */
   public function encrypt($value) {
     return $this->encryption->encrypt($value, $this->encryptionProfile());
   }
 
-  public static function getAuthCallbackUrl() {
-    return Url::fromRoute('salesforce.oauth_callback', [], [
-      'absolute' => TRUE,
-      'https' => TRUE,
-    ])->toString();
-  }
-
+  /**
+   * {@inheritdoc}
+   */
   public function getConsumerSecret() {
     return $this->credentials->getConsumerSecret();
   }
 
   /**
-   * @return bool
-   * @throws \OAuth\Common\Http\Exception\TokenResponseException
-   * @see \Drupal\salesforce\Controller\SalesforceOAuthController
+   * {@inheritdoc}
    */
   public function finalizeOauth() {
     $this->requestAccessToken(\Drupal::request()->get('code'));

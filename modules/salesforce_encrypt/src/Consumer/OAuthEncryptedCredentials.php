@@ -3,14 +3,22 @@
 namespace Drupal\salesforce_encrypt\Consumer;
 
 use Drupal\salesforce\Consumer\SalesforceCredentials;
-use Drupal\salesforce\Entity\SalesforceAuthConfig;
-use Drupal\salesforce\EntityNotFoundException;
-use Drupal\salesforce_encrypt\Plugin\SalesforceAuthProvider\SalesforceEncryptedOAuthPlugin;
 
+/**
+ * OAuth encrypted creds.
+ */
 class OAuthEncryptedCredentials extends SalesforceCredentials {
 
+  /**
+   * Encryption profile id.
+   *
+   * @var string
+   */
   protected $encryptionProfileId;
 
+  /**
+   * {@inheritdoc}
+   */
   public function __construct($consumerKey, $loginUrl, $consumerSecret, $encryptionProfileId) {
     parent::__construct($consumerKey, $loginUrl);
     $this->consumerSecret = $consumerSecret;
@@ -18,17 +26,13 @@ class OAuthEncryptedCredentials extends SalesforceCredentials {
   }
 
   /**
+   * Getter.
+   *
    * @return string
+   *   The encryption profile id.
    */
   public function getEncryptionProfileId() {
     return $this->encryptionProfileId;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCallbackUrl() {
-    return SalesforceEncryptedOAuthPlugin::getAuthCallbackUrl();
   }
 
 }

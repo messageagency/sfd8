@@ -4,18 +4,52 @@ namespace Drupal\salesforce_jwt\Consumer;
 
 use Drupal\salesforce\Consumer\SalesforceCredentials;
 
+/**
+ * JWT credentials.
+ */
 class JWTCredentials extends SalesforceCredentials {
+
+  /**
+   * Pre-authorized login user for JWT OAuth authentication.
+   *
+   * @var string
+   */
   protected $loginUser;
-  protected $encryptKeyId;
-  public function __construct($consumerKey, $loginUrl, $loginUser, $encryptKeyId) {
+
+  /**
+   * Id of authorization key for this JWT Credential.
+   *
+   * @var string
+   */
+  protected $keyId;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($consumerKey, $loginUrl, $loginUser, $keyId) {
     parent::__construct($consumerKey, $loginUrl);
     $this->loginUser = $loginUser;
-    $this->encryptKeyId = $encryptKeyId;
+    $this->keyId = $keyId;
   }
+
+  /**
+   * Login user getter.
+   *
+   * @return string
+   *   The login user.
+   */
   public function getLoginUser() {
     return $this->loginUser;
   }
-  public function getEncryptKeyId() {
-    return $this->encryptKeyId;
+
+  /**
+   * Authorization key getter.
+   *
+   * @return string
+   *   The key id.
+   */
+  public function getKeyId() {
+    return $this->keyId;
   }
+
 }

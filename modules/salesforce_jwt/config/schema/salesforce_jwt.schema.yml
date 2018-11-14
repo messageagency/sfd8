@@ -14,4 +14,3 @@ salesforce.auth_provider_settings.jwt:
     encrypt_key:
       type: key.key.[%key]
       label: 'Encryption Key ID'
-

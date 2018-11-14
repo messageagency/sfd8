@@ -38,7 +38,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
    * @deprecated use \Drupal\salesforce\SalesforceAuthProviderPluginManager::getConfig() to access the current active auth configuration.
    */
   public function hookEncryptionProfileDelete(EncryptionProfileInterface $profile) {
-    // noop
+    // Noop.
   }
 
   /**
