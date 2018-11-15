@@ -29,6 +29,9 @@
     "require": {
         "consolidation/output-formatters": "^3.2.0",
         "drupal/dynamic_entity_reference": "^2.0-alpha8",
-        "drupal/encrypt": "^3.0-rc1"
+        "drupal/encrypt": "^3.0-rc1",
+        "drupal/key": "^1.7",
+        "lusitanian/oauth": "^0.8.11",
+        "firebase/php-jwt": "^5.0"
     }
 }

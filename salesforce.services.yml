@@ -2,3 +2,15 @@ services:
   salesforce.client:
     class: Drupal\salesforce\Rest\RestClient
     arguments: ['@http_client', '@config.factory', '@state', '@cache.default', '@serialization.json', '@datetime.time']
+
+  plugin.manager.salesforce.auth_providers:
+    class: Drupal\salesforce\SalesforceAuthProviderPluginManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@entity_type.manager']
+
+  salesforce.http_client_wrapper:
+    class: Drupal\salesforce\Client\HttpClientWrapper
+    arguments: ['@http_client']
+
+  salesforce.auth_token_storage:
+    class: Drupal\salesforce\Storage\SalesforceAuthTokenStorage
+    arguments: ['@state']
