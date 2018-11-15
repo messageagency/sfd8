@@ -282,3 +282,18 @@ function salesforce_update_8005() {
   }
   return $message;
 }
+
+/**
+ * Convert legacy token to new auth plugin config.
+ */
+function salesforce_update_8006() {
+  $oauth = SalesforceAuthProviderPluginManager::getAuthConfig();
+  if (!$oauth) {
+    return "Auth config missing. Refused to update legacy token.";
+  }
+  if (\Drupal::service('salesforce.auth_token_storage')->retrieveAccessToken($oauth->id())) {
+    return "Token exists. Refused to update.";
+  }
+  \Drupal::service('salesforce.auth_token_storage')->updateToken();
+  return "Updated legacy token to new plugin config.";
+}
