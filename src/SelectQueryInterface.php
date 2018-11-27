@@ -2,6 +2,9 @@
 
 namespace Drupal\salesforce;
 
+/**
+ *
+ */
 interface SelectQueryInterface {
 
   /**

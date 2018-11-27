@@ -69,6 +69,7 @@ class SObject {
    * Given $key, return corresponding field value.
    *
    * @return mixed
+   *
    * @throws \Exception if $key is not found
    */
   public function field($key) {

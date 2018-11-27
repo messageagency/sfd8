@@ -100,7 +100,6 @@ class SalesforceEvents {
    * @Event
    *
    * @var string
-   *
    */
   const PULL_PREPULL = 'salesforce.pull_prepull';
 

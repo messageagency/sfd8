@@ -26,10 +26,12 @@ use Symfony\Component\Console\Output\Output;
  */
 class SalesforcePullCommands extends SalesforceCommandsBase {
 
-  /** @var \Drupal\salesforce_pull\QueueHandler */
+  /**
+   * @var \Drupal\salesforce_pull\QueueHandler*/
   protected $pullQueue;
 
-  /** @var \Symfony\Component\EventDispatcher\EventDispatcher */
+  /**
+   * @var \Symfony\Component\EventDispatcher\EventDispatcher*/
   protected $eventDispatcher;
 
   /**
@@ -87,7 +89,8 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
    *
    * @param $name
    *   Machine name of the Salesforce Mapping for which to queue pull records.
-   * @param array $options An associative array of options whose values come from cli, aliases, config, etc.
+   * @param array $options
+   *   An associative array of options whose values come from cli, aliases, config, etc.
    *
    * @option where
    *   A WHERE clause to add to the SOQL pull query. Default behavior is to query and pull all records.
@@ -208,7 +211,7 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
           // If so, this is probably a good SFID.
           // If not, it is definitely not a good SFID.
           if ($mapping->getSalesforceObjectType() != $this->client->getObjectTypeName($sfid)) {
-            $this->logger()->error(dt('SFID !sfid does not match type !type', ['!sfid' => (string)$sfid, '!type' => $mapping->getSalesforceObjectType()]));
+            $this->logger()->error(dt('SFID !sfid does not match type !type', ['!sfid' => (string) $sfid, '!type' => $mapping->getSalesforceObjectType()]));
             continue;
           }
         }
@@ -259,7 +262,9 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
    *
    * @param string $name
    *   mapping id.
-    * @param array $options An associative array of options whose values come from cli, aliases, config, etc.
+   * @param array $options
+   *   An associative array of options whose values come from cli, aliases, config, etc.
+   *
    * @option delete
    *   Reset delete date timestamp (instead of pull date timestamp)
    * @usage drush sf-pull-reset
@@ -274,7 +279,7 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
    * @command salesforce_pull:pull-reset
    * @aliases sf-pull-reset,salesforce_pull:reset
    */
-  public function pullReset($name, array $options = ['delete' => null]) {
+  public function pullReset($name, array $options = ['delete' => NULL]) {
     $mappings = $this->getPullMappingsFromName($name);
     foreach ($mappings as $mapping) {
       if ($options['delete']) {
@@ -297,6 +302,7 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
    *   mapping id.
    * @param int $time
    *   timestamp.
+   *
    * @option delete
    *   Reset delete date timestamp (instead of pull date timestamp)
    * @usage drush sf-pull-set foo
@@ -307,7 +313,7 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
    * @command salesforce_pull:pull-set
    * @aliases sf-pull-set,salesforce_pull:set
    */
-  public function pullSet($name, $time, $options = ['delete' => null]) {
+  public function pullSet($name, $time, $options = ['delete' => NULL]) {
     $mappings = $this->getPullMappingsFromName($name);
     foreach ($mappings as $mapping) {
       $mapping->setLastPullTime(NULL);

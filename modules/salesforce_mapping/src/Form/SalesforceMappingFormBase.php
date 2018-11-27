@@ -25,7 +25,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *   Need this to fetch the appropriate field mapping
    * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
    *   Need this to fetch the mapping field plugins
-   * @param SalesforceMappableEntityTypesInterface
+   * @param \Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface
    *
    * @throws RuntimeException
    */

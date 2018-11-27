@@ -2,6 +2,9 @@
 
 namespace Drupal\salesforce;
 
+/**
+ *
+ */
 class SelectQueryRaw implements SelectQueryInterface {
 
   protected $query;
@@ -22,4 +25,5 @@ class SelectQueryRaw implements SelectQueryInterface {
   public function __toString() {
     return str_replace(' ', '+', $this->query);
   }
+
 }

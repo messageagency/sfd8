@@ -6,12 +6,18 @@ use Consolidation\OutputFormatters\StructuredData\RowsOfFieldsWithMetadata;
 use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce\SelectQueryResult;
 
+/**
+ *
+ */
 class QueryResult extends RowsOfFieldsWithMetadata {
 
   protected $size;
   protected $total;
   protected $query;
 
+  /**
+   *
+   */
   public function __construct(SelectQueryInterface $query, SelectQueryResult $queryResult) {
     print_r($queryResult->records());
     $data = [];
@@ -45,6 +51,9 @@ class QueryResult extends RowsOfFieldsWithMetadata {
     return $this->query;
   }
 
+  /**
+   *
+   */
   public function getPrettyQuery() {
     return str_replace('+', ' ', (string) $this->query);
   }

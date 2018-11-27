@@ -17,10 +17,10 @@ class RestException extends \RuntimeException implements ExceptionInterface {
   /**
    * RestException constructor.
    *
-   * @param \Psr\Http\Message\ResponseInterface|NULL $response
+   * @param \Psr\Http\Message\ResponseInterface|null $response
    * @param string $message
    * @param int $code
-   * @param \Exception|NULL $previous
+   * @param \Exception|null $previous
    */
   public function __construct(ResponseInterface $response = NULL, $message = "", $code = 0, \Exception $previous = NULL) {
     $this->response = $response;
@@ -29,7 +29,7 @@ class RestException extends \RuntimeException implements ExceptionInterface {
   }
 
   /**
-   * @return NULL|\Psr\Http\Message\ResponseInterface
+   * @return null|\Psr\Http\Message\ResponseInterface
    */
   public function getResponse() {
     return $this->response;

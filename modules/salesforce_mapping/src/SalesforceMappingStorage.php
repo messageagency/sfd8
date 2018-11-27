@@ -76,7 +76,7 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
   }
 
   /**
-   * Pass-through for loadMultipleMapping() including bundle
+   * Pass-through for loadMultipleMapping() including bundle.
    */
   public function loadByEntity(EntityInterface $entity) {
     return $this->loadByProperties([

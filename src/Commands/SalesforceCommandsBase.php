@@ -11,17 +11,27 @@ use Drush\Exceptions\UserAbortException;
 use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Output\Output;
 
+/**
+ *
+ */
 abstract class SalesforceCommandsBase extends DrushCommands {
 
-  /** @var \Drupal\salesforce\Rest\RestClient */
+  /**
+   * @var \Drupal\salesforce\Rest\RestClient*/
   protected $client;
-  /** @var \Drupal\Core\Entity\EntityTypeManagerInterface */
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface*/
   protected $etm;
-  /** @var \Drupal\salesforce_mapping\SalesforceMappingStorage */
+  /**
+   * @var \Drupal\salesforce_mapping\SalesforceMappingStorage*/
   protected $mappingStorage;
-  /** @var \Drupal\salesforce_mapping\MappedObjectStorage */
+  /**
+   * @var \Drupal\salesforce_mapping\MappedObjectStorage*/
   protected $mappedObjectStorage;
 
+  /**
+   *
+   */
   public function __construct(RestClient $client, EntityTypeManagerInterface $etm) {
     $this->client = $client;
     $this->etm = $etm;
@@ -45,6 +55,9 @@ abstract class SalesforceCommandsBase extends DrushCommands {
     }
   }
 
+  /**
+   *
+   */
   protected function interactMapping(Input $input, Output $output, $message = 'Choose a Salesforce mapping', $allOption = FALSE, $dir = NULL) {
     if ($name = $input->getArgument('name')) {
       if (strtoupper($name) == 'ALL') {
@@ -108,11 +121,13 @@ abstract class SalesforceCommandsBase extends DrushCommands {
   }
 
   /**
-   * Given a mapping name (and option direction), get an array of mappings
+   * Given a mapping name (and option direction), get an array of mappings.
+   *
    * @param string $name
    *   'ALL' to load all mappings, or a mapping id.
    * @param string $dir
    *   'push'|'pull'|NULL to load limit mappings by push or pull types.
+   *
    * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
    */
   protected function getMappingsFromName($name, $dir = NULL) {
@@ -158,7 +173,7 @@ abstract class SalesforceCommandsBase extends DrushCommands {
   /**
    * @param string $name
    *
-   * @return SalesforceMapping[]
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMapping[]
    * @throws \Exception
    */
   protected function getPullMappingsFromName($name) {

@@ -23,7 +23,7 @@ class EntityNotFoundException extends \RuntimeException {
    *
    * @param $entity_properties
    * @param $entity_type_id
-   * @param Throwable|NULL $previous
+   * @param \Throwable|null $previous
    */
   public function __construct($entity_properties, $entity_type_id, Throwable $previous = NULL) {
     parent::__construct($this->t('Entity not found. type: %type properties: %props', ['%type' => $entity_type_id, '%props' => var_export($entity_properties, TRUE)]), 0, $previous);

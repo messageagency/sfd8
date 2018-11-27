@@ -1,6 +1,11 @@
 <?php
 
+/**
+ * @file
+ */
+
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
+use Drupal\views\Views;
 
 /**
  * @file
@@ -78,9 +83,41 @@ function salesforce_mapping_update_8002() {
  */
 function salesforce_mapping_update_8003() {
   /** @var \Drupal\salesforce_mapping\Entity\SalesforceMapping $mapping */
-  foreach(SalesforceMapping::loadMultiple() as $mapping) {
+  foreach (SalesforceMapping::loadMultiple() as $mapping) {
     if ($mapping->hasKey() && $mapping->get('always_upsert') !== FALSE) {
       $mapping->set('always_upsert', TRUE)->save();
     }
   }
+}
+
+/**
+ * Verify Salesforce admin content permissions.
+ */
+function salesforce_mapping_update_8004() {
+  $view = FALSE;
+  try {
+    $view = Views::getView('salesforce_mapped_objects');
+  }
+  catch (\Exception $e) {
+    return t('Exception while loading Salesforce admin view.');
+  }
+  if (!$view) {
+    return t('Salesforce objects admin view not found');
+  }
+
+  // If access has been changed from defaults, we're done.
+  $options = $view->getDisplay()->getOption('access');
+  if ((!empty($options['type']) && $options['type'] != 'none')) {
+    return t('Salesforce admin permissions confirmed.');
+  }
+
+  // Otherwise, set access.
+  $view->getDisplay()->setOption('access', [
+    'type' => 'perm',
+    'options' => [
+      'perm' => 'administer salesforce mapped objects'
+    ]
+]);
+  $view->save();
+  return t('Salesforce admin permissions updated. You may wish to review your user permission settings.');
 }

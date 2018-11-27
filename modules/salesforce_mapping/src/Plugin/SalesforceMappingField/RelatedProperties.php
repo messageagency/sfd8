@@ -8,7 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 
-
 /**
  * Adapter for entity Reference and fields.
  *
@@ -142,7 +141,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
       }
 
       foreach ($properties as $key => $property) {
-        $options[(string)$instance->getLabel()][$instance->getName() . ':' . $key] = $property->getLabel();
+        $options[(string) $instance->getLabel()][$instance->getName() . ':' . $key] = $property->getLabel();
       }
     }
 

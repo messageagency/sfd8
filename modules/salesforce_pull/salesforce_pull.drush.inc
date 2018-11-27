@@ -90,6 +90,7 @@ function salesforce_pull_drush_command() {
  * Queues records for pull from salesforce for the given mapping.
  *
  * @param string $name
+ *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_pull_sf_pull_query($name) {
@@ -144,6 +145,7 @@ function drush_salesforce_pull_sf_pull_query($name) {
  *
  * @param string $file
  * @param string $name
+ *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {

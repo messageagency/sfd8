@@ -341,7 +341,6 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     return $this;
   }
 
-
   /**
    * Given a salesforce mapping, process all its push queue entries.
    *

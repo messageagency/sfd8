@@ -22,7 +22,7 @@ class SalesforceMappingEnableForm extends EntityConfirmFormBase {
   public function getDescription() {
     return $this->t('Enabling a mapping will restart any automatic synchronization.');
   }
-  
+
   /**
    * {@inheritdoc}
    */

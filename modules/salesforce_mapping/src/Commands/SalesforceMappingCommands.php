@@ -27,6 +27,10 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
 
   protected $salesforceConfig;
   protected $database;
+
+  /**
+   *
+   */
   public function __construct(RestClient $client, EntityTypeManagerInterface $etm, ConfigFactory $configFactory, Connection $database) {
     parent::__construct($client, $etm);
     $this->database = $database;
@@ -196,11 +200,14 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
       return;
     }
 
-    // Still have to *load* entities in order to delete them. **UGH**
+    // Still have to *load* entities in order to delete them. **UGH**.
     $mapped_objs = $this->mappedObjectStorage->loadMultiple($object_ids);
     $this->mappedObjectStorage->delete($mapped_objs);
   }
 
+  /**
+   *
+   */
   protected function objectTypesByPrefix() {
     $ret = [];
     $describe = $this->client->objects();
@@ -247,7 +254,7 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
         if (empty($mapped_obj_ids)) {
           continue;
         }
-        $this->logger()->warning(dt('Unknown object type for Salesforce ID prefix !prefix', ['!prefix' =>  $prefix]));
+        $this->logger()->warning(dt('Unknown object type for Salesforce ID prefix !prefix', ['!prefix' => $prefix]));
         $this->purgeConfirmAndDelete($mapped_obj_ids, 'prefix ' . $prefix);
         continue;
       }
@@ -272,11 +279,11 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
         $soql_query->addCondition('Id', array_keys($chunk));
         $results = $this->client->query($soql_query);
         foreach ($results->records() as $record) {
-          unset($to_delete[(string)$record->id()]);
+          unset($to_delete[(string) $record->id()]);
         }
       }
       if (empty($to_delete)) {
-        $this->logger()->info(dt('No orphaned mapped objects found for SObject type !type', ['!type' =>  $object_types[$prefix]['name']]));
+        $this->logger()->info(dt('No orphaned mapped objects found for SObject type !type', ['!type' => $object_types[$prefix]['name']]));
         continue;
       }
       $this->purgeConfirmAndDelete(array_values($to_delete), 'SObject type *' . $object_types[$prefix]['name'] . '*');

@@ -5,7 +5,6 @@
  * Drush integration for Salesforce.
  */
 
-
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
@@ -57,8 +56,8 @@ function drush_salesforce_mapping_sf_prune_revisions() {
 
   $limit =
     \Drupal::service('config.factory')
-    ->get('salesforce.settings')
-    ->get('limit_mapped_object_revisions');
+      ->get('salesforce.settings')
+      ->get('limit_mapped_object_revisions');
   if ($limit <= 0) {
     drush_log('Mapped Object revisions limit is 0. No action taken.', 'warning');
     return;
@@ -94,7 +93,7 @@ function drush_salesforce_mapping_sf_prune_revisions() {
     $mapped_object = $storage->load($id);
     $mapped_object->pruneRevisions($storage);
   }
-  
+
 }
 
 /**
@@ -197,7 +196,7 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
       ->execute()
       ->fetchAllKeyed();
     $to_delete = $sfids;
-    // SOQL queries are limited to 4000-characters in where statements. 
+    // SOQL queries are limited to 4000-characters in where statements.
     // Chunkify in case we have more than ~200 sfids.
     foreach (array_chunk($sfids, 200, TRUE) as $chunk) {
       $soql_query = new SelectQuery($object_types[$prefix]['name']);
@@ -205,7 +204,7 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
       $soql_query->addCondition('Id', array_keys($chunk));
       $results = $client->query($soql_query);
       foreach ($results->records() as $record) {
-        unset($to_delete[(string)$record->id()]);
+        unset($to_delete[(string) $record->id()]);
       }
     }
     if (empty($to_delete)) {
@@ -257,7 +256,7 @@ function drush_salesforce_mapping_sf_purge_mapping() {
       ->distinct()
       ->execute()
       ->fetchCol();
-      
+
     _drush_salesforce_mapping_confirm_and_delete($mapped_obj_ids, $mapped_obj_storage, 'missing mapping: ' . $mapping_id);
   }
 }
@@ -272,6 +271,9 @@ function drush_salesforce_mapping_sf_purge_all() {
   drush_salesforce_mapping_sf_purge_salesforce();
 }
 
+/**
+ *
+ */
 function _drush_salesforce_mapping_object_types_by_prefix(RestClientInterface $client) {
   $ret = [];
   $describe = $client->objects();
@@ -281,6 +283,9 @@ function _drush_salesforce_mapping_object_types_by_prefix(RestClientInterface $c
   return $ret;
 }
 
+/**
+ *
+ */
 function _drush_salesforce_mapping_confirm_and_delete($object_ids, ContentEntityStorageInterface $storage, $extra = '') {
   if (empty($object_ids)) {
     return;
@@ -294,8 +299,7 @@ function _drush_salesforce_mapping_confirm_and_delete($object_ids, ContentEntity
     return;
   }
 
-  // Still have to *load* entities in order to delete them. **UGH**
+  // Still have to *load* entities in order to delete them. **UGH**.
   $mapped_objs = $storage->loadMultiple($object_ids);
   $storage->delete($mapped_objs);
 }
-

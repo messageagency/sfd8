@@ -48,13 +48,16 @@ class SalesforceMappingStorageTest extends UnitTestCase {
    */
   protected $configFactory;
 
-  /** @var \Drupal\Core\Entity\EntityTypeManagerInterface */
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface*/
   protected $etm;
 
-  /** @var \Drupal\Core\Entity\EntityTypeInterface */
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeInterface*/
   protected $entity_type;
 
-  /** @var \PHPUnit\Framework\MockObject\MockObject */
+  /**
+   * @var \PHPUnit\Framework\MockObject\MockObject*/
   protected $salesforceMappingStorage;
 
   /**
@@ -94,8 +97,6 @@ class SalesforceMappingStorageTest extends UnitTestCase {
       ->setMethods(['loadByProperties'])
       ->getMock();
   }
-
-
 
   /**
    * @covers ::loadByDrupal

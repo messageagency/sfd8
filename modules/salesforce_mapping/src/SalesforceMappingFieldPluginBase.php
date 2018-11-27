@@ -298,6 +298,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
 
   /**
    * In order to set a config value to null, use setConfiguration()
+   *
    * @return array|string
    */
   public function config($key = NULL, $value = NULL) {
@@ -482,7 +483,9 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   /**
    * Given a field definition, return TRUE if it uses an entity reference
    * handler.
-   * @param FieldDefinitionInterface $instance
+   *
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $instance
+   *
    * @return bool
    */
   protected function instanceOfEntityReference(FieldDefinitionInterface $instance) {

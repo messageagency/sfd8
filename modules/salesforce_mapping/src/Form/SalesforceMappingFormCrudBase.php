@@ -552,7 +552,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     //    foreach ($field_plugins as $field_plugin) {
     //      $field_type_options[$field_plugin['id']] = $field_plugin['label'];
     //    }
-    //    return $field_type_options;
+    //    return $field_type_options;.
   }
 
 }

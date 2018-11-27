@@ -202,7 +202,8 @@ class DeleteHandler {
           '%sfid' => $record['id'],
         ];
         $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
-      } catch (\Exception $e) {
+      }
+      catch (\Exception $e) {
         $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
         // If mapped entity couldn't be deleted, do not delete the mapped object.
         return;

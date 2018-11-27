@@ -3,7 +3,7 @@
 namespace Drupal\salesforce;
 
 /**
- * Class SelectQueryResult
+ * Class SelectQueryResult.
  *
  * @package Drupal\salesforce
  */

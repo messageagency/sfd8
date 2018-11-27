@@ -58,7 +58,7 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
    */
   public function getSalesforceRecord();
 
-    /**
+  /**
    * @return string
    *   SFID
    */
@@ -89,7 +89,6 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
    * @return $this
    */
   public function pull();
-
 
   /**
    * Based on the Mapped Object revision limit, delete old revisions.

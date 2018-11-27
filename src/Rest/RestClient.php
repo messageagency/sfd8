@@ -222,7 +222,9 @@ class RestClient implements RestClientInterface {
    * binary fields like Attachments.
    *
    * @param string $url
+   *
    * @return mixed
+   *
    * @throws \Exception
    */
   public function httpRequestRaw($url) {
@@ -736,7 +738,7 @@ class RestClient implements RestClientInterface {
       $result = $this->apiCall('sobjects');
       $this->cache->set('salesforce:objects', $result, $this->getRequestTime() + self::CACHE_LIFETIME, ['salesforce']);
     }
-//print_r($result);
+    // print_r($result);
     $sobjects = [];
     // Filter the list by conditions, and assign SF table names as array keys.
     foreach ($result['sobjects'] as $key => $object) {

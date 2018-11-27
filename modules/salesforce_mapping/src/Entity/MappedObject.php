@@ -129,7 +129,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->config('salesforce.settings')
       ->get('limit_mapped_object_revisions');
     if ($limit <= 0) {
-      // limit 0 means no limit.
+      // Limit 0 means no limit.
       return;
     }
     $count = $storage
@@ -139,7 +139,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->count()
       ->execute();
 
-    // Query for any revision id beyond the limit
+    // Query for any revision id beyond the limit.
     if ($count <= $limit) {
       return;
     }
@@ -353,6 +353,9 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     return \Drupal::service('event_dispatcher');
   }
 
+  /**
+   *
+   */
   public function config($name) {
     return \Drupal::service('config.factory')->get($name);
   }

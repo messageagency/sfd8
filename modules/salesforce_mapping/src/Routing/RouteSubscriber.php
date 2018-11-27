@@ -23,7 +23,7 @@ class RouteSubscriber extends RouteSubscriberBase {
   /**
    * The mappable entity types service.
    *
-   * @var SalesforceMappableEntityTypesInterface
+   * @var \Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface
    */
   protected $mappable;
 

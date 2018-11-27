@@ -12,6 +12,9 @@ use Drupal\salesforce\Rest\RestClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
+/**
+ *
+ */
 class RevokeAuthorizationForm extends ConfigFormBase {
 
   /**

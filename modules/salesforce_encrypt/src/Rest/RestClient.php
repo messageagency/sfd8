@@ -149,7 +149,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   /**
    * Exception-handling wrapper around getEncryptionProfile().
    *
-   * getEncryptionProfile() will throw an EntityNotFoundException exception
+   * GetEncryptionProfile() will throw an EntityNotFoundException exception
    * if it has an encryption profile ID but cannot load it.  In this wrapper
    * we handle that exception by setting a helpful error message and allow
    * execution to proceed.

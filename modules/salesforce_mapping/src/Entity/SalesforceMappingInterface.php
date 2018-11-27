@@ -215,4 +215,5 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * @return bool
    */
   public function alwaysUpsert();
+
 }

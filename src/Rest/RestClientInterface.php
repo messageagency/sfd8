@@ -147,7 +147,7 @@ interface RestClientInterface {
    */
   public function setInstanceUrl($url);
 
-    /**
+  /**
    * Get the access token.
    */
   public function getAccessToken();
@@ -397,6 +397,7 @@ interface RestClientInterface {
    *   Object type name, E.g., Contact, Account.
    * @param string $id
    *   Salesforce id of the object.
+   *
    * @pararm bool $throw_exception
    *   (optional) If TRUE, 404 response code will cause RequestException to be
    *   thrown. Otherwise, hide those errors. Default is FALSE.

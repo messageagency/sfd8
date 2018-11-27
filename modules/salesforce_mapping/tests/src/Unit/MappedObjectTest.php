@@ -224,7 +224,7 @@ class MappedObjectTest extends UnitTestCase {
    * @covers ::push
    */
   public function testAlwaysUpsert() {
-    // Fourth pass: test always upsert
+    // Fourth pass: test always upsert.
     $this->mapped_object->expects($this->any())
       ->method('sfid')
       ->willReturn($this->sfid);

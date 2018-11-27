@@ -23,11 +23,16 @@ use Symfony\Component\Console\Output\Output;
  */
 class SalesforcePushCommands extends SalesforceCommandsBase {
 
-  /** @var \Drupal\Core\Database\Connection $database */
+  /**
+   * @var \Drupal\Core\Database\Connection*/
   protected $database;
-  /** @var \Drupal\salesforce_push\PushQueue $pushQueue */
+  /**
+   * @var \Drupal\salesforce_push\PushQueue*/
   protected $pushQueue;
 
+  /**
+   *
+   */
   public function __construct(RestClient $client, EntityTypeManagerInterface $etm, PushQueue $pushQueue, Connection $database) {
     parent::__construct($client, $etm);
     $this->pushQueue = $pushQueue;
@@ -53,6 +58,7 @@ class SalesforcePushCommands extends SalesforceCommandsBase {
    *
    * @param $name
    *   Array
+   *
    * @usage drush sfpushq
    *   Process all push queue items
    * @usage drush sfpushq foo
@@ -75,7 +81,9 @@ class SalesforcePushCommands extends SalesforceCommandsBase {
    *
    * @param $name
    *   The Drupal machine name of the mapping for the entities.
-   * @param array $options An associative array of options whose values come from cli, aliases, config, etc.
+   * @param array $options
+   *   An associative array of options whose values come from cli, aliases, config, etc.
+   *
    * @option count
    *   The number of entities to try to sync. (Default is 50).
    * @usage drush sfpu foo
@@ -86,7 +94,7 @@ class SalesforcePushCommands extends SalesforceCommandsBase {
    * @command salesforce_push:push-unmapped
    * @aliases sfpu,salesforce-push-unmapped,salesforce_push:unmapped
    */
-  public function pushUnmapped($name, array $options = ['count' => null]) {
+  public function pushUnmapped($name, array $options = ['count' => NULL]) {
     $mappings = $this->getPushMappingsFromName($name);
     foreach ($mappings as $mapping) {
       $entity_type = $mapping->get('drupal_entity_type');

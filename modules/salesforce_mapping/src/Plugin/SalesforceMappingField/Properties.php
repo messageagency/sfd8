@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
-
 /**
  * Adapter for entity properties and fields.
  *

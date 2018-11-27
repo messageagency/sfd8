@@ -45,8 +45,8 @@ function salesforce_mapping_menu_local_actions_alter(&$local_actions) {
 function salesforce_mapping_entity_operation(EntityInterface $entity) {
   $operations = [];
   if (\Drupal::entityTypeManager()
-      ->getStorage('salesforce_mapping')
-      ->loadByEntity($entity)) {
+    ->getStorage('salesforce_mapping')
+    ->loadByEntity($entity)) {
     $operations['salesforce'] = [
       'title' => t('Salesforce'),
       'weight' => 200,
@@ -115,9 +115,9 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
 
 /**
  * Implements hook_entity_delete().
- * Delete any corresponding Mapped Objects when an entity is deleted. 
+ * Delete any corresponding Mapped Objects when an entity is deleted.
  *
- * @param EntityInterface $entity
+ * @param \Drupal\Core\Entity\EntityInterface $entity
  */
 function salesforce_mapping_entity_delete(EntityInterface $entity) {
   $storage = \Drupal::entityTypeManager()

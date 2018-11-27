@@ -37,7 +37,7 @@ class QueueHandler {
   protected $queue;
 
   /**
-   * @var array of \Drupal\salesforce_mapping\Entity\SalesforceMapping
+   * @var arrayof\Drupal\salesforce_mapping\Entity\SalesforceMapping
    */
   protected $mappings;
 

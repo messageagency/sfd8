@@ -13,6 +13,9 @@ use Drupal\Core\Access\AccessResult;
  */
 class MappedObjectController extends ControllerBase {
 
+  /**
+   *
+   */
   public function access(AccountInterface $account) {
     if (!$account->hasPermission('administer salesforce')) {
       return AccessResult::forbidden();
@@ -27,7 +30,7 @@ class MappedObjectController extends ControllerBase {
     if (empty($implements['Drupal\Core\Entity\EntityInterface'])) {
       return AccessResult::forbidden();
     }
-    // Only allow access for entities with mappings
+    // Only allow access for entities with mappings.
     return \Drupal::entityTypeManager()
       ->getStorage('salesforce_mapping')
       ->loadByEntity($param)

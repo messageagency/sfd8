@@ -140,7 +140,9 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *
    * @param $object
    *   The object name in Salesforce.
-   * @param array $options An associative array of options whose values come from cli, aliases, config, etc.
+   * @param array $options
+   *   An associative array of options whose values come from cli, aliases, config, etc.
+   *
    * @option output
    *   Specify an output type.
    *   Options are:
@@ -162,7 +164,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    * @command salesforce:describe-object-deprecated
    * @deprecated Use describeFields, describeMetadata, describeRecordTypes, dumpObject
    */
-  public function describeObject($object, array $options = ['output' => null, 'field' => null]) {
+  public function describeObject($object, array $options = ['output' => NULL, 'field' => NULL]) {
     return $this->describeFields($object);
   }
 
@@ -277,7 +279,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
     unset($data['fields'], $data['childRelationships'], $data['recordTypeInfos']);
     foreach ($data as $k => &$v) {
       if ($k == 'supportedScopes') {
-        array_walk($v, function(&$value, $key) {
+        array_walk($v, function (&$value, $key) {
           $value = $value['name'] . ' (' . $value['label'] . ')';
         });
       }
@@ -494,7 +496,9 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   The object type name in Salesforce (e.g. Account).
    * @param array $data
    *   The data to use when creating the object (default is JSON format). Use '-' to read the data from STDIN.
-   * @param array $options An associative array of options whose values come from cli, aliases, config, etc.
+   * @param array $options
+   *   An associative array of options whose values come from cli, aliases, config, etc.
+   *
    * @option encoding
    *   Format to parse the object. Use  "json" for JSON (default) or "query" for data formatted like a query string, e.g. 'Company=Foo&LastName=Bar'.
    *   Defaults to "query".
@@ -515,7 +519,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
       $result = $this->client->objectCreate($object, $data);
       return new PropertyList([
         'status' => 'Success',
-        'id' => (string)$result,
+        'id' => (string) $result,
         'errors' => '',
       ]);
     }
@@ -534,12 +538,15 @@ class SalesforceCommands extends SalesforceCommandsBase {
   public function interactQueryObject(Input $input, Output $output) {
     return $this->interactObject($input, $output, 'Enter the object to be queried');
   }
+
   /**
    * Query an object using SOQL with specified conditions.
    *
    * @param $object
    *   The object type name in Salesforce (e.g. Account).
-    * @param array $options An associative array of options whose values come from cli, aliases, config, etc.
+   * @param array $options
+   *   An associative array of options whose values come from cli, aliases, config, etc.
+   *
    * @option where
    *   A WHERE clause to add to the SOQL query
    * @option fields
@@ -554,7 +561,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    * @command salesforcef:query-object
    * @aliases sfqo,sf-query-object
    */
-  public function queryObject($object, array $options = ['format' => 'table', 'where' => null, 'fields' => null, 'limit' => null, 'order' => null]) {
+  public function queryObject($object, array $options = ['format' => 'table', 'where' => NULL, 'fields' => NULL, 'limit' => NULL, 'order' => NULL]) {
     $query = new SelectQuery($object);
 
     if (!$options['fields']) {

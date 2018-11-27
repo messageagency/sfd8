@@ -6,3 +6,7 @@ view salesforce mapping:
   title: 'View Salesforce mapping'
   description: 'View Salesforce mapping data.'
   restrict access: TRUE
+administer salesforce mapped objects:
+  title: 'Administer Salesforce mapped objects'
+  description: 'Administer Salesforce mapped objects'
+  restrict access: TRUE

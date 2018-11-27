@@ -498,6 +498,9 @@ function _salesforce_drush_get_mapping($name = NULL) {
   return $mapping;
 }
 
+/**
+ *
+ */
 function _drush_salesforce_deprecated() {
   trigger_error('Salesforce module support for Drush 8 is deprecated and will be removed in a future release', E_DEPRECATED);
 }

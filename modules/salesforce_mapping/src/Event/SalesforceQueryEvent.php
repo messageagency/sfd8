@@ -26,7 +26,7 @@ class SalesforceQueryEvent extends SalesforceBaseEvent {
   }
 
   /**
-   * @return SelectQuery
+   * @return \Drupal\salesforce\SelectQuery
    */
   public function getQuery() {
     return $this->query;

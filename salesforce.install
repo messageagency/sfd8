@@ -164,7 +164,7 @@ function salesforce_update_8001() {
 }
 
 /**
- * Install new "Limit revisions" setting; defaults to 10
+ * Install new "Limit revisions" setting; defaults to 10.
  */
 function salesforce_update_8002() {
   $settings = \Drupal::configFactory()->getEditable('salesforce.settings');
