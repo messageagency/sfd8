@@ -12,25 +12,48 @@ use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Output\Output;
 
 /**
- *
+ * Shared command base for Salesforce Drush commands.
  */
 abstract class SalesforceCommandsBase extends DrushCommands {
 
   /**
-   * @var \Drupal\salesforce\Rest\RestClient*/
+   * The Salesforce client.
+   *
+   * @var \Drupal\salesforce\Rest\RestClient
+   */
   protected $client;
+
   /**
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface*/
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $etm;
+
   /**
-   * @var \Drupal\salesforce_mapping\SalesforceMappingStorage*/
+   * Salesforce Mapping storage handler.
+   *
+   * @var \Drupal\salesforce_mapping\SalesforceMappingStorage
+   */
   protected $mappingStorage;
+
   /**
-   * @var \Drupal\salesforce_mapping\MappedObjectStorage*/
+   * Mapped Object storage handler.
+   *
+   * @var \Drupal\salesforce_mapping\MappedObjectStorage
+   */
   protected $mappedObjectStorage;
 
   /**
+   * SalesforceCommandsBase constructor.
    *
+   * @param \Drupal\salesforce\Rest\RestClient $client
+   *   SF client.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
+   *   Entity type manager.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct(RestClient $client, EntityTypeManagerInterface $etm) {
     $this->client = $client;
@@ -56,7 +79,7 @@ abstract class SalesforceCommandsBase extends DrushCommands {
   }
 
   /**
-   *
+   * Collect a salesforce mapping interactively.
    */
   protected function interactMapping(Input $input, Output $output, $message = 'Choose a Salesforce mapping', $allOption = FALSE, $dir = NULL) {
     if ($name = $input->getArgument('name')) {
@@ -121,7 +144,7 @@ abstract class SalesforceCommandsBase extends DrushCommands {
   }
 
   /**
-   * Given a mapping name (and option direction), get an array of mappings.
+   * Given a mapping name (and optional direction), get an array of mappings.
    *
    * @param string $name
    *   'ALL' to load all mappings, or a mapping id.
@@ -129,6 +152,7 @@ abstract class SalesforceCommandsBase extends DrushCommands {
    *   'push'|'pull'|NULL to load limit mappings by push or pull types.
    *
    * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
+   *   The mappings.
    */
   protected function getMappingsFromName($name, $dir = NULL) {
     $mappings = [];
@@ -161,9 +185,14 @@ abstract class SalesforceCommandsBase extends DrushCommands {
   }
 
   /**
-   * @param $name
+   * Given a mapping name, get an array of matching push mappings.
+   *
+   * @param string $name
+   *   The mapping name.
    *
    * @return \Drupal\salesforce_mapping\Entity\SalesforceMapping[]
+   *   The matching mappings.
+   *
    * @throws \Exception
    */
   protected function getPushMappingsFromName($name) {
@@ -171,9 +200,14 @@ abstract class SalesforceCommandsBase extends DrushCommands {
   }
 
   /**
+   * Given a mappin gname, get an array of matching pull mappings.
+   *
    * @param string $name
+   *   The mapping name.
    *
    * @return \Drupal\salesforce_mapping\Entity\SalesforceMapping[]
+   *   The pull mappings.
+   *
    * @throws \Exception
    */
   protected function getPullMappingsFromName($name) {
@@ -181,9 +215,13 @@ abstract class SalesforceCommandsBase extends DrushCommands {
   }
 
   /**
+   * Pass-through helper to add appropriate formatters for a query result.
+   *
    * @param \Drupal\salesforce\Commands\QueryResult $query
+   *   The query result.
    *
    * @return \Drupal\salesforce\Commands\QueryResult
+   *   The same, unchanged query result.
    */
   protected function returnQueryResult(QueryResult $query) {
     $formatter = new QueryResultTableFormatter();

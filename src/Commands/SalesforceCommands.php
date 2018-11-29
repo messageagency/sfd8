@@ -41,6 +41,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    * @default-fields label,url,version,login_url,latest
    *
    * @return \Consolidation\OutputFormatters\StructuredData\PropertyList
+   *   The version info.
    */
   public function restVersion() {
     $version_id = $this->client->getApiVersion();
@@ -88,6 +89,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    * @default-fields name,label,labelPlural
    *
    * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
+   *   The objects.
    */
   public function listObjects() {
     if ($objects = $this->client->objects()) {
@@ -101,6 +103,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Wrap ::interactObject for describe-object.
+   *
    * @hook interact salesforce:describe-object
    */
   public function interactDescribeObject(Input $input, Output $output) {
@@ -108,6 +112,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Wrap ::interactObject for describe-fields.
+   *
    * @hook interact salesforce:describe-fields
    */
   public function interactDescribeFields(Input $input, Output $output) {
@@ -115,6 +121,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Wrap ::interactObject for describe-metadata.
+   *
    * @hook interact salesforce:describe-metadata
    */
   public function interactDescribeMetadata(Input $input, Output $output) {
@@ -122,6 +130,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Wrap ::interactObject for describe-record-types.
+   *
    * @hook interact salesforce:describe-record-types
    */
   public function interactDescribeRecordTypes(Input $input, Output $output) {
@@ -129,6 +139,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Wrap ::interactObject for dump-object.
+   *
    * @hook interact salesforce:dump-object
    */
   public function interactDumpObject(Input $input, Output $output) {
@@ -138,7 +150,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
   /**
    * Retrieve all the metadata for an object, including information about each field, URLs, and child relationships.
    *
-   * @param $object
+   * @param string $object
    *   The object name in Salesforce.
    * @param array $options
    *   An associative array of options whose values come from cli, aliases, config, etc.
@@ -187,7 +199,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
   /**
    * Retrieve object record types.
    *
-   * @param $object
+   * @param string $object
    *   The object name in Salesforce.
    *
    * @command salesforce:describe-record-types
@@ -205,7 +217,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *
    * @default-fields name,recordTypeId,developerName,active,available,defaultRecordTypeMapping,master
    *
-   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
+   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields|null
+   *   The record types, or null if the object was not found.
    */
   public function describeRecordTypes($object) {
     $objectDescription = $this->client->objectDescribe($object);
@@ -226,7 +239,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
   /**
    * Retrieve object metadata.
    *
-   * @param $object
+   * @param string $object
    *   The object name in Salesforce.
    *
    * @command salesforce:describe-metadata
@@ -266,7 +279,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   updateable: Updateable
    *   urls: Urls
    *
-   * @return \Consolidation\OutputFormatters\StructuredData\PropertyList
+   * @return \Consolidation\OutputFormatters\StructuredData\PropertyList|null
+   *   The metadata, or null if object was not found.
    */
   public function describeMetadata($object) {
     $objectDescription = $this->client->objectDescribe($object);
@@ -298,7 +312,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
   /**
    * Retrieve all the metadata for an object, including information about each field, URLs, and child relationships.
    *
-   * @param $object
+   * @param string $object
    *   The object name in Salesforce.
    *
    * @command salesforce:describe-fields
@@ -367,7 +381,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *
    * @default-fields label,name,type
    *
-   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
+   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields|null
+   *   The fields, or null if the object was not found.
    */
   public function describeFields($object) {
     $objectDescription = $this->client->objectDescribe($object);
@@ -405,7 +420,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   url: URL
    * @default-fields resource,url
    *
-   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
+   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields|null
+   *   The resources, or null if resources failed to load.
    */
   public function listResources() {
     $resources = $this->client->listResources();
@@ -420,6 +436,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Read a Salesforce ID interactively.
+   *
    * @hook interact salesforce:read-object
    */
   public function interactReadObject(Input $input, Output $output) {
@@ -433,6 +451,9 @@ class SalesforceCommands extends SalesforceCommandsBase {
 
   /**
    * Retrieve all the data for an object with a specific ID.
+   *
+   * @param string $id
+   *   A Salesforce ID.
    *
    * @todo create a proper StructuredData return value
    *
@@ -452,6 +473,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Fetch an object type and object data interactively.
+   *
    * @hook interact salesforce:create-object
    */
   public function interactCreateObject(Input $input, Output $output) {
@@ -494,7 +517,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *
    * @param string $object
    *   The object type name in Salesforce (e.g. Account).
-   * @param array $data
+   * @param mixed $data
    *   The data to use when creating the object (default is JSON format). Use '-' to read the data from STDIN.
    * @param array $options
    *   An associative array of options whose values come from cli, aliases, config, etc.
@@ -510,6 +533,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    * @default-fields status,id,errors
    *
    * @return \Consolidation\OutputFormatters\StructuredData\PropertyList
+   *   The create() response.
    *
    * @command salesforce:create-object
    * @aliases sfco,sf-create-object
@@ -533,6 +557,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Wrap ::interactObject() for query-object.
+   *
    * @hook interact salesforce:query-object
    */
   public function interactQueryObject(Input $input, Output $output) {
@@ -542,7 +568,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
   /**
    * Query an object using SOQL with specified conditions.
    *
-   * @param $object
+   * @param string $object
    *   The object type name in Salesforce (e.g. Account).
    * @param array $options
    *   An associative array of options whose values come from cli, aliases, config, etc.
@@ -557,11 +583,18 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   Comma-separated fields by which to sort results. Make sure to enclose in quotes for any whitespace.
    *
    * @return \Drupal\salesforce\Commands\QueryResult
+   *   The query result.
    *
    * @command salesforcef:query-object
    * @aliases sfqo,sf-query-object
    */
-  public function queryObject($object, array $options = ['format' => 'table', 'where' => NULL, 'fields' => NULL, 'limit' => NULL, 'order' => NULL]) {
+  public function queryObject($object, array $options = [
+    'format' => 'table',
+    'where' => NULL,
+    'fields' => NULL,
+    'limit' => NULL,
+    'order' => NULL
+  ]) {
     $query = new SelectQuery($object);
 
     if (!$options['fields']) {
@@ -600,11 +633,12 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   The query to execute.
    *
    * @return \Drupal\salesforce\Commands\QueryResult
+   *   The query result.
    *
    * @command salesforce:execute-query
    * @aliases sfeq,soql,sf-execute-query
    */
-  public function executeQuery($query, array $options = ['format' => 'table']) {
+  public function executeQuery($query) {
     $query = new SelectQueryRaw($query);
     return $this->returnQueryResult(new QueryResult($query, $this->client->query($query)));
   }
