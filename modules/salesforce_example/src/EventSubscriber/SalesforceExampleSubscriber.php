@@ -12,6 +12,7 @@ use Drupal\salesforce_mapping\Event\SalesforceQueryEvent;
 
 /**
  * Class SalesforceExampleSubscriber.
+ *
  * Trivial example of subscribing to salesforce.push_params event to set a
  * constant value for Contact.FirstName.
  *
@@ -20,7 +21,10 @@ use Drupal\salesforce_mapping\Event\SalesforceQueryEvent;
 class SalesforceExampleSubscriber implements EventSubscriberInterface {
 
   /**
+   * SalesforcePushAllowedEvent callback.
+   *
    * @param \Drupal\salesforce_mapping\Event\SalesforcePushAllowedEvent $event
+   *   The push allowed event.
    */
   public function pushAllowed(SalesforcePushAllowedEvent $event) {
     /** @var \Drupal\Core\Entity\Entity $entity */
@@ -31,7 +35,10 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * SalesforcePushParamsEvent callback.
+   *
    * @param \Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent $event
+   *   The event.
    */
   public function pushParamsAlter(SalesforcePushParamsEvent $event) {
     $mapping = $event->getMapping();
@@ -53,7 +60,10 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * SalesforcePushParamsEvent push success callback.
+   *
    * @param \Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent $event
+   *   The event.
    */
   public function pushSuccess(SalesforcePushParamsEvent $event) {
     switch ($event->getMappedObject()->getMapping()->id()) {
@@ -69,14 +79,20 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * SalesforcePushParamsEvent push fail callback.
+   *
    * @param \Drupal\salesforce_mapping\Event\SalesforcePushOpEvent $event
+   *   The event.
    */
   public function pushFail(SalesforcePushOpEvent $event) {
     drupal_set_message('push fail example: ' . $event->getMappedObject()->id());
   }
 
   /**
+   * SalesforceQueryEvent pull query alter event callback.
+   *
    * @param \Drupal\salesforce_mapping\Event\SalesforceQueryEvent $event
+   *   The event.
    */
   public function pullQueryAlter(SalesforceQueryEvent $event) {
     $mapping = $event->getMapping();
@@ -97,7 +113,10 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * Pull presave event callback.
    *
+   * @param \Drupal\salesforce_mapping\Event\SalesforcePullEvent $event
+   *   The event.
    */
   public function pullPresave(SalesforcePullEvent $event) {
     $mapping = $event->getMapping();
@@ -132,7 +151,7 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
         }
         catch (\Exception $e) {
           // Unable to fetch file data from SF.
-          \Drupal::logger('db')->error(t('failed to fetch attachment for user ' . $account->id()));
+          \Drupal::logger('db')->error(t('failed to fetch attachment for user @user', ['@user' => $account->id()]));
           return;
         }
 

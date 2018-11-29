@@ -30,8 +30,6 @@ function salesforce_example_help($route_name, RouteMatchInterface $route_match) 
  *
  * For this example we are simply calling a "manage" function and passing a
  * parameter to indicate what type of operaiton is taking place.
- *
- * @param \Drupal\Core\Entity\EntityInterface $entity
  */
 function salesforce_example_entity_insert(EntityInterface $entity) {
   _salesforce_example_entity_manage($entity, 'insert');
@@ -42,8 +40,6 @@ function salesforce_example_entity_insert(EntityInterface $entity) {
  *
  * For this example we are simply calling a "manage" function and passing a
  * parameter to indicate what type of operaiton is taking place.
- *
- * @param \Drupal\Core\Entity\EntityInterface $entity
  */
 function salesforce_example_entity_update(EntityInterface $entity) {
   _salesforce_example_entity_manage($entity, 'update');
@@ -54,14 +50,14 @@ function salesforce_example_entity_update(EntityInterface $entity) {
  *
  * For this example we are simply calling a "manage" function and passing a
  * parameter to indicate what type of operaiton is taking place.
- *
- * @param \Drupal\Core\Entity\EntityInterface $entity
  */
 function salesforce_example_entity_delete(EntityInterface $entity) {
   _salesforce_example_entity_manage($entity, 'delete');
 }
 
 /**
+ * Handler for entity operations.
+ *
  * This function is called by the three hook_entity_OPERATION functions
  * - salesforce_example_entity_insert (hook_entity_insert)
  * - salesforce_example_entity_update (hook_entity_update)
@@ -75,9 +71,6 @@ function salesforce_example_entity_delete(EntityInterface $entity) {
  * So if you have a Drupal T-Shirt in sizes S,M,L,XL, the Product is "Drupal T-Shirt" and you
  * will have four Product Variations, one for each size.  The Product object will have entity references
  * to each Product Variation.
- *
- * @param \Drupal\Core\Entity\EntityInterface $entity
- * @param $op
  */
 function _salesforce_example_entity_manage(EntityInterface &$entity, $op) {
 
@@ -89,12 +82,10 @@ function _salesforce_example_entity_manage(EntityInterface &$entity, $op) {
       ->getStorage('salesforce_mapped_object');
   }
 
-  /**
-   * We're performing a check to see if we're dealing with a Salesforce Mapped Object.  The reason
-   * we do this instead of just checking to see if we're dealing with a Commerce Product Variation is that
-   * we could very well have product variations that are not being managed by the SFDC integration.
-   * If this is the case, we do not want to be programmatically manipulating these objects.
-   */
+  // We're performing a check to see if we're dealing with a Salesforce Mapped Object.  The reason
+  // we do this instead of just checking to see if we're dealing with a Commerce Product Variation is that
+  // we could very well have product variations that are not being managed by the SFDC integration.
+  // If this is the case, we do not want to be programmatically manipulating these objects.
   if ($entity->getEntityTypeId() == 'salesforce_mapped_object') {
 
     /** @var \Drupal\salesforce_mapping\Entity\MappedObject $entity */
@@ -102,20 +93,18 @@ function _salesforce_example_entity_manage(EntityInterface &$entity, $op) {
     if (!$mapped_entity) {
       return;
     }
-    /**
-     * Here we check to see if the entity that the SFDC Mapping Object dealt with was a Commerce Product
-     * Variation.
-     */
+
+    // Here we check to see if the entity that the SFDC Mapping Object dealt with was a Commerce Product
+    // Variation.
     if ($mapped_entity->getEntityTypeId() == 'commerce_product_variation') {
       /** @var \Drupal\salesforce\SObject $sf */
       $sf = $entity->getSalesforceRecord();
 
       if ($sf != NULL) {
-        /**
-         * We are operating under the assumption that the parent Commerce Product object is also being
-         * managed by the SFDC integration.  Therefore we will be able to load the object by leveraging
-         * the Salesforce Modules storage service and using the SDFC ID as the key.
-         */
+
+        // We are operating under the assumption that the parent Commerce Product object is also being
+        // managed by the SFDC integration.  Therefore we will be able to load the object by leveraging
+        // the Salesforce Modules storage service and using the SDFC ID as the key.
 
         // Get the SFDC ID for the parent Product (the Product -> Product Variation already exists in SFDC,
         // conveniently mirroring the Drupal Commerce model)
@@ -129,7 +118,7 @@ function _salesforce_example_entity_manage(EntityInterface &$entity, $op) {
 
         if (is_array($mapped_objects)) {
 
-          // We are lazily assuming that there will only be one corresponding prodctu object
+          // We are lazily assuming that there will only be one corresponding prodct object
           // and that it will be the first item in the returned array.
           $mapped_object = current($mapped_objects);
 
@@ -141,23 +130,18 @@ function _salesforce_example_entity_manage(EntityInterface &$entity, $op) {
           /** @var \Drupal\commerce_product\Entity\Product $product */
           $product = $mgr->load($course->id());
 
-          /**
-           * If this is a deletion of a Product Variation, we need to remove the reference to the variation
-           * from the Commerce Product
-           */
+          // If this is a deletion of a Product Variation, we need to remove the reference to the variation
+          // from the Commerce Product.
           if ($op == 'delete') {
             $product->removeVariation($mapped_entity);
           }
-          /**
-           * Otherwise we need to add the reference to the Product Variation that was just inserted or updated
-           */
+
+          // Otherwise we need to add the reference to the Product Variation that was just inserted or updated.
           else {
             $product->addVariation($mapped_entity);
           }
 
-          /**
-           * Finally we save the Commerce Product that we've manipulated
-           */
+          // Finally we save the Commerce Product that we've manipulated.
           $product->save();
         }
       }

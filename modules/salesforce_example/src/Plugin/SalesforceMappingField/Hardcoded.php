@@ -19,7 +19,7 @@ use Drupal\salesforce_mapping\MappingConstants;
 class Hardcoded extends SalesforceMappingFieldPluginBase {
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $pluginForm = parent::buildConfigurationForm($form, $form_state);
@@ -43,19 +43,17 @@ class Hardcoded extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     return 'Hardcoded value';
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function pull() {
     return FALSE;
   }
-
-  // @TODO add validation handler (?)
 
 }
