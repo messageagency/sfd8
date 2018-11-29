@@ -2,6 +2,7 @@
 
 /**
  * @file
+ * Logger install file.
  */
 
 use Drupal\salesforce\Event\SalesforceEvents;
