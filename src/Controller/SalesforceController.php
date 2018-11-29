@@ -12,19 +12,19 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
- *
+ * OAuth callback handler.
  */
 class SalesforceController extends ControllerBase {
 
   protected $client;
-  protected $http_client;
+  protected $httpClient;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(RestClientInterface $rest, Client $http_client, MetadataBubblingUrlGenerator $url_generator) {
+  public function __construct(RestClientInterface $rest, Client $httpClient, MetadataBubblingUrlGenerator $url_generator) {
     $this->client = $rest;
-    $this->http_client = $http_client;
+    $this->httpClient = $httpClient;
     $this->url_generator = $url_generator;
   }
 
@@ -40,14 +40,17 @@ class SalesforceController extends ControllerBase {
   }
 
   /**
+   * Wrapper for \Drupal::request().
    *
+   * @return \Symfony\Component\HttpFoundation\Request
+   *   The currently active request object.
    */
   protected function request() {
     return \Drupal::request();
   }
 
   /**
-   *
+   * Display a success message on successful oauth.
    */
   protected function successMessage() {
     drupal_set_message(t('Successfully connected to %endpoint', ['%endpoint' => $this->client->getInstanceUrl()]));
@@ -78,7 +81,7 @@ class SalesforceController extends ControllerBase {
       'Content-Type' => 'application/x-www-form-urlencoded',
     ];
 
-    $response = $this->http_client->post($url, ['headers' => $headers, 'body' => $data]);
+    $response = $this->httpClient->post($url, ['headers' => $headers, 'body' => $data]);
 
     $this->client->handleAuthResponse($response);
 

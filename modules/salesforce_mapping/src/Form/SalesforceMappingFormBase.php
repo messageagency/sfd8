@@ -66,7 +66,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    * @param string $salesforce_object_type
    *   The object type of whose records you want to retreive.
    *
-   * @return RestResponse_Describe
+   * @return \Drupal\salesforce\Rest\RestResponseDescribe
    *   Information about the Salesforce object as provided by Salesforce.
    *
    * @throws Exception if $salesforce_object_type is not provided and

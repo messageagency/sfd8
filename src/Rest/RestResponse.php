@@ -29,9 +29,10 @@ class RestResponse extends Response {
   protected $data;
 
   /**
-   * {@inheritdoc}
+   * RestResponse constructor.
    *
-   * @throws \Drupal\salesforce\Rest\RestException if body cannot be json-decoded
+   * @param \GuzzleHttp\Psr7\Response $response
+   *   A response.
    */
   public function __construct(Response $response) {
     $this->response = $response;
@@ -43,10 +44,13 @@ class RestResponse extends Response {
    * Magic getter method to return the given property.
    *
    * @param string $key
+   *   The property name.
    *
    * @return mixed
+   *   The property value.
    *
-   * @throws \Exception if $key is not a property
+   * @throws \Exception
+   *   If $key property does not exist.
    */
   public function __get($key) {
     if (!property_exists($this, $key)) {

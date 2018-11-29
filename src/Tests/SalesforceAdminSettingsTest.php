@@ -78,7 +78,7 @@ class SalesforceAdminSettingsTest extends WebTestBase {
   }
 
   /**
-   *
+   * Test that the oauth mechanism appropriately sends a redirect header.
    */
   public function testOauthCallback() {
     $this->drupalLogin($this->adminSalesforceUser);

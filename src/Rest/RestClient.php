@@ -106,6 +106,8 @@ class RestClient implements RestClientInterface {
    *   The cache service.
    * @param \Drupal\Component\Serialization\Json $json
    *   The JSON serializer service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The Time service.
    */
   public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time) {
     $this->configFactory = $config_factory;
@@ -189,7 +191,6 @@ class RestClient implements RestClientInterface {
    *
    * @param string $url
    *   Fully-qualified URL to resource.
-   *
    * @param array $params
    *   Parameters to provide.
    * @param string $method
@@ -590,10 +591,10 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Helper method to extract API Usage info from response header and write to
-   * stateful variable.
+   * Helper to extract API Usage info from response header and write to state.
    *
-   * @param RestResponse $response
+   * @param \Drupal\salesforce\Rest\RestResponse $response
+   *   A REST API response.
    */
   protected function updateApiUsage(RestResponse $response) {
     if ($limit_info = $response->getHeader('Sforce-Limit-Info')) {
@@ -685,7 +686,7 @@ class RestClient implements RestClientInterface {
       return $cache->data;
     }
     else {
-      $response = new RestResponse_Describe($this->apiCall("sobjects/{$name}/describe", [], 'GET', TRUE));
+      $response = new RestResponseDescribe($this->apiCall("sobjects/{$name}/describe", [], 'GET', TRUE));
       $this->cache->set('salesforce:object:' . $name, $response, $this->getRequestTime() + self::CACHE_LIFETIME, ['salesforce']);
       return $response;
     }
@@ -767,14 +768,10 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Return a list of available resources for the configured API version.
-   *
-   * @return \Drupal\salesforce\Rest\RestResponse_Resources
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function listResources() {
-    return new RestResponse_Resources($this->apiCall('', [], 'GET', TRUE));
+    return new RestResponseResources($this->apiCall('', [], 'GET', TRUE));
   }
 
   /**

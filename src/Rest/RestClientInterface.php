@@ -395,7 +395,7 @@ interface RestClientInterface {
    * @param bool $reset
    *   Whether to reset the cache and retrieve a fresh version from Salesforce.
    *
-   * @return \Drupal\salesforce\Rest\RestResponse_Describe
+   * @return \Drupal\salesforce\Rest\RestResponseDescribe
    *   The describe result.
    *
    * @addtogroup salesforce_apicalls
@@ -529,7 +529,7 @@ interface RestClientInterface {
   /**
    * Return a list of available resources for the configured API version.
    *
-   * @return \Drupal\salesforce\Rest\RestResponse_Resources
+   * @return \Drupal\salesforce\Rest\RestResponseResources
    *   The response.
    *
    * @addtogroup salesforce_apicalls

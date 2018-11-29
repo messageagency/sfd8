@@ -3,7 +3,7 @@
 namespace Drupal\salesforce;
 
 /**
- *
+ * Allows for creating a select query by providing the SOQL string directly.
  */
 class SelectQueryRaw implements SelectQueryInterface {
 

@@ -6,8 +6,8 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\Rest\RestResponse;
-use Drupal\salesforce\Rest\RestResponse_Describe;
-use Drupal\salesforce\Rest\RestResponse_Resources;
+use Drupal\salesforce\Rest\RestResponseDescribe;
+use Drupal\salesforce\Rest\RestResponseResources;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQueryResult;
@@ -259,7 +259,7 @@ class RestClientTest extends UnitTestCase {
 
     // Test that we hit "apiCall" and get expected result:
     $result = $this->client->objectDescribe($name);
-    $expected = new RestResponse_Describe($restResponse);
+    $expected = new RestResponseDescribe($restResponse);
     $this->assertEquals($expected, $result);
 
     // Test that cache gets set correctly:
@@ -436,7 +436,7 @@ class RestClientTest extends UnitTestCase {
     $this->client->expects($this->once())
       ->method('apiCall')
       ->willReturn($restResponse);
-    $this->assertEquals(new RestResponse_Resources($restResponse), $this->client->listResources());
+    $this->assertEquals(new RestResponseResources($restResponse), $this->client->listResources());
   }
 
   /**

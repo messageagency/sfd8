@@ -6,6 +6,8 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 
 /**
+ * Empty http client.
+ *
  * @see tests/modules/salesforce_test_rest_client
  */
 class TestHttpClient extends Client {
