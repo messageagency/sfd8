@@ -5,7 +5,7 @@ namespace Drupal\salesforce\Event;
 use Drupal\Core\Logger\RfcLogLevel;
 
 /**
- *
+ * Notice event.
  */
 class SalesforceNoticeEvent extends SalesforceExceptionEvent {
 
