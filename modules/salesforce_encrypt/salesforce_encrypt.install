@@ -2,14 +2,16 @@
 
 /**
  * @file
+ * Requirements and uninstall hooks.
  */
 
 use Drupal\Core\Url;
 use Drupal\salesforce\EntityNotFoundException;
 
 /**
- * Implements hook_requirements
  * Throw a runtime error if Salesforce encryption profile is not selected.
+ *
+ * Implements hook_requirements().
  */
 function salesforce_encrypt_requirements($phase) {
   $requirements = [];

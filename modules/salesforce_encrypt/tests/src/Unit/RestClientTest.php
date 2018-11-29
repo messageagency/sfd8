@@ -21,7 +21,7 @@ use Drupal\Component\Datetime\TimeInterface;
  */
 class RestClientTest extends UnitTestCase {
 
-  static $modules = ['key', 'encrypt', 'salesforce', 'salesforce_encrypt'];
+  static public $modules = ['key', 'encrypt', 'salesforce', 'salesforce_encrypt'];
 
   protected $httpClient;
   protected $configFactory;
@@ -34,7 +34,7 @@ class RestClientTest extends UnitTestCase {
   protected $lock;
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function setUp() {
     parent::setUp();
@@ -61,7 +61,17 @@ class RestClientTest extends UnitTestCase {
     $this->time = $this->createMock(TimeInterface::CLASS);
     $this->client = $this->getMockBuilder(RestClient::CLASS)
       ->setMethods(['_getEncryptionProfile'])
-      ->setConstructorArgs([$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->time, $this->encryption, $this->profileManager, $this->lock])
+      ->setConstructorArgs([
+          $this->httpClient,
+          $this->configFactory,
+          $this->state,
+          $this->cache,
+          $this->json,
+          $this->time,
+          $this->encryption,
+          $this->profileManager,
+          $this->lock
+        ])
       ->getMock();
   }
 

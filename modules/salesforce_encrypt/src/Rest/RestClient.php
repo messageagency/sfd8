@@ -25,8 +25,25 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
 
   use StringTranslationTrait;
 
+  /**
+   * Encryption service.
+   *
+   * @var \Drupal\encrypt\EncryptServiceInterface
+   */
   protected $encryption;
+
+  /**
+   * Encryption profile manager.
+   *
+   * @var \Drupal\encrypt\EncryptionProfileManagerInterface
+   */
   protected $encryptionProfileManager;
+
+  /**
+   * The active encryption profile id.
+   *
+   * @var string
+   */
   protected $encryptionProfileId;
 
   /**
@@ -49,6 +66,8 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
    *   The cache service.
    * @param \Drupal\Component\Serialization\Json $json
    *   The JSON serializer service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The Time service.
    * @param \Drupal\encrypt\EncryptServiceInterface $encryption
    *   The encryption service.
    * @param \Drupal\encrypt\EncryptionProfileManagerInterface $encryptionProfileManager
@@ -66,9 +85,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   * Encrypts all sensitive salesforce config values.
-   *
-   * @throws RuntimeException if Salesforce if encryption was not enabled.
+   * {@inheritdoc}
    */
   public function enableEncryption(EncryptionProfileInterface $profile) {
     if ($ret = $this->setEncryption($profile)) {
@@ -78,10 +95,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   * Inverse of ::enableEncryption. Decrypts all sensitive salesforce config
-   * values.
-   *
-   * @throws RuntimeException if Salesforce encryption can't be disabled
+   * {@inheritdoc}
    */
   public function disableEncryption() {
     if ($ret = $this->setEncryption()) {
@@ -91,7 +105,7 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function hookEncryptionProfileDelete(EncryptionProfileInterface $profile) {
     if ($this->encryptionProfileId == $profile->id()) {
@@ -100,7 +114,12 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
+   * Set the given encryption profile as active.
    *
+   * If given profile is null, decrypt and disable encryption.
+   *
+   * @param \Drupal\encrypt\EncryptionProfileInterface|null $profile
+   *   The encryption profile. If null, encryption will be disabled.
    */
   protected function setEncryption(EncryptionProfileInterface $profile = NULL) {
     if (!$this->lock->acquire('salesforce_encrypt')) {
@@ -147,6 +166,15 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
   }
 
   /**
+   * Deprecated, use doGetEncryptionProfile.
+   *
+   * @deprecated use ::doGetEncryptionProfile().
+   */
+  protected function _getEncryptionProfile() {
+    return $this->doGetEncryptionProfile();
+  }
+
+  /**
    * Exception-handling wrapper around getEncryptionProfile().
    *
    * GetEncryptionProfile() will throw an EntityNotFoundException exception
@@ -154,10 +182,10 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
    * we handle that exception by setting a helpful error message and allow
    * execution to proceed.
    *
-   * @return \Drupal\encrypt\EncryptionProfileInterface | NULL
+   * @return \Drupal\encrypt\EncryptionProfileInterface|null
    *   The encryption profile if it can be loaded, otherwise NULL.
    */
-  protected function _getEncryptionProfile() {
+  protected function doGetEncryptionProfile() {
     try {
       $profile = $this->getEncryptionProfile();
     }
@@ -172,11 +200,11 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
    * {@inheritdoc}
    */
   public function encrypt($value) {
-    if (empty($this->_getEncryptionProfile())) {
+    if (empty($this->doGetEncryptionProfile())) {
       return $value;
     }
     else {
-      return $this->encryption->encrypt($value, $this->_getEncryptionProfile());
+      return $this->encryption->encrypt($value, $this->doGetEncryptionProfile());
     }
   }
 
@@ -184,11 +212,11 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
    * {@inheritdoc}
    */
   public function decrypt($value) {
-    if (empty($this->_getEncryptionProfile()) || empty($value) || mb_strlen($value) === 0) {
+    if (empty($this->doGetEncryptionProfile()) || empty($value) || mb_strlen($value) === 0) {
       return $value;
     }
     else {
-      return $this->encryption->decrypt($value, $this->_getEncryptionProfile());
+      return $this->encryption->decrypt($value, $this->doGetEncryptionProfile());
     }
   }
 
