@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
- *
+ * Mappable entity types constructor.
  */
 class SalesforceMappableEntityTypes implements SalesforceMappableEntityTypesInterface {
 

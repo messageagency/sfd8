@@ -14,7 +14,7 @@ use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface as FieldPlug
 class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
 
   /**
-   * {@inheritdoc}.
+   * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Previously "Field Mapping" table on the map edit form.
@@ -89,7 +89,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $form['buttons']['field_type'] = [
       '#title' => t('Field Type'),
       '#type' => 'select',
-      '#options' => $this->get_drupal_type_options($this->entity),
+      '#options' => $this->getDrupalTypeOptions($this->entity),
       '#attributes' => ['id' => 'edit-mapping-add-field-type'],
       '#empty_option' => $this->t('- Select -'),
     ];
@@ -99,10 +99,9 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       '#executes_submit_callback' => FALSE,
       '#limit_validation_errors' => [],
       '#ajax' => [
-        'callback' => [$this, 'field_add_callback'],
+        'callback' => [$this, 'fieldAddCallback'],
         'wrapper' => 'edit-field-mappings-wrapper',
       ],
-      // @TODO add validation to field_add_callback()
       '#states' => [
         'disabled' => [
           ':input#edit-mapping-add-field-type' => ['value' => ''],
@@ -120,7 +119,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     foreach ($this->entity->getFieldMappings() as $field_plugin) {
       $row = $row_template;
       $row['#attributes']['class']['zebra'] = ($zebra % 2) ? 'odd' : 'even';
-      $rows[] = $row + $this->get_row($field_plugin, $form, $form_state);
+      $rows[] = $row + $this->getRow($field_plugin, $form, $form_state);
       $zebra++;
     }
 
@@ -131,7 +130,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
         $row = $row_template;
         $row['#attributes']['class']['zebra'] = ($zebra % 2) ? 'odd' : 'even';
         $field_plugin = $this->entity->getFieldMapping($input['field_mappings'][$i]);
-        $rows[] = $row + $this->get_row($field_plugin, $form, $form_state);
+        $rows[] = $row + $this->getRow($field_plugin, $form, $form_state);
         $zebra++;
       }
     }
@@ -147,7 +146,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     && !empty($input['field_type'])) {
       $row = $row_template;
       $row['#attributes']['class']['zebra'] = ($zebra % 2) ? 'odd' : 'even';
-      $rows[] = $row + $this->get_row(NULL, $form, $form_state);
+      $rows[] = $row + $this->getRow(NULL, $form, $form_state);
       $zebra++;
     }
 
@@ -161,9 +160,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   }
 
   /**
-   * @return array
-   *   Return an array of field names => labels for any field which is marked
-   *   "externalId"
+   * Return an options array of field labels for any fields marked externalId.
    */
   private function getUpsertKeyOptions() {
     $options = [];
@@ -185,11 +182,11 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   /**
    * Helper function to return an empty row for the field mapping form.
    */
-  private function get_row(FieldPluginInterface $field_plugin = NULL, $form, FormStateInterface $form_state) {
+  private function getRow(FieldPluginInterface $field_plugin = NULL, $form, FormStateInterface $form_state) {
     $input = $form_state->getUserInput();
     if ($field_plugin == NULL) {
       $field_type = $input['field_type'];
-      $field_plugin_definition = $this->get_field_plugin($field_type);
+      $field_plugin_definition = $this->getFieldPlugin($field_type);
       $field_plugin = $this->mappingFieldPluginManager->createInstance(
         $field_plugin_definition['id']
       );
@@ -280,7 +277,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   /**
    * Ajax callback for adding a new field.
    */
-  public function field_add_callback($form, FormStateInterface $form_state) {
+  public function fieldAddCallback($form, FormStateInterface $form_state) {
     $response = new AjaxResponse();
     // Requires updating itself and the field map.
     $response->addCommand(new ReplaceCommand('#edit-field-mappings-wrapper', render($form['field_mappings_wrapper'])));
@@ -288,9 +285,9 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   }
 
   /**
-   * @return array
+   * Get an array of drupal types.
    */
-  protected function get_drupal_type_options($mapping) {
+  protected function getDrupalTypeOptions($mapping) {
     $field_plugins = $this->mappingFieldPluginManager->getDefinitions();
     $options = [];
     foreach ($field_plugins as $definition) {
@@ -302,9 +299,9 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   }
 
   /**
-   * @return SalesforceMappingFieldPluginInterface
+   * Get a field plugin of the given type.
    */
-  protected function get_field_plugin($field_type) {
+  protected function getFieldPlugin($field_type) {
     $field_plugins = $this->mappingFieldPluginManager->getDefinitions();
     return $field_plugins[$field_type];
   }

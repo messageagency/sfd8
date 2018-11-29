@@ -7,71 +7,111 @@ use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface;
 
 /**
- *
+ * Pull entity event.
  */
 class SalesforcePullEntityValueEvent extends SalesforceBaseEvent {
 
-  protected $entity_value;
-  protected $field_plugin;
-  protected $mapped_object;
+  /**
+   * The value of the field to be assigned.
+   *
+   * @var mixed
+   */
+  protected $entityValue;
+
+  /**
+   * The field plugin responsible for pulling the data.
+   *
+   * @var \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
+   */
+  protected $fieldPlugin;
+
+  /**
+   * The mapped object, or mapped object stub.
+   *
+   * @var \Drupal\salesforce_mapping\Entity\MappedObjectInterface
+   */
+  protected $mappedObject;
+
+  /**
+   * The mapping responsible for this pull.
+   *
+   * @var \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface
+   */
   protected $mapping;
+
+  /**
+   * The Drupal entity, or entity stub.
+   *
+   * @var \Drupal\Core\Entity\EntityInterface
+   */
   protected $entity;
 
   /**
-   * Undocumented function.
+   * SalesforcePullEntityValueEvent constructor.
    *
-   * @param mixed &$value
-   * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface $field_plugin
-   * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mapped_object
+   * @param mixed $value
+   *   The value to be assigned.
+   * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface $fieldPlugin
+   *   The field plugin.
+   * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mappedObject
+   *   The mapped object.
    */
-  public function __construct(&$value, SalesforceMappingFieldPluginInterface $field_plugin, MappedObjectInterface $mapped_object) {
-    $this->entity_value = $value;
-    $this->field_plugin = $field_plugin;
-    $this->mapped_object = $mapped_object;
-    $this->entity = $mapped_object->getMappedEntity();
-    $this->mapping = $mapped_object->salesforce_mapping->entity;
+  public function __construct(&$value, SalesforceMappingFieldPluginInterface $fieldPlugin, MappedObjectInterface $mappedObject) {
+    $this->entityValue = $value;
+    $this->fieldPlugin = $fieldPlugin;
+    $this->mappedObject = $mappedObject;
+    $this->entity = $mappedObject->getMappedEntity();
+    $this->mapping = $mappedObject->getMapping();
   }
 
   /**
+   * Getter.
    *
+   * @return mixed
+   *   The value to be pulled and assigned to the Drupal entity.
    */
   public function getEntityValue() {
-    return $this->entity_value;
+    return $this->entityValue;
   }
 
   /**
+   * Getter.
    *
+   * @return \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
+   *   The field plugin.
    */
   public function getFieldPlugin() {
-    return $this->field_plugin;
+    return $this->fieldPlugin;
   }
 
   /**
-   * @return EntityInterface (from PushParams)
+   * Getter.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface
+   *   The entity.
    */
   public function getEntity() {
     return $this->entity;
   }
 
   /**
-   * @return SalesforceMappingInterface (from PushParams)
+   * Getter.
+   *
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface
+   *   The mapping.
    */
   public function getMapping() {
     return $this->mapping;
   }
 
   /**
+   * Getter.
+   *
    * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface
+   *   The mapped object.
    */
   public function getMappedObject() {
-    return $this->mapped_object;
-  }
-
-  /**
-   *
-   */
-  public function getOp() {
-    return $this->op;
+    return $this->mappedObject;
   }
 
 }

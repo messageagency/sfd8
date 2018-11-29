@@ -87,8 +87,8 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     $this->state = $state;
     $this->queueManager = $queue_manager;
     $this->entity_manager = $entity_manager;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
+    $this->mappingStorage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mappedObjectStorage = $entity_manager->getStorage('salesforce_mapped_object');
     $this->eventDispatcher = $event_dispatcher;
     $this->time = $time;
 
@@ -324,7 +324,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
   public function processQueues($mappings = []) {
     if (empty($mappings)) {
       $mappings = $this
-        ->mapping_storage
+        ->mappingStorage
         ->loadPushMappings();
     }
     if (empty($mappings)) {
@@ -424,7 +424,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
    * {@inheritdoc}
    */
   public function failItem(\Exception $e, \stdClass $item) {
-    $mapping = $this->mapping_storage->load($item->name);
+    $mapping = $this->mappingStorage->load($item->name);
 
     if ($e instanceof EntityNotFoundException) {
       // If there was an exception loading any entities,

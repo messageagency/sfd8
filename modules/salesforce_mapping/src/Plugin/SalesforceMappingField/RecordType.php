@@ -45,7 +45,7 @@ class RecordType extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     return (string) ($this
@@ -57,7 +57,7 @@ class RecordType extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   private function getRecordTypeOptions($mapping) {
     $options = [];
@@ -90,6 +90,8 @@ class RecordType extends SalesforceMappingFieldPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   *
    * @TODO figure out what it means to pull Record Type
    */
   public function pull() {

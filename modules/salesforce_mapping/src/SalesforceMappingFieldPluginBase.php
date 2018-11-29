@@ -27,6 +27,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Defines a base Salesforce Mapping Field Plugin implementation.
+ *
  * Extenders need to implement SalesforceMappingFieldPluginInterface::value() and
  * PluginFormInterface::buildConfigurationForm().
  *
@@ -35,47 +36,95 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 abstract class SalesforceMappingFieldPluginBase extends PluginBase implements SalesforceMappingFieldPluginInterface, PluginFormInterface, ConfigurablePluginInterface, ContainerFactoryPluginInterface {
 
+  /**
+   * The label of the mapping.
+   *
+   * @var string
+   */
   protected $label;
+
+  /**
+   * The machine name of the mapping.
+   *
+   * @var string
+   */
   protected $id;
+
+  /**
+   * Entity type bundle info service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
   protected $entityTypeBundleInfo;
+
+  /**
+   * Entity field manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
   protected $entityFieldManager;
+
+  /**
+   * Salesforce client service.
+   *
+   * @var \Drupal\salesforce\Rest\RestClientInterface
+   */
   protected $salesforceClient;
 
-  // @see SalesforceMappingFieldPluginInterface::value()
-  // public function value();
-  // @see PluginFormInterface::buildConfigurationForm().
-  // public function buildConfigurationForm(array $form, FormStateInterface $form_state);
   /**
    * Storage handler for SF mappings.
    *
-   * @var \Drupal\salesforce_mapping\Entity\SalesforceMappingStorage
+   * @var \Drupal\salesforce_mapping\SalesforceMappingStorage
    */
-  protected $mapping_storage;
+  protected $mappingStorage;
 
   /**
    * Storage handler for Mapped Objects.
    *
    * @var \Drupal\salesforce_mapping\MappedObjectStorage
    */
-  protected $mapped_object_storage;
+  protected $mappedObjectStorage;
 
+  /**
+   * Entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
 
+  /**
+   * Event dispatcher service.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
   protected $eventDispatcher;
 
   /**
-   * Constructs a \Drupal\salesforce_mapping\Plugin\SalesforceMappingFieldPluginBase object.
+   * SalesforceMappingFieldPluginBase constructor.
    *
    * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
+   *   Plugin config.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   Plugin id.
    * @param array $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $mapping
-   *   The entity manager to get the SF listing, mapped entity, etc.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $mapping
-   *   The entity manager to get the SF listing, mapped entity, etc.
+   *   Plugin definition.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   Entity type bundle info service.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   Entity field manager.
+   * @param \Drupal\salesforce\Rest\RestClientInterface $rest_client
+   *   Salesforce client.
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   Entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
+   *   ETM service.
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
+   *   Date formatter service.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   Event dispatcher service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityManagerInterface $entity_manager, EntityTypeManagerInterface $etm, DateFormatterInterface $dateFormatter, EventDispatcherInterface $event_dispatcher) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
@@ -84,8 +133,8 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
     $this->salesforceClient = $rest_client;
     $this->entityManager = $entity_manager;
     $this->entityTypeManager = $etm;
-    $this->mapping_storage = $entity_manager->getStorage('salesforce_mapping');
-    $this->mapped_object_storage = $entity_manager->getStorage('salesforce_mapped_object');
+    $this->mappingStorage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mappedObjectStorage = $entity_manager->getStorage('salesforce_mapped_object');
     $this->dateFormatter = $dateFormatter;
     $this->eventDispatcher = $event_dispatcher;
   }
@@ -300,6 +349,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * In order to set a config value to null, use setConfiguration()
    *
    * @return array|string
+   *   The config value.
    */
   public function config($key = NULL, $value = NULL) {
     if ($key === NULL) {
@@ -345,7 +395,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
       '#description' => t('Select a Salesforce field to map.'),
       // @TODO MULTIPLE SF FIELDS FOR ONE MAPPING FIELD NOT IN USE:
       // '#multiple' => (isset($drupal_field_type['salesforce_multiple_fields']) && $drupal_field_type['salesforce_multiple_fields']) ? TRUE : FALSE,
-      '#options' => $this->get_salesforce_field_options($form['#entity']->getSalesforceObjectType()),
+      '#options' => $this->getSalesforceFieldOptions($form['#entity']->getSalesforceObjectType()),
       '#default_value' => $this->config('salesforce_field'),
       '#empty_option' => $this->t('- Select -'),
     ];
@@ -380,58 +430,35 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   }
 
   /**
-   * @TODO: this implementation from ConfigurablePluginInterface
-   * Calculates dependencies for the configured plugin.
-   *
-   * Dependencies are saved in the plugin's configuration entity and are used to
-   * determine configuration synchronization order. For example, if the plugin
-   * integrates with specific user roles, this method should return an array of
-   * dependencies listing the specified roles.
-   *
-   * @return array
-   *   An array of dependencies grouped by type (config, content, module,
-   *   theme). For example:
-   * @code
-   *   array(
-   *     'config' => array('user.role.anonymous', 'user.role.authenticated'),
-   *     'content' => array('node:article:f0a189e6-55fb-47fb-8005-5bef81c44d6d'),
-   *     'module' => array('node', 'user'),
-   *     'theme' => array('seven'),
-   *   );
-   * @endcode
-   *
-   * @see \Drupal\Core\Config\Entity\ConfigDependencyManager
-   * @see \Drupal\Core\Entity\EntityInterface::getConfigDependencyName()
+   * {@inheritdoc}
    */
   public function calculateDependencies() {
 
   }
 
   /**
-   * Implements SalesforceMappingFieldPluginInterface::label().
+   * {@inheritdoc}
    */
   public function label() {
     return $this->get('label');
   }
 
   /**
-   * Implements SalesforceMappingFieldPluginInterface::get().
+   * {@inheritdoc}
    */
   public function get($key) {
     return $this->config($key);
   }
 
   /**
-   * Implements SalesforceMappingFieldPluginInterface::get().
+   * {@inheritdoc}
    */
   public function set($key, $value) {
     $this->$key = $value;
   }
 
   /**
-   * @return bool
-   *   Whether or not this field should be pushed to Salesforce.
-   * @TODO This needs a better name. Could be mistaken for a verb.
+   * {@inheritdoc}
    */
   public function push() {
     return in_array($this->config('direction'), [
@@ -441,9 +468,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   }
 
   /**
-   * @return bool
-   *   Whether or not this field should be pulled from Salesforce to Drupal.
-   * @TODO This needs a better name. Could be mistaken for a verb.
+   * {@inheritdoc}
    */
   public function pull() {
     return in_array($this->config('direction'), [
@@ -455,14 +480,14 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   /**
    * Helper to retreive a list of fields for a given object type.
    *
-   * @param string $salesforce_object_type
+   * @param string $sfobject_name
    *   The object type of whose fields you want to retreive.
    *
    * @return array
    *   An array of values keyed by machine name of the field with the label as
    *   the value, formatted to be appropriate as a value for #options.
    */
-  protected function get_salesforce_field_options($sfobject_name) {
+  protected function getSalesforceFieldOptions($sfobject_name) {
     // Static cache since this function is called frequently across many
     // different object instances.
     $options = &drupal_static(__CLASS__ . __FUNCTION__, []);
@@ -481,12 +506,13 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   }
 
   /**
-   * Given a field definition, return TRUE if it uses an entity reference
-   * handler.
+   * Return TRUE if the given field uses an entity reference handler.
    *
    * @param \Drupal\Core\Field\FieldDefinitionInterface $instance
+   *   The field.
    *
    * @return bool
+   *   Whether the field is an entity reference.
    */
   protected function instanceOfEntityReference(FieldDefinitionInterface $instance) {
     $handler = $instance->getSetting('handler');
@@ -500,7 +526,10 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   }
 
   /**
-   * @TODO DIC this and update extenders.
+   * Wraper for plugin.manager.entity_reference_selection service.
+   *
+   * @return \Drupal\Core\Entity\EntityAutocompleteMatcher
+   *   Entity autocompleter service.
    */
   protected function selectionPluginManager() {
     return \Drupal::service('plugin.manager.entity_reference_selection');

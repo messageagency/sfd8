@@ -24,15 +24,11 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
 
   /**
    * {@inheritdoc}
-   *
-   * @TODO this function is almost 200 lines. Look into leveraging core Entity
-   *   interfaces like FieldsDefinition (or something). Look at breaking this up
-   *   into smaller chunks.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Perform our salesforce queries first, so that if we can't connect we don't waste time on the rest of the form.
     try {
-      $object_type_options = $this->get_salesforce_object_type_options();
+      $object_type_options = $this->getSalesforceObjectTypeOptions();
     }
     catch (\Exception $e) {
       $href = new Url('salesforce.authorize');
@@ -71,7 +67,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#open' => $mapping->isNew(),
     ];
 
-    $entity_types = $this->get_entity_type_options();
+    $entity_types = $this->getEntityTypeOptions();
     $form['drupal_entity']['drupal_entity_type'] = [
       '#title' => $this->t('Drupal Entity Type'),
       '#id' => 'edit-drupal-entity-type',
@@ -151,7 +147,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     ];
 
     // @TODO either change sync_triggers to human readable values, or make them work as hex flags again.
-    $trigger_options = $this->get_sync_trigger_options();
+    $trigger_options = $this->getSyncTriggerOptions();
     $form['sync_triggers'] = [
       '#title' => t('Action triggers'),
       '#type' => 'details',
@@ -226,7 +222,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
           '#description' => t('Poll Salesforce for updated records based on the given date field. Defaults to "Last Modified Date".'),
           '#required' => $mapping->salesforce_object_type,
           '#default_value' => $mapping->pull_trigger_date,
-          '#options' => $this->get_pull_trigger_options(),
+          '#options' => $this->getPullTriggerOptions(),
         ];
       }
 
@@ -398,25 +394,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   }
 
   /**
-   *
-   */
-  public function drupal_entity_type_bundle_callback($form, FormStateInterface $form_state) {
-    $response = new AjaxResponse();
-    // Requires updating itself and the field map.
-    $response->addCommand(new ReplaceCommand('#edit-salesforce-object', render($form['salesforce_object'])))->addCommand(new ReplaceCommand('#edit-salesforce-field-mappings-wrapper', render($form['salesforce_field_mappings_wrapper'])));
-    return $response;
-  }
-
-  /**
-   * Ajax callback for salesforce_mapping_form() field CRUD.
-   */
-  public function field_callback($form, FormStateInterface $form_state) {
-    $response = new AjaxResponse();
-    $response->addCommand(new ReplaceCommand('#edit-salesforce-field-mappings-wrapper', render($form['salesforce_field_mappings_wrapper'])));
-    return $response;
-  }
-
-  /**
    * Ajax callback for salesforce_mapping_form() bundle selection.
    */
   public function bundleCallback($form, FormStateInterface $form_state) {
@@ -427,7 +404,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * Return an array of all bundle options, for javascript-free fallback.
    */
   protected function getBundleOptions() {
-    $entities = $this->get_entity_type_options();
+    $entities = $this->getEntityTypeOptions();
     $bundles = $this->entityManager->getAllBundleInfo();
     $options = [];
     foreach ($bundles as $entity => $bundle_info) {
@@ -449,7 +426,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    *   An array of values keyed by machine name of the entity with the label as
    *   the value, formatted to be appropriate as a value for #options.
    */
-  protected function get_entity_type_options() {
+  protected function getEntityTypeOptions() {
     $options = [];
     $mappable_entity_types = $this->mappableEntityTypes
       ->getMappableEntityTypes();
@@ -465,15 +442,11 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   /**
    * Helper to retreive a list of object type options.
    *
-   * @param array $form_state
-   *   Current state of the form to store and retreive results from to minimize
-   *   the need for recalculation.
-   *
    * @return array
    *   An array of values keyed by machine name of the object with the label as
    *   the value, formatted to be appropriate as a value for #options.
    */
-  protected function get_salesforce_object_type_options() {
+  protected function getSalesforceObjectTypeOptions() {
     $sfobject_options = [];
 
     // Note that we're filtering SF object types to a reasonable subset.
@@ -497,7 +470,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    *   Array of sync trigger options keyed by their machine name with their
    *   label as the value.
    */
-  protected function get_sync_trigger_options() {
+  protected function getSyncTriggerOptions() {
     $options = [];
     if ($this->moduleHandler->moduleExists('salesforce_push')) {
       $options += [
@@ -517,14 +490,12 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   }
 
   /**
-   * Helper function which returns an array of Date fields suitable for use a
-   * pull trigger field.
-   *
-   * @param string $name
+   * Return an array of Date fields suitable for use a pull trigger field.
    *
    * @return array
+   *   The options array.
    */
-  private function get_pull_trigger_options() {
+  private function getPullTriggerOptions() {
     $options = [];
     try {
       $describe = $this->get_salesforce_object();
@@ -540,19 +511,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       }
     }
     return $options;
-  }
-
-  /**
-   *
-   */
-  protected function get_push_plugin_options() {
-    return [];
-    // Example:
-    //    $field_type_options = [];
-    //    foreach ($field_plugins as $field_plugin) {
-    //      $field_type_options[$field_plugin['id']] = $field_plugin['label'];
-    //    }
-    //    return $field_type_options;.
   }
 
 }

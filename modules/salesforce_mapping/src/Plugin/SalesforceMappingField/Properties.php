@@ -45,7 +45,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
@@ -60,7 +60,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     // No error checking here. If a property is not defined, it's a
@@ -83,7 +83,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * Form options helper.
    */
   private function getConfigurationOptions(SalesforceMappingInterface $mapping) {
     $instances = $this->entityFieldManager->getFieldDefinitions(

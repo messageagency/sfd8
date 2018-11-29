@@ -23,14 +23,14 @@ class MappedObjectForm extends ContentEntityForm {
   /**
    * Mapping entity storage service.
    *
-   * @var SalesforceMappingStorage
+   * @var \Drupal\salesforce_mapping\SalesforceMappingStorage
    */
   protected $mappingStorage;
 
   /**
    * Mapped object storage service.
    *
-   * @var MappedObjectStorage
+   * @var \Drupal\salesforce_mapping\MappedObjectStorage
    */
   protected $mappedObjectStorage;
 
@@ -46,7 +46,7 @@ class MappedObjectForm extends ContentEntityForm {
    *
    * @var \Symfony\Component\HttpFoundation\RequestStack
    */
-  protected $request_stack;
+  protected $request;
 
   /**
    * Entity type manager.
@@ -56,17 +56,26 @@ class MappedObjectForm extends ContentEntityForm {
   protected $entityTypeManager;
 
   /**
-   * Constructs a ContentEntityForm object.
+   * MappedObjectForm constructor.
    *
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   Entity manager service.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entityTypeBundleInfo
+   *   Bundle info service.
+   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   *   Time service.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   Event dispatcher service.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   Route matching service.
+   *   Request stack.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   Entity Type Manager service.
+   *   Entity type manager service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(EntityManagerInterface $entity_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct($entity_manager, $entity_type_bundle_info, $time);
+  public function __construct(EntityManagerInterface $entity_manager, EntityTypeBundleInfoInterface $entityTypeBundleInfo, TimeInterface $time, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack, EntityTypeManagerInterface $entity_type_manager) {
+    parent::__construct($entity_manager, $entityTypeBundleInfo, $time);
     $this->eventDispatcher = $event_dispatcher;
     $this->request = $request_stack->getCurrentRequest();
     $this->entityTypeManager = $entity_type_manager;
@@ -139,9 +148,6 @@ class MappedObjectForm extends ContentEntityForm {
 
   /**
    * Verify that entity type and mapping agree.
-   *
-   * @param array $form
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
    */
   public function validatePush(array &$form, FormStateInterface $form_state) {
     $drupal_entity_array = $form_state->getValue(['drupal_entity', 0]);
@@ -155,9 +161,6 @@ class MappedObjectForm extends ContentEntityForm {
 
   /**
    * Salesforce ID is required for a pull.
-   *
-   * @param array $form
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
    */
   public function validatePull(array &$form, FormStateInterface $form_state) {
     // Verify SFID was given - required for pull.
@@ -176,7 +179,9 @@ class MappedObjectForm extends ContentEntityForm {
     $mapped_object = $this->entity;
     $mapped_object
       ->set('drupal_entity', $drupal_entity_array)
-      ->set('salesforce_mapping', $form_state->getValue(['salesforce_mapping', 0, 'target_id']));
+      ->set('salesforce_mapping', $form_state->getValue([
+        'salesforce_mapping', 0, 'target_id'
+      ]));
 
     if ($sfid = $form_state->getValue(['salesforce_id', 0, 'value'], FALSE)) {
       $mapped_object->set('salesforce_id', (string) new SFID($sfid));
@@ -207,9 +212,11 @@ class MappedObjectForm extends ContentEntityForm {
    * Submit handler for "pull" button.
    */
   public function submitPull(array &$form, FormStateInterface $form_state) {
+    $mapping_id = $form_state->getValue(['salesforce_mapping', 0, 'target_id']);
+    $sfid = new SFID($form_state->getValue(['salesforce_id', 0, 'value']));
     $mapped_object = $this->entity
-      ->set('salesforce_id', (string) new SFID($form_state->getValue(['salesforce_id', 0, 'value'])))
-      ->set('salesforce_mapping', $form_state->getValue(['salesforce_mapping', 0, 'target_id']));
+      ->set('salesforce_id', (string) $sfid)
+      ->set('salesforce_mapping', $mapping_id);
     // Create stub entity.
     $drupal_entity_array = $form_state->getValue(['drupal_entity', 0]);
     if ($drupal_entity_array['target_id']) {
@@ -253,7 +260,7 @@ class MappedObjectForm extends ContentEntityForm {
   }
 
   /**
-   * @TODO: There must be a better way to do this.
+   * Helper to fetch the contextual Drupal entity.
    */
   private function getDrupalEntityFromUrl() {
     // Fetch the current entity from context.

@@ -22,8 +22,7 @@ use Drupal\salesforce\Exception as SalesforceException;
 class RelatedIDs extends SalesforceMappingFieldPluginBase {
 
   /**
-   * Implementation of PluginFormInterface::buildConfigurationForm
-   * This is basically the inverse of Properties::buildConfigurationForm()
+   * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $pluginForm = parent::buildConfigurationForm($form, $form_state);
@@ -50,7 +49,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   * @see RelatedProperties::value
+   * {@inheritdoc}
    */
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     $field_name = $this->config('drupal_field_value');
@@ -72,7 +71,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     // Now we can actually fetch the referenced entity.
     $field_settings = $field->getFieldDefinition()->getSettings();
     // @TODO this procedural call will go away when sf mapping object becomes a service or field
-    $referenced_mappings = $this->mapped_object_storage->loadByDrupal($field_settings['target_type'], $field->entity->id());
+    $referenced_mappings = $this->mappedObjectStorage->loadByDrupal($field_settings['target_type'], $field->entity->id());
     if (!empty($referenced_mappings)) {
       $mapping = reset($referenced_mappings);
       return $mapping->sfid();
@@ -105,7 +104,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     }
 
     // Convert SF Id to Drupal Id.
-    $referenced_mappings = $this->mapped_object_storage->loadBySfid($value);
+    $referenced_mappings = $this->mappedObjectStorage->loadBySfid($value);
     if (!empty($referenced_mappings)) {
       $mapped_object = reset($referenced_mappings);
       return $mapped_object->getMappedEntity()
@@ -115,7 +114,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * Helper to build form options.
    */
   private function getConfigurationOptions($mapping) {
     $instances = $this->entityFieldManager->getFieldDefinitions(

@@ -2,14 +2,11 @@
 
 /**
  * @file
+ * Install file.
  */
 
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\views\Views;
-
-/**
- * @file
- */
 
 /**
  * Copy entity_id-entity_type_id data into new mapped_entity field.
@@ -78,11 +75,9 @@ function salesforce_mapping_update_8002() {
 }
 
 /**
- * Add new "always_upsert" field to all existing mappings which have an upsert
- * key, to preserve old behavior.
+ * Add new "always_upsert" field to all existing mappings which have an upsert key, to preserve old behavior.
  */
 function salesforce_mapping_update_8003() {
-  /** @var \Drupal\salesforce_mapping\Entity\SalesforceMapping $mapping */
   foreach (SalesforceMapping::loadMultiple() as $mapping) {
     if ($mapping->hasKey() && $mapping->get('always_upsert') !== FALSE) {
       $mapping->set('always_upsert', TRUE)->save();
@@ -115,9 +110,9 @@ function salesforce_mapping_update_8004() {
   $view->getDisplay()->setOption('access', [
     'type' => 'perm',
     'options' => [
-      'perm' => 'administer salesforce mapped objects'
-    ]
-]);
+      'perm' => 'administer salesforce mapped objects',
+    ],
+  ]);
   $view->save();
   return t('Salesforce admin permissions updated. You may wish to review your user permission settings.');
 }

@@ -51,18 +51,18 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->with($this->equalTo('drupal_entity_type'))
       ->willReturn($this->entityType);
 
-    $this->mapping_storage = $this->getMock(ConfigEntityStorageInterface::CLASS);
-    $this->mapping_storage->expects($this->any())
+    $this->mappingStorage = $this->getMock(ConfigEntityStorageInterface::CLASS);
+    $this->mappingStorage->expects($this->any())
       ->method('load')
       ->willReturn($this->mapping);
 
-    $this->mapped_object_storage = $this->getMock(SqlEntityStorageInterface::CLASS);
+    $this->mappedObjectStorage = $this->getMock(SqlEntityStorageInterface::CLASS);
 
     $prophecy = $this->prophesize(EntityTypeManagerInterface::class);
     $prophecy->getStorage('salesforce_mapping')
-      ->willReturn($this->mapping_storage);
+      ->willReturn($this->mappingStorage);
     $prophecy->getStorage('salesforce_mapped_object')
-      ->willReturn($this->mapped_object_storage);
+      ->willReturn($this->mappedObjectStorage);
     $this->entityTypeManager = $prophecy->reveal();
 
     $container = new ContainerBuilder();
@@ -178,9 +178,9 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
     $prophecy->getStorage($this->entityType)
       ->willReturn($this->entityStorage);
     $prophecy->getStorage('salesforce_mapping')
-      ->willReturn($this->mapping_storage);
+      ->willReturn($this->mappingStorage);
     $prophecy->getStorage('salesforce_mapped_object')
-      ->willReturn($this->mapped_object_storage);
+      ->willReturn($this->mappedObjectStorage);
     $this->entityTypeManager = $prophecy->reveal();
 
     $this->mappedObject->expects($this->once())
@@ -224,9 +224,9 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
     $prophecy->getStorage($this->entityType)
       ->willReturn($this->entityStorage);
     $prophecy->getStorage('salesforce_mapping')
-      ->willReturn($this->mapping_storage);
+      ->willReturn($this->mappingStorage);
     $prophecy->getStorage('salesforce_mapped_object')
-      ->willReturn($this->mapped_object_storage);
+      ->willReturn($this->mappedObjectStorage);
     $this->entityTypeManager = $prophecy->reveal();
 
     $this->entityStorage->expects($this->once())

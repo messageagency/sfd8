@@ -65,23 +65,23 @@ class PushQueueTest extends UnitTestCase {
     $this->string_translation = $this->getMock(TranslationInterface::class);
     $this->time = $this->getMock(TimeInterface::class);
 
-    $this->mapping_storage = $this->getMockBuilder(SalesforceMappingStorage::CLASS)
+    $this->mappingStorage = $this->getMockBuilder(SalesforceMappingStorage::CLASS)
       ->disableOriginalConstructor()
       ->getMock();
 
-    $this->mapped_object_storage = $this->getMock(SqlEntityStorageInterface::CLASS);
+    $this->mappedObjectStorage = $this->getMock(SqlEntityStorageInterface::CLASS);
 
     $this->entityStorage = $this->getMock(SqlEntityStorageInterface::CLASS);
 
     $this->entityTypeManager->expects($this->at(0))
       ->method('getStorage')
       ->with($this->equalTo('salesforce_mapping'))
-      ->willReturn($this->mapping_storage);
+      ->willReturn($this->mappingStorage);
 
     $this->entityTypeManager->expects($this->at(1))
       ->method('getStorage')
       ->with($this->equalTo('salesforce_mapped_object'))
-      ->willReturn($this->mapped_object_storage);
+      ->willReturn($this->mappedObjectStorage);
 
     // Mock config.
     $prophecy = $this->prophesize(Config::CLASS);

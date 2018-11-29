@@ -15,6 +15,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Class MappedObjectStorage.
+ *
  * Extends ConfigEntityStorage to add some commonly used convenience wrappers.
  *
  * @package Drupal\salesforce_mapping
@@ -22,20 +23,26 @@ use Drupal\Core\Entity\EntityTypeInterface;
 class MappedObjectStorage extends SqlContentEntityStorage {
 
   /**
-   * {@inheritdoc}
-   */
-  // During testing, complaints alternate between the type of
-  // cache interface expected between below:
-  // CacheBackendInterface.
-
-  /**
-   * DatabaseBackendFactory.
+   * MappedObjectStorage constructor.
+   *
+   * @param string $entity_type_id
+   *   Entity type id.
+   * @param \Drupal\Core\Database\Connection $database
+   *   Database service.
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   Entity manager service.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
+   *   Cache service.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   Language service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct($entity_type_id, Connection $database, EntityManagerInterface $entity_manager, CacheBackendInterface $cache, LanguageManagerInterface $language_manager) {
     // @TODO the $entity_type needs to be in the constructor and not
     // devrived from from $entity_type_id. This is because of the parent
     // class SqlContentEntityStorage's createInstance method, which while
-    // ultimately calls it's own constructer through here, is calling this
+    // ultimately calls it's own constructor through here, is calling this
     // constuctor with the same paramter blueprint, which expects
     // EntityTypeInterface and not a string.
     $entity_type = $entity_manager->getDefinition($entity_type_id);
@@ -58,11 +65,13 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   /**
    * Load MappedObjects by entity type id and entity id.
    *
-   * @pararm string entity_type_id
+   * @param string $entity_type_id
+   *   Entity type id.
+   * @param int|string $entity_id
+   *   Entity id.
    *
-   * @param int/string entity_id
-   *
-   * @return array
+   * @return \Drupal\salesforce_mapping\Entity\MappedObject[]
+   *   Mapped objects.
    *
    * @see loadByProperties()
    */
@@ -77,8 +86,10 @@ class MappedObjectStorage extends SqlContentEntityStorage {
    * Load MappedObjects by Drupal Entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Drupal entity.
    *
-   * @return array
+   * @return \Drupal\salesforce_mapping\Entity\MappedObject[]
+   *   Mapped objects.
    *
    * @see loadByProperties()
    */
@@ -93,8 +104,12 @@ class MappedObjectStorage extends SqlContentEntityStorage {
    * Load a single MappedObject by Drupal Entity and Mapping.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Drupal entity.
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Salesforce Mapping.
    *
-   * @return MappedObjectInterface|null
+   * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface|null
+   *   The matching Mapped Object, or null if none are found.
    *
    * @see loadByProperties()
    */
@@ -111,6 +126,10 @@ class MappedObjectStorage extends SqlContentEntityStorage {
    * Load MappedObjects by Salesforce ID.
    *
    * @param \Drupal\salesforce\SFID $salesforce_id
+   *   Salesforce id.
+   *
+   * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface[]
+   *   Matching mapped objects.
    *
    * @see loadByProperties()
    */
@@ -123,9 +142,13 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   /**
    * Load a single MappedObject by Mapping and SFID.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\salesforce\SFID $salesforce_id
+   *   Salesforce id.
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Salesforce mapping.
    *
-   * @return MappedObjectInterface|null
+   * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface|null
+   *   Mapped object, or null if none are found.
    *
    * @see loadByProperties()
    */
@@ -138,10 +161,10 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   }
 
   /**
-   * Set the "force_pull" column to TRUE for all mapped objects of the given
-   * mapping.
+   * Set "force_pull" column to TRUE for mapped objects of the given mapping.
    *
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Mapping.
    *
    * @return $this
    */

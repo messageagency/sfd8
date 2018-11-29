@@ -7,26 +7,28 @@ use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Wrapper for the array of values which will be pushed to Salesforce.
+ *
  * Usable by salesforce.client for push actions: create, upsert, update.
  */
 class PushParams {
 
   protected $params;
   protected $mapping;
-  protected $drupal_entity;
+  protected $drupalEntity;
 
   /**
-   * Given a Drupal entity, return an array of Salesforce key-value pairs
-   * previously salesforce_push_map_params (d7)
+   * Given a Drupal entity, return an array of Salesforce key-value pairs.
    *
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Salesforce Mapping.
    * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Drupal entity.
    * @param array $params
-   *   (optional)
+   *   Initial params values (optional).
    */
   public function __construct(SalesforceMappingInterface $mapping, EntityInterface $entity, array $params = []) {
     $this->mapping = $mapping;
-    $this->drupal_entity = $entity;
+    $this->drupalEntity = $entity;
     $this->params = $params;
     foreach ($mapping->getFieldMappings() as $field_plugin) {
       // Skip fields that aren't being pushed to Salesforce.
@@ -38,29 +40,46 @@ class PushParams {
   }
 
   /**
-   * @return SalesforceMapping for this PushParams
+   * Getter.
+   *
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface
+   *   Mapping.
    */
   public function getMapping() {
     return $this->mapping;
   }
 
   /**
-   * @return \Drupal\Core\Entity\EntityInterface for this PushParams
+   * Getter.
+   *
+   * @return \Drupal\Core\Entity\FieldableEntityInterface
+   *   Drupal entity.
    */
   public function getDrupalEntity() {
-    return $this->drupal_entity;
+    return $this->drupalEntity;
   }
 
   /**
-   * @return array of params
+   * Get the raw push data.
+   *
+   * @return array
+   *   The push data.
    */
   public function getParams() {
     return $this->params;
   }
 
   /**
-   * @return mixed the given param value for $key
-   * @throws Exception
+   * Get a param value for a given key.
+   *
+   * @param string $key
+   *   A param key.
+   *
+   * @return mixed
+   *   The given param value for $key
+   *
+   * @throws \Exception
+   *   If the key doesn't exist.
    */
   public function getParam($key) {
     if (!array_key_exists($key, $this->params)) {
@@ -70,8 +89,11 @@ class PushParams {
   }
 
   /**
-   * @param $params
-   *   array of params to set for thie PushParams
+   * Overwrite params wholesale.
+   *
+   * @param array $params
+   *   Array of params to set for thie PushParams.
+   *
    * @return $this
    */
   public function setParams(array $params) {
@@ -80,10 +102,13 @@ class PushParams {
   }
 
   /**
+   * Set a param.
+   *
    * @param string $key
    *   Key to set for this param.
    * @param mixed $value
    *   Value to set for this param.
+   *
    * @return $this
    */
   public function setParam($key, $value) {
@@ -92,8 +117,11 @@ class PushParams {
   }
 
   /**
+   * Unset a param value.
+   *
    * @param string $key
    *   Key to unset for this param.
+   *
    * @return $this
    */
   public function unsetParam($key) {

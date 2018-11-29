@@ -128,6 +128,7 @@ class MappedObjectList extends EntityListBuilder {
    * Set the given entity ids to show only those in a listing of mapped objects.
    *
    * @param array $ids
+   *   The entity ids.
    *
    * @return $this
    */

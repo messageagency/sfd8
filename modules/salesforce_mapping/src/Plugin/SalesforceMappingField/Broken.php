@@ -18,7 +18,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 class Broken extends SalesforceMappingFieldPluginBase {
 
   /**
-   * Implementation of PluginFormInterface::buildConfigurationForm.
+   * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     // Try to preserve existing, broken config, so that it works again when the
@@ -47,14 +47,14 @@ class Broken extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     return;
   }
 
   /**
-   * Do not allow this mapping plugin to be added via UI.
+   * {@inheritdoc}
    */
   public static function isAllowed(SalesforceMappingInterface $mapping) {
     return FALSE;

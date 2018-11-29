@@ -8,7 +8,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- *
+ * Local action for salesforce mapped objects.
  */
 class SalesforceMappedObjectAddLocalAction extends LocalActionDefault {
 

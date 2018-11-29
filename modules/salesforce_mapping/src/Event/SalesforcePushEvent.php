@@ -6,50 +6,71 @@ use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce\Event\SalesforceBaseEvent;
 
 /**
- *
+ * Push event.
  */
 abstract class SalesforcePushEvent extends SalesforceBaseEvent {
 
+  /**
+   * The mapping.
+   *
+   * @var \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface
+   */
   protected $mapping;
-  protected $mapped_object;
+
+  /**
+   * The mapped object.
+   *
+   * @var \Drupal\salesforce_mapping\Entity\MappedObjectInterface
+   */
+  protected $mappedObject;
+
+  /**
+   * The Drupal entity.
+   *
+   * @var \Drupal\Core\Entity\FieldableEntityInterface
+   */
   protected $entity;
 
   /**
-   * {@inheritdoc}
+   * SalesforcePushEvent constructor.
    *
-   * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mapped_object
-   * @param PushParams $params
-   *   One of
-   *     Drupal\salesforce_mapping\MappingConstants::
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE
-   *       SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE.
+   * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mappedObject
+   *   The mapped object.
    */
-  public function __construct(MappedObjectInterface $mapped_object) {
-    $this->mapped_object = $mapped_object;
-    $this->entity = ($mapped_object) ? $mapped_object->getMappedEntity() : NULL;
-    $this->mapping = ($mapped_object) ? $mapped_object->getMapping() : NULL;
+  public function __construct(MappedObjectInterface $mappedObject) {
+    $this->mappedObject = $mappedObject;
+    $this->entity = ($mappedObject) ? $mappedObject->getMappedEntity() : NULL;
+    $this->mapping = ($mappedObject) ? $mappedObject->getMapping() : NULL;
   }
 
   /**
-   * @return EntityInterface (from PushParams)
+   * Getter.
+   *
+   * @return \Drupal\Core\Entity\FieldableEntityInterface
+   *   The entity.
    */
   public function getEntity() {
     return $this->entity;
   }
 
   /**
-   * @return SalesforceMappingInterface (from PushParams)
+   * Getter.
+   *
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface
+   *   The mapping.
    */
   public function getMapping() {
     return $this->mapping;
   }
 
   /**
+   * Getter.
+   *
    * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface
+   *   The mapped object.
    */
   public function getMappedObject() {
-    return $this->mapped_object;
+    return $this->mappedObject;
   }
 
 }

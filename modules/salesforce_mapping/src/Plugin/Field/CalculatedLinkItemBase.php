@@ -5,7 +5,7 @@ namespace Drupal\salesforce_mapping\Plugin\Field;
 use Drupal\link\Plugin\Field\FieldType\LinkItem;
 
 /**
- *
+ * Calculated link item.
  */
 abstract class CalculatedLinkItemBase extends LinkItem {
 

@@ -165,7 +165,6 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    *   The delete time to set.
    *
    * @return $this
-   *   Fluency.
    */
   public function setLastDeleteTime($time);
 
@@ -184,7 +183,6 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    *   The pull time to set.
    *
    * @return $this
-   *   Fluency.
    */
   public function setLastPullTime($time);
 
@@ -228,7 +226,6 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    *   The push time to set.
    *
    * @return $this
-   *   Fluency.
    */
   public function setLastPushTime($time);
 

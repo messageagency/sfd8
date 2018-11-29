@@ -52,8 +52,8 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     $this->queue = $queue;
     $this->client = $client;
     $this->etm = $etm;
-    $this->mapping_storage = $etm->getStorage('salesforce_mapping');
-    $this->mapped_object_storage = $etm->getStorage('salesforce_mapped_object');
+    $this->mappingStorage = $etm->getStorage('salesforce_mapping');
+    $this->mappedObjectStorage = $etm->getStorage('salesforce_mapped_object');
     $this->event_dispatcher = $event_dispatcher;
   }
 
@@ -92,7 +92,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    */
   public function processItem(\stdClass $item) {
     // Allow exceptions to bubble up for PushQueue to sort things out.
-    $mapping = $this->mapping_storage->load($item->name);
+    $mapping = $this->mappingStorage->load($item->name);
     $mapped_object = $this->getMappedObject($item, $mapping);
 
     if ($mapped_object->isNew()
@@ -159,7 +159,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     // Prefer mapped object id if we have one.
     if ($item->mapped_object_id) {
       $mapped_object = $this
-        ->mapped_object_storage
+        ->mappedObjectStorage
         ->load($item->mapped_object_id);
     }
     if ($mapped_object) {
@@ -169,7 +169,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
     // Fall back to entity+mapping, which is a unique key.
     if ($item->entity_id) {
       $mapped_object = $this
-        ->mapped_object_storage
+        ->mappedObjectStorage
         ->loadByProperties([
           'drupal_entity__target_type' => $mapping->drupal_entity_type,
           'drupal_entity__target_id' => $item->entity_id,

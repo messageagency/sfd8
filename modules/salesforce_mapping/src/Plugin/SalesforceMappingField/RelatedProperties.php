@@ -19,8 +19,7 @@ use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 class RelatedProperties extends SalesforceMappingFieldPluginBase {
 
   /**
-   * Implementation of PluginFormInterface::buildConfigurationForm
-   * This is basically the inverse of Properties::buildConfigurationForm()
+   * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $pluginForm = parent::buildConfigurationForm($form, $form_state);
@@ -47,7 +46,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
     list($field_name, $referenced_field_name) = explode(':', $this->config('drupal_field_value'), 2);
@@ -93,7 +92,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   *
+   * Form options helper.
    */
   protected function getConfigurationOptions($mapping) {
     $instances = $this->entityFieldManager->getFieldDefinitions(

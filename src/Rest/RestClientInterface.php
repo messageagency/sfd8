@@ -70,7 +70,6 @@ interface RestClientInterface {
    * @see http://docs.guzzlephp.org/en/latest/request-options.html
    *
    * @return $this
-   *   Fluency.
    */
   public function setHttpClientOptions(array $options);
 
@@ -85,7 +84,6 @@ interface RestClientInterface {
    * @see setHttpClientOptions
    *
    * @return $this
-   *   Fluency.
    */
   public function setHttpClientOption($option_name, $option_value);
 
@@ -164,7 +162,6 @@ interface RestClientInterface {
    *   Consumer key value.
    *
    * @return $this
-   *   Fluency.
    */
   public function setConsumerKey($value);
 
@@ -183,7 +180,6 @@ interface RestClientInterface {
    *   Consumer secret value.
    *
    * @return $this
-   *   Fluency.
    */
   public function setConsumerSecret($value);
 
@@ -202,7 +198,6 @@ interface RestClientInterface {
    *   The login url.
    *
    * @return $this
-   *   Fluency.
    */
   public function setLoginUrl($value);
 
@@ -221,7 +216,6 @@ interface RestClientInterface {
    *   The url.
    *
    * @return $this
-   *   Fluency.
    */
   public function setInstanceUrl($url);
 

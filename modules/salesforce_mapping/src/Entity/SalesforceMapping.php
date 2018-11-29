@@ -72,15 +72,17 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
 
   /**
    * Only one bundle type for now.
+   *
+   * @var string
    */
   protected $type = 'salesforce_mapping';
 
   /**
    * ID (machine name) of the Mapping.
    *
-   * @note numeric id was removed
-   *
    * @var string
+   *
+   * @note numeric id was removed
    */
   protected $id;
 
@@ -106,9 +108,10 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   protected $weight = 0;
 
   /**
-   * Whether to push asychronous only:
-   *   * If true, disable real-time push.
-   *   * If false (default), attempt real-time push and enqueue failures for
+   * Whether to push asychronous.
+   *
+   *   - If true, disable real-time push.
+   *   - If false (default), attempt real-time push and enqueue failures for
    *     async push.
    *
    * Note this is different behavior compared to D7.
@@ -176,9 +179,17 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   protected $always_upsert;
 
   /**
-   * @TODO documentation
+   * Mapped field plugins.
+   *
+   * @var \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface[]
    */
   protected $field_mappings = [];
+
+  /**
+   * Active sync triggers.
+   *
+   * @var array
+   */
   protected $sync_triggers = [];
 
   /**
@@ -270,7 +281,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   /**
    * Testable func to return the request time server variable.
    *
-   * @return int REQUEST_TIME
+   * @return int
    *   The request time.
    */
   protected function getRequestTime() {
@@ -465,7 +476,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
 
   /**
    * Returns the name of this configuration object.
-   * from ConfigBase...
    *
    * @return string
    *   The name of the configuration object.
@@ -506,7 +516,9 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * Setter for pull info.
    *
    * @param string $key
+   *   The config id to set.
    * @param mixed $value
+   *   The value.
    *
    * @return $this
    */
@@ -543,7 +555,9 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * Setter for pull info.
    *
    * @param string $key
+   *   The config id to set.
    * @param mixed $value
+   *   The value.
    *
    * @return $this
    */
@@ -610,6 +624,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * Salesforce Mapping Field Manager service.
    *
    * @return \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager
+   *   The plugin.manager.salesforce_mapping_field service.
    */
   protected function fieldManager() {
     return \Drupal::service('plugin.manager.salesforce_mapping_field');
@@ -619,6 +634,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * Salesforce API client service.
    *
    * @return \Drupal\salesforce\Rest\RestClient
+   *   The salesforce.client service.
    */
   protected function client() {
     return \Drupal::service('salesforce.client');
@@ -628,6 +644,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
    * State service.
    *
    * @return \Drupal\Core\State\StateInterface
+   *   The state service.
    */
   protected function state() {
     return \Drupal::state();

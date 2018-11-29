@@ -32,8 +32,6 @@ class RouteSubscriber extends RouteSubscriberBase {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity type manager.
-   * @param \Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface $mappable
-   *   The mappable entity types interface.
    */
   public function __construct(EntityTypeManagerInterface $entity_manager) {
     $this->entityTypeManager = $entity_manager;

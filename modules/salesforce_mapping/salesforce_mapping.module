@@ -17,7 +17,6 @@ function salesforce_mapping_entity_type_alter(array &$entity_types) {
   // creates an infinite recursion. So, we set the link template on any
   // mappable entity, and hide it for any entity types that don't have
   // mappings.
-  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
   foreach ($entity_types as $entity_type_id => $entity_type) {
     if ($entity_type->hasViewBuilderClass() && $entity_type->hasLinkTemplate('canonical')) {
       $entity_type->setLinkTemplate('salesforce', "/$entity_type_id/{{$entity_type_id}}/salesforce");
@@ -26,7 +25,7 @@ function salesforce_mapping_entity_type_alter(array &$entity_types) {
 }
 
 /**
- *
+ * Implements hook_local_actions_alter().
  */
 function salesforce_mapping_menu_local_actions_alter(&$local_actions) {
   foreach (\Drupal::entityManager()->getDefinitions() as $entity_type_id => $entity_type) {
@@ -115,9 +114,8 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
 
 /**
  * Implements hook_entity_delete().
- * Delete any corresponding Mapped Objects when an entity is deleted.
  *
- * @param \Drupal\Core\Entity\EntityInterface $entity
+ * Delete any corresponding Mapped Objects when an entity is deleted.
  */
 function salesforce_mapping_entity_delete(EntityInterface $entity) {
   $storage = \Drupal::entityTypeManager()

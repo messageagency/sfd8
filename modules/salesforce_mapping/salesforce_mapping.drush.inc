@@ -49,7 +49,9 @@ function salesforce_mapping_drush_command() {
 }
 
 /**
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ * Support for drush 8 is deprecated and will be removed in a future release.
+ *
+ * @deprecated
  */
 function drush_salesforce_mapping_sf_prune_revisions() {
   _drush_salesforce_deprecated();
@@ -97,7 +99,9 @@ function drush_salesforce_mapping_sf_prune_revisions() {
 }
 
 /**
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ * Support for drush 8 is deprecated and will be removed in a future release.
+ *
+ * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_drupal() {
   _drush_salesforce_deprecated();
@@ -144,7 +148,9 @@ function drush_salesforce_mapping_sf_purge_drupal() {
 }
 
 /**
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ * Support for drush 8 is deprecated and will be removed in a future release.
+ *
+ * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_salesforce() {
   _drush_salesforce_deprecated();
@@ -216,7 +222,9 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
 }
 
 /**
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ * Support for drush 8 is deprecated and will be removed in a future release.
+ *
+ * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_mapping() {
   _drush_salesforce_deprecated();
@@ -262,7 +270,9 @@ function drush_salesforce_mapping_sf_purge_mapping() {
 }
 
 /**
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ * Support for drush 8 is deprecated and will be removed in a future release.
+ *
+ * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_all() {
   _drush_salesforce_deprecated();
@@ -272,7 +282,13 @@ function drush_salesforce_mapping_sf_purge_all() {
 }
 
 /**
+ * Helper to fetch object types by prefix.
  *
+ * @param \Drupal\salesforce\Rest\RestClientInterface $client
+ *   Client interface.
+ *
+ * @return array
+ *   Array of objects, indexed by key prefix.
  */
 function _drush_salesforce_mapping_object_types_by_prefix(RestClientInterface $client) {
   $ret = [];
@@ -284,9 +300,18 @@ function _drush_salesforce_mapping_object_types_by_prefix(RestClientInterface $c
 }
 
 /**
+ * Helper to interactively confirm delete.
  *
+ * @param array $object_ids
+ *   Records to be deleted.
+ * @param \Drupal\Core\Entity\ContentEntityStorageInterface $storage
+ *   Storage.
+ * @param string $extra
+ *   Extra message parts.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
-function _drush_salesforce_mapping_confirm_and_delete($object_ids, ContentEntityStorageInterface $storage, $extra = '') {
+function _drush_salesforce_mapping_confirm_and_delete(array $object_ids, ContentEntityStorageInterface $storage, $extra = '') {
   if (empty($object_ids)) {
     return;
   }
