@@ -446,8 +446,8 @@ class RestClientTest extends UnitTestCase {
    */
   public function testGetRecordTypes() {
     $this->initClient(array_merge($this->methods, ['query']));
-    $SobjectType = $this->randomMachineName();
-    $DeveloperName = $this->randomMachineName();
+    $sObjectType = $this->randomMachineName();
+    $developerName = $this->randomMachineName();
 
     $rawQueryResult = [
       'totalSize' => 1,
@@ -458,15 +458,15 @@ class RestClientTest extends UnitTestCase {
             'type' => 'Foo',
             'url' => 'Bar',
           ],
-          'SobjectType' => $SobjectType,
-          'DeveloperName' => $DeveloperName,
+          'SobjectType' => $sObjectType,
+          'DeveloperName' => $developerName,
           'Id' => $this->salesforce_id,
         ],
       ],
     ];
     $recordTypes = [
-      $SobjectType => [
-        $DeveloperName =>
+      $sObjectType => [
+        $developerName =>
         new SObject($rawQueryResult['records'][0]),
       ],
     ];
@@ -490,7 +490,7 @@ class RestClientTest extends UnitTestCase {
 
     $this->assertEquals($recordTypes, $this->client->getRecordTypes());
 
-    $this->assertEquals($recordTypes[$SobjectType], $this->client->getRecordTypes($SobjectType));
+    $this->assertEquals($recordTypes[$sObjectType], $this->client->getRecordTypes($sObjectType));
 
     $this->client->getRecordTypes('fail');
   }

@@ -6,93 +6,110 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
- *
+ * Mapping between Drupal and Salesforce records.
  */
 interface SalesforceMappingInterface extends ConfigEntityInterface {
-  // Placeholder interface.
-  // @TODO figure out what to abstract out of SalesforceMapping
 
   /**
-   * @param array $values
-   * @param string $entity_type
-   */
-  public function __construct(array $values, $entity_type);
-
-  /**
-   * @param  string $key
+   * Magic getter method for mapping properties.
+   *
+   * @param string $key
+   *   The property to get.
+   *
    * @return mixed
+   *   The value.
    */
   public function __get($key);
 
   /**
-   * @param  string $property_name
-   * @return mixed
-   */
-  public function get($property_name);
-
-  /**
-   * @return array fieldmappings
+   * Get all the mapped field plugins for this mapping.
+   *
+   * @return \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface[]
+   *   The fields.
    */
   public function getFieldMappings();
 
   /**
-   * @param  array $field
-   * @return SalesforceMappingFieldPluginInterface
+   * Given a field config, create an instance of a field mapping.
+   *
+   * @param array $field
+   *   Field plugin definition. Keys are "drupal_field_type" and "config".
+   *
+   * @return \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
+   *   The field.
    */
   public function getFieldMapping(array $field);
 
   /**
+   * Get the Salesforce Object type name for this mapping, e.g. "Contact".
+   *
    * @return string
+   *   The object name.
    */
   public function getSalesforceObjectType();
 
   /**
+   * Get the Drupal entity type name for this mapping, e.g. "node".
+   *
    * @return string
+   *   The entity type id.
    */
   public function getDrupalEntityType();
 
   /**
+   * Get the Drupal bundle name for this mapping, e.g. "article".
+   *
    * @return string
+   *   The bundle.
    */
   public function getDrupalBundle();
 
   /**
-   * Given a Salesforce object, return an array of Drupal entity key-value pairs.
+   * Get all the field plugins which are configured to pull from Salesforce.
    *
-   * @return array
-   *   Array of SalesforceMappingFieldPluginInterface objects
-   *
-   * @see salesforce_pull_map_field (from d7)
+   * @return \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface[]
+   *   Array of objects.
    */
   public function getPullFields();
 
   /**
+   * Get a flat array of the field plugins which are configured to pull.
+   *
    * @return array
+   *   Keys and values are Salesforce field names.
    */
   public function getPullFieldsArray();
 
   /**
+   * The Salesforce date field which determines whether to pull.
+   *
    * @return string
+   *   SF field name.
    */
   public function getPullTriggerDate();
 
   /**
-   * Return TRUE if this mapping is set to process push queue via a standalone
-   * endpoint instead of during cron.
+   * Getter for push_standalone property.
+   *
+   * @return bool
+   *   TRUE if this mapping is set to process push queue via a standalone
+   *   endpoint instead of during cron.
    */
   public function doesPushStandalone();
 
   /**
-   * Checks mappings for any push operation positive.
+   * Checks mappings for any push operation.
    *
    * @return bool
+   *   TRUE if this mapping is configured to push.
    */
   public function doesPush();
 
   /**
-   * Checks mappings for any pull operation positive.
+   * Checks mappings for any pull operation.
    *
    * @return bool
+   *   TRUE if this mapping is configured to pull.
    */
   public function doesPull();
 
@@ -100,9 +117,12 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * Checks if mapping has any of the given triggers.
    *
    * @param array $triggers
+   *   Collection of SALESFORCE_MAPPING_SYNC_* constants from MappingConstants.
+   *
+   * @see \Drupal\salesforce_mapping\MappingConstants
    *
    * @return bool
-   *   TRUE if this mapping uses any of the given $triggers, otherwise FALSE.
+   *   TRUE if any of the given $triggers are enabled for this mapping.
    */
   public function checkTriggers(array $triggers);
 
@@ -110,6 +130,7 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * Return TRUE if an upsert key is set for this mapping.
    *
    * @return bool
+   *   Return TRUE if an upsert key is set for this mapping.
    */
   public function hasKey();
 
@@ -117,22 +138,23 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * Return name of the Salesforce field which is the upsert key.
    *
    * @return string
+   *   The upsert key Salesforce field name.
    */
   public function getKeyField();
 
   /**
-   * Return value for the field upon which to be upserted.
+   * Given a Drupal entity, get the value to be upserted.
    *
    * @return mixed
+   *   The upsert field value.
    */
   public function getKeyValue(EntityInterface $entity);
 
   /**
-   * Return the timestamp for the date of most recent delete processing for
-   * this mapping, or NULL if it has never been processed.
+   * Return the timestamp for the date of most recent delete processing.
    *
-   * @return mixed
-   *   integer timestamp of last delete, or NULL.
+   * @return int|null
+   *   Integer timestamp of last delete, or NULL if delete has not been run.
    */
   public function getLastDeleteTime();
 
@@ -140,17 +162,18 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * Set this mapping as having been last processed for deletes at $time.
    *
    * @param int $time
+   *   The delete time to set.
    *
    * @return $this
+   *   Fluency.
    */
   public function setLastDeleteTime($time);
 
   /**
-   * We keep track of when this mapping was last pulled with a state value.
-   * Fetch the value.
+   * Return the timestamp for the date of most recent pull processing.
    *
    * @return mixed
-   *   integer timestamp of last pull, or NULL.
+   *   Integer timestamp of last pull, or NULL if pull has not been run.
    */
   public function getLastPullTime();
 
@@ -158,8 +181,10 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * Set this mapping as having been last pulled at $time.
    *
    * @param int $time
+   *   The pull time to set.
    *
    * @return $this
+   *   Fluency.
    */
   public function setLastPullTime($time);
 
@@ -167,6 +192,7 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * Get the timestamp when the next pull should be processed for this mapping.
    *
    * @return int
+   *   The next pull time.
    */
   public function getNextPullTime();
 
@@ -183,13 +209,15 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    *   "now".
    *
    * @return \Drupal\salesforce\SelectQuery
+   *   The pull query.
    */
   public function getPullQuery(array $mapped_fields = [], $start = 0, $stop = 0);
 
   /**
    * Returns a timstamp when the push queue was last processed for this mapping.
    *
-   * @return int
+   * @return int|null
+   *   The last push time, or NULL.
    */
   public function getLastPushTime();
 
@@ -197,8 +225,10 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * Set the timestamp when the push queue was last process for this mapping.
    *
    * @param string $time
+   *   The push time to set.
    *
    * @return $this
+   *   Fluency.
    */
   public function setLastPushTime($time);
 
@@ -206,6 +236,7 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * Get the timestamp when the next push should be processed for this mapping.
    *
    * @return int
+   *   The next push time.
    */
   public function getNextPushTime();
 
@@ -213,6 +244,7 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
    * Return TRUE if this mapping should always use upsert over create or update.
    *
    * @return bool
+   *   Whether to upsert, ignoring any local Salesforce ID.
    */
   public function alwaysUpsert();
 
