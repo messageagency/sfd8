@@ -13,6 +13,7 @@ use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Class MappedObjectStorage.
+ *
  * Extends ConfigEntityStorage to add some commonly used convenience wrappers.
  *
  * @package Drupal\salesforce_mapping
@@ -89,8 +90,10 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
    * Return an array of SalesforceMapping entities who are push-enabled.
    *
    * @param string $entity_type_id
+   *   The entity type id. If given, filter the mappings by only this type.
    *
-   * @return array
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
+   *   The Mappings.
    */
   public function loadPushMappings($entity_type_id = NULL) {
     $properties = empty($entity_type_id)
@@ -100,11 +103,10 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
   }
 
   /**
-   * Return an array of SalesforceMapping entities who are push-enabled.
+   * Get Mapping entities who are standalone push-enabled.
    *
-   * @param string $entity_type_id
-   *
-   * @return array
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
+   *   The push-standalong mappings Mappings.
    */
   public function loadCronPushMappings() {
     $properties["push_standalone"] = FALSE;
@@ -112,18 +114,17 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
   }
 
   /**
-   * Return an array of SalesforceMapping entities whose push-triggers are
-   * enabled.
+   * Return an array push-enabled mappings by properties.
    *
    * @param array $properties
    *   Properties array for storage handler.
    *
-   * @return array
-   *   array of SalesforceMapping entities
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
+   *   The push mappings.
    *
    * @see ::loadByProperties()
    */
-  public function loadPushMappingsByProperties($properties) {
+  public function loadPushMappingsByProperties(array $properties) {
     $mappings = $this->loadByProperties($properties);
     foreach ($mappings as $key => $mapping) {
       if (!$mapping->doesPush()) {
@@ -141,8 +142,10 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
    * Return an array of SalesforceMapping entities who are pull-enabled.
    *
    * @param string $entity_type_id
+   *   Optionally filter by entity type id.
    *
-   * @return array
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
+   *   The Mappings.
    */
   public function loadPullMappings($entity_type_id = NULL) {
     $pull_mappings = [];
@@ -180,6 +183,9 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
   /**
    * Return a unique list of mapped Salesforce object types.
    *
+   * @return array
+   *   Mapped object types.
+   *
    * @see loadMultipleMapping()
    */
   public function getMappedSobjectTypes() {
@@ -190,17 +196,6 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
       $object_types[$type] = $type;
     }
     return $object_types;
-  }
-
-  /**
-   * Returns the name of this configuration object.
-   * from ConfiBase...
-   *
-   * @return string
-   *   The name of the configuration object.
-   */
-  public function getName() {
-    return $this->name;
   }
 
 }

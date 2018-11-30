@@ -165,7 +165,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
   private function getUpsertKeyOptions() {
     $options = [];
     try {
-      $describe = $this->get_salesforce_object();
+      $describe = $this->getSalesforceObject();
     }
     catch (\Exception $e) {
       return [];

@@ -498,7 +498,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
   private function getPullTriggerOptions() {
     $options = [];
     try {
-      $describe = $this->get_salesforce_object();
+      $describe = $this->getSalesforceObject();
     }
     catch (\Exception $e) {
       // No describe results means no datetime fields. We're done.

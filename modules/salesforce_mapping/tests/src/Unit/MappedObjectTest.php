@@ -18,7 +18,7 @@ use Drupal\Component\Datetime\TimeInterface;
  * @group salesforce_mapping
  */
 class MappedObjectTest extends UnitTestCase {
-  static $modules = ['salesforce_mapping'];
+  static public $modules = ['salesforce_mapping'];
 
   /**
    * {@inheritdoc}
@@ -113,17 +113,6 @@ class MappedObjectTest extends UnitTestCase {
       ->method('isTranslatable')
       ->willReturn(FALSE);
 
-    // $this->fieldDefinitions = array(
-    //   'id' => BaseFieldDefinition::create('integer'),
-    //   'entity_id' => BaseFieldDefinition::create('integer'),
-    //   'entity_type_id' => BaseFieldDefinition::create('string'),
-    //   'salesforce_id' => BaseFieldDefinition::create('string'),
-    //   'salesforce_mapping' => BaseFieldDefinition::create('entity_reference'),
-    // );.
-    // $this->entityManager->expects($this->any())
-    //   ->method('getFieldDefinitions')
-    //   ->with('salesforce_mapped_object', 'salesforce_mapped_object')
-    //   ->will($this->returnValue($this->fieldDefinitions));.
     // Mock salesforce mapping.
     $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
     $this->mapping
@@ -141,7 +130,16 @@ class MappedObjectTest extends UnitTestCase {
 
     $this->mapped_object = $this->getMockBuilder(MappedObject::CLASS)
       ->disableOriginalConstructor()
-      ->setMethods(['getMappedEntity', 'getMapping', 'getEntityType', 'sfid', 'set', 'save', 'setNewRevision', 'client'])
+      ->setMethods([
+        'getMappedEntity',
+        'getMapping',
+        'getEntityType',
+        'sfid',
+        'set',
+        'save',
+        'setNewRevision',
+        'client',
+      ])
       ->getMock();
     $this->mapped_object->expects($this->any())
       ->method('getMappedEntity')
@@ -288,8 +286,6 @@ class MappedObjectTest extends UnitTestCase {
   public function testPull() {
     // Set sf_object to mock coming from cron pull.
     $this->mapped_object->setSalesforceRecord($this->sf_object);
-    // $this->event_dispatcher->expects($this->once())
-    //   ->method('dispatch');
     $this->assertEquals($this->mapped_object, $this->mapped_object->pull());
   }
 

@@ -30,7 +30,7 @@ class SalesforceMappingFieldPluginManager extends DefaultPluginManager implement
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function getFallbackPluginId($plugin_id, array $configuration = []) {
     return 'broken';

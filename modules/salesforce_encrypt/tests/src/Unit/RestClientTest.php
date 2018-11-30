@@ -60,7 +60,7 @@ class RestClientTest extends UnitTestCase {
     $this->json = $this->createMock(Json::CLASS);
     $this->time = $this->createMock(TimeInterface::CLASS);
     $this->client = $this->getMockBuilder(RestClient::CLASS)
-      ->setMethods(['_getEncryptionProfile'])
+      ->setMethods(['doGetEncryptionProfile'])
       ->setConstructorArgs([
           $this->httpClient,
           $this->configFactory,
@@ -87,7 +87,7 @@ class RestClientTest extends UnitTestCase {
       ->method('get')
       ->willReturn(NULL);
     $this->client->expects($this->any())
-      ->method('_getEncryptionProfile')
+      ->method('doGetEncryptionProfile')
       ->willReturn(NULL);
     $this->assertFalse($this->client->getAccessToken());
   }
@@ -103,7 +103,7 @@ class RestClientTest extends UnitTestCase {
       ->method('get')
       ->willReturn('not null');
     $this->client->expects($this->any())
-      ->method('_getEncryptionProfile')
+      ->method('doGetEncryptionProfile')
       ->willReturn($this->encryptionProfile);
     $this->encryption->expects($this->any())
       ->method('decrypt')

@@ -37,7 +37,11 @@ class SalesforceMappingList extends DraggableListBuilder {
   public function buildRow(EntityInterface $entity) {
     $row = [];
     $row['label'] = $entity->label();
-    $properties = ['drupal_entity_type', 'drupal_bundle', 'salesforce_object_type'];
+    $properties = [
+      'drupal_entity_type',
+      'drupal_bundle',
+      'salesforce_object_type'
+    ];
     foreach ($properties as $property) {
       $row[$property] = ['#markup' => $entity->get($property)];
     }
