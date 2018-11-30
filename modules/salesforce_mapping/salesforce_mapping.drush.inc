@@ -21,28 +21,28 @@ function salesforce_mapping_drush_command() {
     'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Drupal entities.',
     'aliases' => ['sfpd'],
     'options' => [
-      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.',
     ],
   ];
   $items['sf-purge-salesforce'] = [
     'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Salesforce records.',
     'aliases' => ['sfpsf'],
     'options' => [
-      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.',
     ],
   ];
   $items['sf-purge-mapping'] = [
     'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Mappings.',
     'aliases' => ['sfpmap'],
     'options' => [
-      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.',
     ],
   ];
   $items['sf-purge-all'] = [
     'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Mappings, Entities, or Salesforce records.',
     'aliases' => ['sfpall'],
     'options' => [
-      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.',
     ],
   ];
   return $items;

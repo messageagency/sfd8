@@ -16,13 +16,6 @@ class PullQueueItemTest extends UnitTestCase {
   public static $modules = ['salesforce_pull'];
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp() {
-    parent::setUp();
-  }
-
-  /**
    * Test object instantiation.
    */
   public function testObject() {

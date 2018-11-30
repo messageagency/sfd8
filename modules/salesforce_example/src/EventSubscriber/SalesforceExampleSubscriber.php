@@ -98,7 +98,8 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
     $mapping = $event->getMapping();
     switch ($mapping->id()) {
       case 'contact':
-        // Add attachments to the Contact pull mapping so that we can save profile pics. See also ::pullPresave.
+        // Add attachments to the Contact pull mapping so that we can save
+        // profile pics. See also ::pullPresave.
         $query = $event->getQuery();
         // Add a subquery:
         $query->fields[] = "(SELECT Id FROM Attachments WHERE Name = 'example.jpg' LIMIT 1)";

@@ -4,7 +4,6 @@ namespace Drupal\salesforce\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drush\Commands\DrushCommands;
 use Drush\Drush;
 use Drush\Exceptions\UserAbortException;

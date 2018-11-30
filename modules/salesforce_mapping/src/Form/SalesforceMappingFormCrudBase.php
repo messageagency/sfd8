@@ -2,8 +2,6 @@
 
 namespace Drupal\salesforce_mapping\Form;
 
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\Core\Url;
@@ -26,7 +24,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // Perform our salesforce queries first, so that if we can't connect we don't waste time on the rest of the form.
+    // Perform our salesforce queries first, so that if we can't connect we
+    // don't waste time on the rest of the form.
     try {
       $object_type_options = $this->getSalesforceObjectTypeOptions();
     }
@@ -175,7 +174,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       $form['pull'] = [
         '#title' => t('Pull Settings'),
         '#type' => 'details',
-        '#description' => t(''),
+        '#description' => '',
         '#open' => TRUE,
         '#tree' => FALSE,
         '#states' => [
@@ -212,8 +211,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
           '#validate' => ['::lastDeleteReset'],
         ];
 
-        // ' ; Last delete date/time: %last_delete',  '%last_delete' => $mapping->getLastDeleteTime() ? date('Y-m-d h:ia', $mapping->getLastDeleteTime()) : 'never'])
-        // ];.
         // This doesn't work until after mapping gets saved.
         // @TODO figure out best way to alert admins about this, or AJAX-ify it.
         $form['pull']['pull_trigger_date'] = [

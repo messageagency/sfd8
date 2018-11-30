@@ -67,16 +67,16 @@ class RestClientTest extends UnitTestCase {
     $this->client = $this->getMockBuilder(RestClient::CLASS)
       ->setMethods(['doGetEncryptionProfile'])
       ->setConstructorArgs([
-          $this->httpClient,
-          $this->configFactory,
-          $this->state,
-          $this->cache,
-          $this->json,
-          $this->time,
-          $this->encryption,
-          $this->profileManager,
-          $this->lock
-        ])
+        $this->httpClient,
+        $this->configFactory,
+        $this->state,
+        $this->cache,
+        $this->json,
+        $this->time,
+        $this->encryption,
+        $this->profileManager,
+        $this->lock,
+      ])
       ->getMock();
   }
 

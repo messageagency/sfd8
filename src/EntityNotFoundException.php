@@ -41,9 +41,9 @@ class EntityNotFoundException extends \RuntimeException {
    */
   public function __construct($entityProperties, $entityTypeId, Throwable $previous = NULL) {
     parent::__construct($this->t('Entity not found. type: %type properties: %props', [
-        '%type' => $entityTypeId,
-        '%props' => var_export($entityProperties, TRUE)
-      ]), 0, $previous);
+      '%type' => $entityTypeId,
+      '%props' => var_export($entityProperties, TRUE),
+    ]), 0, $previous);
     $this->entityProperties = $entityProperties;
     $this->entityTypeId = $entityTypeId;
   }
@@ -76,9 +76,9 @@ class EntityNotFoundException extends \RuntimeException {
    */
   public function getFormattableMessage() {
     return new FormattableMarkup('Entity not found. type: %type properties: %props', [
-        '%type' => $this->entityTypeId,
-        '%props' => var_export($this->entityProperties, TRUE)
-      ]);
+      '%type' => $this->entityTypeId,
+      '%props' => var_export($this->entityProperties, TRUE),
+    ]);
   }
 
 }

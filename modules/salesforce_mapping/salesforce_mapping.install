@@ -75,7 +75,7 @@ function salesforce_mapping_update_8002() {
 }
 
 /**
- * Add new "always_upsert" field to all existing mappings which have an upsert key, to preserve old behavior.
+ * Add new "always_upsert" field to all existing mappings.
  */
 function salesforce_mapping_update_8003() {
   foreach (SalesforceMapping::loadMultiple() as $mapping) {

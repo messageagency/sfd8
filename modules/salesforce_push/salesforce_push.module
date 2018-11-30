@@ -117,7 +117,8 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
   if (empty($mapped_objects)) {
     // No mappings found.
     if ($op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
-      // If no existing mapping, and this is a delete, purge any entries from push queue and we're done.
+      // If no existing mapping, and this is a delete, purge any entries from
+      // push queue and we're done.
       \Drupal::service('queue.salesforce_push')
         ->setName($mapping->id())
         ->deleteItemByEntity($entity);

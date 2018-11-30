@@ -13,7 +13,12 @@ use Drupal\salesforce_mapping\Plugin\Field\CalculatedLinkItemBase;
  *   description = @Translation("A link to the salesforce record."),
  *   default_widget = "link_default",
  *   default_formatter = "link",
- *   constraints = {"LinkType" = {}, "LinkAccess" = {}, "LinkExternalProtocols" = {}, "LinkNotExistingInternal" = {}}
+ *   constraints = {
+ *     "LinkType" = {},
+ *     "LinkAccess" = {},
+ *     "LinkExternalProtocols" = {},
+ *     "LinkNotExistingInternal" = {}
+ *   }
  * )
  */
 class SalesforceLinkItem extends CalculatedLinkItemBase {

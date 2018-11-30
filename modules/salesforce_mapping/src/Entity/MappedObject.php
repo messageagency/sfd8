@@ -378,7 +378,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // @TODO is this the right place for this logic to live?
     // Cases:
-    // 1. Already mapped to an existing Salesforce object + always_upsert not set?  Update.
+    // 1. Already mapped to an existing Salesforce object + always_upsert not
+    //    set?  Update.
     // 2. Not mapped, but upsert key is defined?  Upsert.
     // 3. Not mapped & no upsert key?  Create.
     $result = FALSE;

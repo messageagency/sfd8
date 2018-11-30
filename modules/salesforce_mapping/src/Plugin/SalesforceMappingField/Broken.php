@@ -50,7 +50,7 @@ class Broken extends SalesforceMappingFieldPluginBase {
    * {@inheritdoc}
    */
   public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
-    return;
+
   }
 
   /**

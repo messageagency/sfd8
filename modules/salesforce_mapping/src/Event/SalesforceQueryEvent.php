@@ -2,7 +2,6 @@
 
 namespace Drupal\salesforce_mapping\Event;
 
-use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Event\SalesforceBaseEvent;

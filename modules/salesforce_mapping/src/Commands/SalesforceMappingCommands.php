@@ -156,7 +156,7 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Clean up Mapped Objects table by deleting any records which reference missing Drupal entities.
+   * Clean up Mapped Objects referencing missing Drupal entities.
    *
    * @param string $name
    *   Id of the salesforce mapping whose mapped objects should be purged.
@@ -239,7 +239,7 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Clean up Mapped Objects table by deleting any records which reference missing Salesforce records.
+   * Clean up Mapped Objects by deleting records referencing missing records.
    *
    * @param string $name
    *   Id of the salesforce mapping whose mapped objects should be purged.
@@ -312,7 +312,7 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Clean up Mapped Objects table by deleting any records which reference missing Mappings.
+   * Clean up Mapped Objects by deleting records referencing missing Mappings.
    *
    * @param string $name
    *   Mapping id.

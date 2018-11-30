@@ -258,7 +258,8 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    * Submit handler.
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // Need to transform the schema slightly to remove the "config" dereference. Also trigger submit handlers on plugins.
+    // Need to transform the schema slightly to remove the "config" dereference.
+    // Also trigger submit handlers on plugins.
     $form_state->unsetValue(['field_type', 'ops']);
 
     $values = &$form_state->getValues();

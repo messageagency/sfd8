@@ -180,7 +180,7 @@ class MappedObjectForm extends ContentEntityForm {
     $mapped_object
       ->set('drupal_entity', $drupal_entity_array)
       ->set('salesforce_mapping', $form_state->getValue([
-        'salesforce_mapping', 0, 'target_id'
+        'salesforce_mapping', 0, 'target_id',
       ]));
 
     if ($sfid = $form_state->getValue(['salesforce_id', 0, 'value'], FALSE)) {

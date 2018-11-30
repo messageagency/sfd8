@@ -117,7 +117,7 @@ class MappedObjectStorage extends SqlContentEntityStorage {
     $result = $this->loadByProperties([
       'drupal_entity__target_type' => $entity->getEntityTypeId(),
       'drupal_entity__target_id' => $entity->id(),
-      'salesforce_mapping' => $mapping->id()
+      'salesforce_mapping' => $mapping->id(),
     ]);
     return empty($result) ? NULL : reset($result);
   }

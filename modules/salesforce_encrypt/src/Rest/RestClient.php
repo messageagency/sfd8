@@ -3,7 +3,6 @@
 namespace Drupal\salesforce_encrypt\Rest;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Lock\LockBackendInterface;

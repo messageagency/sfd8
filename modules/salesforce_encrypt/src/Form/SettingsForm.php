@@ -101,13 +101,6 @@ class SettingsForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $old_profile_id = $this->state->get('salesforce_encrypt.profile');
     $profile_id = $form_state->getValue('profile');

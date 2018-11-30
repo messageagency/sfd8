@@ -115,26 +115,37 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
    * @param string $name
    *   Machine name of the Salesforce Mapping for which to queue pull records.
    * @param array $options
-   *   An associative array of options whose values come from cli, aliases, config, etc.
+   *   An associative array of options whose values come from cli, aliases,
+   *   config, etc.
    *
    * @option where
-   *   A WHERE clause to add to the SOQL pull query. Default behavior is to query and pull all records.
+   *   A WHERE clause to add to the SOQL pull query. Default behavior is to
+   *   query and pull all records.
    * @option start
-   *   strtotime()able string for the start timeframe over which to pull, e.g. "-5 hours". If omitted, use the value given by the mapping's pull timestamp. Must be in the past.
+   *   strtotime()able string for the start timeframe over which to pull, e.g.
+   *   "-5 hours". If omitted, use the value given by the mapping's pull
+   *   timestamp. Must be in the past.
    * @option stop
-   *   strtotime()able string for the end timeframe over which to pull, e.g. "-5 hours". If omitted, defaults to "now". Must be "now" or earlier
+   *   strtotime()able string for the end timeframe over which to pull, e.g.
+   *   "-5 hours". If omitted, defaults to "now". Must be "now" or earlier.
    * @option force-pull
-   *   if given, force all queried records to be pulled regardless of updated timestamps. If omitted, only Salesforce records which are newer than linked Drupal records will be pulled.
+   *   if given, force all queried records to be pulled regardless of updated
+   *   timestamps. If omitted, only Salesforce records which are newer than
+   *   linked Drupal records will be pulled.
    * @usage drush sfpq user
    *   Query and queue all records for "user" Salesforce mapping.
-   * @usage drush sfpq user --where="Email like '%foo%' AND (LastName = 'bar' OR FirstName = 'bar')"
-   *   Query and queue all records for "user" Salesforce mapping with Email field containing the string "foo" and First or Last name equal to "bar"
+   * @usage drush sfpq user --where="Email like '%foo%' AND (LastName = 'bar'
+   *   OR FirstName = 'bar')"
+   *   Query and queue all records for "user" Salesforce mapping with Email
+   *   field containing the string "foo" and First or Last name equal to "bar"
    * @usage drush sfpq
    *   Fetch and process all pull queue items
    * @usage drush sfpq --start="-25 minutes" --stop="-5 minutes"
-   *   Fetch updated records for all mappings between 25 minutes and 5 minutes old, and process them.
+   *   Fetch updated records for all mappings between 25 minutes and 5 minutes
+   *   old, and process them.
    * @usage drush sfpq foo --start="-25 minutes" --stop="-5 minutes"
-   *   Fetch updated records for mapping "foo" between 25 minutes and 5 minutes old, and process them.
+   *   Fetch updated records for mapping "foo" between 25 minutes and 5 minutes
+   *   old, and process them.
    *
    * @command salesforce_pull:pull-query
    * @aliases sfpq,sfiq,sf-pull-query,salesforce_pull:query
@@ -170,7 +181,7 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
 
       $this->logger()->info(dt('!mapping: Issuing pull query: !query', [
         '!query' => (string) $soql,
-        '!mapping' => $mapping->id()
+        '!mapping' => $mapping->id(),
       ]));
       $results = $this->client->query($soql);
 
@@ -183,13 +194,16 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
 
       $this->logger()->info(dt('!mapping: Queued !count items for pull.', [
         '!count' => $results->size(),
-        '!mapping' => $mapping->id()
+        '!mapping' => $mapping->id(),
       ]));
     }
   }
 
   /**
-   * Given a mapping, enqueue a list of object IDs to be pulled from a CSV file, e.g. a Salesforce report. The first column of the CSV file must be SFIDs. Additional columns will be ignored.
+   * Given a mapping, enqueue a list of object IDs to be pulled from CSV file.
+   *
+   * E.g. a Salesforce report. The first column of the CSV file must be SFIDs.
+   * Additional columns will be ignored.
    *
    * @param string $file
    *   CSV file name of 15- or 18-character Salesforce ids to be pulled.
@@ -218,10 +232,10 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
     // Track IDs to avoid duplicates.
     $seen = [];
 
-    // Max length for SOQL query is 20,000 characters. Chunk the IDs into smaller
-    // units to avoid this limit. 1000 IDs per query * 18 chars per ID = up to
-    // 18000 characters per query, plus up to 2000 for fields, where condition,
-    // etc.
+    // Max length for SOQL query is 20,000 characters. Chunk the IDs into
+    // smaller units to avoid this limit. 1000 IDs per query * 18 chars per ID,
+    // up to 18000 characters per query, plus up to 2000 for fields, where
+    // condition, etc.
     $queries = [];
     foreach (array_chunk($rows, 1000) as $i => $chunk) {
       $base = $i * 1000;
@@ -288,12 +302,13 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Reset pull timestamps for one or all Salesforce Mappings, and set all mapped objects to be force-pulled.
+   * Reset pull timestamps for one or all Salesforce Mappings.
    *
    * @param string $name
    *   Mapping id.
    * @param array $options
-   *   An associative array of options whose values come from cli, aliases, config, etc.
+   *   An associative array of options whose values come from cli, aliases,
+   *   config, etc.
    *
    * @option delete
    *   Reset delete date timestamp (instead of pull date timestamp)
@@ -326,7 +341,7 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Set pull timestamp on a single Salesforce Mappings to a specific point in history (or now).
+   * Set a specific pull timestamp on a single Salesforce Mapping.
    *
    * @param string $name
    *   Mapping id.

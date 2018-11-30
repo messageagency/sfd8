@@ -39,7 +39,7 @@ class MappedObjectController extends ControllerBase {
   }
 
   /**
-   * Helper function to get entity from router path e.g. get User from user/1/salesforce.
+   * Helper function to get entity from router path.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The route match service.
@@ -47,7 +47,7 @@ class MappedObjectController extends ControllerBase {
    * @return \Drupal\Core\Entity\EntityInterface
    *   The Drupal entity mapped by the given mapped object.
    *
-   * @throws Exception
+   * @throws \Exception
    *   If an EntityInterface is not found at the given route.
    *
    * @TODO find a more specific exception class

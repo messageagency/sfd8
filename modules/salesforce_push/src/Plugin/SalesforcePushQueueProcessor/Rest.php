@@ -145,7 +145,8 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
 
     if ($mapped_object->isNew()
     && $item->op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
-      // If mapped object doesn't exist or fails to load for this delete, this item can be considered successfully processed.
+      // If mapped object doesn't exist or fails to load for this delete, this
+      // item can be considered successfully processed.
       return;
     }
 

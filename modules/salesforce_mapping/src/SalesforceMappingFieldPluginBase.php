@@ -28,8 +28,8 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 /**
  * Defines a base Salesforce Mapping Field Plugin implementation.
  *
- * Extenders need to implement SalesforceMappingFieldPluginInterface::value() and
- * PluginFormInterface::buildConfigurationForm().
+ * Extenders need to implement SalesforceMappingFieldPluginInterface::value()
+ * and PluginFormInterface::buildConfigurationForm().
  *
  * @see \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
  * @see \Drupal\Core\Plugin\PluginFormInterface
@@ -393,8 +393,6 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
       '#title' => t('Salesforce field'),
       '#type' => 'select',
       '#description' => t('Select a Salesforce field to map.'),
-      // @TODO MULTIPLE SF FIELDS FOR ONE MAPPING FIELD NOT IN USE:
-      // '#multiple' => (isset($drupal_field_type['salesforce_multiple_fields']) && $drupal_field_type['salesforce_multiple_fields']) ? TRUE : FALSE,
       '#options' => $this->getSalesforceFieldOptions($form['#entity']->getSalesforceObjectType()),
       '#default_value' => $this->config('salesforce_field'),
       '#empty_option' => $this->t('- Select -'),

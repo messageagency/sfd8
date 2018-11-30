@@ -219,9 +219,10 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
    *   * 'entity_id': the entity id being mapped / pushed
    *   * 'op': the operation which triggered this push.
    *
-   * @return \Drupal\Core\Database\Query\MergeSTATUS_INSERT|Drupal\Core\Database\Query\MergeSTATUS_UPDATE
-   *   On success, STATUS_INSERT or STATUS_UPDATE whether item was inserted or
-   *   updated.
+   * @return int
+   *   On success, \Drupal\Core\Database\Query\Merge::STATUS_INSERT or
+   *   Drupal\Core\Database\Query\Merge::STATUS_UPDATE whether item was inserted
+   *   or updated.
    *
    * @throws \Exception
    *   If the required indexes are not provided.
@@ -453,7 +454,8 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     // the mapping limit, then move to the next queue. If we hit the global
     // limit, return immediately.
     while (TRUE) {
-      // Claim as many items as we can from this queue and advance our counter. If this queue is empty, move to the next mapping.
+      // Claim as many items as we can from this queue and advance our counter.
+      // If this queue is empty, move to the next mapping.
       $items = $this->claimItems($mapping->push_limit, $mapping->push_retries);
 
       if (empty($items)) {
@@ -487,7 +489,8 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
         $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
       }
       finally {
-        // If we've reached our limit, we're done. Otherwise, continue to next items.
+        // If we've reached our limit, we're done. Otherwise, continue to next
+        // items.
         $i += count($items);
         if ($i >= $this->globalLimit) {
           return $i;

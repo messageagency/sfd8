@@ -40,7 +40,7 @@ class SalesforceMappingList extends DraggableListBuilder {
     $properties = [
       'drupal_entity_type',
       'drupal_bundle',
-      'salesforce_object_type'
+      'salesforce_object_type',
     ];
     foreach ($properties as $property) {
       $row[$property] = ['#markup' => $entity->get($property)];

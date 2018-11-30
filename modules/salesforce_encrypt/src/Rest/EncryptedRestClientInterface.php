@@ -61,24 +61,24 @@ interface EncryptedRestClientInterface extends RestClientInterface {
   public function hookEncryptionProfileDelete(EncryptionProfileInterface $profile);
 
   /**
-   * Encrypts a value using the encryption profile given by salesforce_encrypt.profile.
+   * Encrypts a value using the active encryption profile, or return plaintext.
    *
    * @param string $value
    *   The value to encrypt.
    *
    * @return string
-   *   The encrypted value.
+   *   The encrypted value, or plaintext if no active profile.
    */
   public function encrypt($value);
 
   /**
-   * Decrypts a value using the encryption profile given by salesforce_encrypt.profile.
+   * Decrypts a value using active encryption profile, or return the same value.
    *
    * @param string $value
    *   The value to decrypt.
    *
    * @return string
-   *   The decrypted value.
+   *   The decrypted value, or the unchanged value if no active profile.
    */
   public function decrypt($value);
 

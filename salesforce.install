@@ -53,7 +53,8 @@ function salesforce_requirements($phase) {
 function salesforce_fetch_new_tls() {
   $response = FALSE;
   try {
-    // Ping the howsmyssl web service to check TLS version support for this client.
+    // Ping the howsmyssl web service to check TLS version support for this
+    // client.
     \Drupal::state()->set('salesforce.last_requirements_check', REQUEST_TIME);
     $raw_response = \Drupal::service('http_client')->get('https://www.howsmyssl.com/a/check', ['json' => TRUE, 'timeout' => 5]);
     $body = $raw_response->getBody();
@@ -90,7 +91,8 @@ function salesforce_get_tls_requirements() {
     ];
   }
   else {
-    // If we got a good response, and this client doesn't support TLS1.1+, throw an error.
+    // If we got a good response, and this client doesn't support TLS1.1+, throw
+    // an error.
     switch ($response['tls_version']) {
       case 'TLS 1.1':
       case 'TLS 1.2':

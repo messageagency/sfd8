@@ -58,7 +58,8 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
     $this->drupalPostForm('admin/structure/salesforce/mappings/add', $post, t('Save'));
     $newurl = parse_url($this->getUrl());
 
-    // Make sure the redirect was correct (and therefore form was submitted successfully)
+    // Make sure the redirect was correct (and therefore form was submitted
+    // successfully).
     $this->assertEqual($newurl['path'], $base_path . 'admin/structure/salesforce/mappings/manage/' . $mapping_name . '/fields');
     $mapping = $mappingStorage->load($mapping_name);
     // Make sure mapping was saved correctly.
@@ -77,9 +78,9 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
     $this->drupalPostForm('admin/structure/salesforce/mappings/manage/' . $mapping_name, $post, t('Save'));
     $this->assertFieldByName('label', $post['label']);
 
-    /* Salesforce Mapping Fields Form */
-    // Test simply adding a field plugin of every possible type.
-    // This is not great coverage, but will at least make sure our plugin definitions don't cause fatal errors.
+    // Test simply adding a field plugin of every possible type. This is not
+    // great coverage, but will at least make sure our plugin definitions don't
+    // cause fatal errors.
     $mappingFieldsPluginManager = \Drupal::service('plugin.manager.salesforce_mapping_field');
     $field_plugins = $mappingFieldsPluginManager->getDefinitions();
     foreach ($field_plugins as $definition) {

@@ -14,13 +14,6 @@ class SFIDTest extends UnitTestCase {
   static public $modules = ['salesforce'];
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp() {
-    parent::setUp();
-  }
-
-  /**
    * Test object instantiation with good ID.
    */
   public function testGoodId() {

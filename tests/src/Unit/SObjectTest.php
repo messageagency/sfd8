@@ -14,13 +14,6 @@ class SObjectTest extends UnitTestCase {
   static public $modules = ['salesforce'];
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp() {
-    parent::setUp();
-  }
-
-  /**
    * Test object instantiation.
    */
   public function testObject() {

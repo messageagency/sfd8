@@ -98,8 +98,8 @@ class AuthorizeForm extends ConfigFormBase {
     $encrypted = is_subclass_of($this->client, EncryptedRestClientInterface::class);
     $url = new Url('salesforce.oauth_callback', [], ['absolute' => TRUE]);
     drupal_set_message($this->t('Callback URL: :url', [
-        ':url' => str_replace('http:', 'https:', $url->toString())
-      ]));
+      ':url' => str_replace('http:', 'https:', $url->toString()),
+    ]));
 
     $form['creds'] = [
       '#title' => $this->t('API / OAuth Connection Settings'),

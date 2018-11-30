@@ -4,7 +4,6 @@ namespace Drupal\salesforce\Rest;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -712,7 +711,8 @@ class RestClient implements RestClientInterface {
 
     $response = $this->apiCall("sobjects/{$name}/{$key}/{$value}", $params, 'PATCH', TRUE);
 
-    // On update, upsert method returns an empty body. Retreive object id, so that we can return a consistent response.
+    // On update, upsert method returns an empty body. Retreive object id, so
+    // that we can return a consistent response.
     if ($response->getStatusCode() == 204) {
       // We need a way to allow callers to distinguish updates and inserts. To
       // that end, cache the original response and reset it after fetching the

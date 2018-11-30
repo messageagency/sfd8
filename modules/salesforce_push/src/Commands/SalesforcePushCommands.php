@@ -77,10 +77,10 @@ class SalesforcePushCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Process push queues (as though during cron) for one or all Salesforce Mappings.
+   * Process push queues for one or all Salesforce Mappings.
    *
    * @param string $name
-   *   Array.
+   *   Mapping name.
    *
    * @usage drush sfpushq
    *   Process all push queue items.
@@ -100,12 +100,13 @@ class SalesforcePushCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Attempt to push entities of a mapped type that are not linked to Salesforce Objects.
+   * Push entities of a mapped type that are not linked to Salesforce Objects.
    *
    * @param string $name
    *   The Drupal machine name of the mapping for the entities.
    * @param array $options
-   *   An associative array of options whose values come from cli, aliases, config, etc.
+   *   An associative array of options whose values come from cli, aliases,
+   *   config, etc.
    *
    * @option count
    *   The number of entities to try to sync. (Default is 50).

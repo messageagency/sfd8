@@ -131,7 +131,9 @@ interface SalesforceMappingFieldPluginInterface {
   public function pull();
 
   /**
-   * Return an array of dependencies, compatible with \Drupal\Component\Plugin\DependentPluginInterface::calculateDependencies.
+   * Return an array of dependencies.
+   *
+   * Compatible with DependentPluginInterface::calculateDependencies().
    *
    * @return array
    *   Depdencies.

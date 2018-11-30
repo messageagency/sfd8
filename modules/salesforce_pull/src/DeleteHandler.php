@@ -210,7 +210,8 @@ class DeleteHandler {
       }
       catch (\Exception $e) {
         $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-        // If mapped entity couldn't be deleted, do not delete the mapped object.
+        // If mapped entity couldn't be deleted, do not delete the mapped
+        // object.
         return;
       }
 
