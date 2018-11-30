@@ -16,3 +16,7 @@
 .salesforce-mapping-fields-form #edit-buttons {
   clear: both;
 }
+
+.salesforce-mapping-fields-form .field_mapping_field > .form-item .drupal-field-value {
+  width: initial;
+}
