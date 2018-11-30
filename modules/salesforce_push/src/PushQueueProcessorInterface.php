@@ -15,12 +15,13 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 interface PushQueueProcessorInterface extends ContainerFactoryPluginInterface {
 
   /**
-   * Process an array of push queue items. When an item is successfully
-   * processed, delete the item from queue via PushQueue::deleteItem()
+   * Process an array of push queue items.
+   *
+   * When an item is successfully processed, delete the item from queue via
+   * PushQueue::deleteItem().
    *
    * @param array $items
-   *
-   * @return null
+   *   The items to process.
    *
    * @throws \Drupal\Core\Queue\SuspendQueueException
    *   Indicate that processing for this queue should not continue.

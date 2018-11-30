@@ -173,7 +173,19 @@ class PushQueueTest extends UnitTestCase {
       ->method('createInstance')
       ->willReturn($this->worker);
 
-    $this->queue = $this->getMock(PushQueue::class, ['claimItems', 'setName', 'garbageCollection'], [$this->database, $this->state, $this->push_queue_processor_plugin_manager, $this->entityTypeManager, $this->eventDispatcher, $this->time, $this->configFactory]);
+    $this->queue = $this->getMock(PushQueue::class, [
+      'claimItems',
+      'setName',
+      'garbageCollection',
+    ], [
+      $this->database,
+      $this->state,
+      $this->push_queue_processor_plugin_manager,
+      $this->entityTypeManager,
+      $this->eventDispatcher,
+      $this->time,
+      $this->configFactory,
+    ]);
 
     $this->queue->expects($this->once())
       ->method('setName')
@@ -190,11 +202,4 @@ class PushQueueTest extends UnitTestCase {
 
   }
 
-  /**
-   * @covers ::failItem
-   */
-  // Not sure best way to test this yet.
-  // public function testFailItem() {
-  //   // Test failed item gets its "fail" property incremented by 1.
-  // }.
 }

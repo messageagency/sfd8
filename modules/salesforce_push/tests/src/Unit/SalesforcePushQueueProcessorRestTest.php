@@ -26,7 +26,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
  * @group salesforce_pull
  */
 class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
-  static $modules = ['salesforce_pull'];
+  static public $modules = ['salesforce_pull'];
 
   /**
    * {@inheritdoc}
@@ -83,7 +83,15 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
    * @expectedException \Drupal\Core\Queue\SuspendQueueException
    */
   public function testProcess() {
-    $this->handler = $this->getMock(Rest::class, ['processItem'], [[], '', [], $this->queue, $this->client, $this->entityTypeManager, $this->eventDispatcher]);
+    $this->handler = $this->getMock(Rest::class, ['processItem'], [
+      [],
+      '',
+      [],
+      $this->queue,
+      $this->client,
+      $this->entityTypeManager,
+      $this->eventDispatcher,
+    ]);
 
     $this->client->expects($this->at(0))
       ->method('isAuthorized')
@@ -112,7 +120,15 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
    */
   public function testProcessItemDeleteNoop() {
     $this->handler = $this->getMockBuilder(Rest::class)
-      ->setConstructorArgs([[], '', [], $this->queue, $this->client, $this->entityTypeManager, $this->eventDispatcher])
+      ->setConstructorArgs([
+        [],
+        '',
+        [],
+        $this->queue,
+        $this->client,
+        $this->entityTypeManager,
+        $this->eventDispatcher,
+      ])
       ->setMethods(['getMappedObject'])
       ->getMock();
 
@@ -125,7 +141,11 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->method('getMappedObject')
       ->willReturn($mappedObject);
 
-    $this->handler->processItem((object) ['op' => MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE, 'mapped_object_id' => 'foo', 'name' => 'bar']);
+    $this->handler->processItem((object) [
+      'op' => MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE,
+      'mapped_object_id' => 'foo',
+      'name' => 'bar',
+    ]);
   }
 
   /**
@@ -145,7 +165,15 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->method('pushDelete')
       ->willReturn(NULL);
 
-    $this->handler = $this->getMock(Rest::class, ['getMappedObject'], [[], '', [], $this->queue, $this->client, $this->entityTypeManager, $this->eventDispatcher]);
+    $this->handler = $this->getMock(Rest::class, ['getMappedObject'], [
+      [],
+      '',
+      [],
+      $this->queue,
+      $this->client,
+      $this->entityTypeManager,
+      $this->eventDispatcher,
+    ]);
     $this->handler->expects($this->once())
       ->method('getMappedObject')
       ->willReturn($this->mappedObject);
@@ -191,7 +219,15 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->method('push')
       ->willReturn(NULL);
 
-    $this->handler = $this->getMock(Rest::class, ['getMappedObject'], [[], '', [], $this->queue, $this->client, $this->entityTypeManager, $this->eventDispatcher]);
+    $this->handler = $this->getMock(Rest::class, ['getMappedObject'], [
+      [],
+      '',
+      [],
+      $this->queue,
+      $this->client,
+      $this->entityTypeManager,
+      $this->eventDispatcher,
+    ]);
     $this->handler->expects($this->once())
       ->method('getMappedObject')
       ->willReturn($this->mappedObject);
@@ -233,7 +269,15 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->method('load')
       ->willReturn(NULL);
 
-    $this->handler = $this->getMock(Rest::class, ['getMappedObject'], [[], '', [], $this->queue, $this->client, $this->entityTypeManager, $this->eventDispatcher]);
+    $this->handler = $this->getMock(Rest::class, ['getMappedObject'], [
+      [],
+      '',
+      [],
+      $this->queue,
+      $this->client,
+      $this->entityTypeManager,
+      $this->eventDispatcher,
+    ]);
     $this->handler->expects($this->once())
       ->method('getMappedObject')
       ->willReturn($this->mappedObject);

@@ -26,35 +26,78 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class Rest extends PluginBase implements PushQueueProcessorInterface {
+
+  /**
+   * Push queue service.
+   *
+   * @var \Drupal\salesforce_push\PushQueueInterface
+   */
   protected $queue;
+
+  /**
+   * Salesforce client service.
+   *
+   * @var \Drupal\salesforce\Rest\RestClientInterface
+   */
   protected $client;
 
   /**
    * Storage handler for SF mappings.
    *
-   * @var SalesforceMappingStorage
+   * @var \Drupal\salesforce_mapping\SalesforceMappingStorage
    */
-  protected $mapping_storage;
+  protected $mappingStorage;
 
   /**
    * Storage handler for Mapped Objects.
    *
-   * @var \Drupal\salesforce_mapping\Entity\MappedObjectStorage
+   * @var \Drupal\salesforce_mapping\MappedObjectStorage
    */
-  protected $mapped_object_storage;
-  protected $event_dispatcher;
+  protected $mappedObjectStorage;
+
+  /**
+   * Event dispatcher service.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
+   * ETM service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $etm;
 
   /**
+   * Rest constructor.
    *
+   * @param array $configuration
+   *   Plugin config.
+   * @param string $plugin_id
+   *   Plugin id.
+   * @param array $plugin_definition
+   *   Plugin definition.
+   * @param \Drupal\salesforce_push\PushQueueInterface $queue
+   *   Push queue service.
+   * @param \Drupal\salesforce\Rest\RestClientInterface $client
+   *   Salesforce client service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
+   *   ETM service.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   Event dispatcher service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueueInterface $queue, RestClientInterface $client, EntityTypeManagerInterface $etm, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueueInterface $queue, RestClientInterface $client, EntityTypeManagerInterface $etm, EventDispatcherInterface $eventDispatcher) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->queue = $queue;
     $this->client = $client;
     $this->etm = $etm;
     $this->mappingStorage = $etm->getStorage('salesforce_mapping');
     $this->mappedObjectStorage = $etm->getStorage('salesforce_mapped_object');
-    $this->event_dispatcher = $event_dispatcher;
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
@@ -70,7 +113,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   }
 
   /**
-   *
+   * Process push queue items.
    */
   public function process(array $items) {
     if (!$this->client->isAuthorized()) {
@@ -88,7 +131,12 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   }
 
   /**
+   * Push queue item process callback.
    *
+   * @param \stdClass $item
+   *   The push queue item.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function processItem(\stdClass $item) {
     // Allow exceptions to bubble up for PushQueue to sort things out.
@@ -103,7 +151,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
 
     // @TODO: the following is nearly identical to the end of salesforce_push_entity_crud(). Can we DRY it? Do we care?
     try {
-      $this->event_dispatcher->dispatch(
+      $this->eventDispatcher->dispatch(
         SalesforceEvents::PUSH_MAPPING_OBJECT,
         new SalesforcePushOpEvent($mapped_object, $item->op)
       );
@@ -128,7 +176,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
       }
     }
     catch (\Exception $e) {
-      $this->event_dispatcher->dispatch(
+      $this->eventDispatcher->dispatch(
         SalesforceEvents::PUSH_FAIL,
         new SalesforcePushOpEvent($mapped_object, $item->op)
       );
@@ -150,9 +198,12 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    * Return the mapped object given a queue item and mapping.
    *
    * @param object $item
+   *   Push queue item.
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   The mapping.
    *
    * @return \Drupal\salesforce_mapping\Entity\MappedObject
+   *   The mapped object.
    */
   protected function getMappedObject(\stdClass $item, SalesforceMappingInterface $mapping) {
     $mapped_object = FALSE;
@@ -190,7 +241,12 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    * Helper method to generate a new MappedObject during push procesing.
    *
    * @param object $item
+   *   Push queue item.
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   The mapping.
+   *
+   * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface
+   *   The new mapped object.
    */
   protected function createMappedObject(\stdClass $item, SalesforceMappingInterface $mapping) {
     return new MappedObject([

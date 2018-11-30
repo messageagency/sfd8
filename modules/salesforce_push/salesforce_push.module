@@ -94,10 +94,11 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
  * Helper method for salesforce_push_entity_crud()
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity.
  * @param string $op
+ *   The current CRUD operation.
  * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
- *
- * @return void
+ *   The mapping.
  */
 function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
   $mapped_object = NULL;
@@ -197,12 +198,14 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
 }
 
 /**
- * Worker function to insert a new queue item into the async push queue for the
- * given mapping.
+ * Insert a new queue item into the async push queue for the given mapping.
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity.
  * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+ *   The mapping.
  * @param string $op
+ *   The operation.
  */
 function salesforce_push_enqueue_async(EntityInterface $entity, SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object = NULL, $op) {
   // Each mapping has its own queue, so that like entries can be easily grouped

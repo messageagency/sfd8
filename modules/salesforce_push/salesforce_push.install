@@ -2,6 +2,7 @@
 
 /**
  * @file
+ * Salesforce push install.
  */
 
 use Drupal\salesforce_push\PushQueue;

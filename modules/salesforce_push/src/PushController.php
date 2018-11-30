@@ -9,15 +9,34 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
- *
+ * Push controller.
  */
 class PushController extends ControllerBase {
 
+  /**
+   * Push queue service.
+   *
+   * @var \Drupal\salesforce_push\PushQueue
+   */
   protected $pushQueue;
+
+  /**
+   * Mapping storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
   protected $mappingStorage;
 
   /**
+   * PushController constructor.
    *
+   * @param \Drupal\salesforce_push\PushQueue $pushQueue
+   *   Push queue service.
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   Entity manager service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct(PushQueue $pushQueue, EntityManagerInterface $entity_manager) {
     $this->pushQueue = $pushQueue;

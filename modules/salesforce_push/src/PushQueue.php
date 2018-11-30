@@ -32,80 +32,155 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
    */
   const TABLE_NAME = 'salesforce_push_queue';
 
+  /**
+   * Default max number of items to process in a single cron run.
+   */
   const DEFAULT_GLOBAL_LIMIT = 10000;
 
+  /**
+   * Plugin id of default queue processor.
+   */
   const DEFAULT_QUEUE_PROCESSOR = 'rest';
 
-  const MAPPING_CRON_PUSH_LIMIT = 30;
-
+  /**
+   * Default number of fails to consider a record permanently failed.
+   */
   const DEFAULT_MAX_FAILS = 10;
 
+  /**
+   * Default lease time for push queue items.
+   */
   const DEFAULT_LEASE_TIME = 300;
 
-  protected $mapping_limit;
-  protected $global_limit;
+  /**
+   * Global limit from config.
+   *
+   * @var int
+   */
+  protected $globalLimit;
+
+  /**
+   * Max fails from config.
+   *
+   * @var int
+   */
+  protected $maxFails;
+
+  /**
+   * Database service.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
   protected $connection;
+
+  /**
+   * State service.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
   protected $state;
-  protected $logger;
+
+  /**
+   * Push queue plugin manager.
+   *
+   * @var \Drupal\salesforce_push\PushQueueProcessorPluginManager
+   */
   protected $queueManager;
-  protected $max_fails;
+
+  /**
+   * Event dispatcher service.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
   protected $eventDispatcher;
+
+  /**
+   * Whether garbage has been collected.
+   *
+   * @var bool
+   */
   protected $garbageCollected;
 
   /**
    * Storage handler for SF mappings.
    *
-   * @var SalesforceMappingStorage
+   * @var \Drupal\salesforce_mapping\SalesforceMappingStorage
    */
-  protected $mapping_storage;
+  protected $mappingStorage;
 
   /**
    * Storage handler for Mapped Objects.
    *
-   * @var MappedObjectStorage
+   * @var \Drupal\salesforce_mapping\MappedObjectStorage
    */
-  protected $mapped_object_storage;
+  protected $mappedObjectStorage;
 
   /**
+   * Time service.
+   *
    * @var \Drupal\Component\Datetime\TimeInterface
    */
   protected $time;
 
   /**
+   * Config service.
+   *
    * @var \Drupal\Core\Config\Config
    */
   protected $config;
 
   /**
-   * Constructs a \Drupal\Core\Queue\DatabaseQueue object.
+   * ETM service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $etm;
+
+  /**
+   * PushQueue constructor.
    *
    * @param \Drupal\Core\Database\Connection $connection
-   *   The Connection object containing the key-value tables.
+   *   Database service.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   State service.
+   * @param \Drupal\salesforce_push\PushQueueProcessorPluginManager $queue_manager
+   *   Queue plugin manager service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
+   *   ETM service.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   Event dispatcher service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   Time service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
+   *   Config service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(Connection $connection, StateInterface $state, PushQueueProcessorPluginManager $queue_manager, EntityTypeManagerInterface $entity_manager, EventDispatcherInterface $event_dispatcher, TimeInterface $time, ConfigFactoryInterface $config) {
+  public function __construct(Connection $connection, StateInterface $state, PushQueueProcessorPluginManager $queue_manager, EntityTypeManagerInterface $etm, EventDispatcherInterface $event_dispatcher, TimeInterface $time, ConfigFactoryInterface $config) {
     $this->connection = $connection;
     $this->state = $state;
     $this->queueManager = $queue_manager;
-    $this->entity_manager = $entity_manager;
-    $this->mappingStorage = $entity_manager->getStorage('salesforce_mapping');
-    $this->mappedObjectStorage = $entity_manager->getStorage('salesforce_mapped_object');
+    $this->etm = $etm;
+    $this->mappingStorage = $etm->getStorage('salesforce_mapping');
+    $this->mappedObjectStorage = $etm->getStorage('salesforce_mapped_object');
     $this->eventDispatcher = $event_dispatcher;
     $this->time = $time;
 
     $this->config = $config->get('salesforce.settings');
-    $this->global_limit = $this->config->get('global_push_limit') ?: static::DEFAULT_GLOBAL_LIMIT;
-    if (empty($this->global_limit)) {
-      $this->global_limit = static::DEFAULT_GLOBAL_LIMIT;
+    $this->globalLimit = $this->config->get('global_push_limit') ?: static::DEFAULT_GLOBAL_LIMIT;
+    if (empty($this->globalLimit)) {
+      $this->globalLimit = static::DEFAULT_GLOBAL_LIMIT;
     }
-    $this->max_fails = $state->get('salesforce.push_queue_max_fails', static::DEFAULT_MAX_FAILS);
-    if (empty($this->max_fails)) {
-      $this->max_fails = static::DEFAULT_MAX_FAILS;
+    $this->maxFails = $state->get('salesforce.push_queue_max_fails', static::DEFAULT_MAX_FAILS);
+    if (empty($this->maxFails)) {
+      $this->maxFails = static::DEFAULT_MAX_FAILS;
     }
     $this->garbageCollected = FALSE;
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     return new static(
@@ -126,6 +201,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
    * just set the value appropriately.
    *
    * @param string $name
+   *   Queue name. For us it's the Mapping id.
    *
    * @return $this
    */
@@ -143,11 +219,12 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
    *   * 'entity_id': the entity id being mapped / pushed
    *   * 'op': the operation which triggered this push.
    *
-   * @return
-   *   On success, Drupal\Core\Database\Query\Merge::STATUS_INSERT or
-   *   Drupal\Core\Database\Query\Merge::STATUS_UPDATE.
+   * @return \Drupal\Core\Database\Query\MergeSTATUS_INSERT|Drupal\Core\Database\Query\MergeSTATUS_UPDATE
+   *   On success, STATUS_INSERT or STATUS_UPDATE whether item was inserted or
+   *   updated.
    *
-   * @throws Exception if the required indexes are not provided.
+   * @throws \Exception
+   *   If the required indexes are not provided.
    *
    * @TODO convert $data to a proper class and make sure that's what we get for this argument.
    */
@@ -198,7 +275,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
       try {
         if ($n <= 0) {
           // If $n is zero, process as many items as possible.
-          $n = $this->global_limit;
+          $n = $this->globalLimit;
         }
         // @TODO: convert items to content entities.
         // @see \Drupal::entityQuery()
@@ -334,7 +411,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     $i = 0;
     foreach ($mappings as $mapping) {
       $i += $this->processQueue($mapping);
-      if ($i >= $this->global_limit) {
+      if ($i >= $this->globalLimit) {
         break;
       }
     }
@@ -412,7 +489,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
       finally {
         // If we've reached our limit, we're done. Otherwise, continue to next items.
         $i += count($items);
-        if ($i >= $this->global_limit) {
+        if ($i >= $this->globalLimit) {
           return $i;
         }
       }
@@ -443,7 +520,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     $item->failures++;
 
     $message = $e->getMessage();
-    if ($item->failures >= $this->max_fails) {
+    if ($item->failures >= $this->maxFails) {
       $message = 'Permanently failed queue item %item failed %fail times. Exception while pushing entity %type %id for salesforce mapping %mapping. ' . $message;
     }
     else {
@@ -489,7 +566,12 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
   }
 
   /**
+   * For a given entity, delete its corresponding queue items.
    *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity whose items should be deleted.
+   *
+   * @throws \Exception
    */
   public function deleteItemByEntity(EntityInterface $entity) {
     try {
