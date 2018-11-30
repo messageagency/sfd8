@@ -11,7 +11,7 @@ use Drupal\salesforce\SFID;
  * @group salesforce_pull
  */
 class SFIDTest extends UnitTestCase {
-  static $modules = ['salesforce'];
+  static public $modules = ['salesforce'];
 
   /**
    * {@inheritdoc}
@@ -23,7 +23,7 @@ class SFIDTest extends UnitTestCase {
   /**
    * Test object instantiation with good ID.
    */
-  public function testGoodID() {
+  public function testGoodId() {
     $sfid = new SFID('1234567890abcde');
     $this->assertTrue($sfid instanceof SFID);
   }
@@ -33,7 +33,7 @@ class SFIDTest extends UnitTestCase {
    *
    * @expectedException Exception
    */
-  public function testBadID() {
+  public function testBadId() {
     new SFID('1234567890');
   }
 

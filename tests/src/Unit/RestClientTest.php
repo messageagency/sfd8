@@ -63,7 +63,14 @@ class RestClientTest extends UnitTestCase {
       $methods = $this->methods;
     }
 
-    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->time];
+    $args = [
+      $this->httpClient,
+      $this->configFactory,
+      $this->state,
+      $this->cache,
+      $this->json,
+      $this->time,
+    ];
 
     $this->client = $this->getMock(RestClient::CLASS, $methods, $args);
 

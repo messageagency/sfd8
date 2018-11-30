@@ -21,7 +21,12 @@ use Drupal\Component\Datetime\TimeInterface;
  */
 class RestClientTest extends UnitTestCase {
 
-  static public $modules = ['key', 'encrypt', 'salesforce', 'salesforce_encrypt'];
+  static public $modules = [
+    'key',
+    'encrypt',
+    'salesforce',
+    'salesforce_encrypt',
+  ];
 
   protected $httpClient;
   protected $configFactory;

@@ -2,11 +2,14 @@
 
 /**
  * @file
+ * Salesforce install file.
  */
 
 use Drupal\Component\Serialization\Json;
 
 /**
+ * Implements hook_uninstall().
+ *
  * Purge Salesforce module state variables.
  */
 function salesforce_uninstall() {
@@ -23,7 +26,7 @@ function salesforce_uninstall() {
 }
 
 /**
- *
+ * Implements hook_requirements().
  */
 function salesforce_requirements($phase) {
   if ($phase != 'runtime') {
@@ -45,7 +48,7 @@ function salesforce_requirements($phase) {
 }
 
 /**
- *
+ * Check TLS status.
  */
 function salesforce_fetch_new_tls() {
   $response = FALSE;
@@ -69,7 +72,7 @@ function salesforce_fetch_new_tls() {
 }
 
 /**
- *
+ * Return TLS requirements array.
  */
 function salesforce_get_tls_requirements() {
   $response = \Drupal::state()->get('salesforce.tls_status', FALSE);
@@ -110,7 +113,7 @@ function salesforce_get_tls_requirements() {
 }
 
 /**
- *
+ * Return usage requirements array.
  */
 function salesforce_get_usage_requirements() {
   $requirements = [

@@ -9,8 +9,9 @@
  */
 
 /**
- * @defgroup salesforce_deprecated
  * Hooks deprecated between 7.x and 8.x with pointers to new solutions.
+ *
+ * @defgroup salesforce_deprecated
  * See SalesforceEvents.php for events documentation.
  * See salesforce_example for example Event Subscriber implementation.
  *
@@ -34,29 +35,25 @@ function hook_salesforce_mapping_fieldmap_type_alter() {
 }
 
 /**
- * Implement an EventSubscriber on
- * Drupal\salesforce\Event\SalesforceEvents::PULL_QUERY.
+ * Implement an EventSubscriber on Drupal\salesforce\Event\SalesforceEvents::PULL_QUERY.
  */
 function hook_salesforce_pull_select_query_alter() {
 }
 
 /**
- * Implement an EventSubscriber on
- * Drupal\salesforce\Event\SalesforceEvents::PULL_PREPULL.
+ * Implement an EventSubscriber on Drupal\salesforce\Event\SalesforceEvents::PULL_PREPULL.
  */
 function hook_salesforce_pull_mapping_object_alter() {
 }
 
 /**
- * Implement an EventSubscriber on
- * Drupal\salesforce\Event\SalesforceEvents::PULL_ENTITY_VALUE.
+ * Implement an EventSubscriber on Drupal\salesforce\Event\SalesforceEvents::PULL_ENTITY_VALUE.
  */
 function hook_salesforce_pull_entity_value_alter() {
 }
 
 /**
- * Implement an EventSubscriber on
- * Drupal\salesforce\Event\SalesforceEvents::PULL_PRESAVE.
+ * Implement an EventSubscriber on Drupal\salesforce\Event\SalesforceEvents::PULL_PRESAVE.
  */
 function hook_salesforce_pull_entity_presave() {
 }
@@ -74,44 +71,42 @@ function hook_salesforce_pull_entity_update() {
 }
 
 /**
- * Implement an EventSubscriber on
- * Drupal\salesforce\Event\SalesforceEvents::PUSH_ALLOWED
+ * Implement an EventSubscriber on Drupal\salesforce\Event\SalesforceEvents::PUSH_ALLOWED.
+ *
  * Throw an exception to indicate that push is not allowed.
  */
 function hook_salesforce_push_entity_allowed() {
 }
 
 /**
- * Implement an EventSubscriber on
- * Drupal\salesforce\Event\SalesforceEvents::PUSH_MAPPING_OBJECT.
+ * Implement an EventSubscriber on  Drupal\salesforce\Event\SalesforceEvents::PUSH_MAPPING_OBJECT.
  */
 function hook_salesforce_push_mapping_object_alter() {
 }
 
 /**
- * Implement an EventSubscriber on
- * Drupal\salesforce\Event\SalesforceEvents::PUSH_PARAMS.
+ * Implement an EventSubscriber on Drupal\salesforce\Event\SalesforceEvents::PUSH_PARAMS.
  */
 function hook_salesforce_push_params_alter() {
 }
 
 /**
- * Implement an EventSubscriber on
- * Drupal\salesforce\Event\SalesforceEvents::PUSH_SUCCESS.
+ * Implement an EventSubscriber on Drupal\salesforce\Event\SalesforceEvents::PUSH_SUCCESS.
  */
 function hook_salesforce_push_success() {
 }
 
 /**
- * Implement an EventSubscriber on
- * Drupal\salesforce\Event\SalesforceEvents::PUSH_FAIL.
+ * Implement an EventSubscriber on Drupal\salesforce\Event\SalesforceEvents::PUSH_FAIL.
  */
 function hook_salesforce_push_fail() {
 }
 
 /**
- * No replacement. Entities must implement proper URIs to take advantage of
- * Salesforce mapping dynamic routing.
+ * No replacement.
+ *
+ * Entities must implement proper URIs to take advantage of Salesforce mapping
+ * dynamic routing.
  */
 function hook_salesforce_mapping_entity_uris_alter() {
 }

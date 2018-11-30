@@ -12,7 +12,7 @@ use Drupal\salesforce\SelectQueryResult;
  * @group salesforce_pull
  */
 class SelectQueryResultTest extends UnitTestCase {
-  static $modules = ['salesforce'];
+  static public $modules = ['salesforce'];
 
   /**
    * {@inheritdoc}
@@ -41,7 +41,7 @@ class SelectQueryResultTest extends UnitTestCase {
   /**
    * Test object instantiation with good resultd.
    */
-  public function testGoodID() {
+  public function testGoodId() {
     $this->assertTrue($this->sqr instanceof SelectQueryResult);
   }
 
@@ -50,7 +50,7 @@ class SelectQueryResultTest extends UnitTestCase {
    *
    * @expectedException Exception
    */
-  public function testNoID() {
+  public function testNoId() {
     $sfid = new SFID('1234567890abcdg');
     $this->sqr->record($sfid);
   }
