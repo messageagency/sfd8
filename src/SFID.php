@@ -3,7 +3,7 @@
 namespace Drupal\salesforce;
 
 /**
- * Class SFID
+ * Class SFID.
  *
  * @package Drupal\salesforce
  */
@@ -15,7 +15,8 @@ class SFID {
   /**
    * SFID constructor.
    *
-   * @param $id
+   * @param string $id
+   *   The SFID.
    *
    * @throws \Exception
    */
@@ -30,7 +31,10 @@ class SFID {
   }
 
   /**
+   * Magic method wrapping the SFID string.
+   *
    * @return string
+   *   The SFID.
    */
   public function __toString() {
     return (string) $this->id;

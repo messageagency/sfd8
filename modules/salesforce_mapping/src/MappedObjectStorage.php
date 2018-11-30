@@ -13,9 +13,9 @@ use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 
-
 /**
  * Class MappedObjectStorage.
+ *
  * Extends ConfigEntityStorage to add some commonly used convenience wrappers.
  *
  * @package Drupal\salesforce_mapping
@@ -23,17 +23,26 @@ use Drupal\Core\Entity\EntityTypeInterface;
 class MappedObjectStorage extends SqlContentEntityStorage {
 
   /**
-   * {@inheritdoc}
+   * MappedObjectStorage constructor.
+   *
+   * @param string $entity_type_id
+   *   Entity type id.
+   * @param \Drupal\Core\Database\Connection $database
+   *   Database service.
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   Entity manager service.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
+   *   Cache service.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   Language service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-   // During testing, complaints alternate between the type of
-   // cache interface expected between below:
-   // CacheBackendInterface
-   // DatabaseBackendFactory
   public function __construct($entity_type_id, Connection $database, EntityManagerInterface $entity_manager, CacheBackendInterface $cache, LanguageManagerInterface $language_manager) {
     // @TODO the $entity_type needs to be in the constructor and not
     // devrived from from $entity_type_id. This is because of the parent
     // class SqlContentEntityStorage's createInstance method, which while
-    // ultimately calls it's own constructer through here, is calling this
+    // ultimately calls it's own constructor through here, is calling this
     // constuctor with the same paramter blueprint, which expects
     // EntityTypeInterface and not a string.
     $entity_type = $entity_manager->getDefinition($entity_type_id);
@@ -54,13 +63,15 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   }
 
   /**
-   * Load MappedObjects by entity type id and entity id
+   * Load MappedObjects by entity type id and entity id.
    *
-   * @pararm string entity_type_id
+   * @param string $entity_type_id
+   *   Entity type id.
+   * @param int|string $entity_id
+   *   Entity id.
    *
-   * @param int/string entity_id
-   *
-   * @return array
+   * @return \Drupal\salesforce_mapping\Entity\MappedObject[]
+   *   Mapped objects.
    *
    * @see loadByProperties()
    */
@@ -72,11 +83,13 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   }
 
   /**
-   * Load MappedObjects by Drupal Entity
+   * Load MappedObjects by Drupal Entity.
    *
-   * @param EntityInterface $entity
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Drupal entity.
    *
-   * @return array
+   * @return \Drupal\salesforce_mapping\Entity\MappedObject[]
+   *   Mapped objects.
    *
    * @see loadByProperties()
    */
@@ -88,65 +101,77 @@ class MappedObjectStorage extends SqlContentEntityStorage {
   }
 
   /**
-   * Load a single MappedObject by Drupal Entity and Mapping
+   * Load a single MappedObject by Drupal Entity and Mapping.
    *
-   * @param EntityInterface $entity
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Drupal entity.
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Salesforce Mapping.
    *
-   * @return MappedObjectInterface|null
+   * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface|null
+   *   The matching Mapped Object, or null if none are found.
    *
    * @see loadByProperties()
    */
   public function loadByEntityAndMapping(EntityInterface $entity, SalesforceMappingInterface $mapping) {
-     $result = $this->loadByProperties([
+    $result = $this->loadByProperties([
       'drupal_entity__target_type' => $entity->getEntityTypeId(),
       'drupal_entity__target_id' => $entity->id(),
-      'salesforce_mapping' => $mapping->id()
-    ]);
-    return empty($result) ? NULL : reset($result);
-  }
-
-  /**
-   * Load MappedObjects by Salesforce ID
-   *
-   * @param SFID $salesforce_id
-   *
-   * @see loadByProperties()
-   */
-  public function loadBySfid(SFID $salesforce_id) {
-    return $this->loadByProperties([
-      'salesforce_id' => (string)$salesforce_id,
-    ]);
-  }
-
-  /**
-   * Load a single MappedObject by Mapping and SFID
-   *
-   * @param EntityInterface $entity
-   *
-   * @return MappedObjectInterface|null
-   *
-   * @see loadByProperties()
-   */
-  public function loadBySfidAndMapping(SFID $salesforce_id, SalesforceMappingInterface $mapping) {
-    $result = $this->loadByProperties([
-      'salesforce_id' => (string)$salesforce_id,
       'salesforce_mapping' => $mapping->id(),
     ]);
     return empty($result) ? NULL : reset($result);
   }
 
   /**
-   * Set the "force_pull" column to TRUE for all mapped objects of the given
-   * mapping
+   * Load MappedObjects by Salesforce ID.
    *
-   * @param SalesforceMappingInterface $mapping
+   * @param \Drupal\salesforce\SFID $salesforce_id
+   *   Salesforce id.
+   *
+   * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface[]
+   *   Matching mapped objects.
+   *
+   * @see loadByProperties()
+   */
+  public function loadBySfid(SFID $salesforce_id) {
+    return $this->loadByProperties([
+      'salesforce_id' => (string) $salesforce_id,
+    ]);
+  }
+
+  /**
+   * Load a single MappedObject by Mapping and SFID.
+   *
+   * @param \Drupal\salesforce\SFID $salesforce_id
+   *   Salesforce id.
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Salesforce mapping.
+   *
+   * @return \Drupal\salesforce_mapping\Entity\MappedObjectInterface|null
+   *   Mapped object, or null if none are found.
+   *
+   * @see loadByProperties()
+   */
+  public function loadBySfidAndMapping(SFID $salesforce_id, SalesforceMappingInterface $mapping) {
+    $result = $this->loadByProperties([
+      'salesforce_id' => (string) $salesforce_id,
+      'salesforce_mapping' => $mapping->id(),
+    ]);
+    return empty($result) ? NULL : reset($result);
+  }
+
+  /**
+   * Set "force_pull" column to TRUE for mapped objects of the given mapping.
+   *
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Mapping.
    *
    * @return $this
    */
   public function setForcePull(SalesforceMappingInterface $mapping) {
     $this->database->update($this->baseTable)
       ->condition('salesforce_mapping', $mapping->id())
-      ->fields(array('force_pull' => 1))
+      ->fields(['force_pull' => 1])
       ->execute();
     return $this;
   }

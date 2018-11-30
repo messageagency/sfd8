@@ -27,6 +27,22 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
 
   protected $salesforceConfig;
   protected $database;
+
+  /**
+   * SalesforceMappingCommands constructor.
+   *
+   * @param \Drupal\salesforce\Rest\RestClient $client
+   *   The salesforce.client service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
+   *   The entity_type.manager service.
+   * @param \Drupal\Core\Config\ConfigFactory $configFactory
+   *   The config.factory service.
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function __construct(RestClient $client, EntityTypeManagerInterface $etm, ConfigFactory $configFactory, Connection $database) {
     parent::__construct($client, $etm);
     $this->database = $database;
@@ -34,6 +50,8 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Get a limit argument interactively.
+   *
    * @hook interact salesforce_mapping:prune-revisions
    */
   public function interactPrune(Input $input, Output $output) {
@@ -62,9 +80,9 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
    * Useful if you have recently changed settings, or if you have just updated
    * to a version with prune support.
    *
-   * @param $limit
-   *   The Drupal machine name of the mapping for the entities. If $limit is not
-   *   specified, salesforce.settings.limit_mapped_object_revisions is used.
+   * @param int $limit
+   *   If $limit is not specified,
+   *   salesforce.settings.limit_mapped_object_revisions is used.
    *
    * @command salesforce_mapping:prune-revisions
    * @aliases sfprune,sf-prune-revisions
@@ -102,6 +120,8 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Interactively gather a salesforce mapping name.
+   *
    * @hook interact salesforce_mapping:purge-drupal
    */
   public function interactPurgeDrupal(Input $input, Output $output) {
@@ -109,6 +129,8 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Interactively gather a salesforce mapping name.
+   *
    * @hook interact salesforce_mapping:purge-salesforce
    */
   public function interactPurgeSalesforce(Input $input, Output $output) {
@@ -116,6 +138,8 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Interactively gather a salesforce mapping name.
+   *
    * @hook interact salesforce_mapping:purge-mapping
    */
   public function interactPurgeMapping(Input $input, Output $output) {
@@ -123,6 +147,8 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Interactively gather a salesforce mapping name.
+   *
    * @hook interact salesforce_mapping:purge-all
    */
   public function interactPurgeAll(Input $input, Output $output) {
@@ -130,16 +156,15 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Clean up Mapped Objects table by deleting any records which reference missing Drupal entities.
+   * Clean up Mapped Objects referencing missing Drupal entities.
    *
-   * @param $name
+   * @param string $name
    *   Id of the salesforce mapping whose mapped objects should be purged.
    *
    * @command salesforce_mapping:purge-drupal
    * @aliases sfpd,sf-purge-drupal
    */
   public function purgeDrupal($name) {
-    $mapped_obj_storage = $this->mappedObjectStorage;
     $mapped_obj_table = $this->etm
       ->getDefinition('salesforce_mapped_object')
       ->getBaseTable();
@@ -196,11 +221,14 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
       return;
     }
 
-    // Still have to *load* entities in order to delete them. **UGH**
+    // Still have to *load* entities in order to delete them. **UGH**.
     $mapped_objs = $this->mappedObjectStorage->loadMultiple($object_ids);
     $this->mappedObjectStorage->delete($mapped_objs);
   }
 
+  /**
+   * Helper to gather object types by prefix.
+   */
   protected function objectTypesByPrefix() {
     $ret = [];
     $describe = $this->client->objects();
@@ -211,9 +239,9 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Clean up Mapped Objects table by deleting any records which reference missing Salesforce records.
+   * Clean up Mapped Objects by deleting records referencing missing records.
    *
-   * @param $name
+   * @param string $name
    *   Id of the salesforce mapping whose mapped objects should be purged.
    *
    * @command salesforce_mapping:purge-salesforce
@@ -247,7 +275,7 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
         if (empty($mapped_obj_ids)) {
           continue;
         }
-        $this->logger()->warning(dt('Unknown object type for Salesforce ID prefix !prefix', ['!prefix' =>  $prefix]));
+        $this->logger()->warning(dt('Unknown object type for Salesforce ID prefix !prefix', ['!prefix' => $prefix]));
         $this->purgeConfirmAndDelete($mapped_obj_ids, 'prefix ' . $prefix);
         continue;
       }
@@ -272,11 +300,11 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
         $soql_query->addCondition('Id', array_keys($chunk));
         $results = $this->client->query($soql_query);
         foreach ($results->records() as $record) {
-          unset($to_delete[(string)$record->id()]);
+          unset($to_delete[(string) $record->id()]);
         }
       }
       if (empty($to_delete)) {
-        $this->logger()->info(dt('No orphaned mapped objects found for SObject type !type', ['!type' =>  $object_types[$prefix]['name']]));
+        $this->logger()->info(dt('No orphaned mapped objects found for SObject type !type', ['!type' => $object_types[$prefix]['name']]));
         continue;
       }
       $this->purgeConfirmAndDelete(array_values($to_delete), 'SObject type *' . $object_types[$prefix]['name'] . '*');
@@ -284,9 +312,9 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Clean up Mapped Objects table by deleting any records which reference missing Mappings.
+   * Clean up Mapped Objects by deleting records referencing missing Mappings.
    *
-   * @param $name
+   * @param string $name
    *   Mapping id.
    *
    * @command sf:purge-mapping
@@ -335,7 +363,7 @@ class SalesforceMappingCommands extends SalesforceCommandsBase {
    * Clean by deleting any records which reference missing Mappings, Entities,
    * or Salesforce records.
    *
-   * @param $name
+   * @param string $name
    *   Id of the salesforce mapping whose mapped objects should be purged.
    *
    * @command salesforce_mapping:purge-all

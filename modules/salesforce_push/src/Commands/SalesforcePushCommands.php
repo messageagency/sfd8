@@ -23,11 +23,35 @@ use Symfony\Component\Console\Output\Output;
  */
 class SalesforcePushCommands extends SalesforceCommandsBase {
 
-  /** @var \Drupal\Core\Database\Connection $database */
+  /**
+   * Database service.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
   protected $database;
-  /** @var \Drupal\salesforce_push\PushQueue $pushQueue */
+
+  /**
+   * Push queue service.
+   *
+   * @var \Drupal\salesforce_push\PushQueue
+   */
   protected $pushQueue;
 
+  /**
+   * SalesforcePushCommands constructor.
+   *
+   * @param \Drupal\salesforce\Rest\RestClient $client
+   *   Salesforce service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
+   *   ETM service.
+   * @param \Drupal\salesforce_push\PushQueue $pushQueue
+   *   Push queue service.
+   * @param \Drupal\Core\Database\Connection $database
+   *   Database service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function __construct(RestClient $client, EntityTypeManagerInterface $etm, PushQueue $pushQueue, Connection $database) {
     parent::__construct($client, $etm);
     $this->pushQueue = $pushQueue;
@@ -35,6 +59,8 @@ class SalesforcePushCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Collect a mapping interactively.
+   *
    * @hook interact salesforce_push:push-queue
    */
   public function interactPushQueue(Input $input, Output $output) {
@@ -42,6 +68,8 @@ class SalesforcePushCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Collect a mapping interactively.
+   *
    * @hook interact salesforce_push:push-unmapped
    */
   public function interactPushUnmapped(Input $input, Output $output) {
@@ -49,14 +77,15 @@ class SalesforcePushCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Process push queues (as though during cron) for one or all Salesforce Mappings.
+   * Process push queues for one or all Salesforce Mappings.
    *
-   * @param $name
-   *   Array
+   * @param string $name
+   *   Mapping name.
+   *
    * @usage drush sfpushq
-   *   Process all push queue items
+   *   Process all push queue items.
    * @usage drush sfpushq foo
-   *   Process push queue items for mapping "foo"
+   *   Process push queue items for mapping "foo".
    *
    * @command salesforce_push:push-queue
    * @aliases sfpushq,sfpm,sf-push-queue,salesforce_push:queue
@@ -71,11 +100,14 @@ class SalesforcePushCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Attempt to push entities of a mapped type that are not linked to Salesforce Objects.
+   * Push entities of a mapped type that are not linked to Salesforce Objects.
    *
-   * @param $name
+   * @param string $name
    *   The Drupal machine name of the mapping for the entities.
-   * @param array $options An associative array of options whose values come from cli, aliases, config, etc.
+   * @param array $options
+   *   An associative array of options whose values come from cli, aliases,
+   *   config, etc.
+   *
    * @option count
    *   The number of entities to try to sync. (Default is 50).
    * @usage drush sfpu foo
@@ -86,7 +118,7 @@ class SalesforcePushCommands extends SalesforceCommandsBase {
    * @command salesforce_push:push-unmapped
    * @aliases sfpu,salesforce-push-unmapped,salesforce_push:unmapped
    */
-  public function pushUnmapped($name, array $options = ['count' => null]) {
+  public function pushUnmapped($name, array $options = ['count' => NULL]) {
     $mappings = $this->getPushMappingsFromName($name);
     foreach ($mappings as $mapping) {
       $entity_type = $mapping->get('drupal_entity_type');

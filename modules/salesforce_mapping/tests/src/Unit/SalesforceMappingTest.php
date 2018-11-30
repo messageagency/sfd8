@@ -19,7 +19,7 @@ use Prophecy\Argument;
  * @group salesforce_mapping
  */
 class SalesforceMappingTest extends UnitTestCase {
-  static $modules = ['salesforce_mapping'];
+  static public $modules = ['salesforce_mapping'];
 
   /**
    * {@inheritdoc}

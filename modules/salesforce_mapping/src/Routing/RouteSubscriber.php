@@ -7,7 +7,6 @@ use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
-use Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface;
 
 /**
  * Listens to the dynamic route events.
@@ -23,7 +22,7 @@ class RouteSubscriber extends RouteSubscriberBase {
   /**
    * The mappable entity types service.
    *
-   * @var SalesforceMappableEntityTypesInterface
+   * @var \Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface
    */
   protected $mappable;
 
@@ -32,8 +31,6 @@ class RouteSubscriber extends RouteSubscriberBase {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity type manager.
-   * @param \Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface $mappable
-   *   The mappable entity types interface.
    */
   public function __construct(EntityTypeManagerInterface $entity_manager) {
     $this->entityTypeManager = $entity_manager;
@@ -44,12 +41,14 @@ class RouteSubscriber extends RouteSubscriberBase {
    */
   protected function alterRoutes(RouteCollection $collection) {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
-      // If the entity didn't get a salesforce link template added by hook_entity_types_alter, skip it.
+      // If the entity didn't get a salesforce link template added by
+      // hook_entity_types_alter(), skip it.
       if (!($path = $entity_type->getLinkTemplate('salesforce'))) {
         continue;
       }
 
-      // Create the "listing" route to show all the mapped objects for this entity.
+      // Create the "listing" route to show all the mapped objects for this
+      // entity.
       $route = new Route($path);
       $route
         ->addDefaults([

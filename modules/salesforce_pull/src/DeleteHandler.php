@@ -74,6 +74,11 @@ class DeleteHandler {
    *   Entity Manager service.
    * @param \Drupal\Core\State\StateInterface $state
    *   State service.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   Event dispatcher service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, StateInterface $state, EventDispatcherInterface $event_dispatcher) {
     $this->sfapi = $sfapi;
@@ -202,9 +207,11 @@ class DeleteHandler {
           '%sfid' => $record['id'],
         ];
         $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, $message, $args));
-      } catch (\Exception $e) {
+      }
+      catch (\Exception $e) {
         $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-        // If mapped entity couldn't be deleted, do not delete the mapped object.
+        // If mapped entity couldn't be deleted, do not delete the mapped
+        // object.
         return;
       }
 

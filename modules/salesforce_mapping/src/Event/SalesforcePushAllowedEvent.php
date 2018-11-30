@@ -5,21 +5,22 @@ namespace Drupal\salesforce_mapping\Event;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 
 /**
- *
+ * Push allowed event.
  */
 class SalesforcePushAllowedEvent extends SalesforcePushOpEvent {
 
-  protected $op;
-  protected $push_allowed;
+  /**
+   * Indicates whether push is allowed to continue.
+   *
+   * @var bool
+   */
+  protected $pushAllowed;
 
   /**
-   * {@inheritdoc}
-   *
-   * SalesforcePushAllowedEvent is fired when PushParams are not available, for
-   * example on SalesforceEvents::PUSH_ALLOWED, before any entities have been
-   * loaded.
+   * SalesforcePushAllowedEvent dispatched before building PushParams.
    *
    * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mapped_object
+   *   The mapped object.
    * @param string $op
    *   One of
    *     Drupal\salesforce_mapping\MappingConstants::
@@ -33,21 +34,17 @@ class SalesforcePushAllowedEvent extends SalesforcePushOpEvent {
   }
 
   /**
+   * Returns FALSE if push is disallowed.
    *
-   */
-  public function getOp() {
-    return $this->op;
-  }
-
-  /**
-   * Returns FALSE if PUSH_ALLOWED event has been fired, and any subscriber
-   * wants to prevent push. Otherwise, returns NULL. Note: a subscriber cannot
-   * "force" a push when any other subscriber which wants to prevent pushing.
+   * Note: a subscriber cannot "force" a push when any other subscriber has
+   * disallowed it.
    *
-   * @return FALSE or NULL
+   * @return false|null
+   *   Returns FALSE if PUSH_ALLOWED event has been fired, and any subscriber
+   *   wants to prevent push. Otherwise, returns NULL.
    */
   public function isPushAllowed() {
-    return $this->push_allowed === FALSE ? FALSE : NULL;
+    return $this->pushAllowed === FALSE ? FALSE : NULL;
   }
 
   /**
@@ -56,7 +53,7 @@ class SalesforcePushAllowedEvent extends SalesforcePushOpEvent {
    * @return $this
    */
   public function disallowPush() {
-    $this->push_allowed = FALSE;
+    $this->pushAllowed = FALSE;
     return $this;
   }
 

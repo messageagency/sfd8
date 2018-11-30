@@ -5,7 +5,6 @@
  * Drush integration for Salesforce.
  */
 
-
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
@@ -22,43 +21,45 @@ function salesforce_mapping_drush_command() {
     'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Drupal entities.',
     'aliases' => ['sfpd'],
     'options' => [
-      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.',
     ],
   ];
   $items['sf-purge-salesforce'] = [
     'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Salesforce records.',
     'aliases' => ['sfpsf'],
     'options' => [
-      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.',
     ],
   ];
   $items['sf-purge-mapping'] = [
     'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Mappings.',
     'aliases' => ['sfpmap'],
     'options' => [
-      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.',
     ],
   ];
   $items['sf-purge-all'] = [
     'description' => 'Clean up Mapped Objects table by deleting any records which reference missing Mappings, Entities, or Salesforce records.',
     'aliases' => ['sfpall'],
     'options' => [
-      'mapping' => 'Given a mapping id, limit purge to only those referenced.'
+      'mapping' => 'Given a mapping id, limit purge to only those referenced.',
     ],
   ];
   return $items;
 }
 
 /**
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ * Support for drush 8 is deprecated and will be removed in a future release.
+ *
+ * @deprecated
  */
 function drush_salesforce_mapping_sf_prune_revisions() {
   _drush_salesforce_deprecated();
 
   $limit =
     \Drupal::service('config.factory')
-    ->get('salesforce.settings')
-    ->get('limit_mapped_object_revisions');
+      ->get('salesforce.settings')
+      ->get('limit_mapped_object_revisions');
   if ($limit <= 0) {
     drush_log('Mapped Object revisions limit is 0. No action taken.', 'warning');
     return;
@@ -94,11 +95,13 @@ function drush_salesforce_mapping_sf_prune_revisions() {
     $mapped_object = $storage->load($id);
     $mapped_object->pruneRevisions($storage);
   }
-  
+
 }
 
 /**
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ * Support for drush 8 is deprecated and will be removed in a future release.
+ *
+ * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_drupal() {
   _drush_salesforce_deprecated();
@@ -145,7 +148,9 @@ function drush_salesforce_mapping_sf_purge_drupal() {
 }
 
 /**
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ * Support for drush 8 is deprecated and will be removed in a future release.
+ *
+ * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_salesforce() {
   _drush_salesforce_deprecated();
@@ -197,7 +202,7 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
       ->execute()
       ->fetchAllKeyed();
     $to_delete = $sfids;
-    // SOQL queries are limited to 4000-characters in where statements. 
+    // SOQL queries are limited to 4000-characters in where statements.
     // Chunkify in case we have more than ~200 sfids.
     foreach (array_chunk($sfids, 200, TRUE) as $chunk) {
       $soql_query = new SelectQuery($object_types[$prefix]['name']);
@@ -205,7 +210,7 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
       $soql_query->addCondition('Id', array_keys($chunk));
       $results = $client->query($soql_query);
       foreach ($results->records() as $record) {
-        unset($to_delete[(string)$record->id()]);
+        unset($to_delete[(string) $record->id()]);
       }
     }
     if (empty($to_delete)) {
@@ -217,7 +222,9 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
 }
 
 /**
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ * Support for drush 8 is deprecated and will be removed in a future release.
+ *
+ * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_mapping() {
   _drush_salesforce_deprecated();
@@ -257,13 +264,15 @@ function drush_salesforce_mapping_sf_purge_mapping() {
       ->distinct()
       ->execute()
       ->fetchCol();
-      
+
     _drush_salesforce_mapping_confirm_and_delete($mapped_obj_ids, $mapped_obj_storage, 'missing mapping: ' . $mapping_id);
   }
 }
 
 /**
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ * Support for drush 8 is deprecated and will be removed in a future release.
+ *
+ * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_all() {
   _drush_salesforce_deprecated();
@@ -272,6 +281,15 @@ function drush_salesforce_mapping_sf_purge_all() {
   drush_salesforce_mapping_sf_purge_salesforce();
 }
 
+/**
+ * Helper to fetch object types by prefix.
+ *
+ * @param \Drupal\salesforce\Rest\RestClientInterface $client
+ *   Client interface.
+ *
+ * @return array
+ *   Array of objects, indexed by key prefix.
+ */
 function _drush_salesforce_mapping_object_types_by_prefix(RestClientInterface $client) {
   $ret = [];
   $describe = $client->objects();
@@ -281,7 +299,19 @@ function _drush_salesforce_mapping_object_types_by_prefix(RestClientInterface $c
   return $ret;
 }
 
-function _drush_salesforce_mapping_confirm_and_delete($object_ids, ContentEntityStorageInterface $storage, $extra = '') {
+/**
+ * Helper to interactively confirm delete.
+ *
+ * @param array $object_ids
+ *   Records to be deleted.
+ * @param \Drupal\Core\Entity\ContentEntityStorageInterface $storage
+ *   Storage.
+ * @param string $extra
+ *   Extra message parts.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function _drush_salesforce_mapping_confirm_and_delete(array $object_ids, ContentEntityStorageInterface $storage, $extra = '') {
   if (empty($object_ids)) {
     return;
   }
@@ -294,8 +324,7 @@ function _drush_salesforce_mapping_confirm_and_delete($object_ids, ContentEntity
     return;
   }
 
-  // Still have to *load* entities in order to delete them. **UGH**
+  // Still have to *load* entities in order to delete them. **UGH**.
   $mapped_objs = $storage->loadMultiple($object_ids);
   $storage->delete($mapped_objs);
 }
-

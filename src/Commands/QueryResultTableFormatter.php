@@ -6,6 +6,9 @@ use Consolidation\OutputFormatters\Formatters\TableFormatter;
 use Consolidation\OutputFormatters\Options\FormatterOptions;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Format QueryResult metadata.
+ */
 class QueryResultTableFormatter extends TableFormatter {
 
   /**

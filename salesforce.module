@@ -44,20 +44,15 @@ function salesforce_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<li>' . t('You will need to create a remote application/connected app for authorization.') . '</li>';
       $output .= '<ul>';
       $output .= '<li>' . t('In Salesforce go to Your Name > Setup > Create > Apps then create a new Connected App. (Depending on your Salesforce instance, you may need to go to Your Name > Setup > Develop > Remote Access.)') . '</li>';
+      $url = new Url('salesforce.oauth_callback', [], ['absolute' => TRUE]);
       $output .= '<li>' . t('Set the callback URL to: :url (SSL is required)',
-      [':url' => str_replace('http:', 'https:', (new Url('salesforce.oauth_callback', [], ['absolute' => TRUE]))->toString())]) . '</li>';
+          [':url' => str_replace('http:', 'https:', $url->toString())]) . '</li>';
       $output .= '<li>' . t('Select at least "Perform requests on your behalf at any time" for OAuth Scope
   as well as the appropriate other scopes for your application. Note that "Full access" does not include the "Perform requests on your behalf at any time" scope! <a href=":url">Additional Information</a>.', [':url' => 'https://help.salesforce.com/help/doc/en/remoteaccess_about.htm']) . '</li>';
       $output .= '<li>' . t('For more help see <a href=":url">the salesforce.com documentation</a>.', [':url' => 'https://www.salesforce.com/us/developer/docs/api_rest/Content/quickstart_oauth.htm']) . '</li>';
       $output .= '</ul>';
       $output .= '<li>' . t('Your site needs to be SSL enabled to authorize the remote application using OAUTH.') . '</li>';
-      // $output .= '<li>' . t('If using the SOAP API, PHP must be compiled with <a href=":soap">SOAP web services</a> and <a href=":ssl">OpenSSL support</a>.', [':soap' =>  'http://php.net/soap', ':ssl' => 'http://php.net/openssl']) . '</li>';.
       $output .= '</ol>';
-      // $output .= '<h4>' . t('Required modules') . '</h4>';
-      // $output .= '<ul>';
-      // $output .= '<li>' . l(t('Entity API'), 'http://drupal.org/project/entity') . '</li>';
-      // $output .= '<li>' . l(t('Libraries, only for SOAP API'), 'http://drupal.org/project/libraries') . '</li>';
-      // $output .= '</ul>';.
       $output .= '<h3>' . t('Modules') . '</h3>';
       $output .= '<h4>' . t('Salesforce (salesforce)') . '</h4>';
       $output .= '<p>' . t('OAUTH2 authorization and wrapper around the Salesforce REST API.') . '</p>';
@@ -67,9 +62,6 @@ function salesforce_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<p>' . t('Push Drupal entity updates into Salesforce.') . '</p>';
       $output .= '<h4>' . t('Salesforce Pull (salesforce_pull)') . '</h4>';
       $output .= '<p>' . t('Pull Salesforce object updates into Drupal on cron run. (Salesforce Outbound Notifications are not supported.)') . '</p>';
-      // $output .= '<h4>' . t('Salesforce Soap (salesforce_soap)') . '</h4>';
-      // $output .= '<p>' . t('Lightweight wrapper around the SOAP API, using the OAUTH access token, to fill in functional gaps missing in the REST API. Requires the Salesforce PHP Toolkit.') . '</p>';
-      // $output .= '<p>' . t('Example installation of the Salesforce PHP Toolkit using the provided Drush Make file:') . ' <code>drush make /path/to/salesforce/modules/salesforce_soap/salesforce_soap.make.example --no-core -y</code>' . '</p>';.
       return $output;
 
     case 'salesforce.authorize':

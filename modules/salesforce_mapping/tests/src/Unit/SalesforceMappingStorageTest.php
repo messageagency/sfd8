@@ -5,9 +5,7 @@ namespace Drupal\Tests\salesforce_mapping\Unit;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ConfigEntityType;
-use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
@@ -48,13 +46,25 @@ class SalesforceMappingStorageTest extends UnitTestCase {
    */
   protected $configFactory;
 
-  /** @var \Drupal\Core\Entity\EntityTypeManagerInterface */
+  /**
+   * Entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $etm;
 
-  /** @var \Drupal\Core\Entity\EntityTypeInterface */
-  protected $entity_type;
+  /**
+   * Entity type under test.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeInterface
+   */
+  protected $entityType;
 
-  /** @var \PHPUnit\Framework\MockObject\MockObject */
+  /**
+   * Mapping storage service mock.
+   *
+   * @var \PHPUnit\Framework\MockObject\MockObject
+   */
   protected $salesforceMappingStorage;
 
   /**
@@ -66,7 +76,7 @@ class SalesforceMappingStorageTest extends UnitTestCase {
     parent::setUp();
 
     $this->entityTypeId = 'test_entity_type';
-    $this->entity_type = new ConfigEntityType([
+    $this->entityType = new ConfigEntityType([
       'id' => $this->entityTypeId,
       'class' => SalesforceMapping::class,
       'provider' => 'the_provider',
@@ -82,24 +92,30 @@ class SalesforceMappingStorageTest extends UnitTestCase {
     $this->uuidService = $this->createMock(UuidInterface::class);
     $this->languageManager = $this->createMock(LanguageManagerInterface::class);
     $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
-    $this->etm = $this->getMockBuilder(EntityTypeManagerInterface::class)->disableOriginalConstructor()->getMock();
+    $this->etm = $this->getMockBuilder(EntityTypeManagerInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
     $this->etm->expects($this->any())
       ->method('getDefinition')
-      ->with($this->equalTo('test_entity_type'))
-      ->willReturn($this->entity_type);
+      ->with($this->equalTo('test_entityType'))
+      ->willReturn($this->entityType);
 
     $this->salesforceMappingStorage = $this->getMockBuilder(SalesforceMappingStorage::class)
-      ->setConstructorArgs([$this->entityTypeId, $this->configFactory, $this->uuidService, $this->languageManager, $this->etm])
+      ->setConstructorArgs([
+        $this->entityTypeId,
+        $this->configFactory,
+        $this->uuidService,
+        $this->languageManager,
+        $this->etm,
+      ])
       ->disableOriginalConstructor()
       ->setMethods(['loadByProperties'])
       ->getMock();
   }
 
-
-
   /**
    * @covers ::loadByDrupal
-   **/
+   */
   public function testLoadByDrupal() {
     $config_object = $this->prophesize(SalesforceMapping::class);
 
@@ -127,7 +143,7 @@ class SalesforceMappingStorageTest extends UnitTestCase {
 
   /**
    * @covers ::loadPushMappings
-   **/
+   */
   public function testLoadPushMappings() {
     $foo_config_object = $this->prophesize(SalesforceMapping::class);
     $foo_config_object->id()->willReturn('foo');
@@ -145,17 +161,24 @@ class SalesforceMappingStorageTest extends UnitTestCase {
     $this->salesforceMappingStorage
       ->expects($this->once())
       ->method('loadByProperties')
-      ->willReturn(['foo' => $foo_config_object->reveal(), 'bar' => $bar_config_object->reveal(), 'zee' => $zee_config_object->reveal()]);
+      ->willReturn([
+        'foo' => $foo_config_object->reveal(),
+        'bar' => $bar_config_object->reveal(),
+        'zee' => $zee_config_object->reveal(),
+      ]);
 
     $entities = $this->salesforceMappingStorage->loadPushMappings($this->entityTypeId);
-    $expected = ['foo' => $foo_config_object->reveal(), 'bar' => $bar_config_object->reveal()];
+    $expected = [
+      'foo' => $foo_config_object->reveal(),
+      'bar' => $bar_config_object->reveal(),
+    ];
     $this->assertContainsOnlyInstancesOf(EntityInterface::class, $entities);
     $this->assertEquals($expected, $entities);
   }
 
   /**
    * @covers ::loadPullMappings
-   **/
+   */
   public function testLoadPullMappings() {
     $foo_config_object = $this->prophesize(SalesforceMapping::class);
     $foo_config_object->id()->willReturn('foo');
@@ -173,17 +196,24 @@ class SalesforceMappingStorageTest extends UnitTestCase {
     $this->salesforceMappingStorage
       ->expects($this->once())
       ->method('loadByProperties')
-      ->willReturn(['foo' => $foo_config_object->reveal(), 'bar' => $bar_config_object->reveal(), 'zee' => $zee_config_object->reveal()]);
+      ->willReturn([
+        'foo' => $foo_config_object->reveal(),
+        'bar' => $bar_config_object->reveal(),
+        'zee' => $zee_config_object->reveal(),
+      ]);
 
     $entities = $this->salesforceMappingStorage->loadPullMappings($this->entityTypeId);
-    $expected = ['foo' => $foo_config_object->reveal(), 'bar' => $bar_config_object->reveal()];
+    $expected = [
+      'foo' => $foo_config_object->reveal(),
+      'bar' => $bar_config_object->reveal(),
+    ];
     $this->assertContainsOnlyInstancesOf(EntityInterface::class, $entities);
     $this->assertEquals($expected, $entities);
   }
 
   /**
    * @covers ::getMappedSobjectTypes
-   **/
+   */
   public function testGetMappedSobjectTypes() {
     $foo_config_object = $this->prophesize(SalesforceMapping::class);
     $foo_config_object->id()->willReturn('foo');
@@ -200,7 +230,11 @@ class SalesforceMappingStorageTest extends UnitTestCase {
     $this->salesforceMappingStorage
       ->expects($this->once())
       ->method('loadByProperties')
-      ->willReturn([$foo_config_object->reveal(), $bar_config_object->reveal(), $zee_config_object->reveal()]);
+      ->willReturn([
+        $foo_config_object->reveal(),
+        $bar_config_object->reveal(),
+        $zee_config_object->reveal(),
+      ]);
 
     $object_types = $this->salesforceMappingStorage->getMappedSobjectTypes();
     $expected = ['Account' => 'Account', 'Contact' => 'Contact'];

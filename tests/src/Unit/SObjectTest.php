@@ -11,14 +11,7 @@ use Drupal\salesforce\SObject;
  * @group salesforce_pull
  */
 class SObjectTest extends UnitTestCase {
-  static $modules = ['salesforce'];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp() {
-    parent::setUp();
-  }
+  static public $modules = ['salesforce'];
 
   /**
    * Test object instantiation.
@@ -34,7 +27,7 @@ class SObjectTest extends UnitTestCase {
    *
    * @expectedException Exception
    */
-  public function testObjectNoID() {
+  public function testObjectNoId() {
     new SObject(['attributes' => ['type' => 'dummy']]);
   }
 
@@ -43,7 +36,7 @@ class SObjectTest extends UnitTestCase {
    *
    * @expectedException Exception
    */
-  public function testObjectBadID() {
+  public function testObjectBadId() {
     new SObject(['id' => '1234567890', 'attributes' => ['type' => 'dummy']]);
   }
 

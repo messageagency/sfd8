@@ -2,6 +2,9 @@
 
 namespace Drupal\salesforce;
 
+/**
+ * Allows for creating a select query by providing the SOQL string directly.
+ */
 class SelectQueryRaw implements SelectQueryInterface {
 
   protected $query;
@@ -22,4 +25,5 @@ class SelectQueryRaw implements SelectQueryInterface {
   public function __toString() {
     return str_replace(' ', '+', $this->query);
   }
+
 }

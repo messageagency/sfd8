@@ -1,37 +1,37 @@
 {
-    "name": "drupal/salesforce",
-    "description": "Provides Drupal modules to integrate with Salesforce.",
-    "type": "drupal-module",
-    "homepage": "https://drupal.org/project/salesforce",
-    "authors": [
-        {
-            "name": "Aaron Bauman (aaronbauman)",
-            "homepage": "https://www.drupal.org/u/aaronbauman",
-            "role": "Maintainer"
-        },
-        {
-            "name": "Alexander Rhodes (ironsizide)",
-            "homepage": "https://www.drupal.org/u/ironsizide",
-            "role": "Maintainer"
-        }
-    ],
-    "support": {
-        "issues": "https://drupal.org/project/issues/salesforce",
-        "source": "http://cgit.drupalcode.org/salesforce"
+  "name": "drupal/salesforce",
+  "description": "Provides Drupal modules to integrate with Salesforce.",
+  "type": "drupal-module",
+  "homepage": "https://drupal.org/project/salesforce",
+  "authors": [
+    {
+      "name": "Aaron Bauman (aaronbauman)",
+      "homepage": "https://www.drupal.org/u/aaronbauman",
+      "role": "Maintainer"
     },
-    "extra": {
-        "drush": {
-            "services": {
-                "drush.services.yml": "^9"
-            }
-        }
-    },
-    "require": {
-        "consolidation/output-formatters": "^3.2.0",
-        "drupal/dynamic_entity_reference": "^2.0-alpha8",
-        "drupal/encrypt": "^3.0-rc1",
-        "drupal/key": "^1.7",
-        "lusitanian/oauth": "^0.8.11",
-        "firebase/php-jwt": "^5.0"
+    {
+      "name": "Alexander Rhodes (ironsizide)",
+      "homepage": "https://www.drupal.org/u/ironsizide",
+      "role": "Maintainer"
     }
+  ],
+  "support": {
+    "issues": "https://drupal.org/project/issues/salesforce",
+    "source": "http://cgit.drupalcode.org/salesforce"
+  },
+  "extra": {
+    "drush": {
+      "services": {
+        "drush.services.yml": "^9"
+      }
+    }
+  },
+  "require": {
+    "consolidation/output-formatters": "^3.2.0",
+    "drupal/dynamic_entity_reference": "^2.0@alpha",
+    "drupal/encrypt": "^3.0@rc",
+    "drupal/key": "^1.7",
+    "lusitanian/oauth": "^0.8.11",
+    "firebase/php-jwt": "^5.0"
+  }
 }

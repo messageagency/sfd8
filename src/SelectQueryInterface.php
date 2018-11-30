@@ -2,6 +2,9 @@
 
 namespace Drupal\salesforce;
 
+/**
+ * A SOQL query interface.
+ */
 interface SelectQueryInterface {
 
   /**

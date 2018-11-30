@@ -7,6 +7,7 @@
 
 exit;
 
+// @codingStandardsIgnoreStart
 // Include the exception class:
 use Drupal\salesforce\Rest\RestException;
 
@@ -23,8 +24,8 @@ $returnObject = FALSE;
 // Uncomment the following line to get Drupal\salesforce\Rest\RestResponse object instead of json-decoded value:
 // $returnObject = TRUE;.
 // Instantiate the client so we can reference the response later if necessary:
-/**
- * @var Drupal\salesforce\Rest\RestClient **/
+
+/** @var \Drupal\salesforce\Rest\RestClientInterface $client */
 $client = \Drupal::service('salesforce.client');
 
 $method = 'POST';
@@ -67,5 +68,5 @@ catch (\Exception $e) {
   // see GuzzleHttp\Client.
 }
 
-```
+// @codingStandardsIgnoreEnd
 

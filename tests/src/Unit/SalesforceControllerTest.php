@@ -45,9 +45,22 @@ class SalesforceControllerTest extends UnitTestCase {
     $this->json = $this->getMock(Json::CLASS);
     $this->time = $this->getMock(TimeInterface::CLASS);
 
-    $args = [$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->time];
+    $args = [
+      $this->httpClient,
+      $this->configFactory,
+      $this->state,
+      $this->cache,
+      $this->json,
+      $this->time,
+    ];
 
-    $this->client = $this->getMock(RestClient::class, ['getConsumerKey', 'getConsumerSecret', 'getAuthCallbackUrl', 'getAuthTokenUrl', 'handleAuthResponse'], $args);
+    $this->client = $this->getMock(RestClient::class, [
+      'getConsumerKey',
+      'getConsumerSecret',
+      'getAuthCallbackUrl',
+      'getAuthTokenUrl',
+      'handleAuthResponse',
+    ], $args);
     $this->client->expects($this->once())
       ->method('getConsumerKey')
       ->willReturn($this->randomMachineName());

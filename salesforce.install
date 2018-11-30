@@ -2,6 +2,7 @@
 
 /**
  * @file
+ * Salesforce install file.
  */
 
 use Drupal\Component\Serialization\Json;
@@ -10,6 +11,8 @@ use Drupal\Core\Utility\UpdateException;
 use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 
 /**
+ * Implements hook_uninstall().
+ *
  * Purge Salesforce module state variables.
  */
 function salesforce_uninstall() {
@@ -100,12 +103,13 @@ function salesforce_get_auth_provider_requirements() {
 }
 
 /**
- *
+ * Check TLS status.
  */
 function salesforce_fetch_new_tls() {
   $response = FALSE;
   try {
-    // Ping the howsmyssl web service to check TLS version support for this client.
+    // Ping the howsmyssl web service to check TLS version support for this
+    // client.
     \Drupal::state()->set('salesforce.last_requirements_check', REQUEST_TIME);
     $raw_response = \Drupal::service('http_client')->get('https://www.howsmyssl.com/a/check', ['json' => TRUE, 'timeout' => 5]);
     $body = $raw_response->getBody();
@@ -124,7 +128,7 @@ function salesforce_fetch_new_tls() {
 }
 
 /**
- *
+ * Return TLS requirements array.
  */
 function salesforce_get_tls_requirements() {
   $response = \Drupal::state()->get('salesforce.tls_status', FALSE);
@@ -142,7 +146,8 @@ function salesforce_get_tls_requirements() {
     ];
   }
   else {
-    // If we got a good response, and this client doesn't support TLS1.1+, throw an error.
+    // If we got a good response, and this client doesn't support TLS1.1+, throw
+    // an error.
     switch ($response['tls_version']) {
       case 'TLS 1.1':
       case 'TLS 1.2':
@@ -165,7 +170,7 @@ function salesforce_get_tls_requirements() {
 }
 
 /**
- *
+ * Return usage requirements array.
  */
 function salesforce_get_usage_requirements() {
   $requirements = [
@@ -220,7 +225,7 @@ function salesforce_update_8001() {
 }
 
 /**
- * Install new "Limit revisions" setting; defaults to 10
+ * Install new "Limit revisions" setting; defaults to 10.
  */
 function salesforce_update_8002() {
   $settings = \Drupal::configFactory()->getEditable('salesforce.settings');

@@ -5,7 +5,7 @@ namespace Drupal\salesforce_push;
 use Drupal\Core\Queue\ReliableQueueInterface;
 
 /**
- *
+ * Push queue interface.
  */
 interface PushQueueInterface extends ReliableQueueInterface {
 
@@ -14,8 +14,6 @@ interface PushQueueInterface extends ReliableQueueInterface {
    *
    * If queue is empty, return an empty array.
    *
-   * @see DatabaseQueue::claimItem
-   *
    * @param int $n
    *   Number of items to claim.
    * @param int $fail_limit
@@ -23,14 +21,20 @@ interface PushQueueInterface extends ReliableQueueInterface {
    * @param int $lease_time
    *   Time, in seconds, for which to hold this claim.
    *
+   * @see DatabaseQueue::claimItem
+   *
    * @return array
    *   Zero to $n Items indexed by item_id
    */
   public function claimItems($n, $fail_limit = 0, $lease_time = 0);
 
   /**
-   * Inherited classes must throw an exception when this method is called.
+   * Inherited classes MUST throw an exception when this method is called.
+   *
    * Use claimItems() instead.
+   *
+   * @param int $lease_time
+   *   How long should the item remain claimed until considered released?
    *
    * @throws \Exception
    *   Whenever called.
@@ -43,8 +47,10 @@ interface PushQueueInterface extends ReliableQueueInterface {
    * Exception handler so that Queue Processors don't have to worry about what
    * happens when a queue item fails.
    *
-   * @param Exception $e
+   * @param \Exception $e
+   *   The exception which caused the failure.
    * @param object $item
+   *   The failed item.
    */
   public function failItem(\Exception $e, \stdClass $item);
 

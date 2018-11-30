@@ -41,7 +41,7 @@ class SettingsForm extends ConfigFormBase {
         SalesforceEvents::WARNING => $this->t('Log warnings and errors'),
         SalesforceEvents::NOTICE => $this->t('Log all salesforce events'),
       ],
-      '#default_value' => $config->get('log_level')
+      '#default_value' => $config->get('log_level'),
     ];
 
     $form = parent::buildForm($form, $form_state);

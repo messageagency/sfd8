@@ -16,13 +16,22 @@ use Drupal\Core\Url;
  */
 class SettingsForm extends FormBase {
 
+  /**
+   * Profile manager.
+   *
+   * @var \Drupal\encrypt\EncryptionProfileManagerInterface
+   */
   protected $encryptionProfileManager;
 
   /**
-   * Constructs a new key form base.
+   * SettingsForm constructor.
    *
-   * @param \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage
-   *   The key storage.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   State service.
+   * @param \Drupal\encrypt\EncryptionProfileManagerInterface $encryptionProfileManager
+   *   Encryption profile manager service.
+   * @param \Drupal\salesforce_encrypt\Rest\EncryptedRestClientInterface $client
+   *   Rest client service.
    */
   public function __construct(StateInterface $state, EncryptionProfileManagerInterface $encryptionProfileManager, EncryptedRestClientInterface $client) {
     $this->encryptionProfileManager = $encryptionProfileManager;
@@ -87,13 +96,6 @@ class SettingsForm extends FormBase {
     $form['#theme'] = 'system_config_form';
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
   }
 
   /**

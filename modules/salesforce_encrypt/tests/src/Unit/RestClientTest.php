@@ -21,7 +21,12 @@ use Drupal\Component\Datetime\TimeInterface;
  */
 class RestClientTest extends UnitTestCase {
 
-  static $modules = ['key', 'encrypt', 'salesforce', 'salesforce_encrypt'];
+  static public $modules = [
+    'key',
+    'encrypt',
+    'salesforce',
+    'salesforce_encrypt',
+  ];
 
   protected $httpClient;
   protected $configFactory;
@@ -34,7 +39,7 @@ class RestClientTest extends UnitTestCase {
   protected $lock;
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function setUp() {
     parent::setUp();
@@ -60,8 +65,18 @@ class RestClientTest extends UnitTestCase {
     $this->json = $this->createMock(Json::CLASS);
     $this->time = $this->createMock(TimeInterface::CLASS);
     $this->client = $this->getMockBuilder(RestClient::CLASS)
-      ->setMethods(['_getEncryptionProfile'])
-      ->setConstructorArgs([$this->httpClient, $this->configFactory, $this->state, $this->cache, $this->json, $this->time, $this->encryption, $this->profileManager, $this->lock])
+      ->setMethods(['doGetEncryptionProfile'])
+      ->setConstructorArgs([
+        $this->httpClient,
+        $this->configFactory,
+        $this->state,
+        $this->cache,
+        $this->json,
+        $this->time,
+        $this->encryption,
+        $this->profileManager,
+        $this->lock,
+      ])
       ->getMock();
   }
 
@@ -77,7 +92,7 @@ class RestClientTest extends UnitTestCase {
       ->method('get')
       ->willReturn(NULL);
     $this->client->expects($this->any())
-      ->method('_getEncryptionProfile')
+      ->method('doGetEncryptionProfile')
       ->willReturn(NULL);
     $this->assertFalse($this->client->getAccessToken());
   }
@@ -93,7 +108,7 @@ class RestClientTest extends UnitTestCase {
       ->method('get')
       ->willReturn('not null');
     $this->client->expects($this->any())
-      ->method('_getEncryptionProfile')
+      ->method('doGetEncryptionProfile')
       ->willReturn($this->encryptionProfile);
     $this->encryption->expects($this->any())
       ->method('decrypt')

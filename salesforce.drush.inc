@@ -274,7 +274,10 @@ function drush_salesforce_sf_rest_version() {
     $rows[] = [$key, $value];
   }
   $rows[] = ['login url', $salesforce->getLoginUrl()];
-  $rows[] = ['latest version', strcmp($version_id, $latest['version']) ? $latest['version'] : 'Yes'];
+  $rows[] = [
+    'latest version',
+    strcmp($version_id, $latest['version']) ? $latest['version'] : 'Yes',
+  ];
   drush_print_table($rows, TRUE);
 }
 
@@ -311,10 +314,8 @@ function drush_salesforce_sf_list_objects() {
 /**
  * Read a Salesforce object available to the logged-in user.
  *
- * @param $name
- *   The object type name, e.g. Account
- * @param $id
- *   The Salesforce ID
+ * @param string $id
+ *   The Salesforce ID.
  *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
@@ -339,10 +340,10 @@ function drush_salesforce_sf_read_object($id) {
 /**
  * Create a Salesforce object available to the logged-in user.
  *
- * @param $name
- *   The object type name, e.g. Account
- * @param $data
- *   The object data, or '-' to read from stdin
+ * @param string $name
+ *   The object type name, e.g. Account.
+ * @param string $data
+ *   The object data, or '-' to read from stdin.
  *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
@@ -381,8 +382,8 @@ function drush_salesforce_sf_create_object($name, $data) {
 /**
  * Query Salesforce objects available to the logged-in user.
  *
- * @param $name
- *   The object type name, e.g. Account
+ * @param string $name
+ *   The object type name, e.g. Account.
  *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
@@ -443,8 +444,8 @@ function drush_salesforce_sf_query_object($name) {
 /**
  * Execute a SOQL query.
  *
- * @param $query
- *   The query to execute
+ * @param string $query
+ *   The query to execute.
  *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
@@ -464,12 +465,13 @@ function drush_salesforce_sf_execute_query($query = NULL) {
 }
 
 /**
- * Helper method to get a mapping from the given name, or from user input if
- * name is empty.
+ * Get a mapping from the given name, or from user input if name is empty.
  *
  * @param string $name
+ *   The mapping name.
  *
- * @return SalesforceMappingInterface
+ * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface|null
+ *   The mapping.
  *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
@@ -498,6 +500,9 @@ function _salesforce_drush_get_mapping($name = NULL) {
   return $mapping;
 }
 
+/**
+ * Trigger a deprecation error.
+ */
 function _drush_salesforce_deprecated() {
   trigger_error('Salesforce module support for Drush 8 is deprecated and will be removed in a future release', E_DEPRECATED);
 }

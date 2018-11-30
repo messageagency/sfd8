@@ -79,9 +79,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    *
    * @var \Drupal\salesforce\SObject
    */
-  protected $sf_object = NULL;
+  protected $sfObject = NULL;
 
-  protected $drupal_entity_stub = NULL;
+  /**
+   * Drupal entity stub, as its in the process of being created during pulls.
+   *
+   * @var \Drupal\Core\Entity\FieldableEntityInterface
+   */
+  protected $drupalEntityStub = NULL;
 
   /**
    * Overrides ContentEntityBase::__construct().
@@ -129,7 +134,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->config('salesforce.settings')
       ->get('limit_mapped_object_revisions');
     if ($limit <= 0) {
-      // limit 0 means no limit.
+      // Limit 0 means no limit.
       return;
     }
     $count = $storage
@@ -139,7 +144,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->count()
       ->execute();
 
-    // Query for any revision id beyond the limit
+    // Query for any revision id beyond the limit.
     if ($count <= $limit) {
       return;
     }
@@ -298,20 +303,14 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
-   * Get the attached mapping entity.
-   *
-   * @return SalesforceMappingInterface
-   *   The mapping entity.
+   * {@inheritdoc}
    */
   public function getMapping() {
     return $this->salesforce_mapping->entity;
   }
 
   /**
-   * Get the mapped Drupal entity.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   The mapped Drupal entity.
+   * {@inheritdoc}
    */
   public function getMappedEntity() {
     return $this->drupal_entity->entity;
@@ -326,56 +325,42 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
-   * @return Link
-   */
-  public function getSalesforceLink(array $options = []) {
-    // @TODO this doesn't work
-    return;
-    $defaults = ['attributes' => ['target' => '_blank']];
-    $options = array_merge($defaults, $options);
-    return l($this->sfid(), $this->getSalesforceUrl(), $options);
-  }
-
-  /**
-   * Wrapper for salesforce.client.
-   *
-   * @return \Drupal\salesforce\Rest\RestClient service
-   *   Salesforce REST client service.
+   * {@inheritdoc}
    */
   public function client() {
     return \Drupal::service('salesforce.client');
   }
 
   /**
-   * Wrapper for Drupal core event_dispatcher service.
+   * {@inheritdoc}
    */
   public function eventDispatcher() {
     return \Drupal::service('event_dispatcher');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function config($name) {
     return \Drupal::service('config.factory')->get($name);
   }
 
   /**
-   * @return string
+   * {@inheritdoc}
    */
   public function getSalesforceUrl() {
-    // @TODO dependency injection here:
     return $this->client()->getInstanceUrl() . '/' . $this->salesforce_id->value;
   }
 
   /**
-   * @return string
-   *   SFID
+   * {@inheritdoc}
    */
   public function sfid() {
     return $this->salesforce_id->value;
   }
 
   /**
-   * @return mixed
-   *   SFID or NULL depending on result from SF.
+   * {@inheritdoc}
    */
   public function push() {
     // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context, or short of that clear documentation on how callers should handle errors and exceptions. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
@@ -393,7 +378,8 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // @TODO is this the right place for this logic to live?
     // Cases:
-    // 1. Already mapped to an existing Salesforce object + always_upsert not set?  Update.
+    // 1. Already mapped to an existing Salesforce object + always_upsert not
+    //    set?  Update.
     // 2. Not mapped, but upsert key is defined?  Upsert.
     // 3. Not mapped & no upsert key?  Create.
     $result = FALSE;
@@ -451,9 +437,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
-   * Delete the mapped SF object in Salesforce.
-   *
-   * @return $this
+   * {@inheritdoc}
    */
   public function pushDelete() {
     $mapping = $this->getMapping();
@@ -467,32 +451,25 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   }
 
   /**
-   * Attach a Drupal entity to the mapped object.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity to be attached.
-   *
-   * @return $this
+   * {@inheritdoc}
    */
   public function setDrupalEntityStub(EntityInterface $entity = NULL) {
-    $this->drupal_entity_stub = $entity;
+    $this->drupalEntityStub = $entity;
     return $this;
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function getDrupalEntityStub() {
-    return $this->drupal_entity_stub;
+    return $this->drupalEntityStub;
   }
 
   /**
-   * @param \Drupal\salesforce\SObject $sf_object
-   *
-   * @return $this
+   * {@inheritdoc}
    */
-  public function setSalesforceRecord(SObject $sf_object) {
-    $this->sf_object = $sf_object;
+  public function setSalesforceRecord(SObject $sfObject) {
+    $this->sfObject = $sfObject;
     return $this;
   }
 
@@ -500,37 +477,35 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    * {@inheritdoc}
    */
   public function getSalesforceRecord() {
-    return $this->sf_object;
+    return $this->sfObject;
   }
 
   /**
-   * Push the mapped SF object to Salesforce.
-   *
-   * @return $this
+   * {@inheritdoc}
    */
   public function pull() {
     $mapping = $this->getMapping();
 
     // If the pull isn't coming from a cron job.
-    if ($this->sf_object == NULL) {
+    if ($this->sfObject == NULL) {
       if ($this->sfid()) {
-        $this->sf_object = $this->client()->objectRead(
+        $this->sfObject = $this->client()->objectRead(
           $mapping->getSalesforceObjectType(),
           $this->sfid()
         );
       }
       elseif ($mapping->hasKey()) {
-        $this->sf_object = $this->client()->objectReadbyExternalId(
+        $this->sfObject = $this->client()->objectReadbyExternalId(
           $mapping->getSalesforceObjectType(),
           $mapping->getKeyField(),
           $mapping->getKeyValue($this->getMappedEntity())
         );
-        $this->set('salesforce_id', (string) $this->sf_object->id());
+        $this->set('salesforce_id', (string) $this->sfObject->id());
       }
     }
 
     // No object found means there's nothing to pull.
-    if (!($this->sf_object instanceof SObject)) {
+    if (!($this->sfObject instanceof SObject)) {
       throw new SalesforceException('Nothing to pull. Please specify a Salesforce ID, or choose a mapping with an Upsert Key defined.');
     }
 
@@ -539,7 +514,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     $drupal_entity = $this->getMappedEntity() ?: $this->getDrupalEntityStub();
     foreach ($fields as $field) {
       try {
-        $value = $field->pullValue($this->sf_object, $drupal_entity, $mapping);
+        $value = $field->pullValue($this->sfObject, $drupal_entity, $mapping);
       }
       catch (\Exception $e) {
         // Field missing from SObject? Skip it.
@@ -607,7 +582,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   /**
    * Testable func to return the request time server variable.
    *
-   * @return int REQUEST_TIME
+   * @return int
    *   The request time.
    */
   protected function getRequestTime() {

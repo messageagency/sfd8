@@ -10,6 +10,7 @@ use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce_encrypt\Rest\EncryptedRestClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -26,7 +27,7 @@ class AuthorizeForm extends ConfigFormBase {
    *
    * @var \Drupal\salesforce\Rest\RestClientInterface
    */
-  protected $sf_client;
+  protected $client;
 
   /**
    * The sevent dispatcher service..
@@ -51,10 +52,12 @@ class AuthorizeForm extends ConfigFormBase {
    *   The factory for configuration objects.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   The event dispatcher.
    */
   public function __construct(ConfigFactoryInterface $config_factory, RestClientInterface $salesforce_client, StateInterface $state, EventDispatcherInterface $event_dispatcher) {
     parent::__construct($config_factory);
-    $this->sf_client = $salesforce_client;
+    $this->client = $salesforce_client;
     $this->state = $state;
     $this->eventDispatcher = $event_dispatcher;
   }
@@ -92,9 +95,11 @@ class AuthorizeForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('salesforce.settings');
-    $encrypted = is_subclass_of($this->sf_client, 'Drupal\salesforce_encrypt\Rest\EncryptedRestClientInterface');
+    $encrypted = is_subclass_of($this->client, EncryptedRestClientInterface::class);
     $url = new Url('salesforce.oauth_callback', [], ['absolute' => TRUE]);
-    drupal_set_message($this->t('Callback URL: :url', [':url' => str_replace('http:', 'https:', $url->toString())]));
+    drupal_set_message($this->t('Callback URL: :url', [
+      ':url' => str_replace('http:', 'https:', $url->toString()),
+    ]));
 
     $form['creds'] = [
       '#title' => $this->t('API / OAuth Connection Settings'),
@@ -107,14 +112,14 @@ class AuthorizeForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#description' => $this->t('Consumer key of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
-      '#default_value' => $encrypted ? $this->sf_client->decrypt($config->get('consumer_key')) : $config->get('consumer_key'),
+      '#default_value' => $encrypted ? $this->client->decrypt($config->get('consumer_key')) : $config->get('consumer_key'),
     ];
     $form['creds']['consumer_secret'] = [
       '#title' => $this->t('Salesforce consumer secret'),
       '#type' => 'textfield',
       '#description' => $this->t('Consumer secret of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
-      '#default_value' => $encrypted ? $this->sf_client->decrypt($config->get('consumer_secret')) : $config->get('consumer_secret'),
+      '#default_value' => $encrypted ? $this->client->decrypt($config->get('consumer_secret')) : $config->get('consumer_secret'),
     ];
     $form['creds']['login_url'] = [
       '#title' => $this->t('Login URL'),
@@ -126,11 +131,11 @@ class AuthorizeForm extends ConfigFormBase {
 
     // If fully configured, attempt to connect to Salesforce and return a list
     // of resources.
-    if ($this->sf_client->isAuthorized()) {
+    if ($this->client->isAuthorized()) {
       $form['creds']['#open'] = FALSE;
       $form['creds']['#description'] = $this->t('Your Salesforce salesforce instance is currently authorized. Enter credentials here only to change credentials.');
       try {
-        $resources = $this->sf_client->listResources();
+        $resources = $this->client->listResources();
         foreach ($resources->resources as $key => $path) {
           $items[] = $key . ': ' . $path;
         }
@@ -162,13 +167,14 @@ class AuthorizeForm extends ConfigFormBase {
    * Return whether or not the given URL is a valid endpoint.
    *
    * @return bool
+   *   True is the given url is valid.
    */
   public static function validEndpoint($url) {
     return UrlHelper::isValid($url, TRUE);
   }
 
   /**
-   *
+   * Validate handler for auth form. Basic sanity checking.
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     if (!self::validEndpoint($form_state->getValue('login_url'))) {
@@ -186,16 +192,16 @@ class AuthorizeForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
-    $this->sf_client->setConsumerKey($values['consumer_key']);
-    $this->sf_client->setConsumerSecret($values['consumer_secret']);
-    $this->sf_client->setLoginUrl($values['login_url']);
+    $this->client->setConsumerKey($values['consumer_key']);
+    $this->client->setConsumerSecret($values['consumer_secret']);
+    $this->client->setLoginUrl($values['login_url']);
 
     try {
-      $path = $this->sf_client->getAuthEndpointUrl();
+      $path = $this->client->getAuthEndpointUrl();
       $query = [
-        'redirect_uri' => $this->sf_client->getAuthCallbackUrl(),
+        'redirect_uri' => $this->client->getAuthCallbackUrl(),
         'response_type' => 'code',
-        'client_id' => $this->sf_client->getConsumerKey(),
+        'client_id' => $this->client->getConsumerKey(),
       ];
 
       // Send the user along to the Salesforce OAuth login form. If successful,

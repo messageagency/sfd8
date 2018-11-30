@@ -20,7 +20,7 @@ class SettingsForm extends ConfigFormBase {
    *
    * @var \Drupal\salesforce\Rest\RestClientInterface
    */
-  protected $sf_client;
+  protected $client;
 
   /**
    * The sevent dispatcher service..
@@ -36,10 +36,12 @@ class SettingsForm extends ConfigFormBase {
    *   The factory for configuration objects.
    * @param \Drupal\salesforce\Rest\RestClientInterface $salesforce_client
    *   The factory for configuration objects.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   The event dispatcher.
    */
   public function __construct(ConfigFactoryInterface $config_factory, RestClientInterface $salesforce_client, EventDispatcherInterface $event_dispatcher) {
     parent::__construct($config_factory);
-    $this->sf_client = $salesforce_client;
+    $this->client = $salesforce_client;
     $this->eventDispatcher = $event_dispatcher;
   }
 
@@ -193,7 +195,7 @@ class SettingsForm extends ConfigFormBase {
     $use_latest = $form_state->getValue('use_latest');
     $config->set('use_latest', $use_latest);
     if (!$use_latest) {
-      $versions = $this->sf_client->getVersions();
+      $versions = $this->client->getVersions();
       $version = $versions[$form_state->getValue('rest_api_version')];
       $config->set('rest_api_version', $version);
     }
@@ -205,9 +207,10 @@ class SettingsForm extends ConfigFormBase {
    * Helper method to generate Salesforce option list for select element.
    *
    * @return array
+   *   The version options.
    */
   protected function getVersionOptions() {
-    $versions = $this->sf_client->getVersions();
+    $versions = $this->client->getVersions();
     array_walk($versions,
       function (&$item, $key) {
         $item = $item['label'];

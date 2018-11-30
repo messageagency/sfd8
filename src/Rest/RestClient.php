@@ -4,7 +4,6 @@ namespace Drupal\salesforce\Rest;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -117,6 +116,8 @@ class RestClient implements RestClientInterface {
    *   The cache service.
    * @param \Drupal\Component\Serialization\Json $json
    *   The JSON serializer service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The Time service.
    */
   public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time) {
     $this->configFactory = $config_factory;
@@ -146,7 +147,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Determine if this SF instance is fully configured.
+   * {@inheritdoc}
    */
   public function isAuthorized() {
     return $this->getConsumerKey() && $this->getConsumerSecret() && $this->getRefreshToken();
@@ -214,7 +215,6 @@ class RestClient implements RestClientInterface {
    *
    * @param string $url
    *   Fully-qualified URL to resource.
-   *
    * @param array $params
    *   Parameters to provide.
    * @param string $method
@@ -243,12 +243,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Return raw response content from given URL. Useful for fetching data from
-   * binary fields like Attachments.
-   *
-   * @param string $url
-   * @return mixed
-   * @throws \Exception
+   * {@inheritdoc}
    */
   public function httpRequestRaw($url) {
     if (!$this->getAccessToken()) {
@@ -339,13 +334,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Get the API end point for a given type of the API.
-   *
-   * @param string $api_type
-   *   E.g., rest, partner, enterprise.
-   *
-   * @return string
-   *   Complete URL endpoint for API access, or FALSE if no identity is set.
+   * {@inheritdoc}
    */
   public function getApiEndPoint($api_type = 'rest') {
     $url = &drupal_static(__FUNCTION__ . $api_type);
@@ -366,7 +355,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Wrapper for config rest_api_version.version.
+   * {@inheritdoc}
    */
   public function getApiVersion() {
     if ($this->immutableConfig->get('use_latest')) {
@@ -378,13 +367,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Setter for config salesforce.settings rest_api_version and use_latest.
-   *
-   * @param bool $use_latest
-   * @param int $version
-   *
-   * @throws \Exception
-   * @throws \GuzzleHttp\Exception\RequestException
+   * {@inheritdoc}
    */
   public function setApiVersion($use_latest = TRUE, $version = NULL) {
     if ($use_latest) {
@@ -402,23 +385,14 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Gets the Saleforce connected app consumer key.
-   *
-   * @return string
-   *   The consumer key.
+   * {@inheritdoc}
    */
   public function getConsumerKey() {
     return $this->immutableConfig->get('consumer_key');
   }
 
   /**
-   * Sets the Saleforce connected app consumer key.
-   *
-   * @param string $value
-   *   The consumer key.
-   *
-   * @return $this
-   *   The RestClient object.
+   * {@inheritdoc}
    */
   public function setConsumerKey($value) {
     $this->mutableConfig->set('consumer_key', $value)->save();
@@ -427,23 +401,14 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Gets the Saleforce connected app consumer secret.
-   *
-   * @return string
-   *   The consumer secret.
+   * {@inheritdoc}
    */
   public function getConsumerSecret() {
     return $this->immutableConfig->get('consumer_secret');
   }
 
   /**
-   * Sets the Saleforce connected app consumer secret.
-   *
-   * @param string $value
-   *   The consumer secret.
-   *
-   * @return $this
-   *   The RestClient object.
+   * {@inheritdoc}
    */
   public function setConsumerSecret($value) {
     $this->mutableConfig->set('consumer_secret', $value)->save();
@@ -452,13 +417,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Gets the Saleforce connected app login URL.
-   *
-   * If the login URL is not set, a default of "https://login.salesforce.com" is
-   * returned.
-   *
-   * @return string
-   *   The login URL.
+   * {@inheritdoc}
    */
   public function getLoginUrl() {
     $login_url = $this->immutableConfig->get('login_url');
@@ -466,13 +425,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Sets the Saleforce connected app login URL.
-   *
-   * @param string $value
-   *   The login URL.
-   *
-   * @return $this
-   *   The RestClient object.
+   * {@inheritdoc}
    */
   public function setLoginUrl($value) {
     $this->mutableConfig->set('login_url', $value)->save();
@@ -481,19 +434,14 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Get the SF instance URL. Useful for linking to objects.
+   * {@inheritdoc}
    */
   public function getInstanceUrl() {
     return $this->state->get('salesforce.instance_url');
   }
 
   /**
-   * Set the SF instance URL.
-   *
-   * @param string $url
-   *   URL to set.
-   *
-   * @return $this
+   * {@inheritdoc}
    */
   public function setInstanceUrl($url) {
     $this->state->set('salesforce.instance_url', $url);
@@ -501,7 +449,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Get the access token.
+   * {@inheritdoc}
    */
   public function getAccessToken() {
     $access_token = $this->state->get('salesforce.access_token');
@@ -509,12 +457,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Set the access token.
-   *
-   * @param string $token
-   *   Access token from Salesforce.
-   *
-   * @return $this
+   * {@inheritdoc}
    */
   public function setAccessToken($token) {
     $this->state->set('salesforce.access_token', $token);
@@ -530,12 +473,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Set refresh token.
-   *
-   * @param string $token
-   *   Refresh token from Salesforce.
-   *
-   * @return $this
+   * {@inheritdoc}
    */
   public function setRefreshToken($token) {
     $this->state->set('salesforce.refresh_token', $token);
@@ -571,17 +509,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Helper callback for OAuth handshake, and refreshToken()
-   *
-   * @param \GuzzleHttp\Psr7\Response $response
-   *   Response object from refreshToken or authToken endpoints.
-   *
-   * @return $this
-   *
-   * @throws \Exception
-   *
-   * @see SalesforceController::oauthCallback()
-   * @see self::refreshToken()
+   * {@inheritdoc}
    */
   public function handleAuthResponse(Response $response) {
     if ($response->getStatusCode() != 200) {
@@ -603,15 +531,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Retrieve and store the Salesforce identity given an ID url.
-   *
-   * @param string $id
-   *   Identity URL.
-   *
-   * @return $this
-   *
-   * @throws \Exception
-   * @throws \GuzzleHttp\Exception\RequestException
+   * {@inheritdoc}
    */
   public function initializeIdentity($id) {
     $headers = [
@@ -630,9 +550,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Setter for identity state info.
-   *
-   * @return $this
+   * {@inheritdoc}
    */
   public function setIdentity($data) {
     $this->state->set('salesforce.identity', $data);
@@ -641,22 +559,14 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Return the Salesforce identity, which is stored in a variable.
-   *
-   * @return array
-   *   Returns FALSE is no identity has been stored.
+   * {@inheritdoc}
    */
   public function getIdentity() {
     return $this->state->get('salesforce.identity');
   }
 
   /**
-   * Helper to build the redirect URL for OAUTH workflow.
-   *
-   * @return string
-   *   Redirect URL.
-   *
-   * @see \Drupal\salesforce\Controller\SalesforceController
+   * {@inheritdoc}
    */
   public function getAuthCallbackUrl() {
     return Url::fromRoute('salesforce.oauth_callback', [], [
@@ -666,36 +576,21 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Get Salesforce oauth login endpoint. (OAuth step 1)
-   *
-   * @return string
-   *   REST OAuth Login URL.
+   * {@inheritdoc}
    */
   public function getAuthEndpointUrl() {
     return $this->getLoginUrl() . '/services/oauth2/authorize';
   }
 
   /**
-   * Get Salesforce oauth token endpoint. (OAuth step 2)
-   *
-   * @return string
-   *   REST OAuth Token URL.
+   * {@inheritdoc}
    */
   public function getAuthTokenUrl() {
     return $this->getLoginUrl() . '/services/oauth2/token';
   }
 
   /**
-   * Wrapper for "Versions" resource to list information about API releases.
-   *
-   * @param bool $reset
-   *   Whether to reset cache.
-   *
-   * @return array
-   *   Array of all available Salesforce versions, or empty array if version
-   *   info is not available.
-   *
-   * @throws \GuzzleHttp\Exception\RequestException
+   * {@inheritdoc}
    */
   public function getVersions($reset = FALSE) {
     if (!$reset && ($cache = $this->cache->get('salesforce:versions'))) {
@@ -726,10 +621,10 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Helper method to extract API Usage info from response header and write to
-   * stateful variable.
+   * Helper to extract API Usage info from response header and write to state.
    *
-   * @param RestResponse $response
+   * @param \Drupal\salesforce\Rest\RestResponse $response
+   *   A REST API response.
    */
   protected function updateApiUsage(RestResponse $response) {
     if ($limit_info = $response->getHeader('Sforce-Limit-Info')) {
@@ -745,18 +640,7 @@ class RestClient implements RestClientInterface {
    */
 
   /**
-   * Available objects and their metadata for your organization's data.
-   *
-   * @param array $conditions
-   *   Associative array of filters to apply to the returned objects. Filters
-   *   are applied after the list is returned from Salesforce.
-   * @param bool $reset
-   *   Whether to reset the cache and retrieve a fresh version from Salesforce.
-   *
-   * @return array
-   *   Available objects and metadata, indexed by object table name.
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function objects(array $conditions = ['updateable' => TRUE], $reset = FALSE) {
     // Use the cached data if we have it.
@@ -767,7 +651,7 @@ class RestClient implements RestClientInterface {
       $result = $this->apiCall('sobjects');
       $this->cache->set('salesforce:objects', $result, $this->getRequestTime() + self::CACHE_LIFETIME, ['salesforce']);
     }
-//print_r($result);
+    // print_r($result);
     $sobjects = [];
     // Filter the list by conditions, and assign SF table names as array keys.
     foreach ($result['sobjects'] as $key => $object) {
@@ -821,19 +705,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Retrieve all the metadata for an object.
-   *
-   * @param string $name
-   *   Object type name, E.g., Contact, Account, etc.
-   * @param bool $reset
-   *   Whether to reset the cache and retrieve a fresh version from Salesforce.
-   *
-   * @return \Drupal\salesforce\Rest\RestResponse_Describe
-   *   Salesforce object description object.
-   *
-   * @throws \Exception
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function objectDescribe($name, $reset = FALSE) {
     if (empty($name)) {
@@ -844,24 +716,14 @@ class RestClient implements RestClientInterface {
       return $cache->data;
     }
     else {
-      $response = new RestResponse_Describe($this->apiCall("sobjects/{$name}/describe", [], 'GET', TRUE));
+      $response = new RestResponseDescribe($this->apiCall("sobjects/{$name}/describe", [], 'GET', TRUE));
       $this->cache->set('salesforce:object:' . $name, $response, $this->getRequestTime() + self::CACHE_LIFETIME, ['salesforce']);
       return $response;
     }
   }
 
   /**
-   * Create a new object of the given type.
-   *
-   * @param string $name
-   *   Object type name, E.g., Contact, Account, etc.
-   * @param array $params
-   *   Values of the fields to set for the object.
-   *
-   * @return \Drupal\salesforce\SFID
-   *   Salesforce ID object.
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function objectCreate($name, array $params) {
     $response = $this->apiCall("sobjects/{$name}", $params, 'POST', TRUE);
@@ -870,24 +732,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Create new records or update existing records.
-   *
-   * The new records or updated records are based on the value of the specified
-   * field.  If the value is not unique, REST API returns a 300 response with
-   * the list of matching records and throws an Exception.
-   *
-   * @param string $name
-   *   Object type name, E.g., Contact, Account.
-   * @param string $key
-   *   The field to check if this record should be created or updated.
-   * @param string $value
-   *   The value for this record of the field specified for $key.
-   * @param array $params
-   *   Values of the fields to set for the object.
-   *
-   * @return \Drupal\salesforce\SFID|null
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function objectUpsert($name, $key, $value, array $params) {
     // If key is set, remove from $params to avoid UPSERT errors.
@@ -897,7 +742,8 @@ class RestClient implements RestClientInterface {
 
     $response = $this->apiCall("sobjects/{$name}/{$key}/{$value}", $params, 'PATCH', TRUE);
 
-    // On update, upsert method returns an empty body. Retreive object id, so that we can return a consistent response.
+    // On update, upsert method returns an empty body. Retreive object id, so
+    // that we can return a consistent response.
     if ($response->getStatusCode() == 204) {
       // We need a way to allow callers to distinguish updates and inserts. To
       // that end, cache the original response and reset it after fetching the
@@ -911,77 +757,28 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Update an existing object.
-   *
-   * Update() doesn't return any data. Examine HTTP response or Exception.
-   *
-   * @param string $name
-   *   Object type name, E.g., Contact, Account.
-   * @param string $id
-   *   Salesforce id of the object.
-   * @param array $params
-   *   Values of the fields to set for the object.
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function objectUpdate($name, $id, array $params) {
     $this->apiCall("sobjects/{$name}/{$id}", $params, 'PATCH');
   }
 
   /**
-   * Return a full loaded Salesforce object.
-   *
-   * @param string $name
-   *   Object type name, E.g., Contact, Account.
-   * @param string $id
-   *   Salesforce id of the object.
-   *
-   * @return \Drupal\salesforce\SObject
-   *   Object of the requested Salesforce object.
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function objectRead($name, $id) {
     return new SObject($this->apiCall("sobjects/{$name}/{$id}"));
   }
 
   /**
-   * Return a full loaded Salesforce object from External ID.
-   *
-   * @param string $name
-   *   Object type name, E.g., Contact, Account.
-   * @param string $field
-   *   Salesforce external id field name.
-   * @param string $value
-   *   Value of external id.
-   *
-   * @return \Drupal\salesforce\SObject
-   *   Object of the requested Salesforce object.
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function objectReadbyExternalId($name, $field, $value) {
     return new SObject($this->apiCall("sobjects/{$name}/{$field}/{$value}"));
   }
 
   /**
-   * Delete a Salesforce object.
-   *
-   * Note: if Object with given $id doesn't exist,
-   * objectDelete() will assume success unless $throw_exception is given.
-   * Delete() doesn't return any data. Examine HTTP response or Exception.
-   *
-   * @param string $name
-   *   Object type name, E.g., Contact, Account.
-   * @param string $id
-   *   Salesforce id of the object.
-   * @param bool $throw_exception
-   *   (optional) If TRUE, 404 response code will cause RequestException to be
-   *   thrown. Otherwise, hide those errors. Default is FALSE.
-   *
-   * @throws \Exception
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function objectDelete($name, $id, $throw_exception = FALSE) {
     try {
@@ -995,56 +792,21 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Retrieves the list of individual objects that have been deleted within the
-   * given timespan for a specified object type.
-   *
-   * @param string $type
-   *   Object type name, E.g., Contact, Account.
-   * @param string $startDate
-   *   Start date to check for deleted objects (in ISO 8601 format).
-   * @param string $endDate
-   *   End date to check for deleted objects (in ISO 8601 format).
-   *
-   * @return GetDeletedResult
+   * {@inheritdoc}
    */
   public function getDeleted($type, $startDate, $endDate) {
     return $this->apiCall("sobjects/{$type}/deleted/?start={$startDate}&end={$endDate}");
   }
 
   /**
-   * Return a list of available resources for the configured API version.
-   *
-   * @return \Drupal\salesforce\Rest\RestResponse_Resources
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function listResources() {
-    return new RestResponse_Resources($this->apiCall('', [], 'GET', TRUE));
+    return new RestResponseResources($this->apiCall('', [], 'GET', TRUE));
   }
 
   /**
-   * Return a list of SFIDs for the given object, which have been created or
-   * updated in the given timeframe.
-   *
-   * @param string $name
-   *   Object type name, E.g., Contact, Account.
-   * @param int $start
-   *   Unix timestamp for older timeframe for updates.
-   *   Defaults to "-29 days" if empty.
-   * @param int $end
-   *   Unix timestamp for end of timeframe for updates.
-   *   Defaults to now if empty.
-   *
-   * @return array
-   *   return array has 2 indexes:
-   *     "ids": a list of SFIDs of those records which have been created or
-   *       updated in the given timeframe.
-   *     "latestDateCovered": ISO 8601 format timestamp (UTC) of the last date
-   *       covered in the request.
-   *
-   * @see https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_getupdated.htm
-   *
-   * @addtogroup salesforce_apicalls
+   * {@inheritdoc}
    */
   public function getUpdated($name, $start = NULL, $end = NULL) {
     if (empty($start)) {
@@ -1061,17 +823,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Retrieve all record types for this org. If $name is provided, retrieve
-   * record types for the given object type only.
-   *
-   * @param string $name
-   *   Object type name, e.g. Contact, Account, etc.
-   *
-   * @return array
-   *   If $name is given, an array of record types indexed by developer name.
-   *   Otherwise, an array of record type arrays, indexed by object type name.
-   *
-   * @throws \Exception
+   * {@inheritdoc}
    */
   public function getRecordTypes($name = NULL, $reset = FALSE) {
     if (!$reset && ($cache = $this->cache->get('salesforce:record_types'))) {
@@ -1098,23 +850,10 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Given a DeveloperName and SObject Name, return the SFID of the
-   * corresponding RecordType. DeveloperName doesn't change between Salesforce
-   * environments, so it's safer to rely on compared to SFID.
-   *
-   * @param string $name
-   *   Object type name, E.g., Contact, Account.
-   * @param string $devname
-   *   RecordType DeveloperName, e.g. Donation, Membership, etc.
-   * @param bool $reset
-   *
-   * @return \Drupal\salesforce\SFID
-   *   The Salesforce ID of the given Record Type, or null.
-   *
-   * @throws \Exception if record type not found
+   * {@inheritdoc}
    */
   public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE) {
-    $record_types = $this->getRecordTypes();
+    $record_types = $this->getRecordTypes($name, $reset);
     if (empty($record_types[$name][$devname])) {
       throw new \Exception("No record type $devname for $name");
     }
@@ -1122,16 +861,7 @@ class RestClient implements RestClientInterface {
   }
 
   /**
-   * Utility function to determine object type for given SFID.
-   *
-   * @param \Drupal\salesforce\SFID $id
-   *   Salesforce object ID.
-   *
-   * @return string
-   *   Object type's name.
-   *
-   * @throws \Exception
-   *   If SFID doesn't match any object type.
+   * {@inheritdoc}
    */
   public function getObjectTypeName(SFID $id) {
     $prefix = substr((string) $id, 0, 3);

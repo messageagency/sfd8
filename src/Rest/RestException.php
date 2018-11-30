@@ -12,15 +12,31 @@ use Psr\Http\Message\ResponseInterface;
  */
 class RestException extends \RuntimeException implements ExceptionInterface {
 
+  /**
+   * The current Response.
+   *
+   * @var \Psr\Http\Message\ResponseInterface|null
+   */
   protected $response;
+
+  /**
+   * The response body.
+   *
+   * @var string
+   */
+  protected $body;
 
   /**
    * RestException constructor.
    *
-   * @param \Psr\Http\Message\ResponseInterface|NULL $response
+   * @param \Psr\Http\Message\ResponseInterface|null $response
+   *   A response, if available.
    * @param string $message
+   *   Message (optional).
    * @param int $code
-   * @param \Exception|NULL $previous
+   *   Erorr code (optional).
+   * @param \Exception|null $previous
+   *   Previous exception (optional).
    */
   public function __construct(ResponseInterface $response = NULL, $message = "", $code = 0, \Exception $previous = NULL) {
     $this->response = $response;
@@ -29,22 +45,32 @@ class RestException extends \RuntimeException implements ExceptionInterface {
   }
 
   /**
-   * @return NULL|\Psr\Http\Message\ResponseInterface
+   * Getter.
+   *
+   * @return null|\Psr\Http\Message\ResponseInterface
+   *   The response.
    */
   public function getResponse() {
     return $this->response;
   }
 
   /**
+   * Getter.
+   *
    * @return string|null
+   *   The response body.
    */
   public function getResponseBody() {
+    if ($this->body) {
+      return $this->body;
+    }
     if (!$this->response) {
       return NULL;
     }
     $body = $this->response->getBody();
     if ($body) {
-      return $body->getContents();
+      $this->body = $body->getContents();
+      return $this->body;
     }
     return '';
   }

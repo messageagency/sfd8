@@ -206,7 +206,11 @@ class PullBaseTest extends UnitTestCase {
     $container->set('entity_type.manager', $this->etm);
     \Drupal::setContainer($container);
 
-    $this->pullWorker = $this->getMock(PullBase::CLASS, ['getMappedEntity'], [$this->etm, $this->sfapi, $this->ed]);
+    $this->pullWorker = $this->getMock(PullBase::CLASS, ['getMappedEntity'], [
+      $this->etm,
+      $this->sfapi,
+      $this->ed,
+    ]);
     $this->pullWorker->expects($this->any())
       ->method('getMappedEntity')
       ->willReturn($this->entity);

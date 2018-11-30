@@ -14,20 +14,36 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 abstract class SalesforceMappingFormBase extends EntityForm {
 
+  /**
+   * Field plugin manager.
+   *
+   * @var \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager
+   */
   protected $mappingFieldPluginManager;
+
+  /**
+   * Salesforce client.
+   *
+   * @var \Drupal\salesforce\Rest\RestClientInterface
+   */
   protected $client;
+
+  /**
+   * Mappable types service.
+   *
+   * @var \Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface
+   */
   protected $mappableEntityTypes;
 
   /**
-   * Constructs a \Drupal\system\ConfigFormBase object.
+   * SalesforceMappingFormBase constructor.
    *
-   * @param \Drupal\Core\Entity\EntityStorageControllerInterface
-   *   Need this to fetch the appropriate field mapping
-   * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
-   *   Need this to fetch the mapping field plugins
-   * @param SalesforceMappableEntityTypesInterface
-   *
-   * @throws RuntimeException
+   * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager $mappingFieldPluginManager
+   *   Mapping plugin manager.
+   * @param \Drupal\salesforce\Rest\RestClientInterface $client
+   *   Rest client.
+   * @param \Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface $mappableEntityTypes
+   *   Mappable types.
    */
   public function __construct(SalesforceMappingFieldPluginManager $mappingFieldPluginManager, RestClientInterface $client, SalesforceMappableEntityTypesInterface $mappableEntityTypes) {
     $this->mappingFieldPluginManager = $mappingFieldPluginManager;
@@ -61,18 +77,18 @@ abstract class SalesforceMappingFormBase extends EntityForm {
   /**
    * Retreive Salesforce's information about an object type.
    *
-   * @TODO this should move to the Salesforce service
-   *
    * @param string $salesforce_object_type
    *   The object type of whose records you want to retreive.
    *
-   * @return RestResponse_Describe
+   * @TODO this should move to the Salesforce service
+   *
+   * @return \Drupal\salesforce\Rest\RestResponseDescribe
    *   Information about the Salesforce object as provided by Salesforce.
    *
    * @throws Exception if $salesforce_object_type is not provided and
    *   $this->entity->salesforce_object_type is not set.
    */
-  protected function get_salesforce_object($salesforce_object_type = '') {
+  protected function getSalesforceObject($salesforce_object_type = '') {
     if (empty($salesforce_object_type)) {
       $salesforce_object_type = $this->entity->get('salesforce_object_type');
     }

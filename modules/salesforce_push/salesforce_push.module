@@ -14,7 +14,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent;
 use Drupal\salesforce_mapping\Event\SalesforcePushAllowedEvent;
 use Drupal\salesforce_mapping\MappingConstants;
-  
+
 /**
  * Implements hook_entity_insert().
  */
@@ -60,7 +60,7 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
   }
 
   $properties = [];
-  
+
   if ($entity_type = $entity->getEntityTypeId()) {
     $properties['drupal_entity_type'] = $entity_type;
   }
@@ -94,10 +94,11 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
  * Helper method for salesforce_push_entity_crud()
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity.
  * @param string $op
+ *   The current CRUD operation.
  * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
- *
- * @return void
+ *   The mapping.
  */
 function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
   $mapped_object = NULL;
@@ -116,13 +117,14 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
   if (empty($mapped_objects)) {
     // No mappings found.
     if ($op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
-      // If no existing mapping, and this is a delete, purge any entries from push queue and we're done.
+      // If no existing mapping, and this is a delete, purge any entries from
+      // push queue and we're done.
       \Drupal::service('queue.salesforce_push')
         ->setName($mapping->id())
         ->deleteItemByEntity($entity);
       return;
     }
-    $mapped_object = new MappedObject(array());
+    $mapped_object = new MappedObject([]);
     $mapped_object->salesforce_mapping = $mapping;
     $mapped_object->setDrupalEntity($entity);
   }
@@ -197,12 +199,14 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
 }
 
 /**
- * Worker function to insert a new queue item into the async push queue for the
- * given mapping.
+ * Insert a new queue item into the async push queue for the given mapping.
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity.
  * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+ *   The mapping.
  * @param string $op
+ *   The operation.
  */
 function salesforce_push_enqueue_async(EntityInterface $entity, SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object = NULL, $op) {
   // Each mapping has its own queue, so that like entries can be easily grouped

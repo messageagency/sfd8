@@ -21,167 +21,140 @@ Additional major goals:
   -- wait for dust to settle on mapping object schema
 
 List of @TODO tags from code:
-modules/salesforce_logger/src/EventSubscriber/SalesforceLoggerSubscriber.php
-45:    // @TODO configure log levels; only log if configured level >= error level
-
-modules/salesforce_mapping/salesforce_mapping.routing.yml
-74:# @TODO: make enable/disable work like views:
-75:# @TODO: remove it from tabs and make it a checkbox on the properties form
-
-modules/salesforce_mapping/salesforce_mapping.module
-54:  // @TODO: these don't actually show up on the entity view. Have to implement hook_entity_view as well?
-
-modules/salesforce_mapping/src/Entity/SalesforceMapping.php
-111:   * @TODO what does "locked" mean?
-165:   * @TODO documentation
-195:    // @TODO This should probably be delegated to a field plugin bag?
-236:    // @TODO #fieldMappingField
-270:    // @TODO #fieldMappingField
-
-modules/salesforce_mapping/src/Entity/MappedObject.php
-80:    // @TODO: Revisit this language stuff
-158:    // @TODO make this work with Drupal\salesforce\SFID (?)
-254:    // @TODO this doesn't work
-279:    // @TODO dependency injection here:
-296:    // @TODO need error handling, logging, and hook invocations within this function, where we can provide full context, or short of that clear documentation on how callers should handle errors and exceptions. At the very least, we need to make sure to include $params in some kind of exception if we're not going to handle it inside this function.
-300:    // @TODO Convert to $this->drupal_entity
-310:    // @TODO is this the right place for this logic to live?
-347:    // @TODO: catch EntityStorageException ? Others ?
-352:    // @TODO setNewRevision not chainable, per https://www.drupal.org/node/2839075
-446:    // @TODO better way to handle push/pull:
-449:      // @TODO: The field plugin should be in charge of setting its value on an entity, we should not assume the field plugin's logic as we're doing here.
-491:    // @TODO: Event dispatching and entity saving should not be happening in this context, but inside a controller. This class needs to be more model-like.
-517:    // @TODO Replace this with a better implementation when available,
-
-modules/salesforce_mapping/src/Controller/MappedObjectController.php
-26:   * @TODO find a more specific exception class
-51:    // @TODO this probably belongs in a service
-60:    // @TODO change this to allow one-to-many mapping support.
-109:    // @TODO add validation for fieldmap options
-110:    // @TODO add validation of SFID input
-111:    // @TODO create a new field / data type for SFID (?)
-
-modules/salesforce_mapping/src/Entity/SalesforceMappingInterface.php
-13:  // @TODO figure out what to abstract out of SalesforceMapping
-
-modules/salesforce_mapping/src/Form/MappedObjectForm.php
-180:    // @TODO: more verbose feedback for successful push.
-211:    // @TODO: more verbose feedback for successful pull.
-226:   * @TODO this should move to the Salesforce service
-244:   * @TODO: There must be a better way to do this.
-248:    // @TODO what if there's more than one entity in route params?
-
-modules/salesforce_mapping/src/Form/SalesforceMappingFieldsForm.php
-21:    // @TODO add a header with Fieldmap Property information.
-67:      // @TODO there's probably a better way to tie ajax callbacks to this element than by hard-coding an HTML DOM ID here.
-99:      // @TODO add validation to field_add_callback()
-133:    // @TODO input does not contain the clicked button, have to go to values for
-199:    // @TODO implement "lock/unlock" logic here:
-200:    // @TODO convert these to AJAX operations
-251:      // @TODO what does "locked" even mean?
-
-modules/salesforce_mapping/src/Form/SalesforceMappingFormBase.php
-61:   * @TODO this should move to the Salesforce service
-
-modules/salesforce_mapping/src/MappedObjectStorage.php
-32:    // @TODO the $entity_type needs to be in the constructor and not
-
-modules/salesforce_mapping/src/Form/SalesforceMappingFormCrudBase.php
-29:   * @TODO this function is almost 200 lines. Look into leveraging core Entity
-138:      // @TODO figure out best way to alert admins about this, or AJAX-ify it.
-149:    // @TODO either change sync_triggers to human readable values, or make them work as hex flags again.
-226:      // @TODO replace with Dependency Injection
-
-modules/salesforce_mapping/src/Plugin/SalesforceMappingField/Constant.php
-33:    // @TODO: "Constant" as it's implemented now should only be allowed to be set to "Push". In the future: create "Pull" logic for constant, which pulls a constant value to a Drupal field. Probably a separate mapping field plugin.
-58:  // @TODO add validation handler (?)
-
-modules/salesforce_mapping/src/Plugin/SalesforceMappingField/Properties.php
-25:    // @TODO inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
-83:      // @TODO: is this type still a thing even?
-
-modules/salesforce_mapping/src/Plugin/SalesforceMappingField/RecordType.php
-94:   * @TODO figure out what it means to pull Record Type
-
-modules/salesforce_mapping/src/Plugin/SalesforceMappingField/RelatedIDs.php
-27:    // @TODO inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
-71:    // @TODO this procedural call will go away when sf mapping object becomes a service or field
-92:      // @TODO exclude config entities?
-
-modules/salesforce_mapping/src/Plugin/SalesforceMappingField/RelatedProperties.php
-29:    // @TODO inspecting the form and form_state feels wrong, but haven't found a good way to get the entity from config before the config is saved.
-84:      // @TODO something about this exception
-118:      // @TODO replace this with EntityFieldManagerInterface::getFieldMapByFieldType
-145:        // @TODO is there a better way to exclude non-fieldables?
-
-modules/salesforce_mapping/src/Plugin/SalesforceMappingField/Token.php
-57:    // @TODO expose token options on mapping form: clear, callback, sanitize
-58:    // @TODO expose token tree / selector
-59:    // @TODO add token validation
-66:    // @TODO: "Constant" as it's implemented now should only be allowed to be set to "Push". In the future: create "Pull" logic for constant, which pulls a constant value to a Drupal field. Probably a separate mapping field plugin.
-
-modules/salesforce_mapping/src/SalesforceMappingFieldPluginBase.php
-170:      // @TODO MULTIPLE SF FIELDS FOR ONE MAPPING FIELD NOT IN USE:
-208:   * @TODO: this implementation from ConfigurablePluginInterface
-259:   * @TODO This needs a better name. Could be mistaken for a verb.
-271:   * @TODO This needs a better name. Could be mistaken for a verb.
-
-modules/salesforce_mapping/src/SalesforceMappingList.php
-41:    // @TODO rename old "Status" field
-
-modules/salesforce_mapping/tests/salesforce_mapping.test
-284:            // @TODO Ajax commands can target any jQuery selector, but these are
-
-modules/salesforce_mapping/tests/src/Unit/MappedObjectTest.php
-285:      // @TODO better way to handle push/pull:
-289:        // @TODO: The field plugin should be in charge of setting its value on an entity, we should not assume the field plugin's logic as we're doing here.
-329:      // @TODO: Event dispatching and entity saving should not be happening in this context, but inside a controller. This class needs to be more model-like.
-
-modules/salesforce_pull/src/Plugin/QueueWorker/CronPull.php
-7: * @TODO how to make cron time configurable to admin, or at least via settings?
-
-modules/salesforce_pull/src/DeleteHandler.php
-64:    // @TODO Add back in SOAP, and use autoloading techniques
-126:      // @TODO should we delete a mapped object whose parent mapping no longer exists? Feels like someone else's job.
-
-modules/salesforce_pull/src/QueueHandler.php
-89:          // @TODO Replace this with a better implementation when available,
-121:    // @TODO figure out the new way to build the query.
-
-modules/salesforce_pull/src/Plugin/QueueWorker/PullBase.php
-110:    // @TODO one-to-many: this is a blocker for OTM support:
-165:      // @TODO allow some means for contrib to force pull regardless
-228:      // @TODO make this optional / configurable
-
-modules/salesforce_pull/tests/src/Unit/PullBaseTest.php
-96:    // @TODO testing a mapping with no fields is of questionable value:
-
-modules/salesforce_push/salesforce_push.module
-50: * @TODO
-144:    // @TODO this doesn't really seem distinct from PUSH_ALLOWED anymore. Do we still have a use case for this event?
-
-modules/salesforce_push/src/Plugin/SalesforcePushQueueProcessor/Rest.php
-104:    // @TODO: the following is nearly identical to the end of salesforce_push_entity_crud(). Can we DRY it? Do we care?
-
-modules/salesforce_push/src/PushQueue.php
-112:   * @TODO convert $data to a proper class and make sure that's what we get for this argument.
-166:        // @TODO: convert items to content entities.
-298:    // @TODO push queue processor could be set globally, or per-mapping. Exposing some UI setting would probably be better than this:
-337:          // @TODO: this is how Cron.php queue works, but I don't really understand why it doesn't get re-queued.
-
-salesforce.drush.inc
-116:  // @TODO add remaining field objects?
-163: * @TODO implement this function
-
-src/Rest/RestClient.php
-107:   * @TODO: Consider making a test API call.
-
-src/Rest/RestClientInterface.php
-29:   * @TODO: Consider making a test API call.
-
-tests/src/Unit/RestClientTest.php
-143:    // @TODO this is extremely brittle, exposes complexity in underlying client. Refactor this.
-216:    // @TODO this doesn't seem like a very good test.
-228:    // @TODO this is fugly, do we need a refactor on RestResponse?
-270:    // @TODO what happens when we provide a name for non-existent SF table?
-293:    // @TODO this doesn't seem like a very good test.
+./modules/salesforce_mapping/salesforce_mapping.module:63:
+ @TODO: these don't actually show up on the entity view. Have to implement ...
+./modules/salesforce_mapping/src/Controller/MappedObjectController.php:53:
+ @TODO find a more specific exception class
+./modules/salesforce_mapping/src/Controller/MappedObjectController.php:79:  
+ @TODO this probably belongs in a service
+./modules/salesforce_mapping/src/Entity/MappedObject.php:95:  
+ @TODO: Revisit this language stuff
+./modules/salesforce_mapping/src/Entity/MappedObject.php:214:  
+ @TODO make this work with Drupal\salesforce\SFID (?)
+./modules/salesforce_mapping/src/Entity/MappedObject.php:366:  
+ @TODO need error handling, logging, and hook invocations within this ...
+./modules/salesforce_mapping/src/Entity/MappedObject.php:379:  
+ @TODO is this the right place for this logic to live?
+./modules/salesforce_mapping/src/Entity/MappedObject.php:417:  
+ @TODO: catch EntityStorageException ? Others ?
+./modules/salesforce_mapping/src/Entity/MappedObject.php:422:  
+ @TODO setNewRevision not chainable, per https://www.drupal.org/node/2839075
+./modules/salesforce_mapping/src/Entity/MappedObject.php:512:  
+ @TODO better way to handle push/pull:
+./modules/salesforce_mapping/src/Entity/MappedObject.php:557:  
+ @TODO: Event dispatching and entity saving should not be happening in this ...
+./modules/salesforce_mapping/src/Entity/SalesforceMapping.php:333:  
+ @TODO This should probably be delegated to a field plugin bag?
+./modules/salesforce_mapping/src/Entity/SalesforceMapping.php:374:  
+ @TODO #fieldMappingField
+./modules/salesforce_mapping/src/Entity/SalesforceMapping.php:408:  
+ @TODO #fieldMappingField
+./modules/salesforce_mapping/src/Form/MappedObjectForm.php:122:  
+ @TODO #states for entity-type + salesforce mapping dependency
+./modules/salesforce_mapping/src/Form/MappedObjectForm.php:206:  
+ @TODO: more verbose feedback for successful push.
+./modules/salesforce_mapping/src/Form/MappedObjectForm.php:248:  
+ @TODO: more verbose feedback for successful pull.
+./modules/salesforce_mapping/src/Form/MappedObjectForm.php:267:  
+ @TODO what if there's more than one entity in route params?
+./modules/salesforce_mapping/src/Form/SalesforceMappingFieldsForm.php:21:  
+ @TODO add a header with Fieldmap Property information.
+./modules/salesforce_mapping/src/Form/SalesforceMappingFieldsForm.php:73:    
+ @TODO there's probably a better way to tie ajax callbacks to this element ...
+./modules/salesforce_mapping/src/Form/SalesforceMappingFieldsForm.php:138:  
+ @TODO input does not contain the clicked button, have to go to values for
+./modules/salesforce_mapping/src/Form/SalesforceMappingFieldsForm.php:197:  
+ @TODO implement "lock/unlock" logic here:
+./modules/salesforce_mapping/src/Form/SalesforceMappingFieldsForm.php:198:  
+ @TODO convert these to AJAX operations
+./modules/salesforce_mapping/src/Form/SalesforceMappingFormBase.php:83:
+ @TODO this should move to the Salesforce service
+./modules/salesforce_mapping/src/Form/SalesforceMappingFormCrudBase.php:148:  
+ @TODO either change sync_triggers to human readable values, or make them ...
+./modules/salesforce_mapping/src/Form/SalesforceMappingFormCrudBase.php:173:    
+ @TODO should push and pull settings get moved into push and pull modules?
+./modules/salesforce_mapping/src/Form/SalesforceMappingFormCrudBase.php:215:      
+ @TODO figure out best way to alert admins about this, or AJAX-ify it.
+./modules/salesforce_mapping/src/MappedObjectStorage.php:42:  
+ @TODO the $entity_type needs to be in the constructor and not
+./modules/salesforce_mapping/src/Plugin/Field/ComputedItemList.php:45:
+ @todo This will no longer be necessary once #2392845 is fixed.
+./modules/salesforce_mapping/src/Plugin/Menu/LocalAction/SalesforceMappedObjectAddLocalAction.php:19:  
+ @TODO unclear how to translate this, but needs to be translated:
+./modules/salesforce_mapping/src/Plugin/SalesforceMappingField/Constant.php:33:  
+ @TODO: "Constant" as it's implemented now should only be allowed to be set ...
+./modules/salesforce_mapping/src/Plugin/SalesforceMappingField/Properties.php:25:  
+ @TODO inspecting the form and form_state feels wrong, but haven't found a ...
+./modules/salesforce_mapping/src/Plugin/SalesforceMappingField/RecordType.php:95:
+ @TODO figure out what it means to pull Record Type
+./modules/salesforce_mapping/src/Plugin/SalesforceMappingField/RelatedIDs.php:30:  
+ @TODO inspecting the form and form_state feels wrong, but haven't found ...
+./modules/salesforce_mapping/src/Plugin/SalesforceMappingField/RelatedIDs.php:74:  
+ @TODO this procedural call will go away when sf mapping object becomes a ...
+./modules/salesforce_mapping/src/Plugin/SalesforceMappingField/RelatedIDs.php:130:    
+ @TODO exclude config entities?
+./modules/salesforce_mapping/src/Plugin/SalesforceMappingField/RelatedProperties.php:27:  
+ @TODO inspecting the form and form_state feels wrong, but haven't found a ...
+./modules/salesforce_mapping/src/Plugin/SalesforceMappingField/RelatedProperties.php:138:      
+ @TODO is there a better way to exclude non-fieldables?
+./modules/salesforce_mapping/src/Plugin/SalesforceMappingField/Token.php:73:  
+ @TODO expose token options on mapping form: clear, callback, sanitize
+./modules/salesforce_mapping/src/Plugin/SalesforceMappingField/Token.php:74:  
+ @TODO add token validation
+./modules/salesforce_mapping/src/Plugin/SalesforceMappingField/Token.php:93:  
+ @TODO: "Constant" as it's implemented now should only be allowed to be set ...
+./modules/salesforce_mapping/src/SalesforceMappingFieldPluginBase.php:168:  
+ @TODO to provide for better extensibility, this would be better implemented ...
+./modules/salesforce_mapping/src/SalesforceMappingFieldPluginBase.php:252:  
+ @TODO to provide for better extensibility, this would be better implemented ...
+./modules/salesforce_mapping/src/SalesforceMappingFieldPluginBase.php:271:  
+ @TODO this will need to be rewritten for https://www.drupal.org/node/2899460
+./modules/salesforce_pull/src/DeleteHandler.php:99:  
+ @TODO Add back in SOAP, and use autoloading techniques
+./modules/salesforce_pull/src/DeleteHandler.php:105:    
+ @TODO add some accommodation to handle deleted records per-mapping.
+./modules/salesforce_pull/src/DeleteHandler.php:189:      
+ @TODO should we delete a mapped object whose parent mapping no longer exists?
+./modules/salesforce_pull/src/Plugin/QueueWorker/CronPull.php:8:
+ @TODO how to make cron time configurable to admin, or at least via settings?
+./modules/salesforce_pull/src/Plugin/QueueWorker/PullBase.php:116:  
+ @TODO one-to-many: this is a blocker for OTM support:
+./modules/salesforce_pull/src/PullQueueItem.php:68:  
+ @TODO remove for 8.x-3.3
+./modules/salesforce_pull/src/PullQueueItem.php:83:  
+ @TODO remove for 8.x-3.3
+./modules/salesforce_pull/src/QueueHandler.php:200:  
+ @TODO figure out the new way to build the query.
+./modules/salesforce_pull/src/QueueHandler.php:236:      
+ @TODO do we really want to eat this exception here?
+./modules/salesforce_pull/src/QueueHandler.php:261:      
+ @TODO? Pull Queue Enqueue Event
+./modules/salesforce_pull/tests/src/Unit/PullBaseTest.php:93:  
+ @TODO testing a mapping with no fields is of questionable value:
+./modules/salesforce_push/salesforce_push.module:48: * @TODO
+./modules/salesforce_push/src/Plugin/SalesforcePushQueueProcessor/Rest.php:153:  
+ @TODO: the following is nearly identical to the end of ...
+./modules/salesforce_push/src/PushQueue.php:229:
+ @TODO convert $data to a proper class and make sure that's what we get for ...
+./modules/salesforce_push/src/PushQueue.php:280:      
+ @TODO: convert items to content entities.
+./modules/salesforce_push/src/PushQueue.php:443:    
+ @TODO push queue processor could be set globally, or per-mapping. ...
+./modules/salesforce_push/src/PushQueue.php:487:      
+ @TODO: this is how Cron.php queue works, but I don't really understand ...
+./src/Commands/SalesforceCommands.php:185:
+ @todo create a proper StructuredData return value for this.
+./src/Commands/SalesforceCommands.php:457:
+ @todo create a proper StructuredData return value
+./src/Rest/RestClientInterface.php:18:
+ @TODO: Consider making a test API call.
+./tests/src/Unit/RestClientTest.php:156:  
+ @TODO this is extremely brittle, exposes complexity in underlying client.
+./tests/src/Unit/RestClientTest.php:230:  
+ @TODO this doesn't seem like a very good test.
+./tests/src/Unit/RestClientTest.php:242:  
+ @TODO this is fugly, do we need a refactor on RestResponse?
+./tests/src/Unit/RestClientTest.php:284:  
+ @TODO what happens when we provide a name for non-existent SF table?
+./tests/src/Unit/RestClientTest.php:306:  
+ @TODO this doesn't seem like a very good test.

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\salesforce_mapping\SalesforceMappingList.
- */
-
 namespace Drupal\salesforce_mapping;
 
 use Drupal\Core\Config\Entity\DraggableListBuilder;
@@ -42,7 +37,11 @@ class SalesforceMappingList extends DraggableListBuilder {
   public function buildRow(EntityInterface $entity) {
     $row = [];
     $row['label'] = $entity->label();
-    $properties = ['drupal_entity_type', 'drupal_bundle', 'salesforce_object_type'];
+    $properties = [
+      'drupal_entity_type',
+      'drupal_bundle',
+      'salesforce_object_type',
+    ];
     foreach ($properties as $property) {
       $row[$property] = ['#markup' => $entity->get($property)];
     }
@@ -52,11 +51,11 @@ class SalesforceMappingList extends DraggableListBuilder {
   /**
    * {@inheritdoc}
    */
-   public function buildForm(array $form, FormStateInterface $form_state) {
-     $form = parent::buildForm($form, $form_state);
-     $form['actions']['submit']['#value'] = $this->t('Save changes');
-     return $form;
-   }
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildForm($form, $form_state);
+    $form['actions']['submit']['#value'] = $this->t('Save changes');
+    return $form;
+  }
 
   /**
    * {@inheritdoc}
@@ -75,7 +74,7 @@ class SalesforceMappingList extends DraggableListBuilder {
 
     $url = Url::fromRoute('entity.salesforce_mapping.fields', ['salesforce_mapping' => $entity->id()]);
 
-    // Only makes sense to expose fields operation if edit exists
+    // Only makes sense to expose fields operation if edit exists.
     if (isset($operations['edit'])) {
       $operations['edit']['title'] = $this->t('Properties');
       $operations['fields'] = [

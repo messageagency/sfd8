@@ -34,7 +34,7 @@ class UniqueFieldsConstraint extends Constraint {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function validatedBy() {
     return '\Drupal\salesforce_mapping\Plugin\Validation\Constraint\UniqueFieldsConstraintValidator';

@@ -2,11 +2,11 @@
 
 namespace Drupal\salesforce_pull;
 
-use Symfony\Component\Serializer\Exception\Exception as SymfonyException;
+use Drupal\salesforce\Exception;
 
 /**
- *
+ * Pull exception.
  */
-class PullException extends \RuntimeException implements SymfonyException {
+class PullException extends Exception {
 
 }

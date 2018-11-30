@@ -13,6 +13,9 @@ use Drupal\Core\Access\AccessResult;
  */
 class MappedObjectController extends ControllerBase {
 
+  /**
+   * Access callback for Mapped Object entity.
+   */
   public function access(AccountInterface $account) {
     if (!$account->hasPermission('administer salesforce')) {
       return AccessResult::forbidden();
@@ -27,7 +30,7 @@ class MappedObjectController extends ControllerBase {
     if (empty($implements['Drupal\Core\Entity\EntityInterface'])) {
       return AccessResult::forbidden();
     }
-    // Only allow access for entities with mappings
+    // Only allow access for entities with mappings.
     return \Drupal::entityTypeManager()
       ->getStorage('salesforce_mapping')
       ->loadByEntity($param)
@@ -36,14 +39,16 @@ class MappedObjectController extends ControllerBase {
   }
 
   /**
-   * Helper function to get entity from router path
-   * e.g. get User from user/1/salesforce.
+   * Helper function to get entity from router path.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The route match service.
    *
    * @return \Drupal\Core\Entity\EntityInterface
+   *   The Drupal entity mapped by the given mapped object.
    *
-   * @throws Exception if an EntityInterface is not found at the given route
+   * @throws \Exception
+   *   If an EntityInterface is not found at the given route.
    *
    * @TODO find a more specific exception class
    */
@@ -67,7 +72,8 @@ class MappedObjectController extends ControllerBase {
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to be mapped.
    *
-   * @return \Drupal\salesforce_mapping\Entity\MappedObject
+   * @return \Drupal\salesforce_mapping\Entity\MappedObject[]
+   *   The Mapped Objects corresponding to the given entity.
    */
   private function getMappedObjects(EntityInterface $entity) {
     // @TODO this probably belongs in a service

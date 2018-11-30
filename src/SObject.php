@@ -16,6 +16,7 @@ class SObject {
    * SObject constructor.
    *
    * @param array $data
+   *   The SObject field data.
    *
    * @throws \Exception
    */
@@ -45,21 +46,30 @@ class SObject {
   }
 
   /**
+   * SFID Getter.
+   *
    * @return \Drupal\salesforce\SFID
+   *   The record id.
    */
   public function id() {
     return $this->id;
   }
 
   /**
-   * @return mixed
+   * Type getter.
+   *
+   * @return string
+   *   The object type.
    */
   public function type() {
     return $this->type;
   }
 
   /**
+   * Fields getter.
    *
+   * @return array
+   *   All SObject fields.
    */
   public function fields() {
     return $this->fields;
@@ -69,7 +79,10 @@ class SObject {
    * Given $key, return corresponding field value.
    *
    * @return mixed
-   * @throws \Exception if $key is not found
+   *   The value.
+   *
+   * @throws \Exception
+   *   If $key is not found.
    */
   public function field($key) {
     if (!array_key_exists($key, $this->fields)) {

@@ -27,40 +27,65 @@ class QueueHandler {
   const PULL_MAX_QUEUE_SIZE = 100000;
 
   /**
+   * Salesforce client.
+   *
    * @var \Drupal\salesforce\Rest\RestClientInterface
    */
   protected $sfapi;
 
   /**
+   * Queue service.
+   *
    * @var \Drupal\Core\Queue\QueueInterface
    */
   protected $queue;
 
   /**
-   * @var array of \Drupal\salesforce_mapping\Entity\SalesforceMapping
+   * All pull mappings.
+   *
+   * @var \Drupal\salesforce_mapping\Entity\SalesforceMapping[]
    */
   protected $mappings;
 
   /**
+   * Config service.
+   *
    * @var \Drupal\Core\Config\Config
    */
   protected $config;
 
   /**
+   * The current request.
+   *
    * @var \Symfony\Component\HttpFoundation\Request
    */
   protected $request;
 
   /**
+   * Event dispatcher service.
+   *
    * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
    */
   protected $eventDispatcher;
 
   /**
+   * QueueHandler constructor.
+   *
    * @param \Drupal\salesforce\Rest\RestClientInterface $sfapi
-   * @param QueueInterface $queue
-   * @param StateInterface $state
+   *   Salesforce service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager service.
+   * @param \Drupal\Core\Queue\QueueDatabaseFactory $queue_factory
+   *   Queue service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
+   *   Config service.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   Event dispatcher service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   Time service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, QueueDatabaseFactory $queue_factory, ConfigFactoryInterface $config, EventDispatcherInterface $event_dispatcher, TimeInterface $time) {
     $this->sfapi = $sfapi;
@@ -113,6 +138,8 @@ class QueueHandler {
   }
 
   /**
+   * Fetch and enqueue records from Salesforce.
+   *
    * Given a mapping and optional timeframe, perform an API query for updated
    * records and enqueue them into the pull queue.
    *
@@ -127,7 +154,7 @@ class QueueHandler {
    *   Timestamp of ending window from which to pull records. If omitted, use
    *   "now".
    *
-   * @return FALSE | int
+   * @return false|int
    *   Return the number of records fetched by the pull query, or FALSE no
    *   query was executed.
    *
@@ -169,7 +196,7 @@ class QueueHandler {
    *
    * @see SalesforceMappingInterface
    */
-  public function doSfoQuery(SalesforceMappingInterface $mapping, $mapped_fields = [], $start = 0, $stop = 0) {
+  public function doSfoQuery(SalesforceMappingInterface $mapping, array $mapped_fields = [], $start = 0, $stop = 0) {
     // @TODO figure out the new way to build the query.
     // Execute query.
     try {
@@ -188,12 +215,14 @@ class QueueHandler {
   }
 
   /**
-   * Iterates over an entire result set, calling nextRecordsUrl when necessary,
-   * and inserts the records into pull queue.
+   * Inserts the given records into pull queue.
    *
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Mapping.
    * @param \Drupal\salesforce\SelectQueryResult $results
+   *   Results.
    * @param bool $force_pull
+   *   Force flag.
    */
   public function enqueueAllResults(SalesforceMappingInterface $mapping, SelectQueryResult $results, $force_pull = FALSE) {
     while (!$this->enqueueResultSet($mapping, $results, $force_pull)) {
@@ -250,8 +279,11 @@ class QueueHandler {
    * Enqueue a single record for pull.
    *
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   Mapping.
    * @param \Drupal\salesforce\SObject $record
-   * @param bool $foce
+   *   Salesforce data.
+   * @param bool $force_pull
+   *   If TRUE, ignore timestamps and force data to be pulled.
    */
   public function enqueueRecord(SalesforceMappingInterface $mapping, SObject $record, $force_pull = FALSE) {
     $this->queue->createItem(new PullQueueItem($record, $mapping, $force_pull));

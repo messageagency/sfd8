@@ -24,14 +24,11 @@ interface RestClientInterface {
    *
    * @param string $path
    *   Path to resource.
-   *
    *   If $path begins with a slash, the resource will be considered absolute,
    *   and only the instance URL will be pre-pended. This can be used, for
    *   example, to issue an API call to a custom Apex Rest endpoint.
-   *
    *   If $path does not begin with a slash, the resource will be considered
    *   relative and the Rest API Endpoint will be pre-pended.
-   *
    * @param array $params
    *   Parameters to provide.
    * @param string $method
@@ -49,11 +46,28 @@ interface RestClientInterface {
   public function apiCall($path, array $params = [], $method = 'GET', $returnObject = FALSE);
 
   /**
+   * Return raw response content from given URL.
+   *
+   * Useful for fetching data from binary fields like Attachments.
+   *
+   * @param string $url
+   *   The url to request.
+   *
+   * @return mixed
+   *   The raw http response body.
+   *
+   * @throws \Exception
+   */
+  public function httpRequestRaw($url);
+
+  /**
    * Set options for Guzzle HTTP client.
    *
-   * @see http://docs.guzzlephp.org/en/latest/request-options.html
-   *
    * @param array $options
+   *   The options to pass through to guzzle, as an associative array of option
+   *   names and option values.
+   *
+   * @see http://docs.guzzlephp.org/en/latest/request-options.html
    *
    * @return $this
    */
@@ -62,10 +76,12 @@ interface RestClientInterface {
   /**
    * Set a single Guzzle HTTP client option.
    *
-   * @see setHttpClientOptions
-   *
    * @param string $option_name
+   *   The option name to set.
    * @param mixed $option_value
+   *   The option value to set.
+   *
+   * @see setHttpClientOptions
    *
    * @return $this
    */
@@ -75,6 +91,7 @@ interface RestClientInterface {
    * Getter for HTTP client options.
    *
    * @return mixed
+   *   The client options from guzzle.
    */
   public function getHttpClientOptions();
 
@@ -82,8 +99,10 @@ interface RestClientInterface {
    * Getter for a single, named HTTP client option.
    *
    * @param string $option_name
+   *   The option name to get.
    *
    * @return mixed
+   *   The client option from guzzle.
    */
   public function getHttpClientOption($option_name);
 
@@ -99,56 +118,112 @@ interface RestClientInterface {
   public function getApiEndPoint($api_type = 'rest');
 
   /**
-   * Get the api usage, as returned in the most recent API request header.
+   * Wrapper for config rest_api_version.version.
    *
    * @return string
+   *   The SF API version.
+   */
+  public function getApiVersion();
+
+  /**
+   * Setter for config salesforce.settings rest_api_version and use_latest.
+   *
+   * @param bool $use_latest
+   *   Use the latest version, instead of an explicit version number.
+   * @param int $version
+   *   The explicit version number. Mutually exclusive with $use_latest.
+   *
+   * @throws \Exception
+   * @throws \GuzzleHttp\Exception\RequestException
+   */
+  public function setApiVersion($use_latest = TRUE, $version = NULL);
+
+  /**
+   * Get the api usage, as returned in the most recent API request header.
+   *
+   * @return string|null
    *   Returns the complete Sforce-Limit-Info header from a recent API request.
    *   e.g. "api-usage=123/45678"
    */
   public function getApiUsage();
 
   /**
+   * Consumer key getter.
    *
+   * @return string|null
+   *   Consumer key.
    */
   public function getConsumerKey();
 
   /**
+   * Consumer key setter.
    *
+   * @param string $value
+   *   Consumer key value.
+   *
+   * @return $this
    */
   public function setConsumerKey($value);
 
   /**
+   * Comsumer secret getter.
    *
+   * @return string|null
+   *   Consumer secret.
    */
   public function getConsumerSecret();
 
   /**
+   * Consumer key setter.
    *
+   * @param string $value
+   *   Consumer secret value.
+   *
+   * @return $this
    */
   public function setConsumerSecret($value);
 
   /**
+   * Login url getter.
    *
+   * @return string|null
+   *   Login url.
    */
   public function getLoginUrl();
 
   /**
+   * Login url setter.
    *
+   * @param string $value
+   *   The login url.
+   *
+   * @return $this
    */
   public function setLoginUrl($value);
 
   /**
    * Get the SF instance URL. Useful for linking to objects.
+   *
+   * @return string|null
+   *   The instance url.
    */
   public function getInstanceUrl();
 
   /**
    * Set the SF instance URL.
+   *
+   * @param string $url
+   *   The url.
+   *
+   * @return $this
    */
   public function setInstanceUrl($url);
 
-    /**
+  /**
    * Get the access token.
+   *
+   * @return string|null
+   *   The access token.
    */
   public function getAccessToken();
 
@@ -236,6 +311,20 @@ interface RestClientInterface {
   public function getAuthTokenUrl();
 
   /**
+   * Wrapper for "Versions" resource to list information about API releases.
+   *
+   * @param bool $reset
+   *   Whether to reset cache.
+   *
+   * @return array
+   *   Array of all available Salesforce versions, or empty array if version
+   *   info is not available.
+   *
+   * @throws \GuzzleHttp\Exception\RequestException
+   */
+  public function getVersions($reset = FALSE);
+
+  /**
    * @defgroup salesforce_apicalls Wrapper calls around core apiCall()
    */
 
@@ -258,10 +347,11 @@ interface RestClientInterface {
   /**
    * Use SOQL to get objects based on query string.
    *
-   * @param \Drupal\salesforce\SelectQuery $query
+   * @param \Drupal\salesforce\SelectQueryInterface $query
    *   The constructed SOQL query.
    *
    * @return \Drupal\salesforce\SelectQueryResult
+   *   The query result.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -270,10 +360,11 @@ interface RestClientInterface {
   /**
    * Same as ::query(), but also returns deleted or archived records.
    *
-   * @param \Drupal\salesforce\SelectQuery $query
+   * @param \Drupal\salesforce\SelectQueryInterface $query
    *   The constructed SOQL query.
    *
    * @return \Drupal\salesforce\SelectQueryResult
+   *   The query result.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -298,7 +389,8 @@ interface RestClientInterface {
    * @param bool $reset
    *   Whether to reset the cache and retrieve a fresh version from Salesforce.
    *
-   * @return \Drupal\salesforce\Rest\RestResponse_Describe
+   * @return \Drupal\salesforce\Rest\RestResponseDescribe
+   *   The describe result.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -313,6 +405,7 @@ interface RestClientInterface {
    *   Values of the fields to set for the object.
    *
    * @return \Drupal\salesforce\SFID
+   *   The new object's SFID.
    *
    * @addtogroup salesforce_apicalls
    */
@@ -334,7 +427,9 @@ interface RestClientInterface {
    * @param array $params
    *   Values of the fields to set for the object.
    *
-   * @return \Drupal\salesforce\SFID|null
+   * @return \Drupal\salesforce\SFID
+   *   The new object's SFID, if created. NULL if updated. This is not ideal,
+   *   but this is how Salesforce's API works. Go upvote this idea to fix it:
    *
    * @addtogroup salesforce_apicalls
    */
@@ -358,7 +453,7 @@ interface RestClientInterface {
   public function objectUpdate($name, $id, array $params);
 
   /**
-   * Return a full loaded Salesforce object.
+   * Return a fullly loaded Salesforce object.
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account.
@@ -390,14 +485,16 @@ interface RestClientInterface {
   public function objectReadbyExternalId($name, $field, $value);
 
   /**
-   * Delete a Salesforce object. Note: if Object with given $id doesn't exist,
-   * objectDelete() will assume success unless $throw_exception is given.
+   * Delete a Salesforce object.
+   *
+   * Note: if Object with given $id doesn't exist, objectDelete() will assume
+   * success unless $throw_exception is given.
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account.
    * @param string $id
    *   Salesforce id of the object.
-   * @pararm bool $throw_exception
+   * @param bool $throw_exception
    *   (optional) If TRUE, 404 response code will cause RequestException to be
    *   thrown. Otherwise, hide those errors. Default is FALSE.
    *
@@ -409,8 +506,7 @@ interface RestClientInterface {
   public function objectDelete($name, $id, $throw_exception = FALSE);
 
   /**
-   * Retrieves the list of individual objects that have been deleted within the
-   * given timespan for a specified object type.
+   * Retrieves objects deleted within the given timeframe.
    *
    * @param string $type
    *   Object type name, E.g., Contact, Account.
@@ -419,22 +515,23 @@ interface RestClientInterface {
    * @param string $endDate
    *   End date to check for deleted objects (in ISO 8601 format).
    *
-   * @return GetDeletedResult
+   * @return array
+   *   Response data.
    */
   public function getDeleted($type, $startDate, $endDate);
 
   /**
    * Return a list of available resources for the configured API version.
    *
-   * @return \Drupal\salesforce\Rest\RestResponse_Resources
+   * @return \Drupal\salesforce\Rest\RestResponseResources
+   *   The response.
    *
    * @addtogroup salesforce_apicalls
    */
   public function listResources();
 
   /**
-   * Return a list of SFIDs for the given object, which have been created or
-   * updated in the given timeframe.
+   * Return a list of SFIDs for the given object for the given timeframe.
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account.
@@ -442,8 +539,7 @@ interface RestClientInterface {
    *   Unix timestamp for older timeframe for updates.
    *   Defaults to "-29 days" if empty.
    * @param int $end
-   *   unix timestamp for end of timeframe for updates.
-   *   Defaults to now if empty.
+   *   Unix timestamp for end of timeframe for updates. Defaults to now.
    *
    * @return array
    *   return array has 2 indexes:
@@ -459,33 +555,37 @@ interface RestClientInterface {
   public function getUpdated($name, $start = NULL, $end = NULL);
 
   /**
-   * Retrieve all record types for this org. If $name is provided, retrieve
-   * record types for the given object type only.
+   * Retrieve all record types for this org.
+   *
+   * If $name is provided, retrieve record types for the given object type only.
    *
    * @param string $name
    *   Object type name, e.g. Contact, Account, etc.
    *
    * @return array
-   *   If $name is given, an array of record types indexed by developer name.
+   *   If $name is given, a record type array indexed by developer name.
    *   Otherwise, an array of record type arrays, indexed by object type name.
    */
   public function getRecordTypes($name = NULL);
 
   /**
-   * Given a DeveloperName and SObject Name, return the SFID of the
-   * corresponding RecordType. DeveloperName doesn't change between Salesforce
-   * environments, so it's safer to rely on compared to SFID.
+   * Given a DeveloperName and SObject Name, return SFID of the RecordType.
+   *
+   * DeveloperName doesn't change between Salesforce environments, so it's
+   * safer to rely on compared to SFID.
    *
    * @param string $name
    *   Object type name, E.g., Contact, Account.
-   *
    * @param string $devname
    *   RecordType DeveloperName, e.g. Donation, Membership, etc.
+   * @param bool $reset
+   *   If true, clear the local cache and fetch record types from API.
    *
    * @return \Drupal\salesforce\SFID
    *   The Salesforce ID of the given Record Type, or null.
    *
-   * @throws \Exception if record type not found
+   * @throws \Exception
+   *   If record type is not found.
    */
   public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE);
 
@@ -493,10 +593,13 @@ interface RestClientInterface {
    * Utility function to determine object type for given SFID.
    *
    * @param \Drupal\salesforce\SFID $id
+   *   The SFID.
    *
    * @return string
+   *   The object type name.
    *
-   * @throws \Exception if SFID doesn't match any object type
+   * @throws \Exception
+   *   If SFID doesn't match any object type.
    */
   public function getObjectTypeName(SFID $id);
 
