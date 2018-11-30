@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
+use Drupal\typed_data\Exception\InvalidArgumentException;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -35,14 +36,57 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 class PropertiesExtended extends SalesforceMappingFieldPluginBase {
 
+  /**
+   * Module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
   protected $moduleHandler;
+
+  /**
+   * Data fetcher service.
+   *
+   * @var \Drupal\typed_data\DataFetcherInterface
+   */
   protected $dataFetcher;
 
+  /**
+   * PropertiesExtended constructor.
+   *
+   * @param array $configuration
+   *   Plugin config.
+   * @param string $plugin_id
+   *   Plugin id.
+   * @param array $plugin_definition
+   *   Plugin definition.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   Entity type bundle info service.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   Entity field manager.
+   * @param \Drupal\salesforce\Rest\RestClientInterface $rest_client
+   *   Salesforce client.
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   Entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
+   *   ETM service.
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
+   *   Date formatter service.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   Event dispatcher service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   *   Module handler service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityManagerInterface $entity_manager, EntityTypeManagerInterface $etm, DateFormatterInterface $dateFormatter, EventDispatcherInterface $event_dispatcher, ModuleHandlerInterface $moduleHandler) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_bundle_info, $entity_field_manager, $rest_client, $entity_manager, $etm, $dateFormatter, $event_dispatcher);
     $this->moduleHandler = $moduleHandler;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static($configuration, $plugin_id, $plugin_definition,
       $container->get('entity_type.bundle.info'),
@@ -71,7 +115,7 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   * Implementation of PluginFormInterface::buildConfigurationForm.
+   * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $pluginForm = parent::buildConfigurationForm($form, $form_state);
@@ -179,6 +223,8 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
    * Data Fetcher wrapper.
    *
    * @return \Drupal\typed_data\DataFetcherInterface
+   *   Data fetcher service.
+   *
    * @throws \Exception
    *   If typed_data.data_fetcher service does not exist.
    */
@@ -208,16 +254,14 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
     catch (MissingDataException $e) {
 
     }
-    catch (\Drupal\typed_data\Exception\InvalidArgumentException $e) {
+    catch (InvalidArgumentException $e) {
 
     }
     // Allow any other exception types to percolate.
-
     // If the entity doesn't have any value in the field, data fetch will
     // throw an exception. We must attempt to create the field.
     // Typed Data API doesn't provide any good way to initialize a field value
     // given a selector. Instead we have to do it ourselves.
-
     // We descend only to the first-level fields on the entity. Cascading pull
     // values to entity references is not supported.
     list($field_name, $delta, $property, $throw_away) = explode('.', $field_selector, 4);
@@ -242,7 +286,6 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
     $typed_data->setValue($pullValue);
     return $typed_data->getParent();
   }
-
 
   /**
    * Helper Method to check for and retrieve field data.

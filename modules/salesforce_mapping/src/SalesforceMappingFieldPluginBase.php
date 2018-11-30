@@ -406,7 +406,15 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
     return $pluginForm;
   }
 
-  protected function buildBrokenConfigurationForm(array $pluginForm, FormStateInterface $form_state) {
+  /**
+   * Helper for buildConfigurationForm() to build a broken field plugin.
+   *
+   * @see buildConfigurationForm()
+   *
+   * @return array
+   *   The dummy form with message to indicate the plugin is broken.
+   */
+  protected function buildBrokenConfigurationForm(array &$pluginForm, FormStateInterface $form_state) {
     foreach ($this->config() as $key => $value) {
       if (!empty($pluginForm[$key])) {
         $pluginForm[$key]['#type'] = 'hidden';
@@ -422,14 +430,13 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
     return [
       'message' => [
         '#markup' => '<div class="error">'
-          . $this->t('The field plugin %plugin is broken or missing.', ['%plugin' => $this->config('drupal_field_type')])
-          . '</div>',
+        . $this->t('The field plugin %plugin is broken or missing.', ['%plugin' => $this->config('drupal_field_type')])
+        . '</div>',
       ],
     ];
-    return $pluginForm;
   }
 
-/**
+  /**
    * Implements PluginFormInterface::validateConfigurationForm().
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
