@@ -25,7 +25,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  * @group salesforce_pull
  */
 class QueueHandlerTest extends UnitTestCase {
-  static $modules = ['salesforce_pull'];
+  static public $modules = ['salesforce_pull'];
 
   /**
    * {@inheritdoc}
@@ -119,7 +119,14 @@ class QueueHandlerTest extends UnitTestCase {
 
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->configFactory, $this->ed, $this->time])
+      ->setConstructorArgs([
+        $this->sfapi,
+        $this->etm,
+        $this->queue_factory,
+        $this->configFactory,
+        $this->ed,
+        $this->time,
+      ])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')
@@ -157,7 +164,14 @@ class QueueHandlerTest extends UnitTestCase {
 
     $this->qh = $this->getMockBuilder(QueueHandler::CLASS)
       ->setMethods(['parseUrl'])
-      ->setConstructorArgs([$this->sfapi, $this->etm, $this->queue_factory, $this->configFactory, $this->ed, $this->time])
+      ->setConstructorArgs([
+        $this->sfapi,
+        $this->etm,
+        $this->queue_factory,
+        $this->configFactory,
+        $this->ed,
+        $this->time,
+      ])
       ->getMock();
     $this->qh->expects($this->any())
       ->method('parseUrl')

@@ -68,8 +68,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *   The entity type manager.
    * @param \Drupal\salesforce\Rest\RestClientInterface $client
    *   Salesforce REST client.
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   Event dispatcher service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, RestClientInterface $client, EventDispatcherInterface $event_dispatcher) {
     $this->etm = $entity_type_manager;
@@ -91,11 +94,15 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   }
 
   /**
-   * {@inheritdoc}
+   * Queue item process callback.
+   *
+   * @param \Drupal\salesforce_pull\PullQueueItem $item
+   *   Pull queue item. Note: typehint missing because we can't change the
+   *   inherited API.
    */
   public function processItem($item) {
-    $sf_object = $item->sobject;
-    $mapping = $this->mappingStorage->load($item->mapping_id);
+    $sf_object = $item->getSobject();
+    $mapping = $this->mappingStorage->load($item->getMappingId());
     if (!$mapping) {
       return;
     }
@@ -109,7 +116,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
     // @TODO one-to-many: this is a blocker for OTM support:
     $mapped_object = current($mapped_object);
     if (!empty($mapped_object)) {
-      return $this->updateEntity($mapping, $mapped_object, $sf_object, $item->force_pull);
+      return $this->updateEntity($mapping, $mapped_object, $sf_object, $item->getForcePull());
     }
     else {
       return $this->createEntity($mapping, $sf_object);
@@ -126,7 +133,8 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *   SF Mmapped object.
    * @param \Drupal\salesforce\SObject $sf_object
    *   Current Salesforce record array.
-   * @param bool $force
+   * @param bool $force_pull
+   *   If true, ignore entity and SF timestamps.
    */
   protected function updateEntity(SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object, SObject $sf_object, $force_pull = FALSE) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
@@ -209,7 +217,6 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *   Object of field maps.
    * @param \Drupal\salesforce\SObject $sf_object
    *   Current Salesforce record array.
-   * @param bool $force_pull
    */
   protected function createEntity(SalesforceMappingInterface $mapping, SObject $sf_object) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE])) {
@@ -276,7 +283,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         }
       }
 
-      $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, 'Created entity %id %label associated with Salesforce Object ID: %sfid', ['%id' => $entity->id(), '%label' => $entity->label(), '%sfid' => (string) $sf_object->id()]));
+      $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, 'Created entity %id %label associated with Salesforce Object ID: %sfid', [
+        '%id' => $entity->id(),
+        '%label' => $entity->label(),
+        '%sfid' => (string) $sf_object->id(),
+      ]));
 
       return MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE;
     }

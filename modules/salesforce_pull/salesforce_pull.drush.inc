@@ -2,6 +2,7 @@
 
 /**
  * @file
+ * Salesforce Pull drush 8 commands.
  */
 
 use Drupal\salesforce\SFID;
@@ -90,6 +91,7 @@ function salesforce_pull_drush_command() {
  * Queues records for pull from salesforce for the given mapping.
  *
  * @param string $name
+ *   Mapping name.
  *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
@@ -144,7 +146,9 @@ function drush_salesforce_pull_sf_pull_query($name) {
  * Queues records for pull from Salesforce from the given file and mapping.
  *
  * @param string $file
+ *   File name with IDs.
  * @param string $name
+ *   Mapping name.
  *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
@@ -248,7 +252,12 @@ function drush_salesforce_pull_sf_pull_file($file, $name = NULL) {
 }
 
 /**
+ * Get an array of all pull mappings, or the given mapping by name.
+ *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
+ *
+ * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
+ *   Mappings.
  */
 function _salesforce_pull_load_single_mapping_array_or_all_pull_mappings($name = NULL) {
   if ($name != NULL) {
@@ -269,6 +278,8 @@ function _salesforce_pull_load_single_mapping_array_or_all_pull_mappings($name =
 }
 
 /**
+ * Reset pull time on all mappings, or the given mapping by name.
+ *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_pull_sf_pull_reset($name = NULL) {
@@ -285,6 +296,8 @@ function drush_salesforce_pull_sf_pull_reset($name = NULL) {
 }
 
 /**
+ * Set pull time on all mappings, or the given mapping by name.
+ *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_pull_sf_pull_set($name, $time = NULL) {

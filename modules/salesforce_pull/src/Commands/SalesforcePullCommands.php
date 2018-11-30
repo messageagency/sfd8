@@ -27,19 +27,33 @@ use Symfony\Component\Console\Output\Output;
 class SalesforcePullCommands extends SalesforceCommandsBase {
 
   /**
-   * @var \Drupal\salesforce_pull\QueueHandler*/
+   * Pull queue handler service.
+   *
+   * @var \Drupal\salesforce_pull\QueueHandler
+   */
   protected $pullQueue;
 
   /**
-   * @var \Symfony\Component\EventDispatcher\EventDispatcher*/
+   * Event dispatcher service.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcher
+   */
   protected $eventDispatcher;
 
   /**
    * SalesforcePullCommands constructor.
    *
    * @param \Drupal\salesforce\Rest\RestClient $client
+   *   Salesforce client.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
+   *   Entity type manager.
    * @param \Drupal\salesforce_pull\QueueHandler $pullQueue
+   *   Pull queue handler service.
+   * @param \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher $eventDispatcher
+   *   Event dispatcher service.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct(RestClient $client, EntityTypeManagerInterface $etm, QueueHandler $pullQueue, ContainerAwareEventDispatcher $eventDispatcher) {
     parent::__construct($client, $etm);
@@ -48,6 +62,8 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Fetch a pull mapping interactively.
+   *
    * @hook interact salesforce_pull:pull-query
    */
   public function interactPullQuery(Input $input, Output $output) {
@@ -55,6 +71,8 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Fetch a filename interactively.
+   *
    * @hook interact salesforce_pull:pull-file
    */
   public function interactPullFile(Input $input, Output $output) {
@@ -71,6 +89,8 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Fetch a pull mapping interactively.
+   *
    * @hook interact salesforce_pull:pull-reset
    */
   public function interactPullReset(Input $input, Output $output) {
@@ -78,6 +98,8 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
   }
 
   /**
+   * Fetch a pull mapping interactively.
+   *
    * @hook interact salesforce_pull:pull-set
    */
   public function interactPullSet(Input $input, Output $output) {
@@ -85,9 +107,12 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
   }
 
   /**
-   * Given a mapping, enqueue records for pull from Salesforce, ignoring modification timestamp. This command is useful, for example, when seeding content for a Drupal site prior to deployment.
+   * Given a mapping, enqueue records for pull from Salesforce.
    *
-   * @param $name
+   * Ignoring modification timestamp. This command is useful, for example, when
+   * seeding content for a Drupal site prior to deployment.
+   *
+   * @param string $name
    *   Machine name of the Salesforce Mapping for which to queue pull records.
    * @param array $options
    *   An associative array of options whose values come from cli, aliases, config, etc.
@@ -114,7 +139,12 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
    * @command salesforce_pull:pull-query
    * @aliases sfpq,sfiq,sf-pull-query,salesforce_pull:query
    */
-  public function pullQuery($name, array $options = ['where' => '', 'start' => 0, 'stop' => 0, 'force-pull' => FALSE]) {
+  public function pullQuery($name, array $options = [
+    'where' => '',
+    'start' => 0,
+    'stop' => 0,
+    'force-pull' => FALSE,
+  ]) {
     $mappings = $this->getPullMappingsFromName($name);
     $start = $options['start'] ? strtotime($options['start']) : 0;
     $stop = $options['stop'] ? strtotime($options['stop']) : 0;
@@ -161,9 +191,9 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
   /**
    * Given a mapping, enqueue a list of object IDs to be pulled from a CSV file, e.g. a Salesforce report. The first column of the CSV file must be SFIDs. Additional columns will be ignored.
    *
-   * @param $file
+   * @param string $file
    *   CSV file name of 15- or 18-character Salesforce ids to be pulled.
-   * @param $name
+   * @param string $name
    *   Machine name of the Salesforce Mapping for which to queue pull records.
    *
    * @command salesforce_pull:pull-file
@@ -261,7 +291,7 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
    * Reset pull timestamps for one or all Salesforce Mappings, and set all mapped objects to be force-pulled.
    *
    * @param string $name
-   *   mapping id.
+   *   Mapping id.
    * @param array $options
    *   An associative array of options whose values come from cli, aliases, config, etc.
    *
@@ -298,10 +328,12 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
   /**
    * Set pull timestamp on a single Salesforce Mappings to a specific point in history (or now).
    *
-   * @param $name
-   *   mapping id.
+   * @param string $name
+   *   Mapping id.
    * @param int $time
-   *   timestamp.
+   *   Timestamp.
+   * @param array $options
+   *   Assoc array of options.
    *
    * @option delete
    *   Reset delete date timestamp (instead of pull date timestamp)
@@ -313,7 +345,7 @@ class SalesforcePullCommands extends SalesforceCommandsBase {
    * @command salesforce_pull:pull-set
    * @aliases sf-pull-set,salesforce_pull:set
    */
-  public function pullSet($name, $time, $options = ['delete' => NULL]) {
+  public function pullSet($name, $time, array $options = ['delete' => NULL]) {
     $mappings = $this->getPullMappingsFromName($name);
     foreach ($mappings as $mapping) {
       $mapping->setLastPullTime(NULL);
