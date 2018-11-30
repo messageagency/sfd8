@@ -35,7 +35,7 @@ class PullQueueItemTest extends UnitTestCase {
       ->willReturn(1);
     $item = new PullQueueItem($sobject, $mapping);
     $this->assertTrue($item instanceof PullQueueItem);
-    $this->assertEquals(1, $item->mappingId);
+    $this->assertEquals(1, $item->getMappingId());
   }
 
 }
