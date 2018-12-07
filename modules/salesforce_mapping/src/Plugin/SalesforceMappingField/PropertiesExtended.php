@@ -2,7 +2,6 @@
 
 namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
-use Drupal\typed_data\Exception\InvalidArgumentException;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -236,7 +235,6 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
       $this->dataFetcher = \Drupal::service('typed_data.data_fetcher');
     }
     return $this->dataFetcher;
-
   }
 
   /**
@@ -254,7 +252,7 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
     catch (MissingDataException $e) {
 
     }
-    catch (InvalidArgumentException $e) {
+    catch (\Drupal\typed_data\Exception\InvalidArgumentException $e) {
 
     }
     // Allow any other exception types to percolate.

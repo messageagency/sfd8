@@ -5,7 +5,6 @@ namespace Drupal\salesforce_mapping\Controller;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\typed_data\DataFetcherTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,8 +13,6 @@ use Symfony\Component\HttpFoundation\Request;
  * Class AutocompleteController.
  */
 class AutocompleteController extends ControllerBase {
-
-  use DataFetcherTrait;
 
   /**
    * Entity Field manager service.
@@ -71,6 +68,24 @@ class AutocompleteController extends ControllerBase {
       ->autocompletePropertyPath($field_definitions, $string);
 
     return new JsonResponse($results);
+  }
+
+  /**
+   * Gets the data fetcher, or throw an exception if typed_data not installed.
+   *
+   * @return \Drupal\typed_data\DataFetcherInterface
+   *   The data fetcher.
+   *
+   * @throws \Exception
+   */
+  protected function getDataFetcher() {
+    if (!\Drupal::hasService('typed_data.data_fetcher')) {
+      throw new \Exception('Module typed_data must be installed to use Extended Properties');
+    }
+    if (empty($this->dataFetcher)) {
+      $this->dataFetcher = \Drupal::service('typed_data.data_fetcher');
+    }
+    return $this->dataFetcher;
   }
 
 }
