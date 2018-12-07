@@ -823,10 +823,10 @@ class RestClient implements RestClientInterface {
    */
   public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE) {
     $record_types = $this->getRecordTypes($name, $reset);
-    if (empty($record_types[$name][$devname])) {
+    if (empty($record_types[$devname])) {
       throw new \Exception("No record type $devname for $name");
     }
-    return $record_types[$name][$devname]->id();
+    return $record_types[$devname]->id();
   }
 
   /**
