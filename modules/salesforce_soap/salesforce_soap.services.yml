@@ -1,0 +1,4 @@
+services:
+  salesforce.soap_client:
+    class: Drupal\salesforce_soap\Soap\SoapClient
+    arguments: ['@salesforce.client']

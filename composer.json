@@ -29,6 +29,7 @@
   "require": {
     "consolidation/output-formatters": "^3.2.0",
     "drupal/dynamic_entity_reference": "^2.0@alpha",
-    "drupal/encrypt": "^3.0@rc"
+    "drupal/encrypt": "^3.0@rc",
+    "messageagency/force.com-toolkit-for-php": "^1.0.0"
   }
 }
