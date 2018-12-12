@@ -262,24 +262,49 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
     // given a selector. Instead we have to do it ourselves.
     // We descend only to the first-level fields on the entity. Cascading pull
     // values to entity references is not supported.
-    list($field_name, $delta, $property, $throw_away) = explode('.', $field_selector, 4);
-    if (!is_numeric($delta)) {
-      $property = $delta;
-      $delta = 0;
-    }
-    $typed_data = $entity->get($field_name);
-    if ($typed_data instanceof ListInterface) {
-      if (!$typed_data->get(0) instanceof TypedDataInterface) {
-        $typed_data->set(0, []);
-      }
-      $typed_data = $typed_data->get(0);
+    $parts = explode('.', $field_selector, 4);
+
+    switch (count($parts)) {
+      case 1:
+        $entity->set($field_selector, $pullValue);
+        return $entity->getTypedData()->get($field_selector);
+      case 2:
+        $field_name = $parts[0];
+        $delta = 0;
+        $property = $parts[1];
+        break;
+      case 3:
+        $field_name = $parts[0];
+        $delta = $parts[1];
+        $property = $parts[2];
+        if (!is_numeric($delta)) {
+          return;
+        }
+        break;
+      case 4:
+        return;
     }
 
-    if ($typed_data instanceof ComplexDataInterface) {
+    /** @var \Drupal\Core\TypedData\ListInterface $list_data */
+    $list_data = $entity->get($field_name);
+    // If the given delta has not been initialized, initialize it.
+    if (!$list_data->get($delta) instanceof TypedDataInterface) {
+      $list_data->set($delta, []);
+    }
+
+    /** @var \Drupal\Core\TypedData\TypedDataInterface|\Drupal\Core\TypedData\ComplexDataInterface $typed_data */
+    $typed_data = $list_data->get($delta);
+    if ($typed_data instanceof ComplexDataInterface && $property) {
+      // If the given property has not been initialized, initialize it.
       if (!$typed_data->get($property) instanceof TypedDataInterface) {
         $typed_data->set($property, []);
       }
+      /** @var \Drupal\Core\TypedData\TypedDataInterface $typed_data */
       $typed_data = $typed_data->get($property);
+    }
+
+    if (!$typed_data instanceof TypedDataInterface) {
+      return;
     }
     $typed_data->setValue($pullValue);
     return $typed_data->getParent();
