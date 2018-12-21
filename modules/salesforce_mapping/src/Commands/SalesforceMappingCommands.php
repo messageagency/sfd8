@@ -5,7 +5,6 @@ namespace Drupal\salesforce_mapping\Commands;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\salesforce\Commands\SalesforceCommandsBase;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\SelectQuery;
 use Drush\Exceptions\UserAbortException;
@@ -23,7 +22,7 @@ use Symfony\Component\Console\Output\Output;
  *   - http://cgit.drupalcode.org/devel/tree/src/Commands/DevelCommands.php
  *   - http://cgit.drupalcode.org/devel/tree/drush.services.yml
  */
-class SalesforceMappingCommands extends SalesforceCommandsBase {
+class SalesforceMappingCommands extends SalesforceMappingCommandsBase {
 
   protected $salesforceConfig;
   protected $database;
