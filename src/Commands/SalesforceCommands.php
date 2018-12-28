@@ -595,7 +595,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    * @return \Drupal\salesforce\Commands\QueryResult
    *   The query result.
    *
-   * @command salesforcef:query-object
+   * @command salesforce:query-object
    * @aliases sfqo,sf-query-object
    */
   public function queryObject($object, array $options = [
