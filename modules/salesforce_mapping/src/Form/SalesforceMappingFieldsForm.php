@@ -22,6 +22,9 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
 
     $form['#entity'] = $this->entity;
     $form['#attached']['library'][] = 'salesforce/admin';
+    // This needs to be loaded now as it can't be loaded via AJAX for the AC enabled fields.
+    $form['#attached']['library'][] = 'core/drupal.autocomplete';
+
     // For each field on the map, add a row to our table.
     $form['overview'] = ['#markup' => 'Field mapping overview goes here.'];
 
