@@ -146,7 +146,8 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     // around that, they're going to have problems.
     if (!empty($form_state->getValues())
     && $form_state->getValue('add') == $form_state->getValue('op')
-    && !empty($input['field_type'])) {
+    && !empty($input['field_type'])
+    && $form_state->getTriggeringElement()['#name'] != 'context_drupal_field_value') {
       $row = $row_template;
       $row['#attributes']['class']['zebra'] = ($zebra % 2) ? 'odd' : 'even';
       $rows[] = $row + $this->getRow(NULL, $form, $form_state);
