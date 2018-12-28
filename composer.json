@@ -32,6 +32,7 @@
     "drupal/encrypt": "^3.0@rc",
     "drupal/key": "^1.7",
     "lusitanian/oauth": "^0.8.11",
-    "firebase/php-jwt": "^5.0"
+    "firebase/php-jwt": "^5.0",
+    "messageagency/force.com-toolkit-for-php": "^1.0.0"
   }
 }
