@@ -15,7 +15,6 @@ use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\Core\TypedData\Exception\MissingDataException;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
-use Drupal\Core\TypedData\ListInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\Core\Url;
 use Drupal\salesforce\Rest\RestClientInterface;
@@ -268,11 +267,13 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
       case 1:
         $entity->set($field_selector, $pullValue);
         return $entity->getTypedData()->get($field_selector);
+
       case 2:
         $field_name = $parts[0];
         $delta = 0;
         $property = $parts[1];
         break;
+
       case 3:
         $field_name = $parts[0];
         $delta = $parts[1];
@@ -281,8 +282,10 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
           return;
         }
         break;
+
       case 4:
         return;
+
     }
 
     /** @var \Drupal\Core\TypedData\ListInterface $list_data */

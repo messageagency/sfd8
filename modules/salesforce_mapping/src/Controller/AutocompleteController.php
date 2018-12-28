@@ -2,7 +2,7 @@
 
 namespace Drupal\salesforce_mapping\Controller;
 
-use Drupal\Component\Utility\Unicode;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -54,7 +54,7 @@ class AutocompleteController extends ControllerBase {
    *   The JSON results.
    */
   public function autocomplete(Request $request, $entity_type_id, $bundle) {
-    $string = Unicode::strtolower($request->query->get('q'));
+    $string = Html::escape(mb_strtolower($request->query->get('q')));
     $field_definitions = $this->fieldManager->getFieldDefinitions($entity_type_id, $bundle);
 
     // Filter out EntityReference Items.
