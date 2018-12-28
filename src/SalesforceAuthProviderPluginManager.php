@@ -4,18 +4,24 @@ namespace Drupal\salesforce;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use \Drupal\salesforce\Entity\SalesforceAuthConfig as SalesforceAuthEntity;
+use Drupal\salesforce\Entity\SalesforceAuthConfig as SalesforceAuthEntity;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
 use OAuth\OAuth2\Token\StdOAuth2Token;
 
-
+/**
+ * Auth provider plugin manager.
+ */
 class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
 
+  /**
+   * Config from salesforce.settings.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
   protected $config;
 
   /**
@@ -28,16 +34,13 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   /**
    * Salesforce Auth storage.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface
    */
   protected $authStorage;
 
-
   /**
-   * Constructs a KeyPluginManager.
+   * Constructor.
    *
-   * @param string $type
-   *   The plugin type.
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
    *   keyed by the corresponding namespace to look for plugin implementations.
@@ -45,6 +48,8 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
    *   Cache backend instance to use.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
+   *   Entity type manager service.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $etm) {
     parent::__construct('Plugin/SalesforceAuthProvider', $namespaces, $module_handler, 'Drupal\salesforce\SalesforceAuthProviderInterface');
@@ -54,6 +59,8 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   }
 
   /**
+   * Backwards-compatibility for legacy singleton auth.
+   *
    * @deprecated interim, do not use.
    */
   public static function updateAuthConfig() {
@@ -70,13 +77,15 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   }
 
   /**
+   * Backwards-compatibility for legacy singleton auth.
+   *
    * @deprecated interim, do not use.
    */
   public static function getAuthConfig() {
     $config = \Drupal::configFactory()->getEditable('salesforce.settings');
     $auth_provider = $config->get('salesforce_auth_provider');
     if (!$auth_provider || !$oauth = SalesforceAuthConfig::load($auth_provider)) {
-      // config to new plugin config system.
+      // Config to new plugin config system.
       $values = [
         'id' => 'oauth_default',
         'label' => 'OAuth Default',
@@ -90,6 +99,15 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
     return $oauth;
   }
 
+  /**
+   * Wrapper for salesforce_auth storage service.
+   *
+   * @return \Drupal\Core\Config\Entity\ConfigEntityStorageInterface
+   *   Storage for salesforce_auth.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   protected function authStorage() {
     if (empty($this->authStorage)) {
       $this->authStorage = $this->etm->getStorage('salesforce_auth');
@@ -97,10 +115,28 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
     return $this->authStorage;
   }
 
+  /**
+   * All Salesforce auth providers.
+   *
+   * @return \Drupal\salesforce\Entity\SalesforceAuthConfig[]
+   *   All auth provider plugins.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function getProviders() {
     return $this->authStorage()->loadMultiple();
   }
 
+  /**
+   * TRUE if any auth providers are defined.
+   *
+   * @return bool
+   *   TRUE if any auth providers are defined.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function hasProviders() {
     return $this->authStorage()->hasData();
   }
@@ -108,7 +144,8 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   /**
    * Get the active auth service provider, or null if it has not been assigned.
    *
-   * @return \Drupal\salesforce\Entity\SalesforceAuthConfig
+   * @return \Drupal\salesforce\Entity\SalesforceAuthConfig|null
+   *   The active service provider, or null if it has not been assigned.
    */
   public function getConfig() {
     $provider_id = $this->config()->get('salesforce_auth_provider');
@@ -119,7 +156,10 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   }
 
   /**
+   * The auth provider plugin of the active service provider, or null.
+   *
    * @return \Drupal\salesforce\SalesforceAuthProviderInterface|null
+   *   The auth provider plugin of the active service provider, or null.
    */
   public function getProvider() {
     if (!$this->getConfig()) {
@@ -132,6 +172,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
    * Get the active token, or null if it has not been assigned.
    *
    * @return \OAuth\OAuth2\Token\TokenInterface
+   *   The token of the plugin of the active config, or null.
    */
   public function getToken() {
     if (!$config = $this->getConfig()) {
@@ -152,6 +193,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
    * Force a refresh of the active token and return the fresh token.
    *
    * @return \OAuth\OAuth2\Token\TokenInterface|null
+   *   The token.
    */
   public function refreshToken() {
     if (!$config = $this->getConfig()) {
@@ -164,6 +206,12 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
     return $provider->refreshAccessToken($token);
   }
 
+  /**
+   * Wrapper for salesforce.settings config.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   Salesforce settings config.
+   */
   protected function config() {
     if (!$this->config) {
       $this->config = \Drupal::config('salesforce.settings');

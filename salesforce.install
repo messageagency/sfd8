@@ -5,6 +5,7 @@
  * Salesforce install file.
  */
 
+use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\Core\Utility\UpdateException;
@@ -67,36 +68,36 @@ function salesforce_get_auth_provider_requirements() {
   $authMan = \Drupal::service('plugin.manager.salesforce.auth_providers');
   if (!$authMan->hasProviders()) {
     $requirements += [
-      'description' => t('No auth providers have been created. Please <a href="@href">create an auth provider</a> to connect to Salesforce.', ['@href' => \Drupal\Core\Url::fromRoute('entity.salesforce_auth.add_form')]),
-      'severity' => REQUIREMENT_WARNING
+      'description' => t('No auth providers have been created. Please <a href="@href">create an auth provider</a> to connect to Salesforce.', ['@href' => Url::fromRoute('entity.salesforce_auth.add_form')]),
+      'severity' => REQUIREMENT_WARNING,
     ];
   }
   elseif (!$authMan->getConfig()) {
     $requirements += [
-      'description' => t('Default auth provider has not been set. Please <a href="@href">choose an auth provider</a> to connect to Salesforce.', ['@href' => \Drupal\Core\Url::fromRoute('salesforce.auth_config')->toString()]),
-      'severity' => REQUIREMENT_WARNING
+      'description' => t('Default auth provider has not been set. Please <a href="@href">choose an auth provider</a> to connect to Salesforce.', ['@href' => Url::fromRoute('salesforce.auth_config')->toString()]),
+      'severity' => REQUIREMENT_WARNING,
     ];
   }
   else {
-    $failMessage = t('Salesforce authentication failed. Please <a href="@href">check your auth provider settings</a> to connect to Salesforce.', ['@href' => \Drupal\Core\Url::fromRoute('entity.salesforce_auth.edit_form', ['salesforce_auth' => $authMan->getConfig()])]);
+    $failMessage = t('Salesforce authentication failed. Please <a href="@href">check your auth provider settings</a> to connect to Salesforce.', ['@href' => Url::fromRoute('entity.salesforce_auth.edit_form', ['salesforce_auth' => $authMan->getConfig()])]);
     try {
       if (!$authMan->getToken()) {
         $requirements += [
           'description' => $failMessage,
-          'severity' => REQUIREMENT_WARNING
+          'severity' => REQUIREMENT_WARNING,
         ];
       }
     }
     catch (Exception $e) {
       $requirements += [
         'description' => $failMessage,
-        'severity' => REQUIREMENT_WARNING
+        'severity' => REQUIREMENT_WARNING,
       ];
     }
   }
   if (empty($requirements['severity'])) {
     $requirements += [
-      'severity' => REQUIREMENT_OK
+      'severity' => REQUIREMENT_OK,
     ];
   }
   return $requirements;
@@ -276,7 +277,7 @@ function salesforce_update_8005() {
   }
 
   $message = '';
-  // If auth plugin providers have not been created already, convert existing
+  // If auth plugin providers have not been created already, convert existing.
   if (SalesforceAuthConfig::load('oauth_default')) {
     // If an auth config with our name already exists, we are done here.
     $message = 'Existing "oauth_default" provider config detected. Refused to set legacy credentials.';

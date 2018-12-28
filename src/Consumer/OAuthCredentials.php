@@ -2,6 +2,9 @@
 
 namespace Drupal\salesforce\Consumer;
 
+/**
+ * OAuth user agent credentials.
+ */
 class OAuthCredentials extends SalesforceCredentials {
 
   /**
@@ -11,4 +14,5 @@ class OAuthCredentials extends SalesforceCredentials {
     parent::__construct($consumerKey, $loginUrl);
     $this->consumerSecret = $consumerSecret;
   }
+
 }

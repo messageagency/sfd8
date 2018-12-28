@@ -15,7 +15,6 @@ use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryResult;
-use Drupal\salesforce\Storage\SalesforceAuthTokenStorage;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
@@ -136,6 +135,7 @@ class RestClient implements RestClientInterface {
    * Storage helper.
    *
    * @return \Drupal\salesforce\Storage\SalesforceAuthTokenStorage
+   *   The auth token storage service.
    *
    * @deprecated interim, do not use.
    */

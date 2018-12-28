@@ -5,9 +5,23 @@ namespace Drupal\salesforce\Consumer;
 use Drupal\Core\Url;
 use OAuth\Common\Consumer\Credentials;
 
+/**
+ * Salesforce credentials extension, for drupalisms.
+ */
 abstract class SalesforceCredentials extends Credentials implements SalesforceCredentialsInterface {
 
+  /**
+   * Login URL e.g. https://test.salesforce.com or https://login.salesforce.com.
+   *
+   * @var string
+   */
   protected $loginUrl;
+
+  /**
+   * Consumer key for the Salesforce connected OAuth app.
+   *
+   * @var string
+   */
   protected $consumerKey;
 
   /**

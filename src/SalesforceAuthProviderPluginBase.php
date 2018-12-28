@@ -5,12 +5,14 @@ namespace Drupal\salesforce;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerTrait;
-use Drupal\Core\Render\Element\Form;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use OAuth\Common\Http\Exception\TokenResponseException;
 use OAuth\Common\Http\Uri\Uri;
 use OAuth\OAuth2\Service\Salesforce;
 
+/**
+ * Shared methods for auth providers.
+ */
 abstract class SalesforceAuthProviderPluginBase extends Salesforce implements SalesforceAuthProviderInterface {
 
   use StringTranslationTrait;
@@ -18,19 +20,36 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
   use MessengerTrait;
 
   /**
+   * Credentials.
+   *
    * @var \Drupal\salesforce\Consumer\SalesforceCredentials
    */
   protected $credentials;
 
-  /** @var array */
+  /**
+   * Configuration.
+   *
+   * @var array
+   */
   protected $configuration;
 
-  /** @var \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface */
+  /**
+   * Token storage.
+   *
+   * @var \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface
+   */
   protected $storage;
 
-  /** @var string */
+  /**
+   * Machine name identifier.
+   *
+   * @var string
+   */
   protected $id;
 
+  /**
+   * {@inheritdoc}
+   */
   public static function defaultConfiguration() {
     return [
       'consumer_key' => '',
@@ -111,14 +130,23 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
 
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function id() {
     return $this->id;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function type() {
     return static::SERVICE_TYPE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function label() {
     return static::LABEL;
   }
@@ -173,16 +201,20 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
   }
 
   /**
-   * @param $responseBody
+   * Handle the identity response from Salesforce.
+   *
+   * @param string $responseBody
    *   JSON identity response from Salesforce.
    *
    * @return array
+   *   The identity.
+   *
    * @throws \OAuth\Common\Http\Exception\TokenResponseException
    */
   protected function parseIdentityResponse($responseBody) {
-    $data = json_decode($responseBody, true);
+    $data = json_decode($responseBody, TRUE);
 
-    if (null === $data || !is_array($data)) {
+    if (NULL === $data || !is_array($data)) {
       throw new TokenResponseException('Unable to parse response.');
     }
     elseif (isset($data['error'])) {
@@ -192,9 +224,10 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
   }
 
   /**
-   * Accessor to the storage adapter to be able to retrieve tokens
+   * Accessor to the storage adapter to be able to retrieve tokens.
    *
    * @return \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface
+   *   The token storage.
    */
   public function getStorage() {
     return $this->storage;

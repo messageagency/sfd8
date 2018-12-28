@@ -8,26 +8,39 @@ use Drupal\salesforce\Token\SalesforceToken;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
 use OAuth\Common\Token\TokenInterface;
 
+/**
+ * Salesforce auth token storage.
+ */
 class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface {
 
   const TOKEN_STORAGE_PREFIX = "salesforce.auth_tokens";
   const AUTH_STATE_STORAGE_PREFIX = "salesforce.auth_state";
   const IDENTITY_STORAGE_PREFIX = "salesforce.auth_identity";
 
+  /**
+   * State kv storage.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
   protected $state;
 
   /**
-   * @deprecated interim, do not use.
+   * SalesforceAuthTokenStorage constructor.
+   *
+   * @param \Drupal\Core\State\StateInterface $state
+   *   State service.
    */
-  private $client;
-
   public function __construct(StateInterface $state) {
     $this->state = $state;
   }
 
   /**
-   * @deprecated interim, do not use.
+   * Backwards-compatibility for legacy singleton auth.
+   *
    * @return string
+   *   Id of the active oauth.
+   *
+   * @deprecated interim, do not use.
    */
   private function service() {
     $oauth = SalesforceAuthProviderPluginManager::getAuthConfig();
@@ -35,6 +48,8 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   }
 
   /**
+   * Backwards-compatibility for legacy singleton auth.
+   *
    * @deprecated interim, do not use.
    */
   public function updateToken() {
@@ -46,6 +61,8 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   }
 
   /**
+   * Backwards-compatibility for legacy singleton auth.
+   *
    * @deprecated interim, do not use.
    */
   public function updateIdentity() {
@@ -53,20 +70,38 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
     return $this;
   }
 
+  /**
+   * Token storage key for given service.
+   *
+   * @return string
+   *   Token storage key for given service.
+   */
   protected static function getTokenStorageId($service) {
     return self::TOKEN_STORAGE_PREFIX . '.' . $service;
   }
 
+  /**
+   * Auth state storage key for given service.
+   *
+   * @return string
+   *   Auth state storage key for given service.
+   */
   protected static function getAuthStateStorageId($service) {
     return self::AUTH_STATE_STORAGE_PREFIX . '.' . $service;
   }
 
+  /**
+   * Identity storage key for given service.
+   *
+   * @return string
+   *   Identity storage key for given service.
+   */
   protected static function getIdentityStorageId($service) {
     return self::IDENTITY_STORAGE_PREFIX . '.' . $service;
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function retrieveAccessToken($service) {
     if ($token = $this->state->get(self::getTokenStorageId($service))) {
@@ -76,7 +111,7 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function storeAccessToken($service, TokenInterface $token) {
     $this->state->set(self::getTokenStorageId($service), $token);
@@ -84,7 +119,7 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function hasAccessToken($service) {
     try {
@@ -96,23 +131,22 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
-
   public function clearToken($service) {
     $this->state->delete(self::getTokenStorageId($service));
     return $this;
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function clearAllTokens() {
     // noop. We don't do this. Only here to satisfy interface.
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function storeAuthorizationState($service, $state) {
     $this->state->set(self::getAuthStateStorageId($service), $state);
@@ -120,21 +154,21 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function hasAuthorizationState($service) {
     return !empty($this->retrieveAuthorizationState($service));
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function retrieveAuthorizationState($service) {
     return $this->state->get(self::getAuthStateStorageId($service));
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function clearAuthorizationState($service) {
     $this->state->delete(self::getAuthStateStorageId($service));
@@ -142,14 +176,14 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function clearAllAuthorizationStates() {
     // noop. only here to satisfy interface. Use clearAuthorizationState().
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function storeIdentity($service, $identity) {
     $this->state->set(self::getIdentityStorageId($service), $identity);
@@ -157,21 +191,21 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function hasIdentity($service) {
     return !empty($this->retrieveIdentity($service));
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function retrieveIdentity($service) {
     return $this->state->get(self::getIdentityStorageId($service));
   }
 
   /**
-   *{@inheritdoc}
+   * {@inheritdoc}
    */
   public function clearIdentity($service) {
     $this->state->delete(self::getIdentityStorageId($service));

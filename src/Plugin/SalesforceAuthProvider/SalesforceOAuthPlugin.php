@@ -4,22 +4,17 @@ namespace Drupal\salesforce\Plugin\SalesforceAuthProvider;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
-use Drupal\Core\Url;
-use Drupal\salesforce\Rest\RestResponse;
 use Drupal\salesforce\Consumer\OAuthCredentials;
-use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\salesforce\SalesforceAuthProviderPluginBase;
 use Drupal\salesforce\SalesforceOAuthPluginInterface;
 use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
-use Drupal\salesforce\Token\SalesforceToken;
 use OAuth\Common\Http\Client\ClientInterface;
 use OAuth\Common\Http\Uri\Uri;
-use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
+ * Salesforce OAuth user-agent flow auth provider plugin.
+ *
  * @Plugin(
  *   id = "oauth",
  *   label = @Translation("Salesforce OAuth User-Agent")
@@ -27,34 +22,55 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  */
 class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements SalesforceOAuthPluginInterface {
 
-  /** @var \Drupal\salesforce\Consumer\OAuthCredentials */
+  /**
+   * Credentials.
+   *
+   * @var \Drupal\salesforce\Consumer\OAuthCredentials
+   */
   protected $credentials;
 
+  /**
+   * {@inheritdoc}
+   */
   const SERVICE_TYPE = 'oauth';
+
+  /**
+   * {@inheritdoc}
+   */
   const LABEL = 'OAuth';
 
   /**
    * SalesforceOAuthPlugin constructor.
    *
-   * @param $id
+   * @param string $id
+   *   The plugin id.
    * @param \Drupal\salesforce\Consumer\OAuthCredentials $credentials
+   *   The credentials.
    * @param \OAuth\Common\Http\Client\ClientInterface $httpClient
+   *   The oauth http client.
    * @param \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface $storage
+   *   Auth token storage service.
    *
    * @throws \OAuth\OAuth2\Service\Exception\InvalidScopeException
+   *   Comment.
    */
   public function __construct($id, OAuthCredentials $credentials, ClientInterface $httpClient, SalesforceAuthTokenStorageInterface $storage) {
     parent::__construct($credentials, $httpClient, $storage, [], new Uri($credentials->getLoginUrl()));
     $this->id = $id;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $configuration = array_merge(self::defaultConfiguration(), $configuration);
     $cred = new OAuthCredentials($configuration['consumer_key'], $configuration['login_url'], $configuration['consumer_secret']);
     return new static($configuration['id'], $cred, $container->get('salesforce.http_client_wrapper'), $container->get('salesforce.auth_token_storage'));
   }
 
-
+  /**
+   * {@inheritdoc}
+   */
   public static function defaultConfiguration() {
     $defaults = parent::defaultConfiguration();
     return array_merge($defaults, [
@@ -71,7 +87,7 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
       '#type' => 'textfield',
       '#description' => t('Consumer key of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
-      '#default_value' => $this->credentials->getConsumerKey()
+      '#default_value' => $this->credentials->getConsumerKey(),
     ];
 
     $form['consumer_secret'] = [
@@ -79,7 +95,7 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
       '#type' => 'textfield',
       '#description' => $this->t('Consumer secret of the Salesforce remote application.'),
       '#required' => TRUE,
-      '#default_value' => $this->credentials->getConsumerSecret()
+      '#default_value' => $this->credentials->getConsumerSecret(),
     ];
 
     $form['login_url'] = [
@@ -123,18 +139,18 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
     }
     catch (\Exception $e) {
       $this->messenger()->addError(t("Error during authorization: %message", ['%message' => $e->getMessage()]));
-      // $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getConsumerSecret() {
     return $this->credentials->getConsumerSecret();
   }
 
   /**
-   * @return bool
-   * @throws \OAuth\Common\Http\Exception\TokenResponseException
-   * @see \Drupal\salesforce\Controller\SalesforceOAuthController
+   * {@inheritdoc}
    */
   public function finalizeOauth() {
     $token = $this->requestAccessToken(\Drupal::request()->get('code'));
