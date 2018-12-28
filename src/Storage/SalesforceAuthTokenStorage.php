@@ -40,7 +40,7 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
    * @return string
    *   Id of the active oauth.
    *
-   * @deprecated interim, do not use.
+   * @deprecated BC legacy auth scheme only, do not use, will be removed.
    */
   private function service() {
     $oauth = SalesforceAuthProviderPluginManager::getAuthConfig();
@@ -50,7 +50,7 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   /**
    * Backwards-compatibility for legacy singleton auth.
    *
-   * @deprecated interim, do not use.
+   * @deprecated BC legacy auth scheme only, do not use, will be removed.
    */
   public function updateToken() {
     $this->storeAccessToken($this->service(),
@@ -63,7 +63,7 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   /**
    * Backwards-compatibility for legacy singleton auth.
    *
-   * @deprecated interim, do not use.
+   * @deprecated BC legacy auth scheme only, do not use, will be removed.
    */
   public function updateIdentity() {
     $this->storeIdentity($this->service(), $this->state->get('salesforce.identity'));
@@ -143,6 +143,7 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
    */
   public function clearAllTokens() {
     // noop. We don't do this. Only here to satisfy interface.
+    return $this;
   }
 
   /**
@@ -180,6 +181,7 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
    */
   public function clearAllAuthorizationStates() {
     // noop. only here to satisfy interface. Use clearAuthorizationState().
+    return $this;
   }
 
   /**

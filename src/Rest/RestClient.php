@@ -95,7 +95,7 @@ class RestClient implements RestClientInterface {
    *
    * @var \Drupal\salesforce\Storage\SalesforceAuthTokenStorage
    *
-   * @deprecated interim, do not use.
+   * @deprecated BC legacy auth scheme only, do not use, will be removed.
    */
   private $storage;
 
@@ -137,7 +137,7 @@ class RestClient implements RestClientInterface {
    * @return \Drupal\salesforce\Storage\SalesforceAuthTokenStorage
    *   The auth token storage service.
    *
-   * @deprecated interim, do not use.
+   * @deprecated BC legacy auth scheme only, do not use, will be removed.
    */
   private function storage() {
     if (!$this->storage) {
