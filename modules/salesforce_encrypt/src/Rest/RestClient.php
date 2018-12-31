@@ -19,6 +19,8 @@ use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
+ *
+ * @deprecated will be removed in 8.x-4.0 release.
  */
 class RestClient extends SalesforceRestClient implements EncryptedRestClientInterface {
 

@@ -19,6 +19,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "oauth",
  *   label = @Translation("Salesforce OAuth User-Agent")
  * )
+ *
+ * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
  */
 class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements SalesforceOAuthPluginInterface {
 

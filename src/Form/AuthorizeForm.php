@@ -19,6 +19,8 @@ use Drupal\salesforce\Event\SalesforceErrorEvent;
 
 /**
  * Creates authorization form for Salesforce.
+ *
+ * @deprecated will be removed in 8.x-4.0 release.
  */
 class AuthorizeForm extends ConfigFormBase {
 

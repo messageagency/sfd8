@@ -7,6 +7,8 @@ use Drupal\salesforce\Rest\RestClientInterface;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
+ *
+ * @deprecated will be removed in 8.x-4.0 release.
  */
 interface EncryptedRestClientInterface extends RestClientInterface {
 

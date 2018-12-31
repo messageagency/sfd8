@@ -5,7 +5,7 @@ namespace Drupal\salesforce\Rest;
 /**
  * Use RestResponseResources.
  *
- * @deprecated Will be removed in 8.x-3.3
+ * @deprecated will be removed in 8.x-4.0 release.
  */
 class RestResponse_Resources extends RestResponseResources {
 

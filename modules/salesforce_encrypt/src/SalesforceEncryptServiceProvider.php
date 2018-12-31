@@ -9,6 +9,8 @@ use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * Modifies the salesforce client service.
+ *
+ * @deprecated will be removed in 8.x-4.0 release.
  */
 class SalesforceEncryptServiceProvider extends ServiceProviderBase {
 

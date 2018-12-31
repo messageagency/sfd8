@@ -14,6 +14,8 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Revoke the current oauth creds.
+ *
+ * @deprecated will be removed in 8.x-4.0 release.
  */
 class RevokeAuthorizationForm extends ConfigFormBase {
 

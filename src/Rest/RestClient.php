@@ -57,6 +57,8 @@ class RestClient implements RestClientInterface {
    * Salesforce mutable config object.  Useful for sets.
    *
    * @var \Drupal\Core\Config\Config
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   protected $mutableConfig;
 
@@ -95,7 +97,7 @@ class RestClient implements RestClientInterface {
    *
    * @var \Drupal\salesforce\Storage\SalesforceAuthTokenStorage
    *
-   * @deprecated BC legacy auth scheme only, do not use, will be removed.
+   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
    */
   private $storage;
 
@@ -137,7 +139,7 @@ class RestClient implements RestClientInterface {
    * @return \Drupal\salesforce\Storage\SalesforceAuthTokenStorage
    *   The auth token storage service.
    *
-   * @deprecated BC legacy auth scheme only, do not use, will be removed.
+   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
    */
   private function storage() {
     if (!$this->storage) {

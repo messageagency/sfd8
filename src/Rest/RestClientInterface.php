@@ -15,7 +15,7 @@ interface RestClientInterface {
   /**
    * Determine if this SF instance is fully configured.
    *
-   * @TODO: Consider making a test API call.
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function isAuthorized();
 
@@ -114,6 +114,8 @@ interface RestClientInterface {
    *
    * @return string
    *   Complete URL endpoint for API access.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function getApiEndPoint($api_type = 'rest');
 
@@ -135,6 +137,8 @@ interface RestClientInterface {
    *
    * @throws \Exception
    * @throws \GuzzleHttp\Exception\RequestException
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function setApiVersion($use_latest = TRUE, $version = NULL);
 
@@ -152,6 +156,8 @@ interface RestClientInterface {
    *
    * @return string|null
    *   Consumer key.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function getConsumerKey();
 
@@ -162,6 +168,8 @@ interface RestClientInterface {
    *   Consumer key value.
    *
    * @return $this
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function setConsumerKey($value);
 
@@ -170,6 +178,8 @@ interface RestClientInterface {
    *
    * @return string|null
    *   Consumer secret.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function getConsumerSecret();
 
@@ -180,6 +190,8 @@ interface RestClientInterface {
    *   Consumer secret value.
    *
    * @return $this
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function setConsumerSecret($value);
 
@@ -188,6 +200,8 @@ interface RestClientInterface {
    *
    * @return string|null
    *   Login url.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function getLoginUrl();
 
@@ -198,6 +212,8 @@ interface RestClientInterface {
    *   The login url.
    *
    * @return $this
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function setLoginUrl($value);
 
@@ -206,6 +222,8 @@ interface RestClientInterface {
    *
    * @return string|null
    *   The instance url.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function getInstanceUrl();
 
@@ -216,6 +234,8 @@ interface RestClientInterface {
    *   The url.
    *
    * @return $this
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function setInstanceUrl($url);
 
@@ -224,6 +244,8 @@ interface RestClientInterface {
    *
    * @return string|null
    *   The access token.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function getAccessToken();
 
@@ -232,6 +254,8 @@ interface RestClientInterface {
    *
    * @param string $token
    *   Access token from Salesforce.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function setAccessToken($token);
 
@@ -240,6 +264,8 @@ interface RestClientInterface {
    *
    * @param string $token
    *   Refresh token from Salesforce.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function setRefreshToken($token);
 
@@ -247,6 +273,8 @@ interface RestClientInterface {
    * Refresh access token based on the refresh token.
    *
    * @throws \Exception
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function refreshToken();
 
@@ -258,6 +286,8 @@ interface RestClientInterface {
    *
    * @see SalesforceController::oauthCallback()
    * @see self::refreshToken()
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function handleAuthResponse(Response $response);
 
@@ -268,6 +298,8 @@ interface RestClientInterface {
    *   Identity URL.
    *
    * @throws \Exception
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function initializeIdentity($id);
 
@@ -276,11 +308,15 @@ interface RestClientInterface {
    *
    * @return array
    *   Returns FALSE is no identity has been stored.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function getIdentity();
 
   /**
    * Set the Salesforce identity, which is stored in a variable.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function setIdentity($data);
 
@@ -291,6 +327,8 @@ interface RestClientInterface {
    *   Redirect URL.
    *
    * @see \Drupal\salesforce\Controller\SalesforceController
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function getAuthCallbackUrl();
 
@@ -299,6 +337,8 @@ interface RestClientInterface {
    *
    * @return string
    *   REST OAuth Login URL.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function getAuthEndpointUrl();
 
@@ -307,6 +347,8 @@ interface RestClientInterface {
    *
    * @return string
    *   REST OAuth Token URL.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function getAuthTokenUrl();
 

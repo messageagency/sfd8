@@ -18,6 +18,8 @@ use Drupal\Component\Datetime\TimeInterface;
 /**
  * @coversDefaultClass \Drupal\salesforce_encrypt\Rest\RestClient
  * @group salesforce
+ *
+ * @deprecated will be removed in 8.x-4.0 release.
  */
 class RestClientTest extends UnitTestCase {
 

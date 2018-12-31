@@ -61,7 +61,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   /**
    * Backwards-compatibility for legacy singleton auth.
    *
-   * @deprecated BC legacy auth scheme only, do not use, will be removed.
+   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
    */
   public static function updateAuthConfig() {
     $oauth = self::getAuthConfig();
@@ -79,7 +79,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   /**
    * Backwards-compatibility for legacy singleton auth.
    *
-   * @deprecated BC legacy auth scheme only, do not use, will be removed.
+   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
    */
   public static function getAuthConfig() {
     $config = \Drupal::configFactory()->getEditable('salesforce.settings');

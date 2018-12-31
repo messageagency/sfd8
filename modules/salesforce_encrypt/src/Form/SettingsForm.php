@@ -13,6 +13,8 @@ use Drupal\Core\Url;
 
 /**
  * Base form for key add and edit forms.
+ *
+ * @deprecated will be removed in 8.x-4.0 release.
  */
 class SettingsForm extends FormBase {
 

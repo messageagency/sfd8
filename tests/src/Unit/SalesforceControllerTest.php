@@ -18,6 +18,8 @@ use Drupal\Component\Datetime\TimeInterface;
 /**
  * @coversDefaultClass \Drupal\salesforce\Controller\SalesforceController
  * @group salesforce
+ *
+ * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
  */
 class SalesforceControllerTest extends UnitTestCase {
 

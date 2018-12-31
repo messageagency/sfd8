@@ -13,6 +13,8 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * OAuth callback handler.
+ *
+ * @deprecated will be removed in 8.x-4.0 release.
  */
 class SalesforceController extends ControllerBase {
 
@@ -61,6 +63,8 @@ class SalesforceController extends ControllerBase {
    *
    * Complete OAuth handshake by exchanging an authorization code for an access
    * token.
+   *
+   * @deprecated will be removed in 8.x-4.0 release.
    */
   public function oauthCallback() {
     // If no code is provided, return access denied.

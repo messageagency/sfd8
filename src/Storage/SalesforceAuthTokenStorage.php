@@ -40,7 +40,7 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
    * @return string
    *   Id of the active oauth.
    *
-   * @deprecated BC legacy auth scheme only, do not use, will be removed.
+   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
    */
   private function service() {
     $oauth = SalesforceAuthProviderPluginManager::getAuthConfig();
@@ -50,7 +50,7 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   /**
    * Backwards-compatibility for legacy singleton auth.
    *
-   * @deprecated BC legacy auth scheme only, do not use, will be removed.
+   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
    */
   public function updateToken() {
     $this->storeAccessToken($this->service(),
@@ -63,7 +63,7 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   /**
    * Backwards-compatibility for legacy singleton auth.
    *
-   * @deprecated BC legacy auth scheme only, do not use, will be removed.
+   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
    */
   public function updateIdentity() {
     $this->storeIdentity($this->service(), $this->state->get('salesforce.identity'));
