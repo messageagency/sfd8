@@ -5,7 +5,11 @@
  * Salesforce install file.
  */
 
+use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
+use Drupal\salesforce\Entity\SalesforceAuthConfig;
+use Drupal\Core\Utility\UpdateException;
+use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 
 /**
  * Implements hook_uninstall().
@@ -36,7 +40,12 @@ function salesforce_requirements($phase) {
   // Check requirements once per 24 hours.
   $last = \Drupal::state()->get('salesforce.last_requirements_check', 0);
 
-  $requirements['salesforce_usage'] = salesforce_get_usage_requirements();
+  $requirements['salesforce_auth_provider'] = salesforce_get_auth_provider_requirements();
+
+  // Don't bother checking usage if we aren't connected to Salesforce.
+  if ($requirements['salesforce_auth_provider']['severity'] == REQUIREMENT_OK) {
+    $requirements['salesforce_usage'] = salesforce_get_usage_requirements();
+  }
 
   $requirements['salesforce_tls'] = salesforce_get_tls_requirements();
   if ($last < REQUEST_TIME - (60 * 60 * 24) || empty($requirements['salesforce_tls'])) {
@@ -44,6 +53,53 @@ function salesforce_requirements($phase) {
     $requirements['salesforce_tls'] = salesforce_get_tls_requirements();
   }
 
+  return $requirements;
+}
+
+/**
+ * Check to see if an auth provider has been set.
+ */
+function salesforce_get_auth_provider_requirements() {
+  $requirements = [
+    'title' => t('Salesforce Authentication Status'),
+    'value' => t('Provider Status'),
+  ];
+  /** @var \Drupal\salesforce\SalesforceAuthProviderPluginManager $authMan */
+  $authMan = \Drupal::service('plugin.manager.salesforce.auth_providers');
+  if (!$authMan->hasProviders()) {
+    $requirements += [
+      'description' => t('No auth providers have been created. Please <a href="@href">create an auth provider</a> to connect to Salesforce.', ['@href' => Url::fromRoute('entity.salesforce_auth.add_form')]),
+      'severity' => REQUIREMENT_WARNING,
+    ];
+  }
+  elseif (!$authMan->getConfig()) {
+    $requirements += [
+      'description' => t('Default auth provider has not been set. Please <a href="@href">choose an auth provider</a> to connect to Salesforce.', ['@href' => Url::fromRoute('salesforce.auth_config')->toString()]),
+      'severity' => REQUIREMENT_WARNING,
+    ];
+  }
+  else {
+    $failMessage = t('Salesforce authentication failed. Please <a href="@href">check your auth provider settings</a> to connect to Salesforce.', ['@href' => Url::fromRoute('entity.salesforce_auth.edit_form', ['salesforce_auth' => $authMan->getConfig()])]);
+    try {
+      if (!$authMan->getToken()) {
+        $requirements += [
+          'description' => $failMessage,
+          'severity' => REQUIREMENT_WARNING,
+        ];
+      }
+    }
+    catch (Exception $e) {
+      $requirements += [
+        'description' => $failMessage,
+        'severity' => REQUIREMENT_WARNING,
+      ];
+    }
+  }
+  if (empty($requirements['severity'])) {
+    $requirements += [
+      'severity' => REQUIREMENT_OK,
+    ];
+  }
   return $requirements;
 }
 
@@ -132,6 +188,7 @@ function salesforce_get_usage_requirements() {
   }
 
   if (empty($usage)) {
+    // Missing usage information is not necessarily a problem.
     $requirements += [
       'severity' => REQUIREMENT_OK,
       'description' => t('Usage information unavailable'),
@@ -152,7 +209,7 @@ function salesforce_get_usage_requirements() {
     ];
     $requirements += [
       'description' => t('Usage: %usage requests of %limit limit (%pct) in the past 24 hours.', $args),
-      'severity' => $pct >= 100 ? REQUIREMENT_WARNING : REQUIREMENT_OK,
+      'severity' => $pct >= 100 ? REQUIREMENT_ERROR : ($pct >= 80 ? REQUIREMENT_WARNING : REQUIREMENT_OK),
     ];
   }
 
@@ -208,4 +265,41 @@ function salesforce_update_8003() {
  */
 function salesforce_update_8004() {
   \Drupal::cache()->delete('salesforce:objects');
+}
+
+/**
+ * Convert legacy oauth credentials to new auth plugin config.
+ */
+function salesforce_update_8005() {
+  $change_list = \Drupal::entityDefinitionUpdateManager()->getChangeSummary();
+  if (!empty($change_list['salesforce_auth'])) {
+    throw new UpdateException("** PENDING SCHEMA UPDATES ** \n** Please install entity updates (entup) to install Salesforce Auth Config before proceeding with database update.");
+  }
+
+  $message = '';
+  // If auth plugin providers have not been created already, convert existing.
+  if (SalesforceAuthConfig::load('oauth_default')) {
+    // If an auth config with our name already exists, we are done here.
+    $message = 'Existing "oauth_default" provider config detected. Refused to set legacy credentials.';
+  }
+  else {
+    SalesforceAuthProviderPluginManager::updateAuthConfig();
+    $message = 'Default OAuth provider created from legacy credentials.';
+  }
+  return $message;
+}
+
+/**
+ * Convert legacy token to new auth plugin config.
+ */
+function salesforce_update_8006() {
+  $oauth = SalesforceAuthProviderPluginManager::getAuthConfig();
+  if (!$oauth) {
+    return "Auth config missing. Refused to update legacy token.";
+  }
+  if (\Drupal::service('salesforce.auth_token_storage')->retrieveAccessToken($oauth->id())) {
+    return "Token exists. Refused to update.";
+  }
+  \Drupal::service('salesforce.auth_token_storage')->updateToken();
+  return "Updated legacy token to new plugin config.";
 }
