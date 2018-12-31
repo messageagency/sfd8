@@ -1,0 +1,7 @@
+name: Salesforce OAuth user-agent Provider
+type: module
+description: Provides user-agent-based Salesforce OAuth authentication.
+core: 8.x
+package: Salesforce
+dependencies:
+  - salesforce

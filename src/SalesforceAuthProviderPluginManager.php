@@ -61,7 +61,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   /**
    * Backwards-compatibility for legacy singleton auth.
    *
-   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
+   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.1.
    */
   public static function updateAuthConfig() {
     $oauth = self::getAuthConfig();
@@ -79,7 +79,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   /**
    * Backwards-compatibility for legacy singleton auth.
    *
-   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
+   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.1.
    */
   public static function getAuthConfig() {
     $config = \Drupal::configFactory()->getEditable('salesforce.settings');
@@ -192,7 +192,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   /**
    * Force a refresh of the active token and return the fresh token.
    *
-   * @return \OAuth\OAuth2\Token\TokenInterface|null
+   * @return \OAuth\Common\Token\TokenInterface
    *   The token.
    */
   public function refreshToken() {

@@ -3,6 +3,7 @@
 namespace Drupal\salesforce_soap\Soap;
 
 use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use SforcePartnerClient;
 
 /**
@@ -32,6 +33,13 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
   protected $wsdl;
 
   /**
+   * Auth manager.
+   *
+   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   */
+  protected $authMan;
+
+  /**
    * Constructor which initializes the consumer.
    *
    * @param \Drupal\salesforce\Rest\RestClientInterface $rest_api
@@ -40,7 +48,7 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
    *   (Optional) Path to the WSDL that should be used.  Defaults to using the
    *   partner WSDL from the developerforce/force.com-toolkit-for-php package.
    */
-  public function __construct(RestClientInterface $rest_api, $wsdl = NULL) {
+  public function __construct(RestClientInterface $rest_api, SalesforceAuthProviderPluginManager $authMan, $wsdl = NULL) {
     parent::__construct();
 
     $this->restApi = $rest_api;
@@ -66,19 +74,13 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
   public function connect() {
     $this->isConnected = FALSE;
     // Use the "isAuthorized" callback to initialize session headers.
-    if ($this->restApi->isAuthorized()) {
-      $this->createConnection($this->wsdl);
-      $token = $this->restApi->getAccessToken();
-      if (!$token) {
-        $token = $this->restApi->refreshToken();
-      }
-      $this->setSessionHeader($token);
-      $this->setEndPoint($this->restApi->getApiEndPoint('partner'));
-      $this->isConnected = TRUE;
-    }
-    else {
+    if (!$token = $this->authMan->getToken()) {
       throw new \Exception('Salesforce needs to be authorized to connect to this website.');
     }
+    $this->createConnection($this->wsdl);
+    $this->setSessionHeader($token);
+    $this->setEndPoint($this->authMan->getProvider()->getApiEndpoint('partner'));
+    $this->isConnected = TRUE;
   }
 
   /**

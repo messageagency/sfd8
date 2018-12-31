@@ -189,6 +189,38 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
   /**
    * {@inheritdoc}
    */
+  public function getApiEndpoint($api_type = 'rest') {
+    $url = &drupal_static(self::CLASS . __FUNCTION__ . $api_type);
+    if (!isset($url)) {
+      $identity = $this->getIdentity();
+      if (empty($identity)) {
+        return FALSE;
+      }
+      if (is_string($identity)) {
+        $url = $identity;
+      }
+      elseif (isset($identity['urls'][$api_type])) {
+        $url = $identity['urls'][$api_type];
+      }
+      $url = str_replace('{version}', $this->getApiVersion(), $url);
+    }
+    return $url;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiVersion() {
+    $version = \Drupal::config('salesforce.settings')->get('rest_api_version.version');
+    if (empty($version) || \Drupal::config('salesforce.settings')->get('use_latest')) {
+      return self::LATEST_API_VERSION;
+    }
+    return \Drupal::config('salesforce.settings')->get('rest_api_version.version');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getIdentity() {
     return $this->storage->retrieveIdentity($this->id());
   }

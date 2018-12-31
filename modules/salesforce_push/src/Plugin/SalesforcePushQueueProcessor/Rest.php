@@ -2,6 +2,8 @@
 
 namespace Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor;
 
+use Drupal\salesforce\SalesforceAuthProviderInterface;
+use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\PluginBase;
@@ -35,13 +37,6 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   protected $queue;
 
   /**
-   * Salesforce client service.
-   *
-   * @var \Drupal\salesforce\Rest\RestClientInterface
-   */
-  protected $client;
-
-  /**
    * Storage handler for SF mappings.
    *
    * @var \Drupal\salesforce_mapping\SalesforceMappingStorage
@@ -70,6 +65,13 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   protected $etm;
 
   /**
+   * Auth manager.
+   *
+   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   */
+  protected $authMan;
+
+  /**
    * Rest constructor.
    *
    * @param array $configuration
@@ -90,14 +92,14 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueueInterface $queue, RestClientInterface $client, EntityTypeManagerInterface $etm, EventDispatcherInterface $eventDispatcher) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueueInterface $queue, EntityTypeManagerInterface $etm, EventDispatcherInterface $eventDispatcher, SalesforceAuthProviderPluginManager $authMan) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->queue = $queue;
-    $this->client = $client;
     $this->etm = $etm;
     $this->mappingStorage = $etm->getStorage('salesforce_mapping');
     $this->mappedObjectStorage = $etm->getStorage('salesforce_mapped_object');
     $this->eventDispatcher = $eventDispatcher;
+    $this->authMan = $authMan;
   }
 
   /**
@@ -108,7 +110,8 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
       $container->get('queue.salesforce_push'),
       $container->get('salesforce.client'),
       $container->get('entity_type.manager'),
-      $container->get('event_dispatcher')
+      $container->get('event_dispatcher'),
+      $container->get('plugin.manager.salesforce.auth_providers')
     );
   }
 
@@ -116,7 +119,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    * Process push queue items.
    */
   public function process(array $items) {
-    if (!$this->client->isAuthorized()) {
+    if (!$this->authMan->getToken()) {
       throw new SuspendQueueException('Salesforce client not authorized.');
     }
     foreach ($items as $item) {

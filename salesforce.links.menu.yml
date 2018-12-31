@@ -17,16 +17,14 @@ salesforce.global_settings:
   description: 'Manage global settings for Salesforce Suite.'
   weight: -100
 
-salesforce.authorize:
-  route_name: salesforce.authorize
+salesforce.auth_config:
+  route_name: salesforce.auth_config
   parent: salesforce.admin_config_salesforce
   title: Salesforce Authorization
-  description: 'Manage OAuth consumer key and secret and authorize. View existing authorization details.'
-  weight: 99
+  description: 'Salesforce Authorization.'
 
-salesforce.revoke:
-  route_name: salesforce.revoke
-  parent: salesforce.admin_config_salesforce
-  title: Revoke Salesforce Authorization
-  description: 'Revoke OAuth tokens.'
-  weight: 100
+entity.salesforce_auth.collection:
+  route_name: entity.salesforce_auth.collection
+  parent: salesforce.auth_config
+  title: Salesforce Authorization Providers
+  description: 'Salesforce Authorization Providers.'

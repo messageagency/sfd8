@@ -8,7 +8,7 @@ use OAuth\Common\Consumer\Credentials;
 /**
  * Salesforce credentials extension, for drupalisms.
  */
-abstract class SalesforceCredentials extends Credentials implements SalesforceCredentialsInterface {
+class SalesforceCredentials extends Credentials implements SalesforceCredentialsInterface {
 
   /**
    * Login URL e.g. https://test.salesforce.com or https://login.salesforce.com.
@@ -27,10 +27,11 @@ abstract class SalesforceCredentials extends Credentials implements SalesforceCr
   /**
    * {@inheritdoc}
    */
-  public function __construct($consumerKey, $loginUrl) {
+  public function __construct($consumerKey, $loginUrl, $consumerSecret = NULL) {
     parent::__construct($consumerKey, NULL, NULL);
     $this->loginUrl = $loginUrl;
     $this->consumerKey = $consumerKey;
+    $this->consumerSecret = $consumerSecret;
   }
 
   /**

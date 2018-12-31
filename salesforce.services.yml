@@ -1,7 +1,7 @@
 services:
   salesforce.client:
     class: Drupal\salesforce\Rest\RestClient
-    arguments: ['@http_client', '@config.factory', '@state', '@cache.default', '@serialization.json', '@datetime.time']
+    arguments: ['@http_client', '@config.factory', '@state', '@cache.default', '@serialization.json', '@datetime.time', '@plugin.manager.salesforce.auth_providers']
 
   plugin.manager.salesforce.auth_providers:
     class: Drupal\salesforce\SalesforceAuthProviderPluginManager

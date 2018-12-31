@@ -3,6 +3,11 @@
 namespace Drupal\Tests\salesforce\Unit;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\State\State;
+use Drupal\salesforce\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\Token\SalesforceToken;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\Rest\RestResponse;
@@ -12,6 +17,8 @@ use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SelectQuery;
+use OAuth\OAuth2\Token\TokenInterface;
+use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use GuzzleHttp\Psr7\Request as GuzzleRequest;
 use GuzzleHttp\Exception\RequestException;
@@ -32,27 +39,29 @@ class RestClientTest extends UnitTestCase {
     parent::setUp();
     $this->salesforce_id = '1234567890abcde';
     $this->methods = [
-      'getConsumerKey',
-      'getConsumerSecret',
-      'getRefreshToken',
-      'getAccessToken',
-      'refreshToken',
-      'getApiEndPoint',
       'httpRequest',
     ];
 
-    $this->httpClient = $this->getMock('\GuzzleHttp\Client');
+    $this->httpClient = $this->getMock(Client::CLASS);
     $this->configFactory =
-      $this->getMockBuilder('\Drupal\Core\Config\ConfigFactory')
+      $this->getMockBuilder(ConfigFactory::CLASS)
         ->disableOriginalConstructor()
         ->getMock();
     $this->state =
-      $this->getMockBuilder('\Drupal\Core\State\State')
+      $this->getMockBuilder(State::CLASS)
         ->disableOriginalConstructor()
         ->getMock();
-    $this->cache = $this->getMock('\Drupal\Core\Cache\CacheBackendInterface');
+    $this->cache = $this->getMock(CacheBackendInterface::CLASS);
     $this->json = $this->getMock(Json::CLASS);
     $this->time = $this->getMock(TimeInterface::CLASS);
+    $this->authToken = $this->getMock(TokenInterface::CLASS);
+    $this->authMan =
+      $this->getMockBuilder(SalesforceAuthProviderPluginManager::CLASS)
+        ->disableOriginalConstructor()
+        ->getMock();
+    $this->authMan->expects($this->any())
+      ->method('getToken')
+      ->willReturn($this->authToken);
   }
 
   /**
@@ -84,27 +93,6 @@ class RestClientTest extends UnitTestCase {
         ->method('getAccessToken')
         ->willReturn(TRUE);
     }
-  }
-
-  /**
-   * @covers ::isAuthorized
-   */
-  public function testAuthorized() {
-    $this->initClient();
-    $this->client->expects($this->at(0))
-      ->method('getConsumerKey')
-      ->willReturn($this->randomMachineName());
-    $this->client->expects($this->at(1))
-      ->method('getConsumerSecret')
-      ->willReturn($this->randomMachineName());
-    $this->client->expects($this->at(2))
-      ->method('getRefreshToken')
-      ->willReturn($this->randomMachineName());
-
-    $this->assertTrue($this->client->isAuthorized());
-
-    // Next one will fail because mocks only return for specific invocations.
-    $this->assertFalse($this->client->isAuthorized());
   }
 
   /**
@@ -154,10 +142,10 @@ class RestClientTest extends UnitTestCase {
 
     // First httpRequest() is position 4.
     // @TODO this is extremely brittle, exposes complexity in underlying client. Refactor this.
-    $this->client->expects($this->at(3))
+    $this->client->expects($this->at(2))
       ->method('httpRequest')
       ->willReturn($response_401);
-    $this->client->expects($this->at(4))
+    $this->client->expects($this->at(3))
       ->method('httpRequest')
       ->willReturn($response_200);
 

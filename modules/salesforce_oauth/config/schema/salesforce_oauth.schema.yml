@@ -1,0 +1,13 @@
+salesforce.auth_provider_settings.oauth:
+  type: mapping
+  label: 'Salesforce OAuth Provider Settings'
+  mapping:
+    consumer_key:
+      type: string
+      label: 'Consumer Key'
+    consumer_secret:
+      type: string
+      label: 'Consumer Secret'
+    login_url:
+      type: uri
+      label: 'Login URL'

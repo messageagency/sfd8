@@ -35,42 +35,6 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
   }
 
   /**
-   * Backwards-compatibility for legacy singleton auth.
-   *
-   * @return string
-   *   Id of the active oauth.
-   *
-   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
-   */
-  private function service() {
-    $oauth = SalesforceAuthProviderPluginManager::getAuthConfig();
-    return $oauth->id();
-  }
-
-  /**
-   * Backwards-compatibility for legacy singleton auth.
-   *
-   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
-   */
-  public function updateToken() {
-    $this->storeAccessToken($this->service(),
-      new SalesforceToken(
-        $this->state->get('salesforce.access_token'),
-        $this->state->get('salesforce.refresh_token')));
-    return $this;
-  }
-
-  /**
-   * Backwards-compatibility for legacy singleton auth.
-   *
-   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.0.
-   */
-  public function updateIdentity() {
-    $this->storeIdentity($this->service(), $this->state->get('salesforce.identity'));
-    return $this;
-  }
-
-  /**
    * Token storage key for given service.
    *
    * @return string

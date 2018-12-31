@@ -93,15 +93,6 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       $this->eventDispatcher,
     ]);
 
-    $this->client->expects($this->at(0))
-      ->method('isAuthorized')
-      ->willReturn(TRUE);
-
-    // Test suspend queue if not authorized.
-    $this->client->expects($this->at(1))
-      ->method('isAuthorized')
-      ->willReturn(FALSE);
-
     $this->handler->expects($this->once())
       ->method('processItem')
       ->willReturn(NULL);

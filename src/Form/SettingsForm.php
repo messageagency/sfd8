@@ -93,7 +93,7 @@ class SettingsForm extends ConfigFormBase {
       $versions = $this->getVersionOptions();
     }
     catch (\Exception $e) {
-      $href = new Url('salesforce.authorize');
+      $href = new Url('salesforce.admin_config_salesforce');
       drupal_set_message($this->t('Error when connecting to Salesforce. Please <a href="@href">check your credentials</a> and try again: %message', ['@href' => $href->toString(), '%message' => $e->getMessage()]), 'error');
     }
 

@@ -303,3 +303,26 @@ function salesforce_update_8006() {
   \Drupal::service('salesforce.auth_token_storage')->updateToken();
   return "Updated legacy token to new plugin config.";
 }
+
+function salesforce_update_8401() {
+  // Enable salesforce_oauth module.
+  \Drupal::service('module_installer')->install(['salesforce_oauth']);
+  // purge old stateful values.
+  // clear old config.
+  throw new \Exception('foo');
+
+  \Drupal::configFactory()->getEditable('salesforce.settings')
+    ->clear('consumer_key')
+    ->clear('consumer_secret')
+    ->clear('login_url')
+    ->save();
+
+  \Drupal::state()->deleteMultiple([
+    'salesforce.access_token',
+    'salesforce.refresh_token',
+    'salesforce.identity',
+    'salesforce.instance_url',
+    'salesforce_encrypt.profile',
+  ]);
+
+}

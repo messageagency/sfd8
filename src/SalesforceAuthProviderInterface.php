@@ -17,6 +17,7 @@ interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormIn
   const AUTH_TOKEN_PATH = '/services/oauth2/token';
   const AUTH_ENDPOINT_PATH = '/services/oauth2/authorize';
   const SOAP_CLASS_PATH = '/services/Soap/class/';
+  const LATEST_API_VERSION = '44.0';
 
   /**
    * Id of this service.
@@ -131,6 +132,25 @@ interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormIn
   public function getAccessTokenEndpoint();
 
   /**
+   * Get the globally configured API version to use.
+   *
+   * @return string
+   *   The string name of the API version.
+   */
+  public function getApiVersion();
+
+  /**
+   * API Url for this plugin.
+   *
+   * @param string $api_type
+   *   (optional) Which API for which to retrieve URL, defaults to "rest".
+   *
+   * @return string.
+   *   The URL
+   */
+  public function getApiEndpoint($api_type = 'rest');
+
+  /**
    * Instance URL for this connection.
    *
    * @return string
@@ -149,5 +169,25 @@ interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormIn
    *   The form state.
    */
   public function save(array $form, FormStateInterface $form_state);
+
+  /**
+   * The auth provider service.
+   *
+   * @return \Drupal\salesforce\SalesforceAuthProviderInterface
+   *   The auth provider service.
+   */
+  public function service();
+
+  /**
+   * Complete the OAuth user-agent handshake.
+   *
+   * @return bool
+   *   TRUE if oauth finalization was successful.
+   *
+   * @throws \OAuth\Common\Http\Exception\TokenResponseException
+   *
+   * @see \Drupal\salesforce\Controller\SalesforceOAuthController
+   */
+  public function finalizeOauth();
 
 }

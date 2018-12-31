@@ -18,9 +18,9 @@ function salesforce_help($route_name, RouteMatchInterface $route_match) {
       if (!\Drupal::moduleHandler()->moduleExists('salesforce_mapping')) {
         $output .= '<p>' . t('In order to configure Salesforce Mappings, you must first enable the <a href=":url">Salesforce Mapping</a> module.', [':url' => (new Url('system.modules_list'))->toString()]) . '</p>';
       }
-      $client = \Drupal::service('salesforce.client');
-      if (!$client->isAuthorized()) {
-        $output .= '<p>' . t('You must <a href=":authorize">authorize your account with Salesforce</a> in order to configure Salesforce Mappings.', [':authorize' => (new Url('salesforce.authorize'))->toString()]) . '</p>';
+
+      if (!\Drupal::service('plugin.manager.salesforce.auth_providers')->getToken()) {
+        $output .= '<p>' . t('You must <a href=":authorize">authorize your account with Salesforce</a> in order to configure Salesforce Mappings.', [':authorize' => (new Url('salesforce.admin_config_salesforce'))->toString()]) . '</p>';
       }
       return $output;
 
