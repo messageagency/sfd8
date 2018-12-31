@@ -9,6 +9,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
+use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
@@ -89,6 +90,15 @@ class RestClient implements RestClientInterface {
 
   protected $httpClientOptions;
 
+  /**
+   * Token storage.
+   *
+   * @var \Drupal\salesforce\Storage\SalesforceAuthTokenStorage
+   *
+   * @deprecated BC legacy auth scheme only, do not use, will be removed.
+   */
+  private $storage;
+
   const CACHE_LIFETIME = 300;
   const LONGTERM_CACHE_LIFETIME = 86400;
 
@@ -119,6 +129,21 @@ class RestClient implements RestClientInterface {
     $this->time = $time;
     $this->httpClientOptions = [];
     return $this;
+  }
+
+  /**
+   * Storage helper.
+   *
+   * @return \Drupal\salesforce\Storage\SalesforceAuthTokenStorage
+   *   The auth token storage service.
+   *
+   * @deprecated BC legacy auth scheme only, do not use, will be removed.
+   */
+  private function storage() {
+    if (!$this->storage) {
+      $this->storage = \Drupal::service('salesforce.auth_token_storage');
+    }
+    return $this->storage;
   }
 
   /**
@@ -371,6 +396,7 @@ class RestClient implements RestClientInterface {
    */
   public function setConsumerKey($value) {
     $this->mutableConfig->set('consumer_key', $value)->save();
+    SalesforceAuthProviderPluginManager::updateAuthConfig();
     return $this;
   }
 
@@ -386,6 +412,7 @@ class RestClient implements RestClientInterface {
    */
   public function setConsumerSecret($value) {
     $this->mutableConfig->set('consumer_secret', $value)->save();
+    SalesforceAuthProviderPluginManager::updateAuthConfig();
     return $this;
   }
 
@@ -402,6 +429,7 @@ class RestClient implements RestClientInterface {
    */
   public function setLoginUrl($value) {
     $this->mutableConfig->set('login_url', $value)->save();
+    SalesforceAuthProviderPluginManager::updateAuthConfig();
     return $this;
   }
 
@@ -433,13 +461,14 @@ class RestClient implements RestClientInterface {
    */
   public function setAccessToken($token) {
     $this->state->set('salesforce.access_token', $token);
+    $this->storage()->updateToken();
     return $this;
   }
 
   /**
    * Get refresh token.
    */
-  protected function getRefreshToken() {
+  public function getRefreshToken() {
     return $this->state->get('salesforce.refresh_token');
   }
 
@@ -448,6 +477,7 @@ class RestClient implements RestClientInterface {
    */
   public function setRefreshToken($token) {
     $this->state->set('salesforce.refresh_token', $token);
+    $this->storage()->updateToken();
     return $this;
   }
 
@@ -524,6 +554,7 @@ class RestClient implements RestClientInterface {
    */
   public function setIdentity($data) {
     $this->state->set('salesforce.identity', $data);
+    $this->storage()->updateIdentity();
     return $this;
   }
 
