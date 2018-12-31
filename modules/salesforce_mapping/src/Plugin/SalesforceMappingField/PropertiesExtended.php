@@ -16,7 +16,6 @@ use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\Core\TypedData\Exception\MissingDataException;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
-use Drupal\Core\Url;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
@@ -145,10 +144,8 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
     $element = &$pluginForm[$context_name]['setting'];
     if ($mode == 'selector') {
       $element['#description'] = $this->t("The data selector helps you drill down into the data available.");
-      $url = Url::fromRoute('salesforce_mapping.autocomplete_controller_autocomplete', ['entity_type_id' => $mapping->get('drupal_entity_type'), 'bundle' => $mapping->get('drupal_bundle')]);
-      $element['#attributes']['class'][] = 'salesforce-mapping-autocomplete';
-      $element['#attributes']['data-autocomplete-path'] = $url->toString();
-      $element['#attached']['library'][] = 'salesforce_mapping/salesforce_mapping.autocomplete';
+      $element['#autocomplete_route_name'] = 'salesforce_mapping.autocomplete_controller_autocomplete';
+      $element['#autocomplete_route_parameters'] = ['entity_type_id' => $mapping->get('drupal_entity_type'), 'bundle' => $mapping->get('drupal_bundle')];
     }
     $value = $mode == 'selector' ? $this->t('Switch to the direct input mode') : $this->t('Switch to data selection');
     $pluginForm[$context_name]['switch_button'] = [
@@ -364,7 +361,7 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   * Submit callback: switch a context to data selecor or direct input mode.
+   * Submit callback: switch a context to data selector or direct input mode.
    */
   public static function switchContextMode(array &$form, FormStateInterface $form_state) {
     $element_name = $form_state->getTriggeringElement()['#name'];
