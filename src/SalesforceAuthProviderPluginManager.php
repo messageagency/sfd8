@@ -7,7 +7,6 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\salesforce\Entity\SalesforceAuthConfig as SalesforceAuthEntity;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
 use OAuth\OAuth2\Token\StdOAuth2Token;
@@ -152,7 +151,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
     if (empty($provider_id)) {
       return NULL;
     }
-    return SalesforceAuthEntity::load($provider_id);
+    return SalesforceAuthConfig::load($provider_id);
   }
 
   /**

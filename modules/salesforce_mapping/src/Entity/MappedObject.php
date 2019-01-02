@@ -348,8 +348,15 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
   /**
    * {@inheritdoc}
    */
+  public function authMan() {
+    return \Drupal::service('plugin.manager.salesforce.auth_providers');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSalesforceUrl() {
-    return $this->client()->getInstanceUrl() . '/' . $this->salesforce_id->value;
+    return $this->authMan()->getProvider()->getInstanceUrl() . '/' . $this->salesforce_id->value;
   }
 
   /**

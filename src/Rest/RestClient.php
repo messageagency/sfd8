@@ -332,6 +332,9 @@ class RestClient implements RestClientInterface {
     }
 
     $versions = [];
+    if (!$this->authProvider) {
+      return [];
+    }
     $id = $this->authProvider->getIdentity();
     if (!empty($id)) {
       $url = str_replace('v{version}/', '', $id['urls']['rest']);
