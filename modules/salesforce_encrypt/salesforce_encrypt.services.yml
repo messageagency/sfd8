@@ -1,0 +1,4 @@
+services:
+  salesforce_encrypt.service:
+    class: Drupal\salesforce_encrypt\SalesforceEncrypt
+    arguments: ['@encrypt.encryption_profile.manager', '@key.config_override', '@config.factory', '@state']

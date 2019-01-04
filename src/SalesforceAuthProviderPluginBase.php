@@ -3,12 +3,14 @@
 namespace Drupal\salesforce;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Form\ConfigFormBaseTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use OAuth\Common\Http\Exception\TokenResponseException;
 use OAuth\Common\Http\Uri\Uri;
 use OAuth\OAuth2\Service\Salesforce;
+use Symfony\Component\DependencyInjection\Loader\Configurator\Traits\FactoryTrait;
 
 /**
  * Shared methods for auth providers.
@@ -177,6 +179,13 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
    */
   public function getAccessToken() {
     return $this->storage->retrieveAccessToken($this->id());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function revokeAccessToken() {
+    return $this->storage->clearToken($this->id());
   }
 
   /**

@@ -6,12 +6,80 @@
  */
 
 use Drupal\encrypt\EncryptionProfileInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Implements hook_encryption_profile_predelete().
  *
  * If the assigned Encryption profile gets deleted, reset encryption settings.
  */
-function salesforce_encryption_profile_predelete(EncryptionProfileInterface $entity) {
+function salesforce_encrypt_encryption_profile_predelete(EncryptionProfileInterface $entity) {
   \Drupal::service('salesforce.client')->hookEncryptionProfileDelete($entity);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function salesforce_encrypt_form_salesforce_auth_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  /** @var \Drupal\Core\Config\ImmutableConfig $config */
+  $config = $form_state->getBuildInfo()['auth_config'];
+  if (!$config->hasOverrides('provider_settings')) {
+    return;
+  }
+
+  foreach (Element::children($form['settings']['provider_settings']) as $key) {
+    if ($config->hasOverrides("provider_settings.$key")) {
+      $value = &$form['settings']['provider_settings'][$key];
+      $value['#disabled'] = TRUE;
+      $value['#title'] .= ' <em>' . t('(Overridden)') . '</em>';
+      $value['#description'] .= '<br /><strong>' . t('This value is overridden, you cannot edit it here.') . '</strong>';
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function salesforce_encrypt_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
+  $entity_type = &$entity_types['salesforce_auth'];
+  $entity_type->setLinkTemplate('encryption',
+    "/admin/config/salesforce/authorize/encryption/{salesforce_auth}");
+  $handlers = $entity_type->getHandlerClasses();
+  $handlers['form']['encryption'] = 'Drupal\salesforce_encrypt\Form\SalesforceAuthEncryptForm';
+  $entity_type->setHandlerClass('form', $handlers['form']);
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ */
+function salesforce_encrypt_local_tasks_alter(&$local_tasks) {
+  // Clone an existing salesforce_auth local task to create our new tab.
+  $local_tasks['entity.salesforce_auth.encryption'] =
+    array_merge($local_tasks['entity.salesforce_auth.revoke'], [
+      'route_name' => 'entity.salesforce_auth.encryption',
+      'title' => t('Encryption'),
+      'base_route' => 'entity.salesforce_auth.edit_form',
+      'provider' => 'salesforce_encrypt',
+      'id' => 'entity.salesforce_auth.encryption',
+    ]);
+
+
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function salesforce_encrypt_entity_operation(EntityInterface $entity) {
+  $operations = [];
+  if ($entity->getEntityTypeId() == 'salesforce_auth') {
+    $operations['encryption'] = [
+      'title' => t('Encryption'),
+      'weight' => 200,
+      'url' => $entity->toUrl('encryption'),
+    ];
+  }
+  return $operations;
 }

@@ -217,7 +217,7 @@ class RestClient implements RestClientInterface {
    * @throws \GuzzleHttp\Exception\RequestException
    */
   protected function apiHttpRequest($url, array $params, $method) {
-    if (!$this->authManager->getToken()) {
+    if (!$this->authToken) {
       throw new \Exception('Missing OAuth Token');
     }
 

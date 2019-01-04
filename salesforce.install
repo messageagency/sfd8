@@ -69,13 +69,13 @@ function salesforce_get_auth_provider_requirements() {
   if (!$authMan->hasProviders()) {
     $requirements += [
       'description' => t('No auth providers have been created. Please <a href="@href">create an auth provider</a> to connect to Salesforce.', ['@href' => Url::fromRoute('entity.salesforce_auth.add_form')]),
-      'severity' => REQUIREMENT_WARNING,
+      'severity' => REQUIREMENT_ERROR,
     ];
   }
   elseif (!$authMan->getConfig()) {
     $requirements += [
       'description' => t('Default auth provider has not been set. Please <a href="@href">choose an auth provider</a> to connect to Salesforce.', ['@href' => Url::fromRoute('salesforce.auth_config')->toString()]),
-      'severity' => REQUIREMENT_WARNING,
+      'severity' => REQUIREMENT_ERROR,
     ];
   }
   else {
@@ -84,14 +84,14 @@ function salesforce_get_auth_provider_requirements() {
       if (!$authMan->getToken()) {
         $requirements += [
           'description' => $failMessage,
-          'severity' => REQUIREMENT_WARNING,
+          'severity' => REQUIREMENT_ERROR,
         ];
       }
     }
     catch (Exception $e) {
       $requirements += [
         'description' => $failMessage,
-        'severity' => REQUIREMENT_WARNING,
+        'severity' => REQUIREMENT_ERROR,
       ];
     }
   }

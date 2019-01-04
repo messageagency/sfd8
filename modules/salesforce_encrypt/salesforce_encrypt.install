@@ -1,0 +1,54 @@
+<?php
+
+/**
+ * @file
+ * Requirements and uninstall hooks.
+ */
+
+use Drupal\Core\Url;
+use Drupal\salesforce\EntityNotFoundException;
+
+/**
+ * Throw a runtime error if Salesforce encryption profile is not selected.
+ *
+ * Implements hook_requirements().
+ */
+function salesforce_encrypt_requirements($phase) {
+  $requirements = [];
+  if ($phase == 'runtime') {
+    $profile_id = NULL;
+    try {
+      $profile = \Drupal::service('salesforce.client')->getEncryptionProfile();
+    }
+    catch (EntityNotFoundException $e) {
+      // Noop.
+    }
+    $requirements['salesforce_encrypt'] = [
+      'title' => t('Salesforce Encrypt'),
+      'value' => t('Encryption Profile'),
+    ];
+    if (empty($profile)) {
+      $requirements['salesforce_encrypt'] += [
+        'severity' => REQUIREMENT_ERROR,
+        'description' => t('You need to <a href="@url">select an encryption profile</a> in order to fully enable Salesforce Encrypt and protect sensitive information.', ['@url' => Url::fromRoute('salesforce_encrypt.settings')->toString()]),
+      ];
+    }
+    else {
+      $requirements['salesforce_encrypt'] += [
+        'severity' => REQUIREMENT_OK,
+        'description' => t('Profile id: <a href=":url">%profile</a>', ['%profile' => $profile->id(), ':url' => $profile->url()]),
+      ];
+    }
+  }
+  return $requirements;
+}
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Decrypt and purge our data.
+ */
+function salesforce_encrypt_uninstall() {
+  \Drupal::service('salesforce.client')->disableEncryption();
+  \Drupal::state()->delete('salesforce_encrypt.profile');
+}

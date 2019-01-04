@@ -1,18 +1,27 @@
 <?php
 
-namespace Drupal\salesforce\Form;
+namespace Drupal\salesforce_encrypt\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
+use Drupal\salesforce_encrypt\SalesforceEncryptTrait;
 
-class SalesforceAuthRevokeForm extends EntityConfirmFormBase {
+class SalesforceAuthEncryptForm extends EntityConfirmFormBase {
+
   /**
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to revoke authorization for Auth Config %name?', ['%name' => $this->entity->label()]);
+    return $this->t('Encrypt / decrypt Auth Config %name?', ['%name' => $this->entity->label()]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription() {
+    return $this->t('Encryption is currently %status for Auth Config %name.');
   }
 
   /**

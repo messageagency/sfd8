@@ -4,5 +4,6 @@ description: Adds encryption support for auth providers.
 package: Salesforce
 core: 8.x
 dependencies:
+  - key:key
   - encrypt:encrypt
   - salesforce:salesforce

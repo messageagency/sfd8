@@ -19,11 +19,15 @@ class SalesforceAuthForm extends EntityForm {
    */
   protected $entity;
 
+
+
   /**
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
     $auth = $this->entity;
+    $form_state->setBuildInfo($form_state->getBuildInfo()
+      + ['auth_config' => $this->config($auth->getConfigDependencyName())]);
     $form['label'] = [
       '#title' => $this->t('Label'),
       '#type' => 'textfield',

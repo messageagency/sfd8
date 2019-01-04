@@ -4,5 +4,5 @@ description: Provides key-based Salesforce authentication.
 core: 8.x
 package: Salesforce
 dependencies:
-  - salesforce
-  - key
+  - salesforce:salesforce
+  - key:key

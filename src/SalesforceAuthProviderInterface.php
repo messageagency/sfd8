@@ -108,6 +108,13 @@ interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormIn
   public function hasAccessToken();
 
   /**
+   * Clear the access token for this auth provider plugin.
+   *
+   * @return $this
+   */
+  public function revokeAccessToken();
+
+  /**
    * Default configuration for this plugin type.
    *
    * @return array
