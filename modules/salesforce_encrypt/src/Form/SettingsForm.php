@@ -103,7 +103,7 @@ class SettingsForm extends FormBase {
     $default = NULL;
     try {
       /** @var \Drupal\encrypt\EncryptionProfileInterface $profile */
-      $profile = $this->salesforceEncrypt->getProfile('salesforce_encrypt.profile');
+      $profile = $this->salesforceEncrypt->getProfile();
       if (!empty($profile)) {
         $default = $profile->id();
       }
@@ -139,6 +139,7 @@ class SettingsForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // @TODO drop support for changing the profile if we have existing encrypted configs.
     $old_profile_id = $this->state->get('salesforce_encrypt.profile');
     $profile_id = $form_state->getValue('profile');
 

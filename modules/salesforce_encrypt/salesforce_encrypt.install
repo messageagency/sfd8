@@ -43,12 +43,3 @@ function salesforce_encrypt_requirements($phase) {
   return $requirements;
 }
 
-/**
- * Implements hook_uninstall().
- *
- * Decrypt and purge our data.
- */
-function salesforce_encrypt_uninstall() {
-  \Drupal::service('salesforce.client')->disableEncryption();
-  \Drupal::state()->delete('salesforce_encrypt.profile');
-}

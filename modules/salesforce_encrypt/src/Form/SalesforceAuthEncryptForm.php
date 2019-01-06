@@ -35,7 +35,7 @@ class SalesforceAuthEncryptForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getConfirmText() {
-    return $this->t('Revoke Auth Token');
+    return $this->t('Encrypt / decrypt auth config.');
   }
 
   /**
@@ -45,13 +45,7 @@ class SalesforceAuthEncryptForm extends EntityConfirmFormBase {
     if (!$this->entity instanceof SalesforceAuthConfig) {
       return;
     }
-    $this->entity->getPlugin()->revokeAccessToken();
-
-    // Set a message that the entity was deleted.
-    $this->messenger()->addStatus($this->t('Auth token for %label was revoked.', [
-      '%label' => $this->entity->label(),
-    ]));
-
+    \Drupal::service('salesforce_encrypt.service')->encryptAuthConfig($this->entity);
     $form_state->setRedirectUrl($this->getCancelUrl());
   }
 
