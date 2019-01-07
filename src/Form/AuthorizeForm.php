@@ -181,7 +181,7 @@ class AuthorizeForm extends ConfigFormBase {
       $form_state->setErrorByName('login_url', t('Please enter a valid Salesforce login URL.'));
     }
 
-    if (!is_numeric($form_state->getValue('consumer_secret'))) {
+    if (!$form_state->getValue('consumer_secret')) {
       $form_state->setErrorByName('consumer_secret', t('Please enter a valid consumer secret.'));
     }
 
