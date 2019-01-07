@@ -2,12 +2,14 @@
 
 namespace Drupal\salesforce;
 
+use Drupal\salesforce\SelectQueryBase;
+
 /**
  * Class SelectQuery.
  *
  * @package Drupal\salesforce
  */
-class SelectQuery implements SelectQueryInterface {
+class SelectQuery extends SelectQueryBase {
 
   public $fields = [];
   public $order = [];
@@ -41,6 +43,7 @@ class SelectQuery implements SelectQueryInterface {
    */
   public function addCondition($field, $value, $operator = '=') {
     if (is_array($value)) {
+
       $value = "('" . implode("','", $value) . "')";
 
       // Set operator to IN if wasn't already changed from the default.
@@ -75,7 +78,17 @@ class SelectQuery implements SelectQueryInterface {
     if (count($this->conditions) > 0) {
       $where = [];
       foreach ($this->conditions as $condition) {
-        $where[] = implode('+', $condition);
+        // If the condition is provided as an assoc. array escape the value.
+        if (array_key_exists($condition['value'])) {
+          $where[] = implode('+', [
+            $condition['field'],
+            $condition['operator'],
+            $this->escapeSoqlValue($condition['value']),
+          ]);
+        }
+        else {
+          $where[] = implode('+', $condition);
+        }
       }
       $query .= '+WHERE+' . implode('+AND+', $where);
     }
