@@ -8,8 +8,8 @@
 use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
-use Drupal\Core\Utility\UpdateException;
 use Drupal\salesforce\SalesforceAuthProviderPluginManager;
+use OAuth\Common\Storage\Exception\TokenNotFoundException;
 
 /**
  * Implements hook_uninstall().
@@ -270,10 +270,17 @@ function salesforce_update_8004() {
 /**
  * Convert legacy oauth credentials to new auth plugin config.
  */
+/**
+ * Convert legacy oauth credentials to new auth plugin config.
+ */
 function salesforce_update_8005() {
   $change_list = \Drupal::entityDefinitionUpdateManager()->getChangeSummary();
   if (!empty($change_list['salesforce_auth'])) {
-    throw new UpdateException("** PENDING SCHEMA UPDATES ** \n** Please install entity updates (entup) to install Salesforce Auth Config before proceeding with database update.");
+    if (!empty($change_list['salesforce_auth'])) {
+      $entityType = \Drupal::entityTypeManager()
+        ->getDefinition('salesforce_auth');
+      \Drupal::entityDefinitionUpdateManager()->installEntityType($entityType);
+    }
   }
 
   $message = '';
@@ -293,15 +300,21 @@ function salesforce_update_8005() {
  * Convert legacy token to new auth plugin config.
  */
 function salesforce_update_8006() {
+  /** @var \Drupal\salesforce\Entity\SalesforceAuthConfig $oauth */
   $oauth = SalesforceAuthProviderPluginManager::getAuthConfig();
   if (!$oauth) {
     return "Auth config missing. Refused to update legacy token.";
   }
-  if (\Drupal::service('salesforce.auth_token_storage')->retrieveAccessToken($oauth->id())) {
-    return "Token exists. Refused to update.";
+  try {
+    if (\Drupal::service('salesforce.auth_token_storage')
+      ->retrieveAccessToken($oauth->id())) {
+      return "Token exists. Refused to update.";
+    }
   }
-  \Drupal::service('salesforce.auth_token_storage')->updateToken();
-  return "Updated legacy token to new plugin config.";
+  catch (TokenNotFoundException $e) {
+    \Drupal::service('salesforce.auth_token_storage')->updateToken();
+    return "Updated legacy token to new plugin config.";
+  }
 }
 
 function salesforce_update_8401() {
