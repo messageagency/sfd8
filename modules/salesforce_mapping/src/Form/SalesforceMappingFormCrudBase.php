@@ -134,7 +134,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#type' => 'select',
       '#description' => $this->t('Select a Salesforce object to map.'),
       '#default_value' => $salesforce_object_type,
-      '#options' => $object_type_options,
+      '#options' => $this->getSalesforceObjectTypeOptions(),
       '#required' => TRUE,
       '#empty_option' => $this->t('- Select -'),
     ];
