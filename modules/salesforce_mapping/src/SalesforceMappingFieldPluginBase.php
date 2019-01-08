@@ -389,11 +389,12 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
       '#title' => $plugin_def['label'],
     ];
 
+    $options = $this->getSalesforceFieldOptions($form['#entity']->getSalesforceObjectType());
     $pluginForm['salesforce_field'] = [
       '#title' => t('Salesforce field'),
       '#type' => 'select',
       '#description' => t('Select a Salesforce field to map.'),
-      '#options' => $this->getSalesforceFieldOptions($form['#entity']->getSalesforceObjectType()),
+      '#options' => $options,
       '#default_value' => $this->config('salesforce_field'),
       '#empty_option' => $this->t('- Select -'),
     ];

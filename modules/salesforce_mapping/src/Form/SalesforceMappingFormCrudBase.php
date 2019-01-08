@@ -24,16 +24,10 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // Perform our salesforce queries first, so that if we can't connect we
-    // don't waste time on the rest of the form.
-    try {
-      $object_type_options = $this->getSalesforceObjectTypeOptions();
-    }
-    catch (\Exception $e) {
-      $href = new Url('salesforce.authorize');
-      drupal_set_message($this->t('Error when connecting to Salesforce. Please <a href="@href">check your credentials</a> and try again: %message', ['@href' => $href->toString(), '%message' => $e->getMessage()]), 'error');
+    if (!$this->ensureConnection()) {
       return $form;
     }
+
     $form = parent::buildForm($form, $form_state);
     $mapping = $this->entity;
     $form['label'] = [
@@ -434,30 +428,6 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       return strcmp($a->render(), $b->render());
     });
     return $options;
-  }
-
-  /**
-   * Helper to retreive a list of object type options.
-   *
-   * @return array
-   *   An array of values keyed by machine name of the object with the label as
-   *   the value, formatted to be appropriate as a value for #options.
-   */
-  protected function getSalesforceObjectTypeOptions() {
-    $sfobject_options = [];
-
-    // Note that we're filtering SF object types to a reasonable subset.
-    $config = $this->config('salesforce.settings');
-    $filter = $config->get('show_all_objects') ? [] : [
-      'updateable' => TRUE,
-      'triggerable' => TRUE,
-    ];
-    $sfobjects = $this->client->objects($filter);
-    foreach ($sfobjects as $object) {
-      $sfobject_options[$object['name']] = $object['label'] . ' (' . $object['name'] . ')';
-    }
-    asort($sfobject_options);
-    return $sfobject_options;
   }
 
   /**
