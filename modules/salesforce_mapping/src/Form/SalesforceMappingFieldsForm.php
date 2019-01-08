@@ -17,10 +17,16 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    if (!$this->ensureConnection('objectDescribe', $this->entity->getSalesforceObjectType())) {
+      return $form;
+    }
+    $form = parent::buildForm($form, $form_state);
     // Previously "Field Mapping" table on the map edit form.
     // @TODO add a header with Fieldmap Property information.
 
+    // Add #entity property to expose it to our field plugin forms.
     $form['#entity'] = $this->entity;
+
     $form['#attached']['library'][] = 'salesforce/admin';
     // For each field on the map, add a row to our table.
     $form['overview'] = ['#markup' => 'Field mapping overview goes here.'];

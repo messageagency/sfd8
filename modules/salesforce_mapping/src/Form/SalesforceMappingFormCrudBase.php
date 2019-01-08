@@ -24,16 +24,10 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // Perform our salesforce queries first, so that if we can't connect we
-    // don't waste time on the rest of the form.
-    try {
-      $object_type_options = $this->getSalesforceObjectTypeOptions();
-    }
-    catch (\Exception $e) {
-      $href = new Url('salesforce.admin_config_salesforce');
-      drupal_set_message($this->t('Error when connecting to Salesforce. Please <a href="@href">check your credentials</a> and try again: %message', ['@href' => $href->toString(), '%message' => $e->getMessage()]), 'error');
+    if (!$this->ensureConnection()) {
       return $form;
     }
+
     $form = parent::buildForm($form, $form_state);
     $mapping = $this->entity;
     $form['label'] = [
