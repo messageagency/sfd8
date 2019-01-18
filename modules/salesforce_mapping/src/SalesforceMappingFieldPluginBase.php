@@ -15,6 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceWarningEvent;
 use Drupal\salesforce\Exception as SalesforceException;
@@ -263,17 +264,11 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
       ->salesforceClient
       ->objectDescribe($mapping->getSalesforceObjectType());
 
+    $data_definition = $this->getFieldDataDefinition($entity);
+    $drupal_field_type = $this->getDrupalFieldType($data_definition);
+    $drupal_field_settings = $data_definition->getSettings();
+
     $field_definition = $describe->getField($this->config('salesforce_field'));
-
-    $drupal_field_definition = $entity->get($this->config('drupal_field_value'))
-      ->getFieldDefinition()
-      ->getItemDefinition();
-    // @TODO this will need to be rewritten for https://www.drupal.org/node/2899460
-    $field_main_property = $drupal_field_type = $drupal_field_definition
-      ->getPropertyDefinition($drupal_field_definition->getMainPropertyName());
-    $drupal_field_type = $field_main_property ? $field_main_property->getDataType() : NULL;
-    $drupal_field_settings = $drupal_field_definition->getSettings();
-
     switch (strtolower($field_definition['type'])) {
       case 'boolean':
         if (is_string($value) && strtolower($value) === 'false') {
@@ -325,9 +320,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
           }
         }
         break;
-
     }
-
     return $value;
   }
 
@@ -412,6 +405,36 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
     ];
 
     return $pluginForm;
+  }
+
+  /**
+   * Helper for buildConfigurationForm() to build a broken field plugin.
+   *
+   * @see buildConfigurationForm()
+   *
+   * @return array
+   *   The dummy form with message to indicate the plugin is broken.
+   */
+  protected function buildBrokenConfigurationForm(array &$pluginForm, FormStateInterface $form_state) {
+    foreach ($this->config() as $key => $value) {
+      if (!empty($pluginForm[$key])) {
+        $pluginForm[$key]['#type'] = 'hidden';
+        $pluginForm[$key]['#value'] = $value;
+      }
+    }
+
+    $pluginForm['drupal_field_type'] = [
+      '#type' => 'hidden',
+      '#value' => $this->config('drupal_field_type'),
+    ];
+
+    return [
+      'message' => [
+        '#markup' => '<div class="error">'
+        . $this->t('The field plugin %plugin is broken or missing.', ['%plugin' => $this->config('drupal_field_type')])
+        . '</div>',
+      ],
+    ];
   }
 
   /**
@@ -532,6 +555,37 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    */
   protected function selectionPluginManager() {
     return \Drupal::service('plugin.manager.entity_reference_selection');
+  }
+
+  /**
+   * Helper method to get the Data Definition for the current field.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The Entity to get the field from.
+   *
+   * @return \Drupal\Core\TypedData\DataDefinitionInterface
+   *   The Data Definition of the current field.
+   */
+  protected function getFieldDataDefinition(EntityInterface $entity) {
+    return $entity->get($this->config('drupal_field_value'))
+      ->getFieldDefinition()
+      ->getItemDefinition();
+  }
+
+  /**
+   * Helper method to get the Field Type of the given Field Data Definition.
+   *
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface $data_definition
+   *   The Drupal Field Data Definition object.
+   *
+   * @return string|null
+   *   The Drupal Field Type or NULL.
+   */
+  protected function getDrupalFieldType(DataDefinitionInterface $data_definition) {
+    $field_main_property = $data_definition
+      ->getPropertyDefinition($data_definition->getMainPropertyName());
+
+    return $field_main_property ? $field_main_property->getDataType() : NULL;
   }
 
 }
