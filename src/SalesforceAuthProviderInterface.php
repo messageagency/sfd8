@@ -66,22 +66,6 @@ interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormIn
   public function getLoginUrl();
 
   /**
-   * Consumer key for the connected OAuth app.
-   *
-   * @return string
-   *   Consumer key.
-   */
-  public function getConsumerKey();
-
-  /**
-   * Consumer secret for the connected OAuth app.
-   *
-   * @return string
-   *   Consumer secret.
-   */
-  public function getConsumerSecret();
-
-  /**
    * Access token for this plugin.
    *
    * @return \OAuth\OAuth2\Token\TokenInterface
@@ -184,17 +168,5 @@ interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormIn
    *   The auth provider service.
    */
   public function service();
-
-  /**
-   * Complete the OAuth user-agent handshake.
-   *
-   * @return bool
-   *   TRUE if oauth finalization was successful.
-   *
-   * @throws \OAuth\Common\Http\Exception\TokenResponseException
-   *
-   * @see \Drupal\salesforce\Controller\SalesforceOAuthController
-   */
-  public function finalizeOauth();
 
 }

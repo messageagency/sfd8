@@ -86,7 +86,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
       $this->client->{$method}($arg);
     }
     catch (\Exception $e) {
-      $href = new Url('salesforce.admin_config_salesforce');
+      $href = new Url('salesforce.auth_config');
       $this->messenger()->addError($this->t('Error when connecting to Salesforce. Please <a href="@href">check your credentials</a> and try again: %message', ['@href' => $href->toString(), '%message' => $e->getMessage() ?: get_class($e)]), 'error');
       return FALSE;
     }

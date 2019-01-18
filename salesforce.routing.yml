@@ -78,10 +78,3 @@ entity.salesforce_auth.delete_form:
     _permission: 'authorize salesforce'
   options:
     no_cache: TRUE
-
-salesforce.oauth_callback:
-  path: '/salesforce/oauth_callback'
-  defaults:
-    _controller: '\Drupal\salesforce\Controller\SalesforceOAuthController::oauthCallback'
-  requirements:
-    _permission: 'authorize salesforce'

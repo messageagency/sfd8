@@ -3,14 +3,12 @@
 namespace Drupal\salesforce;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
-use Drupal\Core\Form\ConfigFormBaseTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use OAuth\Common\Http\Exception\TokenResponseException;
 use OAuth\Common\Http\Uri\Uri;
 use OAuth\OAuth2\Service\Salesforce;
-use Symfony\Component\DependencyInjection\Loader\Configurator\Traits\FactoryTrait;
 
 /**
  * Shared methods for auth providers.
@@ -122,13 +120,34 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-
+    $this->setConfiguration($form_state->getValues());
   }
 
   /**
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
+    // Initialize identity.
+    $token = $this->getAccessToken();
+    $headers = [
+      'Authorization' => 'OAuth ' . $token->getAccessToken(),
+      'Content-type' => 'application/json',
+    ];
+    $data = $token->getExtraParams();
+    $response = $this->httpClient->retrieveResponse(new Uri($data['id']), [], $headers);
+    $identity = $this->parseIdentityResponse($response);
+    $this->storage->storeIdentity($this->service(), $identity);
+    return TRUE;
+
+    parent::save($form, $form_state);
+    try {
+      $this->setConfiguration($form_state->getValues());
+
+      \Drupal::messenger()->addStatus(t('Successfully connected to Salesforce as user %name.', ['%name' => $this->getIdentity()['display_name']]));
+    }
+    catch (\Exception $e) {
+      $form_state->setError($form, $this->t('Failed to connect to Salesforce: %message', ['%message' => $e->getMessage()]));
+    }
 
   }
 

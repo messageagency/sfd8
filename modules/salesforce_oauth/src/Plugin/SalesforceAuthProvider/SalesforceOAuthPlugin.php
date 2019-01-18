@@ -4,10 +4,12 @@ namespace Drupal\salesforce_oauth\Plugin\SalesforceAuthProvider;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Core\Url;
 use Drupal\salesforce\Consumer\SalesforceCredentials;
 use Drupal\salesforce\SalesforceAuthProviderInterface;
 use Drupal\salesforce\SalesforceAuthProviderPluginBase;
 use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
+use Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials;
 use OAuth\Common\Http\Client\ClientInterface;
 use OAuth\Common\Http\Uri\Uri;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -64,7 +66,7 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $configuration = array_merge(self::defaultConfiguration(), $configuration);
-    $cred = new SalesforceCredentials($configuration['consumer_key'], $configuration['login_url'], $configuration['consumer_secret']);
+    $cred = new SalesforceOAuthCredentials($configuration['consumer_key'], $configuration['consumer_secret'], $configuration['login_url']);
     return new static($configuration['id'], $cred, $container->get('salesforce.http_client_wrapper'), $container->get('salesforce.auth_token_storage'));
   }
 
@@ -113,8 +115,8 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::submitConfigurationForm($form, $form_state);
-    $this->setConfiguration($form_state->getValues());
     $settings = $form_state->getValue('provider_settings');
+
     // Write the config id to private temp store, so that we can use the same
     // callback URL for all OAuth applications in Salesforce.
     /** @var \Drupal\Core\TempStore\PrivateTempStore $tempstore */
@@ -133,12 +135,10 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
       // the user will be redirected to {redirect_uri} to complete the OAuth
       // handshake, and thence to the entity listing. Upon failure, the user
       // redirect URI will send the user back to the edit form.
-      $response = new TrustedRedirectResponse($path . '?' . http_build_query($query), 302);
-      $response->send();
-      return;
+      $form_state->setRedirectUrl(Url::fromUri($path . '?' . http_build_query($query)));
     }
     catch (\Exception $e) {
-      $this->messenger()->addError(t("Error during authorization: %message", ['%message' => $e->getMessage()]));
+      $form_state->setError($form, $this->t("Error during authorization: %message", ['%message' => $e->getMessage()]));
     }
   }
 
@@ -147,24 +147,6 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
    */
   public function getConsumerSecret() {
     return $this->credentials->getConsumerSecret();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function finalizeOauth() {
-    $token = $this->requestAccessToken(\Drupal::request()->get('code'));
-
-    // Initialize identity.
-    $headers = [
-      'Authorization' => 'OAuth ' . $token->getAccessToken(),
-      'Content-type' => 'application/json',
-    ];
-    $data = $token->getExtraParams();
-    $response = $this->httpClient->retrieveResponse(new Uri($data['id']), [], $headers);
-    $identity = $this->parseIdentityResponse($response);
-    $this->storage->storeIdentity($this->service(), $identity);
-    return TRUE;
   }
 
 }

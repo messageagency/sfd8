@@ -5,7 +5,6 @@ namespace Drupal\salesforce;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
-
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;

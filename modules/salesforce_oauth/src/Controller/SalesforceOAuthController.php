@@ -52,19 +52,28 @@ class SalesforceOAuthController extends ControllerBase {
     $configId = $this->tempStore->get('config_id');
 
     if (empty($configId) || !($config = SalesforceAuthConfig::load($configId)) || !($config->getPlugin() instanceof SalesforceAuthProviderInterface)) {
-      $this->messenger->addError('No OAuth config found. Please try again.');
+      $this->messenger->addError($this->t('No OAuth config found. Please try again.'));
       return new RedirectResponse(Url::fromRoute('entity.salesforce_auth.collection')->toString());
     }
 
     /** @var \Drupal\salesforce\SalesforceAuthProviderInterface $oauth */
     $oauth = $config->getPlugin();
-    if ($oauth->finalizeOauth()) {
-      $this->messenger()->addStatus(t('Successfully connected to Salesforce.'));
+    if (\Drupal::request()->get('code')) {
+      try {
+        $oauth->requestAccessToken(\Drupal::request()->get('code'));
+        $this->messenger()
+          ->addStatus(t('Successfully connected to Salesforce.'));
+        return new RedirectResponse(Url::fromRoute('entity.salesforce_auth.collection')
+          ->toString());
+      }
+      catch (\Exception $e) {
+        $this->messenger()->addError($this->t('Salesforce auth failed: @message', ['@message' => $e->getMessage() ?: get_class($e)]));
+      }
     }
     else {
-      $this->messenger()->addError(t('Salesforce auth failed.'));
+      $this->messenger()->addError($this->t('Salesforce auth failed: no oauth code received.'));
     }
-    return new RedirectResponse(Url::fromRoute('entity.salesforce_auth.collection')->toString());
+    return new RedirectResponse(Url::fromRoute('entity.salesforce_auth.edit_form', ['salesforce_auth' => $configId])->toString());
   }
 
 }

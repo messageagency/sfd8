@@ -27,7 +27,9 @@ class JWTCredentials extends SalesforceCredentials {
    * {@inheritdoc}
    */
   public function __construct($consumerKey, $loginUrl, $loginUser, $keyId) {
-    parent::__construct($consumerKey, $loginUrl);
+    parent::__construct($consumerKey, NULL, NULL);
+    $this->consumerKey = $consumerKey;
+    $this->loginUrl = $loginUrl;
     $this->loginUser = $loginUser;
     $this->keyId = $keyId;
   }

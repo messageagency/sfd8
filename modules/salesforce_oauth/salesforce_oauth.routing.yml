@@ -1,0 +1,6 @@
+salesforce.oauth_callback:
+  path: '/salesforce/oauth_callback'
+  defaults:
+    _controller: '\Drupal\salesforce_oauth\Controller\SalesforceOAuthController::oauthCallback'
+  requirements:
+    _permission: 'authorize salesforce'

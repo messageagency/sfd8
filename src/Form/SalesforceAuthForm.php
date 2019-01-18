@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Plugin\SalesforceAuthProviderFormInterface;
 use Drupal\salesforce_oauth\Entity\OAuthConfig;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Entity form for salesforce_auth.
@@ -121,7 +122,11 @@ class SalesforceAuthForm extends EntityForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
     $this->entity->getPlugin()->submitConfigurationform($form, $form_state);
-    $form_state->setRedirectUrl($this->entity->toUrl('collection'));
+    // If redirect is not already set, and we have no errors, send user back to
+    // the AuthConfig listing page.
+    if (!$form_state->getErrors() && !$form_state->getRedirect()) {
+      $form_state->setRedirectUrl($this->entity->toUrl('collection'));
+    }
   }
 
   public function save(array $form, FormStateInterface $form_state) {

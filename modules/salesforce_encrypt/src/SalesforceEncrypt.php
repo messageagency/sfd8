@@ -12,7 +12,7 @@ use Drupal\salesforce\Entity\SalesforceAuthConfig;
 
 class SalesforceEncrypt {
 
-
+  final
 
   public function __construct(EncryptionProfileManagerInterface $encryptionProfileManager, KeyConfigOverrides $keyConfigOverrides, ConfigFactoryInterface $configFactory, StateInterface $state) {
     $this->encryptionProfileManager = $encryptionProfileManager;
@@ -40,7 +40,7 @@ class SalesforceEncrypt {
     }
     // If it's overridden, see if it's an encrypted config.
     // @TODO write me
-    $this->keyConfigOverrides->loadOverrides("$configName.provider_settings.consumer_key");
+    $this->keyConfigOverrides->loadOverrides("$configName.provider_settings");
   }
 
   public function encryptAuthConfig(SalesforceAuthConfig $auth) {
@@ -49,13 +49,13 @@ class SalesforceEncrypt {
     }
     $configName = $auth->getConfigDependencyName();
     $config = $this->configFactory->getEditable($auth->getConfigDependencyName());
-    $consumerKeyValue = $config->get('provider_settings.consumer_key');
 
+    $consumerKeyValue = $config->get('provider_settings.consumer_key');
     $consumerSecretValue = $auth->getPlugin()->getConsumerSecret();
 
     $consumerKeyKey = Key::create([
-      'id' => "$configName.consumer_key",
-      'label' => "$configName.consumer_key",
+      'id' => "$configName:provider_settings.consumer_key",
+      'label' => "$configName:provider_settings.consumer_key",
       'description' => 'Salesforce Encrypt generated consumer key.',
       'key_type' => 'authentication',
       'key_provider' => 'encrypted_config',
