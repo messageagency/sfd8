@@ -79,16 +79,10 @@ class SelectQuery extends SelectQueryBase {
       $where = [];
       foreach ($this->conditions as $condition) {
         // If the condition is provided as an assoc. array escape the value.
-        if (array_key_exists($condition['value'])) {
-          $where[] = implode('+', [
-            $condition['field'],
-            $condition['operator'],
-            $this->escapeSoqlValue($condition['value']),
-          ]);
+        if (array_key_exists('value', $condition)) {
+          $condition['value'] = $this->escapeSoqlValue($condition['value']);
         }
-        else {
-          $where[] = implode('+', $condition);
-        }
+        $where[] = implode('+', $condition);
       }
       $query .= '+WHERE+' . implode('+AND+', $where);
     }
