@@ -274,7 +274,7 @@ interface RestClientInterface {
   /**
    * Return the Salesforce identity, which is stored in a variable.
    *
-   * @return array
+   * @return array|FALSE
    *   Returns FALSE is no identity has been stored.
    */
   public function getIdentity();

@@ -9,6 +9,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
+use Drupal\salesforce\Exception;
 use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce\SFID;
@@ -562,7 +563,17 @@ class RestClient implements RestClientInterface {
    * {@inheritdoc}
    */
   public function getIdentity() {
-    return $this->state->get('salesforce.identity');
+    $identity = $this->state->get('salesforce.identity');
+    if (!$identity) {
+      return FALSE;
+    }
+    $id_url_scheme = parse_url($identity['id']);
+    $allowed_endpoint = $this->getLoginUrl();
+    $allowed_endpoint_url_scheme = parse_url($allowed_endpoint);
+    if ($id_url_scheme['host'] != $allowed_endpoint_url_scheme['host']) {
+      throw new Exception('Salesforce identity does not match salesforce endpoint: you need to re-authenticate.');
+    }
+    return $identity;
   }
 
   /**
