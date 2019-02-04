@@ -56,8 +56,6 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
       // Use the partner WSDL.
       $this->wsdl = "$wsdl_dir/partner.wsdl.xml";
     }
-
-    $this->connect();
   }
 
   /**
