@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_mapping\Form;
 
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\Core\Url;
@@ -41,7 +42,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#type' => 'machine_name',
       '#required' => TRUE,
       '#default_value' => $mapping->id(),
-      '#maxlength' => 255,
+      '#maxlength' => EntityTypeInterface::ID_MAX_LENGTH,
       '#machine_name' => [
         'exists' => ['Drupal\salesforce_mapping\Entity\SalesforceMapping', 'load'],
         'source' => ['label'],
