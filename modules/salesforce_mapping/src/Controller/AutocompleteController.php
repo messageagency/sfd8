@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Controller;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\typed_data\DataFetcherInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,13 +23,21 @@ class AutocompleteController extends ControllerBase {
   protected $fieldManager;
 
   /**
+   * Typed data fetcher.
+   *
+   * @var \Drupal\typed_data\DataFetcherInterface
+   */
+  protected $dataFetcher;
+
+  /**
    * Constructs a new AutocompleteController object.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $field_manager
    *   Entity field manager.
    */
-  public function __construct(EntityFieldManagerInterface $field_manager) {
+  public function __construct(EntityFieldManagerInterface $field_manager, DataFetcherInterface $dataFetcher) {
     $this->fieldManager = $field_manager;
+    $this->dataFetcher = $dataFetcher;
   }
 
   /**
@@ -36,7 +45,8 @@ class AutocompleteController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_field.manager')
+      $container->get('entity_field.manager'),
+      $container->get('typed_data.data_fetcher')
     );
   }
 
@@ -64,7 +74,7 @@ class AutocompleteController extends ControllerBase {
       }
     }
     $results = $this
-      ->getDataFetcher()
+      ->dataFetcher
       ->autocompletePropertyPath($field_definitions, $string);
 
     return new JsonResponse($results);
@@ -77,11 +87,10 @@ class AutocompleteController extends ControllerBase {
    *   The data fetcher.
    *
    * @throws \Exception
+   *
+   * @deprecated BC compatibility only. Will be removed in 8.x-4.0 release.
    */
   protected function getDataFetcher() {
-    if (!\Drupal::hasService('typed_data.data_fetcher')) {
-      throw new \Exception('Module typed_data must be installed to use Extended Properties');
-    }
     if (empty($this->dataFetcher)) {
       $this->dataFetcher = \Drupal::service('typed_data.data_fetcher');
     }

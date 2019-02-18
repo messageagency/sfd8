@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce\Controller;
+namespace Drupal\salesforce_oauth\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Messenger\MessengerInterface;

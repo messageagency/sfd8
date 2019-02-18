@@ -9,24 +9,6 @@ use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\views\Views;
 
 /**
- * Implements hook_requirements().
- */
-function salesforce_mapping_requirements($phase) {
-  $requirements = [];
-  if ($phase === 'runtime') {
-    if (!\Drupal::service('module_handler')->moduleExists('typed_data')) {
-      $requirements['salesforce_mapping'] = [
-        'title' => t('Salesforce Mapping'),
-        'value' => t('Enable Typed Data module to map extended field properties (like link URL or address details)'),
-        'severity' => REQUIREMENT_WARNING,
-      ];
-    }
-  }
-
-  return $requirements;
-}
-
-/**
  * Copy entity_id-entity_type_id data into new mapped_entity field.
  */
 function salesforce_mapping_update_8001(&$sandbox) {
