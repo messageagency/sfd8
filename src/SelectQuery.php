@@ -34,6 +34,8 @@ class SelectQuery implements SelectQueryInterface {
    *   Condition value. If an array, it will be split into quote enclosed
    *   strings separated by commas inside of parenthesis. Note that the caller
    *   must enclose the value in quotes as needed by the SF API.
+   *   NOTE: It is the responsibility of the caller to escape any single-quotes
+   *   inside of string values.
    * @param string $operator
    *   Conditional operator. One of '=', '!=', '<', '>', 'LIKE, 'IN', 'NOT IN'.
    *
@@ -41,6 +43,7 @@ class SelectQuery implements SelectQueryInterface {
    */
   public function addCondition($field, $value, $operator = '=') {
     if (is_array($value)) {
+
       $value = "('" . implode("','", $value) . "')";
 
       // Set operator to IN if wasn't already changed from the default.

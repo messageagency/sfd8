@@ -12,10 +12,10 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 interface SalesforceMappingFieldPluginInterface {
 
   /**
-   * Returns label of the tip.
+   * Returns label of the mapping field plugin.
    *
    * @return string
-   *   The label of the tip.
+   *   The label of the mapping field plugin.
    */
   public function label();
 
@@ -69,11 +69,17 @@ interface SalesforceMappingFieldPluginInterface {
   public function pushValue(EntityInterface $entity, SalesforceMappingInterface $mapping);
 
   /**
-   * Munge the value from Salesforce that's about to be saved to Drupal.
+   * Pull callback for field plugins.
    *
-   * An extension of ::value, ::pullValue does some basic type-checking and
-   * validation against Drupal field types to protect against basic data
-   * errors.
+   * This callback is overloaded to serve 2 different use cases.
+   * - Use case 1: primitive values
+   *   If pullValue() returns a primitive value, callers will attempt to set
+   *   the value directly on the parent entity.
+   * - Use case 2: typed data
+   *   If pullValue() returns a TypedDataInterface, callers will assume the
+   *   implementation has set the appropriate value(s). The returned TypedData
+   *   will be issued to a SalesforceEvents::PULL_ENTITY_VALUE event, but will
+   *   otherwise be ignored.
    *
    * @param \Drupal\salesforce\SObject $sf_object
    *   The SFObject being pulled.
@@ -82,8 +88,10 @@ interface SalesforceMappingFieldPluginInterface {
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *   The mapping.
    *
-   * @return mixed
-   *   The value to be pulled to Drupal.
+   * @return \Drupal\Core\TypedData\TypedDataInterface|mixed
+   *   If a TypedDataInterface is returned, validate constraints and use
+   *   TypedDataManager to set the value on the root entity. Otherwise, set the
+   *   value directly via FieldableEntityInterface::set
    */
   public function pullValue(SObject $sf_object, EntityInterface $entity, SalesforceMappingInterface $mapping);
 

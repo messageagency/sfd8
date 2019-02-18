@@ -17,11 +17,21 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    if (!$this->ensureConnection('objectDescribe', $this->entity->getSalesforceObjectType())) {
+      return $form;
+    }
+    $form = parent::buildForm($form, $form_state);
     // Previously "Field Mapping" table on the map edit form.
     // @TODO add a header with Fieldmap Property information.
 
+    // Add #entity property to expose it to our field plugin forms.
     $form['#entity'] = $this->entity;
+
     $form['#attached']['library'][] = 'salesforce/admin';
+    // This needs to be loaded now as it can't be loaded via AJAX for the AC
+    // enabled fields.
+    $form['#attached']['library'][] = 'core/drupal.autocomplete';
+
     // For each field on the map, add a row to our table.
     $form['overview'] = ['#markup' => 'Field mapping overview goes here.'];
 
@@ -143,7 +153,8 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     // around that, they're going to have problems.
     if (!empty($form_state->getValues())
     && $form_state->getValue('add') == $form_state->getValue('op')
-    && !empty($input['field_type'])) {
+    && !empty($input['field_type'])
+    && $form_state->getTriggeringElement()['#name'] != 'context_drupal_field_value') {
       $row = $row_template;
       $row['#attributes']['class']['zebra'] = ($zebra % 2) ? 'odd' : 'even';
       $rows[] = $row + $this->getRow(NULL, $form, $form_state);

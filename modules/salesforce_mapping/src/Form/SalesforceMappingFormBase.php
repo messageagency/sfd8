@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_mapping\Form;
 
+use Drupal\Core\Url;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
 use Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface;
 use Drupal\Core\Entity\EntityForm;
@@ -36,6 +37,13 @@ abstract class SalesforceMappingFormBase extends EntityForm {
   protected $mappableEntityTypes;
 
   /**
+   * The mapping entity for this form.
+   *
+   * @var \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface
+   */
+  protected $entity;
+
+  /**
    * SalesforceMappingFormBase constructor.
    *
    * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager $mappingFieldPluginManager
@@ -60,6 +68,29 @@ abstract class SalesforceMappingFormBase extends EntityForm {
       $container->get('salesforce.client'),
       $container->get('salesforce_mapping.mappable_entity_types')
     );
+  }
+
+  /**
+   * Test the Salesforce connection by issuing the given api call.
+   *
+   * @param string $method
+   *   Which method to test on the Salesforce client. Defaults to "objects".
+   * @param mixed $arg
+   *   An argument to send to the test method. Defaults to empty array.
+   *
+   * @return bool
+   *   TRUE if Salesforce endpoint (or cache) responded correctly.
+   */
+  protected function ensureConnection($method = 'objects', $arg = []) {
+    try {
+      $this->client->{$method}($arg);
+    }
+    catch (\Exception $e) {
+      $href = new Url('salesforce.admin_config_salesforce');
+      $this->messenger()->addError($this->t('Error when connecting to Salesforce. Please <a href="@href">check your credentials</a> and try again: %message', ['@href' => $href->toString(), '%message' => $e->getMessage() ?: get_class($e)]), 'error');
+      return FALSE;
+    }
+    return TRUE;
   }
 
   /**
@@ -97,6 +128,30 @@ abstract class SalesforceMappingFormBase extends EntityForm {
     }
     // No need to cache here: Salesforce::objectDescribe implements caching.
     return $this->client->objectDescribe($salesforce_object_type);
+  }
+
+  /**
+   * Helper to retreive a list of object type options.
+   *
+   * @return array
+   *   An array of values keyed by machine name of the object with the label as
+   *   the value, formatted to be appropriate as a value for #options.
+   */
+  protected function getSalesforceObjectTypeOptions() {
+    $sfobject_options = [];
+
+    // Note that we're filtering SF object types to a reasonable subset.
+    $config = $this->config('salesforce.settings');
+    $filter = $config->get('show_all_objects') ? [] : [
+      'updateable' => TRUE,
+      'triggerable' => TRUE,
+    ];
+    $sfobjects = $this->client->objects($filter);
+    foreach ($sfobjects as $object) {
+      $sfobject_options[$object['name']] = $object['label'] . ' (' . $object['name'] . ')';
+    }
+    asort($sfobject_options);
+    return $sfobject_options;
   }
 
 }

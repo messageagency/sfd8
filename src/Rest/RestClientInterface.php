@@ -306,7 +306,7 @@ interface RestClientInterface {
   /**
    * Return the Salesforce identity, which is stored in a variable.
    *
-   * @return array
+   * @return array|FALSE
    *   Returns FALSE is no identity has been stored.
    *
    * @deprecated will be removed in 8.x-4.0 release.
