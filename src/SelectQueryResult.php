@@ -33,6 +33,22 @@ class SelectQueryResult {
   }
 
   /**
+   * Create a SelectQueryResult from a single SObject record.
+   *
+   * @param \Drupal\salesforce\SObject $record
+   */
+  public static function createSingle(SObject $record) {
+    $results = [
+      'totalSize' => 1,
+      'done' => TRUE,
+      'records' => []
+    ];
+    $result = new static($results);
+    $result->records[(string)$record->id()] = $record;
+    return $result;
+  }
+
+  /**
    * Getter.
    *
    * @return string|null

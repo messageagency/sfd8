@@ -238,6 +238,34 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         '#default_value' => $mapping->pull_frequency,
         '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to pull data to Drupal. Enter 0 to pull as often as possible. FYI: 1 hour = 3600; 1 day = 86400. <em>NOTE: pull frequency is shared per-Salesforce Object. The setting is exposed here for convenience.</em>'),
       ];
+
+      $description = t('Check this box to disable cron pull processing for this mapping, and allow standalone processing only. A URL will be generated after saving the mapping.');
+      if ($mapping->id()) {
+        $standalone_url = Url::fromRoute(
+          'salesforce_pull.endpoint.salesforce_mapping',
+          [
+            'salesforce_mapping' => $mapping->id(),
+            'key' => \Drupal::state()->get('system.cron_key'),
+          ],
+          ['absolute' => TRUE])
+          ->toString();
+        $description = t('Check this box to disable cron pull processing for this mapping, and allow standalone processing via this URL: <a href=":url">:url</a>', [':url' => $standalone_url]);
+      }
+      $form['pull']['pull_standalone'] = [
+        '#title' => t('Enable standalone pull queue processing'),
+        '#type' => 'checkbox',
+        '#description' => $description,
+        '#default_value' => $mapping->pull_standalone,
+      ];
+
+      // If global standalone is enabled, then we force this mapping's
+      // standalone property to true.
+      if ($this->config('salesforce.settings')->get('standalone')) {
+        $settings_url = Url::fromRoute('salesforce.global_settings')->toString();
+        $form['pull']['pull_standalone']['#default_value'] = TRUE;
+        $form['pull']['pull_standalone']['#disabled'] = TRUE;
+        $form['pull']['pull_standalone']['#description'] .= ' ' . t('See also <a href="@url">global standalone processing settings</a>.', ['@url' => $settings_url]);
+      }
     }
 
     if ($this->moduleHandler->moduleExists('salesforce_push')) {
@@ -316,7 +344,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       // If global standalone is enabled, then we force this mapping's
       // standalone property to true.
       if ($this->config('salesforce.settings')->get('standalone')) {
-        $settings_url = Url::fromRoute('salesforce.global_settings');
+        $settings_url = Url::fromRoute('salesforce.global_settings')->toString();
         $form['push']['push_standalone']['#default_value'] = TRUE;
         $form['push']['push_standalone']['#disabled'] = TRUE;
         $form['push']['push_standalone']['#description'] .= ' ' . t('See also <a href="@url">global standalone processing settings</a>.', ['@url' => $settings_url]);

@@ -98,6 +98,15 @@ interface SalesforceMappingInterface extends ConfigEntityInterface {
   public function doesPushStandalone();
 
   /**
+   * Getter for push_standalone property.
+   *
+   * @return bool
+   *   TRUE if this mapping is set to process push queue via a standalone
+   *   endpoint instead of during cron.
+   */
+  public function doesPullStandalone();
+
+  /**
    * Checks mappings for any push operation.
    *
    * @return bool
