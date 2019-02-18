@@ -169,7 +169,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   /**
    * Get the active token, or null if it has not been assigned.
    *
-   * @return \OAuth\OAuth2\Token\TokenInterface
+   * @return \OAuth\OAuth2\Token\TokenInterface|null
    *   The token of the plugin of the active config, or null.
    */
   public function getToken() {

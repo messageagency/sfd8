@@ -6,6 +6,7 @@ use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Sql\SqlEntityStorageInterface;
+use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
@@ -47,6 +48,10 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
     $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
 
     $this->mapping->expects($this->any())
+      ->method('id')
+      ->willReturn('foo_mapping');
+
+    $this->mapping->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('drupal_entity_type'))
       ->willReturn($this->entityType);
@@ -65,6 +70,16 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->willReturn($this->mappedObjectStorage);
     $this->entityTypeManager = $prophecy->reveal();
 
+    $this->authToken = $this->getMock(TokenInterface::CLASS);
+    $this->authMan =
+      $this->getMockBuilder(SalesforceAuthProviderPluginManager::CLASS)
+        ->disableOriginalConstructor()
+        ->getMock();
+    $this->authMan->expects($this->any())
+      ->method('getToken')
+      ->willReturn($this->authToken);
+
+
     $container = new ContainerBuilder();
     $container->set('queue.salesforce_push', $this->queue);
     $container->set('salesforce.client', $this->client);
@@ -74,23 +89,47 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
     $container->set('entity.manager', $this->entity_manager);
     \Drupal::setContainer($container);
 
-    $this->handler = new Rest([], '', [], $this->queue, $this->client, $this->entityTypeManager, $this->eventDispatcher);
-
+    $this->handler = new Rest([], '', [], $this->queue, $this->entityTypeManager, $this->eventDispatcher, $this->authMan);
   }
 
   /**
    * @covers ::process
    * @expectedException \Drupal\Core\Queue\SuspendQueueException
    */
-  public function testProcess() {
+  public function testProcessMissingAuth() {
+    $this->authMan =
+      $this->getMockBuilder(SalesforceAuthProviderPluginManager::CLASS)
+        ->disableOriginalConstructor()
+        ->getMock();
+    $this->authMan->expects($this->any())
+      ->method('getToken')
+      ->willReturn(NULL);
+
     $this->handler = $this->getMock(Rest::class, ['processItem'], [
       [],
       '',
       [],
       $this->queue,
-      $this->client,
       $this->entityTypeManager,
       $this->eventDispatcher,
+      $this->authMan,
+    ]);
+
+    $this->handler->process([(object) [1]]);
+  }
+
+  /**
+   * @covers ::process
+   */
+  public function testProcessSuccess() {
+    $this->handler = $this->getMock(Rest::class, ['processItem'], [
+      [],
+      '',
+      [],
+      $this->queue,
+      $this->entityTypeManager,
+      $this->eventDispatcher,
+      $this->authMan,
     ]);
 
     $this->handler->expects($this->once())
@@ -103,8 +142,8 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->willReturn(NULL);
 
     $this->handler->process([(object) [1]]);
-    $this->handler->process([(object) [2]]);
   }
+
 
   /**
    * @covers ::processItem
@@ -116,9 +155,9 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
         '',
         [],
         $this->queue,
-        $this->client,
         $this->entityTypeManager,
         $this->eventDispatcher,
+        $this->authMan,
       ])
       ->setMethods(['getMappedObject'])
       ->getMock();
@@ -161,9 +200,9 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       '',
       [],
       $this->queue,
-      $this->client,
       $this->entityTypeManager,
       $this->eventDispatcher,
+      $this->authMan,
     ]);
     $this->handler->expects($this->once())
       ->method('getMappedObject')
@@ -215,9 +254,9 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       '',
       [],
       $this->queue,
-      $this->client,
       $this->entityTypeManager,
       $this->eventDispatcher,
+      $this->authMan,
     ]);
     $this->handler->expects($this->once())
       ->method('getMappedObject')
@@ -265,9 +304,9 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       '',
       [],
       $this->queue,
-      $this->client,
       $this->entityTypeManager,
       $this->eventDispatcher,
+      $this->authMan,
     ]);
     $this->handler->expects($this->once())
       ->method('getMappedObject')

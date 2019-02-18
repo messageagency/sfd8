@@ -2,7 +2,6 @@
 
 namespace Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor;
 
-use Drupal\salesforce\SalesforceAuthProviderInterface;
 use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -10,7 +9,6 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\salesforce\EntityNotFoundException;
 use Drupal\salesforce\Event\SalesforceEvents;
-use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent;
@@ -82,12 +80,12 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    *   Plugin definition.
    * @param \Drupal\salesforce_push\PushQueueInterface $queue
    *   Push queue service.
-   * @param \Drupal\salesforce\Rest\RestClientInterface $client
-   *   Salesforce client service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   ETM service.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   Event dispatcher service.
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   *   Auth manager.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException

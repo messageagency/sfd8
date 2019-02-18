@@ -6,8 +6,9 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\State\State;
+use Drupal\salesforce\Entity\SalesforceAuthConfig;
+use Drupal\salesforce\SalesforceAuthProviderInterface;
 use Drupal\salesforce\SalesforceAuthProviderPluginManager;
-use Drupal\salesforce\Token\SalesforceToken;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce\Rest\RestResponse;
@@ -55,6 +56,17 @@ class RestClientTest extends UnitTestCase {
     $this->json = $this->getMock(Json::CLASS);
     $this->time = $this->getMock(TimeInterface::CLASS);
     $this->authToken = $this->getMock(TokenInterface::CLASS);
+    $this->authProvider = $this->getMockBuilder(SalesforceAuthProviderInterface::CLASS)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->authProvider->expects($this->any())
+      ->method('getApiEndPoint')
+      ->willReturn('https://example.com');
+    $this->authConfig =
+      $this->getMockBuilder(SalesforceAuthConfig::CLASS)
+        ->disableOriginalConstructor()
+        ->getMock();
+
     $this->authMan =
       $this->getMockBuilder(SalesforceAuthProviderPluginManager::CLASS)
         ->disableOriginalConstructor()
@@ -62,6 +74,12 @@ class RestClientTest extends UnitTestCase {
     $this->authMan->expects($this->any())
       ->method('getToken')
       ->willReturn($this->authToken);
+    $this->authMan->expects($this->any())
+      ->method('getProvider')
+      ->willReturn($this->authProvider);
+    $this->authMan->expects($this->any())
+      ->method('getConfig')
+      ->willReturn($this->authConfig);
   }
 
   /**
@@ -79,20 +97,10 @@ class RestClientTest extends UnitTestCase {
       $this->cache,
       $this->json,
       $this->time,
+      $this->authMan,
     ];
 
     $this->client = $this->getMock(RestClient::CLASS, $methods, $args);
-
-    if (in_array('getApiEndPoint', $methods)) {
-      $this->client->expects($this->any())
-        ->method('getApiEndPoint')
-        ->willReturn('https://example.com');
-    }
-    if (in_array('getAccessToken', $methods)) {
-      $this->client->expects($this->any())
-        ->method('getAccessToken')
-        ->willReturn(TRUE);
-    }
   }
 
   /**
@@ -140,12 +148,11 @@ class RestClientTest extends UnitTestCase {
     $response_401 = new GuzzleResponse(401);
     $response_200 = new GuzzleResponse(200);
 
-    // First httpRequest() is position 4.
     // @TODO this is extremely brittle, exposes complexity in underlying client. Refactor this.
-    $this->client->expects($this->at(2))
+    $this->client->expects($this->at(0))
       ->method('httpRequest')
       ->willReturn($response_401);
-    $this->client->expects($this->at(3))
+    $this->client->expects($this->at(1))
       ->method('httpRequest')
       ->willReturn($response_200);
 
