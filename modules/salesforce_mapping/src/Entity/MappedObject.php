@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Event\SalesforceWarningEvent;
@@ -518,7 +519,10 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // @TODO better way to handle push/pull:
     $fields = $mapping->getPullFields();
+    /** @var \Drupal\Core\Entity\FieldableEntityInterface $drupal_entity */
     $drupal_entity = $this->getMappedEntity() ?: $this->getDrupalEntityStub();
+
+    /** @var \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface $field */
     foreach ($fields as $field) {
       try {
         $value = $field->pullValue($this->sfObject, $drupal_entity, $mapping);
@@ -539,20 +543,21 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
         SalesforceEvents::PULL_ENTITY_VALUE,
         new SalesforcePullEntityValueEvent($value, $field, $this)
       );
-
-      $drupal_field = $field->get('drupal_field_value');
-
       try {
-        $drupal_entity->set($drupal_field, $value);
+        // If $value is TypedData, it should have been set during pullValue().
+        if (!$value instanceof TypedDataInterface) {
+          $drupal_field = $field->get('drupal_field_value');
+          $drupal_entity->set($drupal_field, $value);
+        }
       }
       catch (\Exception $e) {
         $message = 'Exception during pull for @sfobj.@sffield @sfid to @dobj.@dprop @did with value @v';
         $args = [
           '@sfobj' => $mapping->getSalesforceObjectType(),
-          '@sffield' => $field,
+          '@sffield' => $field->config('salesforce_field'),
           '@sfid' => $this->sfid(),
           '@dobj' => $drupal_entity->getEntityTypeId(),
-          '@dprop' => $drupal_field,
+          '@dprop' => $field->get('drupal_field_value'),
           '@did' => $drupal_entity->id(),
           '@v' => $value,
         ];

@@ -1,7 +1,7 @@
 {
-  "name": "org/salesforce_mapping",
-  "description": "This extension provides new commands for Drush.",
-  "type": "drupal-drush",
+  "name": "drupal/salesforce_mapping",
+  "description": "This module maps Drupal entities to Salesforce objects.",
+  "type": "drupal-module",
   "authors": [
     {
       "name": "Author name",
@@ -9,7 +9,9 @@
     }
   ],
   "require": {
-    "php": ">=5.6.0"
+    "php": ">=5.6.0",
+    "drupal/dynamic_entity_reference": "^2.0@alpha",
+    "drupal/typed_data": "^1.0@alpha"
   },
   "extra": {
     "drush": {

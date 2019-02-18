@@ -2,9 +2,7 @@
 
 namespace Drupal\salesforce;
 
-use Drupal\salesforce\SelectQueryBase;
-
-class SelectQueryRaw extends SelectQueryBase {
+class SelectQueryRaw implements SelectQueryInterface {
 
   protected $query;
 
