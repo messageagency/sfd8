@@ -8,6 +8,9 @@ use Drupal\Core\Url;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\salesforce_encrypt\SalesforceEncryptTrait;
 
+/**
+ * Auth encryption form.
+ */
 class SalesforceAuthEncryptForm extends EntityConfirmFormBase {
 
   /**

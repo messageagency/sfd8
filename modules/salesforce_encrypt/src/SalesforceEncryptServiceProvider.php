@@ -16,11 +16,11 @@ class SalesforceEncryptServiceProvider {
    */
   public function alter(ContainerBuilder $container) {
     // Add a normalizer service for file entities.
-    $service_definition = new Definition('Drupal\salesforce_encrypt\Storage\SalesforceEncryptedAuthTokenStorage', array(
+    $service_definition = new Definition('Drupal\salesforce_encrypt\Storage\SalesforceEncryptedAuthTokenStorage', [
       new Reference('state'),
       new Reference('encryption'),
       new Reference('encrypt.encryption_profile.manager'),
-    ));
+    ]);
     $container->setDefinition('salesforce.auth_token_storage', $service_definition);
   }
 

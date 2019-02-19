@@ -34,6 +34,8 @@ class AutocompleteController extends ControllerBase {
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $field_manager
    *   Entity field manager.
+   * @param \Drupal\typed_data\DataFetcherInterface $dataFetcher
+   *   Data fetcher.
    */
   public function __construct(EntityFieldManagerInterface $field_manager, DataFetcherInterface $dataFetcher) {
     $this->fieldManager = $field_manager;

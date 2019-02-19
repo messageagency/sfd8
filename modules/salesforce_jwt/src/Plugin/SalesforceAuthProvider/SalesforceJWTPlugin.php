@@ -59,6 +59,8 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    *   Http client wrapper.
    * @param \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface $storage
    *   Token storage.
+   * @param \Drupal\key\KeyRepositoryInterface $keyRepository
+   *   Key repository.
    *
    * @throws \OAuth\OAuth2\Service\Exception\InvalidScopeException
    *   On error.
@@ -164,10 +166,11 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    *
    * @param string $assertion
    *   The JWT assertion.
-   * @param string $loginUrl
+   * @param string $state
    *   Not used.
    *
-   * @return TokenInterface $token
+   * @return \OAuth\Common\Token\TokenInterface
+   *   Access Token.
    *
    * @throws \OAuth\Common\Http\Exception\TokenResponseException
    */

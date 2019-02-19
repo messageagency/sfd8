@@ -4,6 +4,9 @@ namespace Drupal\salesforce\Consumer;
 
 use OAuth\Common\Consumer\Credentials;
 
+/**
+ * Class SalesforceCredentials.
+ */
 abstract class SalesforceCredentials extends Credentials implements SalesforceCredentialsInterface {
 
   /**
@@ -20,7 +23,7 @@ abstract class SalesforceCredentials extends Credentials implements SalesforceCr
    */
   protected $consumerKey;
 
-/**
+  /**
    * {@inheritdoc}
    */
   public function getConsumerKey() {

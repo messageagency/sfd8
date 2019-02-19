@@ -20,8 +20,6 @@ class SalesforceAuthForm extends EntityForm {
    */
   protected $entity;
 
-
-
   /**
    * {@inheritdoc}
    */
@@ -129,6 +127,9 @@ class SalesforceAuthForm extends EntityForm {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function save(array $form, FormStateInterface $form_state) {
     parent::save($form, $form_state);
     $this->entity->getPlugin()->save($form, $form_state);

@@ -12,6 +12,9 @@ use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
+/**
+ * Class SalesforceAuthSettings.
+ */
 class SalesforceAuthSettings extends ConfigFormBase {
 
   protected $salesforceAuth;
@@ -21,7 +24,11 @@ class SalesforceAuthSettings extends ConfigFormBase {
    * Constructs a \Drupal\system\ConfigFormBase object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
+   *   Config.
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager $salesforceAuth
+   *   Authman.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   Events.
    */
   public function __construct(ConfigFactoryInterface $config_factory, SalesforceAuthProviderPluginManager $salesforceAuth, EventDispatcherInterface $eventDispatcher) {
     parent::__construct($config_factory);
@@ -39,7 +46,6 @@ class SalesforceAuthSettings extends ConfigFormBase {
       $container->get('event_dispatcher')
     );
   }
-
 
   /**
    * {@inheritdoc}
@@ -60,17 +66,16 @@ class SalesforceAuthSettings extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     if (!$this->salesforceAuth->hasProviders()) {
-      return ['#markup'=> 'No auth providers have been enabled. Please enable an auth provider and create an auth config before continuing.'];
+      return ['#markup' => 'No auth providers have been enabled. Please enable an auth provider and create an auth config before continuing.'];
     }
     $config = $this->config('salesforce.settings');
     $form = parent::buildForm($form, $form_state);
     $options = [];
-    /** @var \Drupal\salesforce\Entity\SalesforceAuthConfig $provider **/
-    foreach($this->salesforceAuth->getProviders() as $provider) {
+    foreach ($this->salesforceAuth->getProviders() as $provider) {
       $options[$provider->id()] = $provider->label() . ' (' . $provider->getPlugin()->label() . ')';
     }
     if (empty($options)) {
-      return ['#markup'=> 'No auth providers found. Please add an auth provider before continuing.'];
+      return ['#markup' => 'No auth providers found. Please add an auth provider before continuing.'];
     }
     $options = ['' => '- None -'] + $options;
     $form['provider'] = [

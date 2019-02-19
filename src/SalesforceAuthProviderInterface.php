@@ -136,8 +136,8 @@ interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormIn
    * @param string $api_type
    *   (optional) Which API for which to retrieve URL, defaults to "rest".
    *
-   * @return string.
-   *   The URL
+   * @return string
+   *   The URL.
    */
   public function getApiEndpoint($api_type = 'rest');
 

@@ -79,7 +79,6 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
       ->method('getToken')
       ->willReturn($this->authToken);
 
-
     $container = new ContainerBuilder();
     $container->set('queue.salesforce_push', $this->queue);
     $container->set('salesforce.client', $this->client);
@@ -143,7 +142,6 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
 
     $this->handler->process([(object) [1]]);
   }
-
 
   /**
    * @covers ::processItem

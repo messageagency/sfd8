@@ -42,4 +42,3 @@ function salesforce_encrypt_requirements($phase) {
   }
   return $requirements;
 }
-

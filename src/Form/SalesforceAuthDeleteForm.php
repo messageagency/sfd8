@@ -6,7 +6,11 @@ use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
+/**
+ * Class SalesforceAuthDeleteForm.
+ */
 class SalesforceAuthDeleteForm extends EntityConfirmFormBase {
+
   /**
    * {@inheritdoc}
    */

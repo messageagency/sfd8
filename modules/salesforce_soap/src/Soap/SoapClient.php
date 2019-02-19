@@ -44,6 +44,8 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
    *
    * @param \Drupal\salesforce\Rest\RestClientInterface $rest_api
    *   The Salesforce REST API client.
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager $authMan
+   *   Auth manager.
    * @param string $wsdl
    *   (Optional) Path to the WSDL that should be used.  Defaults to using the
    *   partner WSDL from the developerforce/force.com-toolkit-for-php package.

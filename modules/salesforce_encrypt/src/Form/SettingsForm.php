@@ -59,11 +59,6 @@ class SettingsForm extends FormBase {
 
   /**
    * SettingsForm constructor.
-   *
-   * @param \Drupal\Core\State\StateInterface $state
-   *   State service.
-   * @param \Drupal\encrypt\EncryptionProfileManagerInterface $encryptionProfileManager
-   *   Encryption profile manager service.
    */
   public function __construct(StateInterface $state, EncryptionProfileManagerInterface $encryptionProfileManager, SalesforceAuthTokenStorage $authTokenStorage, EntityTypeManagerInterface $etm, SalesforceEncrypt $salesforceEncrypt) {
     $this->encryptionProfileManager = $encryptionProfileManager;

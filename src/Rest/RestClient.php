@@ -126,6 +126,8 @@ class RestClient implements RestClientInterface {
    *   The JSON serializer service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The Time service.
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager $authManager
+   *   Auth manager service.
    */
   public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, SalesforceAuthProviderPluginManager $authManager) {
     $this->configFactory = $config_factory;

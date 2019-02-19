@@ -67,7 +67,7 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
    */
   public function authMan();
 
-    /**
+  /**
    * Get a salesforce url for the linked record.
    *
    * @return string

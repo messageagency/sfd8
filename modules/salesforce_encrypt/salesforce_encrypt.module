@@ -65,8 +65,6 @@ function salesforce_encrypt_local_tasks_alter(&$local_tasks) {
       'provider' => 'salesforce_encrypt',
       'id' => 'entity.salesforce_auth.encryption',
     ]);
-
-
 }
 
 /**

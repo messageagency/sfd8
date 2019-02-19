@@ -74,6 +74,8 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
    *   Event dispatcher service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   Module handler service.
+   * @param \Drupal\typed_data\DataFetcherInterface $dataFetcher
+   *   Data fetcher.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException

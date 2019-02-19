@@ -6,6 +6,9 @@ use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityMalformedException;
 
+/**
+ * Class SalesforceEncryptedAuthStorage.
+ */
 class SalesforceEncryptedAuthStorage extends ConfigEntityStorage {
 
   /**
@@ -19,11 +22,13 @@ class SalesforceEncryptedAuthStorage extends ConfigEntityStorage {
     return parent::save($entity);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function doLoadMultiple(array $ids = NULL) {
     $entities = parent::doLoadMultiple($ids);
-    // Decrypt the sensitive values and return
+    // Decrypt the sensitive values and return.
     return $entities;
   }
-
 
 }

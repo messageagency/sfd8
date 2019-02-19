@@ -270,9 +270,6 @@ function salesforce_update_8004() {
 /**
  * Convert legacy oauth credentials to new auth plugin config.
  */
-/**
- * Convert legacy oauth credentials to new auth plugin config.
- */
 function salesforce_update_8005() {
   $change_list = \Drupal::entityDefinitionUpdateManager()->getChangeSummary();
   if (!empty($change_list['salesforce_auth'])) {
@@ -317,13 +314,15 @@ function salesforce_update_8006() {
   }
 }
 
+/**
+ * Enable salesforce_oauth module and purge legacy settings.
+ */
 function salesforce_update_8401() {
   // Enable salesforce_oauth module.
   \Drupal::service('module_installer')->install(['salesforce_oauth']);
-  // purge old stateful values.
-  // clear old config.
   throw new \Exception('foo');
 
+  // Purge old stateful values and config.
   \Drupal::configFactory()->getEditable('salesforce.settings')
     ->clear('consumer_key')
     ->clear('consumer_secret')

@@ -10,10 +10,14 @@ use Drupal\key\Entity\KeyConfigOverride;
 use Drupal\key\KeyConfigOverrides;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 
+/**
+ * Class SalesforceEncrypt.
+ */
 class SalesforceEncrypt {
 
-  final
-
+  /**
+   * SalesforceEncrypt constructor.
+   */
   public function __construct(EncryptionProfileManagerInterface $encryptionProfileManager, KeyConfigOverrides $keyConfigOverrides, ConfigFactoryInterface $configFactory, StateInterface $state) {
     $this->encryptionProfileManager = $encryptionProfileManager;
     $this->keyConfigOverrides = $keyConfigOverrides;
@@ -24,7 +28,7 @@ class SalesforceEncrypt {
   /**
    * TRUE if the given authconfig is overridden with encrypted values.
    *
-   * @param \Drupal\salesforce\Entity\SalesforceAuthConfig $authConfig
+   * @param \Drupal\salesforce\Entity\SalesforceAuthConfig $auth
    *   The given auth config.
    *
    * @return bool
@@ -43,6 +47,15 @@ class SalesforceEncrypt {
     $this->keyConfigOverrides->loadOverrides("$configName.provider_settings");
   }
 
+  /**
+   * Encrypt auth config.
+   *
+   * @param \Drupal\salesforce\Entity\SalesforceAuthConfig $auth
+   *   Auth config.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   *   Exception.
+   */
   public function encryptAuthConfig(SalesforceAuthConfig $auth) {
     if ($this->isEncrypted($auth)) {
       throw new \Exception('Auth is already encrypted');
@@ -85,7 +98,7 @@ class SalesforceEncrypt {
   /**
    * Get the assigned encryption profile, or NULL.
    *
-   * @return \Drupal\encrypt\EncryptionProfileInterface|NULL
+   * @return \Drupal\encrypt\EncryptionProfileInterface|null
    *   The assigned encryption profile, or NULL.
    */
   public function getProfile() {
@@ -96,12 +109,11 @@ class SalesforceEncrypt {
   /**
    * Get the assigned encryption profile id, or NULL.
    *
-   * @return string|NULL
+   * @return string|null
    *   The assigned encryption profile id, or NULL.
    */
   public function getProfileId() {
     return $this->state->get('salesforce_encrypt.profile');
   }
-
 
 }

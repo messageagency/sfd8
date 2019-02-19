@@ -32,7 +32,7 @@ class RestResponse extends Response {
   /**
    * RestResponse constructor.
    *
-   * @param \GuzzleHttp\Psr7\Response $response
+   * @param \Psr\Http\Message\ResponseInterface $response
    *   A response.
    */
   public function __construct(ResponseInterface $response) {

@@ -84,7 +84,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    *   ETM service.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   Event dispatcher service.
-   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager $authMan
    *   Auth manager.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException

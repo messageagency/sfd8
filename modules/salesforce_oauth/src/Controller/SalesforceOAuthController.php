@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
- *
+ * SalesforceOAuthController.
  */
 class SalesforceOAuthController extends ControllerBase {
 
