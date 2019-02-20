@@ -1,4 +1,0 @@
-administer salesforce encryption:
-  title: 'administer salesforce encryption'
-  description: 'Administer Salesforce integration'
-  restrict access: TRUE

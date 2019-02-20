@@ -5,10 +5,12 @@
  * Salesforce install file.
  */
 
-use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Url;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\salesforce\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\Token\SalesforceToken;
+use Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
 
 /**
@@ -287,7 +289,27 @@ function salesforce_update_8005() {
     $message = 'Existing "oauth_default" provider config detected. Refused to set legacy credentials.';
   }
   else {
-    SalesforceAuthProviderPluginManager::updateAuthConfig();
+    /** @var \Drupal\salesforce\Entity\SalesforceAuthConfig $oauth */
+    $oauth = NULL;
+    $config = \Drupal::configFactory()->getEditable('salesforce.settings');
+    // Config to new plugin config system.
+    $values = [
+      'id' => 'oauth_default',
+      'label' => 'OAuth Default',
+      'provider' => 'oauth',
+    ];
+    $oauth = SalesforceAuthConfig::create($values);
+    $settings = [
+      'consumer_key' => $config->get('consumer_key'),
+      'consumer_secret' => $config->get('consumer_secret'),
+      'login_url' => $config->get('login_url'),
+    ];
+    $oauth
+      ->set('provider_settings', $settings)
+      ->save();
+    $config
+      ->set('salesforce_auth_provider', 'oauth_default')
+      ->save();
     $message = 'Default OAuth provider created from legacy credentials.';
   }
   return $message;
@@ -297,19 +319,21 @@ function salesforce_update_8005() {
  * Convert legacy token to new auth plugin config.
  */
 function salesforce_update_8006() {
-  /** @var \Drupal\salesforce\Entity\SalesforceAuthConfig $oauth */
-  $oauth = SalesforceAuthProviderPluginManager::getAuthConfig();
+  $oauth = SalesforceAuthConfig::load('oauth_default');
   if (!$oauth) {
     return "Auth config missing. Refused to update legacy token.";
   }
   try {
-    if (\Drupal::service('salesforce.auth_token_storage')
-      ->retrieveAccessToken($oauth->id())) {
-      return "Token exists. Refused to update.";
-    }
+    \Drupal::service('salesforce.auth_token_storage')
+      ->retrieveAccessToken($oauth->id());
+    return "Token exists. Refused to update.";
   }
   catch (TokenNotFoundException $e) {
-    \Drupal::service('salesforce.auth_token_storage')->updateToken();
+    \Drupal::service('salesforce.auth_token_storage')
+      ->storeAccessToken('oauth_default',
+        new SalesforceToken(
+          \Drupal::state()->get('salesforce.access_token'),
+          \Drupal::state()->get('salesforce.refresh_token')));
     return "Updated legacy token to new plugin config.";
   }
 }
@@ -320,7 +344,6 @@ function salesforce_update_8006() {
 function salesforce_update_8401() {
   // Enable salesforce_oauth module.
   \Drupal::service('module_installer')->install(['salesforce_oauth']);
-  throw new \Exception('foo');
 
   // Purge old stateful values and config.
   \Drupal::configFactory()->getEditable('salesforce.settings')
@@ -334,7 +357,102 @@ function salesforce_update_8401() {
     'salesforce.refresh_token',
     'salesforce.identity',
     'salesforce.instance_url',
-    'salesforce_encrypt.profile',
   ]);
 
+}
+
+/**
+ * Purge salesforce_encrypt module, in case it was not disabled.
+ *
+ * See change record https://www.drupal.org/node/3034230 for more info.
+ */
+function salesforce_update_8402() {
+  // Manually uninstall salesforce_encrypt, which was removed from.
+    \Drupal::database()->delete('key_value')
+      ->condition('collection', 'system.schema')
+      ->condition('name', 'module_name')
+      ->execute();
+
+  // Check to see if our profile exists, and if our creds are encrypted.
+  // If so, try to unencrypt them and delete our profile.
+  $profile = \Drupal::state()->get('salesforce_encrypt.profile');
+  if (!$profile) {
+    return;
+  }
+
+  \Drupal::state()->delete('salesforce_encrypt.profile');
+
+  $profile = \Drupal::service('encrypt.encryption_profile.manager')->getEncryptionProfile($profile);
+  if (!$profile) {
+    return;
+  }
+  /** @var \Drupal\encrypt\EncryptService $encryption */
+  $encryption = \Drupal::service('encryption');
+
+  // Encryption exists. Profile exists. Look for encrypted credentials.
+  // Load auth config
+  /** @var \Drupal\salesforce\Entity\SalesforceAuthConfig $authConfig */
+  $authConfig = SalesforceAuthConfig::load('oauth_default');
+  if (!$authConfig) {
+    // If we can't load the oauth_default config, we're done.
+    return;
+  }
+  $credentials = $authConfig->getPlugin()->getCredentials();
+  if (!$credentials instanceof SalesforceOAuthCredentials) {
+    // If we're not using OAuth, we are done.
+    return;
+  }
+
+  try {
+    $key = $encryption->decrypt($credentials->getConsumerKey(), $profile);
+    $secret = $encryption->decrypt($credentials->getConsumerSecret(), $profile);
+    $url = $credentials->getLoginUrl();
+    $settings = [
+      'consumer_key' => $key,
+      'consumer_secret' => $secret,
+      'login_url' => $url,
+    ];
+    $authConfig
+      ->set('provider_settings', $settings)
+      ->save();
+  }
+  catch (\Exception $e) {
+    // If these failed encryption, don't bother with the update which will
+    // probably fail.
+    return;
+  }
+
+  /** @var \Drupal\salesforce\Storage\SalesforceAuthTokenStorage $tokenStorage */
+  $tokenStorage = \Drupal::service('salesforce.auth_token_storage');
+  try {
+    $token = $tokenStorage->retrieveAccessToken('oauth_default');
+    $accessToken = $encryption->decrypt($token->getAccessToken(), $profile);
+    $refreshToken = $encryption->decrypt($token->getRefreshToken(), $profile);
+    $token->setAccessToken($accessToken);
+    $token->setRefreshToken($refreshToken);
+    $tokenStorage->storeAccessToken('oauth_default', $token);
+
+    $identity = $tokenStorage->retrieveIdentity('oauth_default');
+    if (empty($identity)) {
+      return;
+    }
+    if (is_string($identity)) {
+      $identity = $encryption->decrypt($identity, $profile);
+      if (empty($identity) || !is_string($identity)) {
+        // If decryption failed, we're done.
+        return;
+      }
+      $identity = unserialize($identity);
+      if ($identity === FALSE) {
+        // We can't do anything with a non-serialized string.
+        return;
+      }
+    }
+    $tokenStorage->storeIdentity('oauth_default', $identity);
+  }
+  catch (\Exception $e) {
+    // If these failed encryption, don't bother with the update which will
+    // probably fail.
+    return;
+  }
 }

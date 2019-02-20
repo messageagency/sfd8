@@ -4,6 +4,8 @@ namespace Drupal\salesforce\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\salesforce\Rest\RestClient;
+use Drupal\salesforce\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
 use Drush\Commands\DrushCommands;
 use Drush\Drush;
 use Drush\Exceptions\UserAbortException;
@@ -30,6 +32,20 @@ abstract class SalesforceCommandsBase extends DrushCommands {
   protected $etm;
 
   /**
+   * Salesforce Auth Provider plugin manager service.
+   *
+   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   */
+  protected $authMan;
+
+  /**
+   * Salesforce Auth Token Storage service.
+   *
+   * @var \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface
+   */
+  protected $tokenStorage;
+
+  /**
    * SalesforceCommandsBase constructor.
    *
    * @param \Drupal\salesforce\Rest\RestClient $client
@@ -40,9 +56,11 @@ abstract class SalesforceCommandsBase extends DrushCommands {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(RestClient $client, EntityTypeManagerInterface $etm) {
+  public function __construct(RestClient $client, EntityTypeManagerInterface $etm, SalesforceAuthProviderPluginManager $authMan, SalesforceAuthTokenStorageInterface $tokenStorage) {
     $this->client = $client;
     $this->etm = $etm;
+    $this->authMan = $authMan;
+    $this->tokenStorage = $tokenStorage;
   }
 
   /**

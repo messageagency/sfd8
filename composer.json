@@ -13,6 +13,11 @@
       "name": "Alexander Rhodes (ironsizide)",
       "homepage": "https://www.drupal.org/u/ironsizide",
       "role": "Maintainer"
+    },
+    {
+      "name": "Colin Corrigan",
+      "homepage": "https://www.drupal.org/u/cwcorrigan",
+      "role": "Maintainer"
     }
   ],
   "support": {
@@ -29,8 +34,6 @@
   "require": {
     "consolidation/output-formatters": "^3.2.0",
     "drupal/dynamic_entity_reference": "^2.0@alpha",
-    "drupal/key": "^1.7",
-    "drupal/encrypt": "^3.0@rc",
     "drupal/typed_data": "^1.0@alpha",
     "firebase/php-jwt": "^5.0",
     "lusitanian/oauth": "^0.8.11",

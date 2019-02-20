@@ -1,6 +1,6 @@
 services:
   salesforce.commands:
     class: \Drupal\salesforce\Commands\SalesforceCommands
-    arguments: ['@salesforce.client', '@entity_type.manager']
+    arguments: ['@salesforce.client', '@entity_type.manager', '@plugin.manager.salesforce.auth_providers', '@salesforce.auth_token_storage']
     tags:
       - { name: drush.command }

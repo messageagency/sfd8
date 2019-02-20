@@ -19,8 +19,8 @@ class SalesforceAuthListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\salesforce\SalesforceAuthProviderInterface $plugin */
     $plugin = $entity->getPlugin();
     $row['label'] = $entity->label();
-    $row['url'] = $plugin->getLoginUrl();
-    $row['key'] = substr($plugin->getConsumerKey(), 0, 16) . '...';
+    $row['url'] = $plugin->getCredentials()->getLoginUrl();
+    $row['key'] = substr($plugin->getCredentials()->getConsumerKey(), 0, 16) . '...';
     $row['type'] = $plugin->label();
     $row['status'] = $plugin->hasAccessToken() ? 'Authorized' : 'Missing';
     return $row + parent::buildRow($entity);

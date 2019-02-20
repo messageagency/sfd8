@@ -107,10 +107,13 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Get credentials.
+   *
+   * @return \Drupal\salesforce\Consumer\SalesforceCredentialsInterface|FALSE
+   *   Credentials or FALSE.
    */
-  public function getLoginUrl() {
-    return $this->getPlugin() ? $this->getPlugin()->getLoginUrl() : '';
+  public function getCredentials() {
+    return $this->getPlugin() ? $this->getPlugin()->getCredentials() : FALSE;
   }
 
   /**

@@ -58,12 +58,14 @@ interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormIn
   public function refreshAccessToken(TokenInterface $token);
 
   /**
-   * Login URL, e.g. https://login.salesforce.com, for this plugin.
+   * Return the credentials configured for this auth provider instance.
    *
-   * @return string
-   *   Login URL.
+   * Credentials contain consumer key, login url, secret, etc.
+   *
+   * @return \Drupal\salesforce\Consumer\SalesforceCredentialsInterface
+   *   The credentials.
    */
-  public function getLoginUrl();
+  public function getCredentials();
 
   /**
    * Access token for this plugin.

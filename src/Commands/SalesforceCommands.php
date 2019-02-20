@@ -43,14 +43,14 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   The version info.
    */
   public function restVersion() {
-    $version_id = $this->client->getApiVersion();
+    $version_id = $this->authMan->getProvider()->getApiVersion();
     $versions = $this->client->getVersions();
     $version = $versions[$version_id];
     $latest = array_pop($versions);
     foreach ($version as $key => $value) {
       $rows[$key] = $value;
     }
-    $rows['login_url'] = $this->client->getLoginUrl();
+    $rows['login_url'] = $this->authMan->getCredentials()->getLoginUrl();
     $rows['latest'] = strcmp($version_id, $latest['version']) ? $latest['version'] : 'Yes';
     return new PropertyList($rows);
   }

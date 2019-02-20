@@ -57,47 +57,6 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   }
 
   /**
-   * Backwards-compatibility for legacy singleton auth.
-   *
-   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.1.
-   */
-  public static function updateAuthConfig() {
-    $oauth = self::getAuthConfig();
-    $config = \Drupal::configFactory()->getEditable('salesforce.settings');
-    $settings = [
-      'consumer_key' => $config->get('consumer_key'),
-      'consumer_secret' => $config->get('consumer_secret'),
-      'login_url' => $config->get('login_url'),
-    ];
-    $oauth
-      ->set('provider_settings', $settings)
-      ->save();
-  }
-
-  /**
-   * Backwards-compatibility for legacy singleton auth.
-   *
-   * @deprecated BC legacy auth scheme only. will be removed in 8.x-4.1.
-   */
-  public static function getAuthConfig() {
-    $config = \Drupal::configFactory()->getEditable('salesforce.settings');
-    $auth_provider = $config->get('salesforce_auth_provider');
-    if (!$auth_provider || !$oauth = SalesforceAuthConfig::load($auth_provider)) {
-      // Config to new plugin config system.
-      $values = [
-        'id' => 'oauth_default',
-        'label' => 'OAuth Default',
-        'provider' => 'oauth',
-      ];
-      $oauth = SalesforceAuthConfig::create($values);
-      $config
-        ->set('salesforce_auth_provider', 'oauth_default')
-        ->save();
-    }
-    return $oauth;
-  }
-
-  /**
    * Wrapper for salesforce_auth storage service.
    *
    * @return \Drupal\Core\Config\Entity\ConfigEntityStorageInterface
@@ -164,6 +123,19 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
       return NULL;
     }
     return $this->getConfig()->getPlugin();
+  }
+
+  /**
+   * The credentials for the active auth provider plugin, or null.
+   *
+   * @return \Drupal\salesforce\Consumer\SalesforceCredentialsInterface|null
+   *   The credentials for the active auth provider plugin, or null.
+   */
+  public function getCredentials() {
+    if (!$this->getProvider()) {
+      return NULL;
+    }
+    return $this->getProvider()->getCredentials();
   }
 
   /**

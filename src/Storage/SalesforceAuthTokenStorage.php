@@ -3,6 +3,8 @@
 namespace Drupal\salesforce\Storage;
 
 use Drupal\Core\State\StateInterface;
+use Drupal\salesforce\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\Token\SalesforceToken;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
 use OAuth\Common\Token\TokenInterface;
 
