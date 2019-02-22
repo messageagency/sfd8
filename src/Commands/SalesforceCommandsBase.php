@@ -52,6 +52,10 @@ abstract class SalesforceCommandsBase extends DrushCommands {
    *   SF client.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   Entity type manager.
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager $authMan
+   *   Auth plugin manager.
+   * @param \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface $tokenStorage
+   *   Token storage.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
