@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\salesforce\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\Token\SalesforceToken;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
 
 /**
@@ -270,9 +271,6 @@ function salesforce_update_8004() {
 /**
  * Convert legacy oauth credentials to new auth plugin config.
  */
-/**
- * Convert legacy oauth credentials to new auth plugin config.
- */
 function salesforce_update_8005() {
   $change_list = \Drupal::entityDefinitionUpdateManager()->getChangeSummary();
   if (!empty($change_list['salesforce_auth'])) {
@@ -290,7 +288,27 @@ function salesforce_update_8005() {
     $message = 'Existing "oauth_default" provider config detected. Refused to set legacy credentials.';
   }
   else {
-    SalesforceAuthProviderPluginManager::updateAuthConfig();
+    /** @var \Drupal\salesforce\Entity\SalesforceAuthConfig $oauth */
+    $oauth = NULL;
+    $config = \Drupal::configFactory()->getEditable('salesforce.settings');
+    // Config to new plugin config system.
+    $values = [
+      'id' => 'oauth_default',
+      'label' => 'OAuth Default',
+      'provider' => 'oauth',
+    ];
+    $oauth = SalesforceAuthConfig::create($values);
+    $settings = [
+      'consumer_key' => $config->get('consumer_key'),
+      'consumer_secret' => $config->get('consumer_secret'),
+      'login_url' => $config->get('login_url'),
+    ];
+    $oauth
+      ->set('provider_settings', $settings)
+      ->save();
+    $config
+      ->set('salesforce_auth_provider', 'oauth_default')
+      ->save();
     $message = 'Default OAuth provider created from legacy credentials.';
   }
   return $message;
@@ -300,19 +318,21 @@ function salesforce_update_8005() {
  * Convert legacy token to new auth plugin config.
  */
 function salesforce_update_8006() {
-  /** @var \Drupal\salesforce\Entity\SalesforceAuthConfig $oauth */
-  $oauth = SalesforceAuthProviderPluginManager::getAuthConfig();
+  $oauth = SalesforceAuthConfig::load('oauth_default');
   if (!$oauth) {
     return "Auth config missing. Refused to update legacy token.";
   }
   try {
-    if (\Drupal::service('salesforce.auth_token_storage')
-      ->retrieveAccessToken($oauth->id())) {
-      return "Token exists. Refused to update.";
-    }
+    \Drupal::service('salesforce.auth_token_storage')
+      ->retrieveAccessToken($oauth->id());
+    return "Token exists. Refused to update.";
   }
   catch (TokenNotFoundException $e) {
-    \Drupal::service('salesforce.auth_token_storage')->updateToken();
+    \Drupal::service('salesforce.auth_token_storage')
+      ->storeAccessToken('oauth_default',
+        new SalesforceToken(
+          \Drupal::state()->get('salesforce.access_token'),
+          \Drupal::state()->get('salesforce.refresh_token')));
     return "Updated legacy token to new plugin config.";
   }
 }
