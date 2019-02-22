@@ -34,6 +34,7 @@
   "require": {
     "consolidation/output-formatters": "^3.2.0",
     "drupal/dynamic_entity_reference": "^2.0@alpha",
+    "drupal/key": "^1.7",
     "drupal/typed_data": "^1.0@alpha",
     "firebase/php-jwt": "^5.0",
     "lusitanian/oauth": "^0.8.11",
