@@ -404,6 +404,9 @@ class RestClient implements RestClientInterface {
           }
         }
       }
+      else {
+        $sobjects[$object['name']] = $object;
+      }
     }
     return $sobjects;
   }
