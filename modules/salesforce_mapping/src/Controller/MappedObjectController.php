@@ -31,7 +31,7 @@ class MappedObjectController extends ControllerBase {
       return AccessResult::forbidden();
     }
     // Only allow access for entities with mappings.
-    return \Drupal::entityTypeManager()
+    return $this->entityTypeManager()
       ->getStorage('salesforce_mapping')
       ->loadByEntity($param)
         ? AccessResult::allowed()
@@ -78,7 +78,7 @@ class MappedObjectController extends ControllerBase {
   private function getMappedObjects(EntityInterface $entity) {
     // @TODO this probably belongs in a service
     return $this
-      ->entityManager()
+      ->entityTypeManager()
       ->getStorage('salesforce_mapped_object')
       ->loadByEntity($entity);
   }

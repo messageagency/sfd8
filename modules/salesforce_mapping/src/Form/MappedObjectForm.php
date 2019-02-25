@@ -4,7 +4,7 @@ namespace Drupal\salesforce_mapping\Form;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\ContentEntityForm;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -58,7 +58,7 @@ class MappedObjectForm extends ContentEntityForm {
   /**
    * MappedObjectForm constructor.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   Entity manager service.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entityTypeBundleInfo
    *   Bundle info service.
@@ -74,13 +74,13 @@ class MappedObjectForm extends ContentEntityForm {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(EntityManagerInterface $entity_manager, EntityTypeBundleInfoInterface $entityTypeBundleInfo, TimeInterface $time, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct($entity_manager, $entityTypeBundleInfo, $time);
+  public function __construct(EntityRepositoryInterface $entityRepository, EntityTypeBundleInfoInterface $entityTypeBundleInfo, TimeInterface $time, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack, EntityTypeManagerInterface $etm) {
+    parent::__construct($entityRepository, $entityTypeBundleInfo, $time);
     $this->eventDispatcher = $event_dispatcher;
     $this->request = $request_stack->getCurrentRequest();
-    $this->entityTypeManager = $entity_type_manager;
-    $this->mappingStorage = $entity_type_manager->getStorage('salesforce_mapping');
-    $this->mappedObjectStorage = $entity_type_manager->getStorage('salesforce_mapped_object');
+    $this->entityTypeManager = $etm;
+    $this->mappingStorage = $etm->getStorage('salesforce_mapping');
+    $this->mappedObjectStorage = $etm->getStorage('salesforce_mapped_object');
   }
 
   /**
@@ -88,7 +88,7 @@ class MappedObjectForm extends ContentEntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity.manager'),
+      $container->get('entity.repository'),
       $container->get('entity_type.bundle.info'),
       $container->get('datetime.time'),
       $container->get('event_dispatcher'),

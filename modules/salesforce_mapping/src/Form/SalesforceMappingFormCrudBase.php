@@ -15,13 +15,6 @@ use Drupal\salesforce\Event\SalesforceErrorEvent;
 abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
 
   /**
-   * The storage controller.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $storageController;
-
-  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
@@ -104,7 +97,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     else {
       $entity_type = $form['drupal_entity']['drupal_entity_type']['#default_value'];
     }
-    $bundle_info = $this->entityManager->getBundleInfo($entity_type);
+    $bundle_info = $this->bundleInfo->getBundleInfo($entity_type);
 
     if (!empty($bundle_info)) {
       $form['drupal_entity']['drupal_bundle']['#options'] = [];
@@ -345,7 +338,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    $bundles = $this->entityManager->getBundleInfo($form_state->getValue('drupal_entity_type'));
+    $bundles = $this->bundleInfo->getBundleInfo($form_state->getValue('drupal_entity_type'));
     if (empty($bundles[$form_state->getValue('drupal_bundle')])) {
       $form_state->setErrorByName('drupal_bundle', $this->t('Invalid bundle for entity type.'));
     }
@@ -397,7 +390,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
    */
   protected function getBundleOptions() {
     $entities = $this->getEntityTypeOptions();
-    $bundles = $this->entityManager->getAllBundleInfo();
+    $bundles = $this->bundleInfo->getAllBundleInfo();
     $options = [];
     foreach ($bundles as $entity => $bundle_info) {
       if (empty($entities[$entity])) {

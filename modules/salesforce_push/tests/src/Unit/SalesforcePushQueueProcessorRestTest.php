@@ -17,7 +17,6 @@ use Drupal\salesforce_push\PushQueueInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
 
 /**
  * Test SalesforcePushQueueProcessor plugin Rest.
@@ -41,7 +40,7 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
     $this->eventDispatcher->expects($this->any())
       ->method('dispatch')
       ->willReturn(NULL);
-    $this->entity_manager = $this->getMock(EntityManagerInterface::class);
+    $this->entity_manager = $this->getMock(EntityTypeManagerInterface::class);
 
     $this->string_translation = $this->getMock(TranslationInterface::class);
 
@@ -85,7 +84,7 @@ class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
     $container->set('entity_type.manager', $this->entityTypeManager);
     $container->set('event_dispatcher', $this->eventDispatcher);
     $container->set('string_translation', $this->string_translation);
-    $container->set('entity.manager', $this->entity_manager);
+    $container->set('entity_type.manager', $this->entity_manager);
     \Drupal::setContainer($container);
 
     $this->handler = new Rest([], '', [], $this->queue, $this->entityTypeManager, $this->eventDispatcher, $this->authMan);

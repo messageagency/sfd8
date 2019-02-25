@@ -5,7 +5,6 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -64,8 +63,6 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
    *   Entity field manager.
    * @param \Drupal\salesforce\Rest\RestClientInterface $rest_client
    *   Salesforce client.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   Entity manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   ETM service.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
@@ -80,8 +77,8 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityManagerInterface $entity_manager, EntityTypeManagerInterface $etm, DateFormatterInterface $dateFormatter, EventDispatcherInterface $event_dispatcher, ModuleHandlerInterface $moduleHandler, DataFetcherInterface $dataFetcher) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_bundle_info, $entity_field_manager, $rest_client, $entity_manager, $etm, $dateFormatter, $event_dispatcher);
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityTypeManagerInterface $etm, DateFormatterInterface $dateFormatter, EventDispatcherInterface $event_dispatcher, ModuleHandlerInterface $moduleHandler, DataFetcherInterface $dataFetcher) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_bundle_info, $entity_field_manager, $rest_client, $etm, $dateFormatter, $event_dispatcher);
     $this->moduleHandler = $moduleHandler;
     $this->dataFetcher = $dataFetcher;
   }
@@ -94,7 +91,6 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
       $container->get('entity_type.bundle.info'),
       $container->get('entity_field.manager'),
       $container->get('salesforce.client'),
-      $container->get('entity.manager'),
       $container->get('entity_type.manager'),
       $container->get('date.formatter'),
       $container->get('event_dispatcher'),

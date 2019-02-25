@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_mapping\Form;
 
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Url;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
 use Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface;
@@ -44,6 +45,13 @@ abstract class SalesforceMappingFormBase extends EntityForm {
   protected $entity;
 
   /**
+   * Bundle info service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected $bundleInfo;
+
+  /**
    * SalesforceMappingFormBase constructor.
    *
    * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager $mappingFieldPluginManager
@@ -53,10 +61,11 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    * @param \Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface $mappableEntityTypes
    *   Mappable types.
    */
-  public function __construct(SalesforceMappingFieldPluginManager $mappingFieldPluginManager, RestClientInterface $client, SalesforceMappableEntityTypesInterface $mappableEntityTypes) {
+  public function __construct(SalesforceMappingFieldPluginManager $mappingFieldPluginManager, RestClientInterface $client, SalesforceMappableEntityTypesInterface $mappableEntityTypes, EntityTypeBundleInfoInterface $bundleInfo) {
     $this->mappingFieldPluginManager = $mappingFieldPluginManager;
     $this->client = $client;
     $this->mappableEntityTypes = $mappableEntityTypes;
+    $this->bundleInfo = $bundleInfo;
   }
 
   /**
@@ -66,7 +75,8 @@ abstract class SalesforceMappingFormBase extends EntityForm {
     return new static(
       $container->get('plugin.manager.salesforce_mapping_field'),
       $container->get('salesforce.client'),
-      $container->get('salesforce_mapping.mappable_entity_types')
+      $container->get('salesforce_mapping.mappable_entity_types'),
+      $container->get('entity_type.bundle.info')
     );
   }
 

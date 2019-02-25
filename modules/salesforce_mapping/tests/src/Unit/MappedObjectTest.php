@@ -3,6 +3,7 @@
 namespace Drupal\Tests\salesforce_mapping\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Rest\RestClientInterface;
@@ -53,8 +54,8 @@ class MappedObjectTest extends UnitTestCase {
         'uuid' => 'uuid',
       ]));
 
-    $this->entityManager = $this->getMock('\Drupal\Core\Entity\EntityManagerInterface');
-    $this->entityManager->expects($this->any())
+    $this->etm = $this->getMock(EntityTypeManagerInterface::class);
+    $this->etm->expects($this->any())
       ->method('getDefinition')
       ->with($this->entityTypeId)
       ->will($this->returnValue($this->entityType));
@@ -68,8 +69,7 @@ class MappedObjectTest extends UnitTestCase {
         'salesforce_id' => 'salesforce_id',
       ]));
 
-    $this->entityManager = $this->getMock('\Drupal\Core\Entity\EntityManagerInterface');
-    $this->entityManager->expects($this->any())
+    $this->etm->expects($this->any())
       ->method('getDefinition')
       ->with('salesforce_mapped_object')
       ->will($this->returnValue($this->mappedObjectEntityType));
@@ -95,7 +95,7 @@ class MappedObjectTest extends UnitTestCase {
     $this->time = $this->getMock(TimeInterface::CLASS);
 
     $container = new ContainerBuilder();
-    $container->set('entity.manager', $this->entityManager);
+    $container->set('entity_type.manager', $this->etm);
     $container->set('salesforce.client', $this->client);
     $container->set('event_dispatcher', $this->event_dispatcher);
     $container->set('plugin.manager.field.field_type', $this->fieldTypePluginManager);

@@ -6,7 +6,6 @@ use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface;
@@ -115,8 +114,6 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    *   Entity field manager.
    * @param \Drupal\salesforce\Rest\RestClientInterface $rest_client
    *   Salesforce client.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   Entity manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   ETM service.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
@@ -127,15 +124,14 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityManagerInterface $entity_manager, EntityTypeManagerInterface $etm, DateFormatterInterface $dateFormatter, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityTypeManagerInterface $etm, DateFormatterInterface $dateFormatter, EventDispatcherInterface $event_dispatcher) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->entityFieldManager = $entity_field_manager;
     $this->salesforceClient = $rest_client;
-    $this->entityManager = $entity_manager;
     $this->entityTypeManager = $etm;
-    $this->mappingStorage = $entity_manager->getStorage('salesforce_mapping');
-    $this->mappedObjectStorage = $entity_manager->getStorage('salesforce_mapped_object');
+    $this->mappingStorage = $etm->getStorage('salesforce_mapping');
+    $this->mappedObjectStorage = $etm->getStorage('salesforce_mapped_object');
     $this->dateFormatter = $dateFormatter;
     $this->eventDispatcher = $event_dispatcher;
   }
@@ -148,7 +144,6 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
       $container->get('entity_type.bundle.info'),
       $container->get('entity_field.manager'),
       $container->get('salesforce.client'),
-      $container->get('entity.manager'),
       $container->get('entity_type.manager'),
       $container->get('date.formatter'),
       $container->get('event_dispatcher')

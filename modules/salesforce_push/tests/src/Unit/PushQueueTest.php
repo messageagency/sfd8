@@ -10,7 +10,6 @@ use Drupal\Core\Database\Query\Update;
 use Drupal\Core\Database\Schema;
 use Drupal\Core\Database\StatementInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Sql\SqlEntityStorageInterface;
 use Drupal\Core\State\StateInterface;
@@ -57,7 +56,6 @@ class PushQueueTest extends UnitTestCase {
         ->getMock();
     $this->entityTypeManager =
       $this->getMock(EntityTypeManagerInterface::class);
-    $this->entity_manager = $this->getMock(EntityManagerInterface::class);
     $this->eventDispatcher = $this->getMock(EventDispatcherInterface::CLASS);
     $this->eventDispatcher->expects($this->any())
       ->method('dispatch')
@@ -98,7 +96,6 @@ class PushQueueTest extends UnitTestCase {
     $container->set('entity_type.manager', $this->entityTypeManager);
     $container->set('event_dispatcher', $this->eventDispatcher);
     $container->set('string_translation', $this->string_translation);
-    $container->set('entity.manager', $this->entity_manager);
     $container->set('plugin.manager.salesforce_push_queue_processor', $this->push_queue_processor_plugin_manager);
     $container->set('datetime.time', $this->time);
     $container->set('config.factory', $this->configFactory);
