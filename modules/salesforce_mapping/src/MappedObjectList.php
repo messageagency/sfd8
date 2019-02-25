@@ -118,7 +118,7 @@ class MappedObjectList extends EntityListBuilder {
     $operations['view'] = [
       'title' => $this->t('View'),
       'weight' => -100,
-      'url' => $entity->urlInfo('canonical'),
+      'url' => $entity->toUrl(),
     ];
     $operations += parent::getDefaultOperations($entity);
     return $operations;

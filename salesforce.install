@@ -49,7 +49,7 @@ function salesforce_requirements($phase) {
   }
 
   $requirements['salesforce_tls'] = salesforce_get_tls_requirements();
-  if ($last < REQUEST_TIME - (60 * 60 * 24) || empty($requirements['salesforce_tls'])) {
+  if ($last < time() - (60 * 60 * 24) || empty($requirements['salesforce_tls'])) {
     salesforce_fetch_new_tls();
     $requirements['salesforce_tls'] = salesforce_get_tls_requirements();
   }
@@ -112,7 +112,7 @@ function salesforce_fetch_new_tls() {
   try {
     // Ping the howsmyssl web service to check TLS version support for this
     // client.
-    \Drupal::state()->set('salesforce.last_requirements_check', REQUEST_TIME);
+    \Drupal::state()->set('salesforce.last_requirements_check', time());
     $raw_response = \Drupal::service('http_client')->get('https://www.howsmyssl.com/a/check', ['json' => TRUE, 'timeout' => 5]);
     $body = $raw_response->getBody();
     if (!empty($body)) {

@@ -108,11 +108,11 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     if (!$this->entity->save()) {
-      drupal_set_message($this->t('An error occurred while trying to save the mapping.'));
+      $this->messenger()->addError($this->t('An error occurred while trying to save the mapping.'));
       return;
     }
 
-    drupal_set_message($this->t('The mapping has been successfully saved.'));
+    $this->messenger()->addStatus($this->t('The mapping has been successfully saved.'));
   }
 
   /**

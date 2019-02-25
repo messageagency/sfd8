@@ -68,14 +68,3 @@ function salesforce_help($route_name, RouteMatchInterface $route_match) {
       return '<p>' . t('Visit <a href=":help">the Salesforce module help page</a> if you need help obtaining a consumer key and secret.', [':help' => (new Url('help.page', ['name' => 'salesforce']))->toString()]) . '</p>';
   }
 }
-
-/**
- * Salesforce set message.
- *
- * Wrapper around drupal_set_message(), checks for proper permissions.
- */
-function salesforce_set_message($message = NULL, $type = 'status', $repeat = FALSE) {
-  if (Drupal::currentUser()->hasPermission('administer salesforce')) {
-    drupal_set_message($message, $type, $repeat);
-  }
-}

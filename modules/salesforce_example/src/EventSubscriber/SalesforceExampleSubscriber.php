@@ -75,7 +75,7 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
         // Do Y.
         break;
     }
-    drupal_set_message('push success example subscriber!: ' . $event->getMappedObject()->sfid());
+    \Drupal::messenger()->addStatus('push success example subscriber!: ' . $event->getMappedObject()->sfid());
   }
 
   /**
@@ -85,7 +85,7 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
    *   The event.
    */
   public function pushFail(SalesforcePushOpEvent $event) {
-    drupal_set_message('push fail example: ' . $event->getMappedObject()->id());
+    \Drupal::messenger()->addStatus('push fail example: ' . $event->getMappedObject()->id());
   }
 
   /**

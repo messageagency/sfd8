@@ -124,17 +124,6 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
     $identity = $this->parseIdentityResponse($response);
     $this->storage->storeIdentity($this->service(), $identity);
     return TRUE;
-
-    parent::save($form, $form_state);
-    try {
-      $this->setConfiguration($form_state->getValues());
-
-      \Drupal::messenger()->addStatus(t('Successfully connected to Salesforce as user %name.', ['%name' => $this->getIdentity()['display_name']]));
-    }
-    catch (\Exception $e) {
-      $form_state->setError($form, $this->t('Failed to connect to Salesforce: %message', ['%message' => $e->getMessage()]));
-    }
-
   }
 
   /**

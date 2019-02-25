@@ -198,13 +198,13 @@ class MappedObjectForm extends ContentEntityForm {
     catch (\Exception $e) {
       $mapped_object->delete();
       $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-      drupal_set_message(t('Push failed with an exception: %exception', ['%exception' => $e->getMessage()]), 'error');
+      $this->messenger()->addError(t('Push failed with an exception: %exception', ['%exception' => $e->getMessage()]));
       $form_state->setRebuild();
       return;
     }
 
     // @TODO: more verbose feedback for successful push.
-    drupal_set_message('Push successful.');
+    $this->messenger()->addStatus('Push successful.');
     $form_state->setRedirect('entity.salesforce_mapped_object.canonical', ['salesforce_mapped_object' => $mapped_object->id()]);
   }
 
@@ -240,13 +240,13 @@ class MappedObjectForm extends ContentEntityForm {
     }
     catch (\Exception $e) {
       $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-      drupal_set_message(t('Pull failed with an exception: %exception', ['%exception' => $e->getMessage()]), 'error');
+      $this->messenger()->addError(t('Pull failed with an exception: %exception', ['%exception' => $e->getMessage()]));
       $form_state->setRebuild();
       return;
     }
 
     // @TODO: more verbose feedback for successful pull.
-    drupal_set_message('Pull successful.');
+    $this->messenger()->addStatus('Pull successful.');
     $form_state->setRedirect('entity.salesforce_mapped_object.canonical', ['salesforce_mapped_object' => $mapped_object->id()]);
   }
 
@@ -255,7 +255,7 @@ class MappedObjectForm extends ContentEntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $this->getEntity()->save();
-    drupal_set_message($this->t('The mapping has been successfully saved.'));
+    $this->messenger()->addStatus($this->t('The mapping has been successfully saved.'));
     $form_state->setRedirect('entity.salesforce_mapped_object.canonical', ['salesforce_mapped_object' => $this->getEntity()->id()]);
   }
 

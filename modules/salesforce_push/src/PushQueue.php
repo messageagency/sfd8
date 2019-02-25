@@ -611,7 +611,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
           'expire' => 0,
         ])
         ->condition('expire', 0, '<>')
-        ->condition('expire', REQUEST_TIME, '<')
+        ->condition('expire', $this->time->getRequestTime(), '<')
         ->execute();
       $this->garbageCollected = TRUE;
     }
