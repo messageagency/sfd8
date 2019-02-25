@@ -82,21 +82,4 @@ class AutocompleteController extends ControllerBase {
     return new JsonResponse($results);
   }
 
-  /**
-   * Gets the data fetcher, or throw an exception if typed_data not installed.
-   *
-   * @return \Drupal\typed_data\DataFetcherInterface
-   *   The data fetcher.
-   *
-   * @throws \Exception
-   *
-   * @deprecated BC compatibility only. Will be removed in 8.x-4.0 release.
-   */
-  protected function getDataFetcher() {
-    if (empty($this->dataFetcher)) {
-      $this->dataFetcher = \Drupal::service('typed_data.data_fetcher');
-    }
-    return $this->dataFetcher;
-  }
-
 }

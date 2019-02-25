@@ -210,24 +210,6 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
   }
 
   /**
-   * Data Fetcher wrapper.
-   *
-   * @return \Drupal\typed_data\DataFetcherInterface
-   *   Data fetcher service.
-   *
-   * @throws \Exception
-   *   If typed_data.data_fetcher service does not exist.
-   *
-   * @deprecated BC compatibility only. Will be removed in 8.x-4.0 release.
-   */
-  protected function getDataFetcher() {
-    if (empty($this->dataFetcher)) {
-      $this->dataFetcher = \Drupal::service('typed_data.data_fetcher');
-    }
-    return $this->dataFetcher;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function pullValue(SObject $sf_object, EntityInterface $entity, SalesforceMappingInterface $mapping) {
