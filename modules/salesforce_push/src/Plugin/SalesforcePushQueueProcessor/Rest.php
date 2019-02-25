@@ -2,7 +2,7 @@
 
 namespace Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor;
 
-use Drupal\salesforce\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\PluginBase;
@@ -65,7 +65,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   /**
    * Auth manager.
    *
-   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface
    */
   protected $authMan;
 
@@ -84,13 +84,13 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    *   ETM service.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   Event dispatcher service.
-   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager $authMan
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface $authMan
    *   Auth manager.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueueInterface $queue, EntityTypeManagerInterface $etm, EventDispatcherInterface $eventDispatcher, SalesforceAuthProviderPluginManager $authMan) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueueInterface $queue, EntityTypeManagerInterface $etm, EventDispatcherInterface $eventDispatcher, SalesforceAuthProviderPluginManagerInterface $authMan) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->queue = $queue;
     $this->etm = $etm;

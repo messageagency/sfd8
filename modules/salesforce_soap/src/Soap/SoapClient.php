@@ -3,7 +3,7 @@
 namespace Drupal\salesforce_soap\Soap;
 
 use Drupal\salesforce\Rest\RestClientInterface;
-use Drupal\salesforce\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface;
 use SforcePartnerClient;
 
 /**
@@ -35,7 +35,7 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
   /**
    * Auth manager.
    *
-   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface
    */
   protected $authMan;
 
@@ -44,13 +44,13 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
    *
    * @param \Drupal\salesforce\Rest\RestClientInterface $rest_api
    *   The Salesforce REST API client.
-   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager $authMan
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface $authMan
    *   Auth manager.
    * @param string $wsdl
    *   (Optional) Path to the WSDL that should be used.  Defaults to using the
    *   partner WSDL from the developerforce/force.com-toolkit-for-php package.
    */
-  public function __construct(RestClientInterface $rest_api, SalesforceAuthProviderPluginManager $authMan, $wsdl = NULL) {
+  public function __construct(RestClientInterface $rest_api, SalesforceAuthProviderPluginManagerInterface $authMan, $wsdl = NULL) {
     parent::__construct();
 
     $this->restApi = $rest_api;

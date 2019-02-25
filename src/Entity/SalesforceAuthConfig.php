@@ -66,7 +66,7 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
   /**
    * Auth manager.
    *
-   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface
    */
   protected $manager;
 
@@ -119,7 +119,7 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
   /**
    * Auth manager wrapper.
    *
-   * @return \Drupal\salesforce\SalesforceAuthProviderPluginManager|mixed
+   * @return \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface|mixed
    *   The auth provider plugin manager.
    */
   public function authManager() {

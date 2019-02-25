@@ -7,8 +7,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
-use Drupal\salesforce\SalesforceAuthManager;
-use Drupal\salesforce\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -25,12 +24,12 @@ class SalesforceAuthSettings extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   Config.
-   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager $salesforceAuth
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface $salesforceAuth
    *   Authman.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   Events.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, SalesforceAuthProviderPluginManager $salesforceAuth, EventDispatcherInterface $eventDispatcher) {
+  public function __construct(ConfigFactoryInterface $config_factory, SalesforceAuthProviderPluginManagerInterface $salesforceAuth, EventDispatcherInterface $eventDispatcher) {
     parent::__construct($config_factory);
     $this->salesforceAuth = $salesforceAuth;
     $this->eventDispatcher = $eventDispatcher;

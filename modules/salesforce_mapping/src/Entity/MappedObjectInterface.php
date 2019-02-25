@@ -62,7 +62,7 @@ interface MappedObjectInterface extends EntityChangedInterface, RevisionLogInter
   /**
    * Wrapper for salesforce auth provider plugin manager.
    *
-   * @return \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   * @return \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface
    *   The auth provider plugin manager.
    */
   public function authMan();

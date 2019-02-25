@@ -13,7 +13,7 @@ use OAuth\OAuth2\Token\StdOAuth2Token;
 /**
  * Auth provider plugin manager.
  */
-class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
+class SalesforceAuthProviderPluginManager extends DefaultPluginManager implements SalesforceAuthProviderPluginManagerInterface {
 
   /**
    * Config from salesforce.settings.
@@ -73,36 +73,21 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   }
 
   /**
-   * All Salesforce auth providers.
-   *
-   * @return \Drupal\salesforce\Entity\SalesforceAuthConfig[]
-   *   All auth provider plugins.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * {@inheritdoc}
    */
   public function getProviders() {
     return $this->authStorage()->loadMultiple();
   }
 
   /**
-   * TRUE if any auth providers are defined.
-   *
-   * @return bool
-   *   TRUE if any auth providers are defined.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * {@inheritdoc}
    */
   public function hasProviders() {
     return $this->authStorage()->hasData();
   }
 
   /**
-   * Get the active auth service provider, or null if it has not been assigned.
-   *
-   * @return \Drupal\salesforce\Entity\SalesforceAuthConfig|null
-   *   The active service provider, or null if it has not been assigned.
+   * {@inheritdoc}
    */
   public function getConfig() {
     $provider_id = $this->config()->get('salesforce_auth_provider');
@@ -113,10 +98,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   }
 
   /**
-   * The auth provider plugin of the active service provider, or null.
-   *
-   * @return \Drupal\salesforce\SalesforceAuthProviderInterface|null
-   *   The auth provider plugin of the active service provider, or null.
+   * {@inheritdoc}
    */
   public function getProvider() {
     if (!$this->getConfig()) {
@@ -126,10 +108,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   }
 
   /**
-   * The credentials for the active auth provider plugin, or null.
-   *
-   * @return \Drupal\salesforce\Consumer\SalesforceCredentialsInterface|null
-   *   The credentials for the active auth provider plugin, or null.
+   * {@inheritdoc}
    */
   public function getCredentials() {
     if (!$this->getProvider()) {
@@ -139,10 +118,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   }
 
   /**
-   * Get the active token, or null if it has not been assigned.
-   *
-   * @return \OAuth\OAuth2\Token\TokenInterface|null
-   *   The token of the plugin of the active config, or null.
+   * {@inheritdoc}
    */
   public function getToken() {
     if (!$config = $this->getConfig()) {
@@ -160,10 +136,7 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager {
   }
 
   /**
-   * Force a refresh of the active token and return the fresh token.
-   *
-   * @return \OAuth\Common\Token\TokenInterface
-   *   The token.
+   * {@inheritdoc}
    */
   public function refreshToken() {
     if (!$config = $this->getConfig()) {

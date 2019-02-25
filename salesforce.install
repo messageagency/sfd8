@@ -8,7 +8,6 @@
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
-use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use Drupal\salesforce\Token\SalesforceToken;
 use Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
@@ -66,7 +65,7 @@ function salesforce_get_auth_provider_requirements() {
     'title' => t('Salesforce Authentication Status'),
     'value' => t('Provider Status'),
   ];
-  /** @var \Drupal\salesforce\SalesforceAuthProviderPluginManager $authMan */
+  /** @var \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface $authMan */
   $authMan = \Drupal::service('plugin.manager.salesforce.auth_providers');
   if (!$authMan->hasProviders()) {
     $requirements += [
