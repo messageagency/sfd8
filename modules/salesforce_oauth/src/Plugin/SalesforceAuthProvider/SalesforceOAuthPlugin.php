@@ -3,7 +3,6 @@
 namespace Drupal\salesforce_oauth\Plugin\SalesforceAuthProvider;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
 use Drupal\salesforce\Consumer\SalesforceCredentials;
 use Drupal\salesforce\SalesforceAuthProviderInterface;

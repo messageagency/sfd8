@@ -89,6 +89,8 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
    *
    * @return \Drupal\salesforce\SalesforceAuthProviderInterface|null
    *   The auth provider plugin, or null.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function getPlugin() {
     $settings = $this->provider_settings ?: [];

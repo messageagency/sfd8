@@ -2,7 +2,6 @@
 
 namespace Drupal\salesforce_soap\Soap;
 
-use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface;
 use SforcePartnerClient;
 
@@ -17,13 +16,6 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
    * @var bool
    */
   protected $isConnected;
-
-  /**
-   * Salesforce REST API client.
-   *
-   * @var \Drupal\salesforce\Rest\RestClientInterface
-   */
-  protected $restApi;
 
   /**
    * Path to the WSDL that should be used.
@@ -49,11 +41,12 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
    * @param string $wsdl
    *   (Optional) Path to the WSDL that should be used.  Defaults to using the
    *   partner WSDL from the developerforce/force.com-toolkit-for-php package.
+   *
+   * @throws \ReflectionException
    */
-  public function __construct(RestClientInterface $rest_api, SalesforceAuthProviderPluginManagerInterface $authMan, $wsdl = NULL) {
+  public function __construct(SalesforceAuthProviderPluginManagerInterface $authMan, $wsdl = NULL) {
     parent::__construct();
-
-    $this->restApi = $rest_api;
+    $this->authMan = $authMan;
 
     if ($wsdl) {
       $this->wsdl = $wsdl;
@@ -95,7 +88,7 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
    */
   public function trySoap($function, array $params = [], $refresh = FALSE) {
     if ($refresh) {
-      $this->restApi->refreshToken();
+      $this->authMan->refreshToken();
     }
     if (!$this->isConnected) {
       $this->connect();
@@ -104,7 +97,7 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
       $results = call_user_func_array([$this, $function], $params);
       return $results;
     }
-    catch (SoapFault $e) {
+    catch (\SoapFault $e) {
       // sf:INVALID_SESSION_ID is thrown on expired login (and other reasons).
       // Our only recourse is to try refreshing our auth token. If we get any
       // other exception, bubble it up.

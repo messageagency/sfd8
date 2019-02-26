@@ -89,7 +89,6 @@ function salesforce_mapping_update_8003() {
  * Verify Salesforce admin content permissions.
  */
 function salesforce_mapping_update_8004() {
-  $view = FALSE;
   try {
     $view = Views::getView('salesforce_mapped_objects');
   }

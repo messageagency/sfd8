@@ -5,7 +5,6 @@ namespace Drupal\salesforce\Controller;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
-use Drupal\salesforce\SalesforceAuthProviderInterface;
 
 /**
  * List builder for salesforce_auth.

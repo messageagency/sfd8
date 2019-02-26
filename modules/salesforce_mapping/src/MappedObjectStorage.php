@@ -2,16 +2,10 @@
 
 namespace Drupal\salesforce_mapping;
 
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Class MappedObjectStorage.

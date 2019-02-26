@@ -24,7 +24,6 @@ class UniqueFieldsConstraintValidator extends ConstraintValidator {
 
     foreach ($constraint->fields as $field) {
       $field_name = $field;
-      $property = '';
       if (strpos($field_name, '.')) {
         list($field_name, $property) = explode('.', $field_name, 2);
       }

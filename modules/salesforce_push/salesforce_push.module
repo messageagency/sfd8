@@ -99,6 +99,8 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
  *   The current CRUD operation.
  * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
  *   The mapping.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
   $mapped_object = NULL;
@@ -140,7 +142,7 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
     new SalesforcePushAllowedEvent($mapped_object, $op)
   );
   if ($event->isPushAllowed() === FALSE) {
-    return FALSE;
+    return;
   }
 
   // Enqueue async push if the mapping is configured to do so, and quit.

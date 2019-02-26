@@ -390,9 +390,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     //    set?  Update.
     // 2. Not mapped, but upsert key is defined?  Upsert.
     // 3. Not mapped & no upsert key?  Create.
-    $result = FALSE;
-    $action = '';
-
     if ($this->sfid() && !$mapping->alwaysUpsert()) {
       $action = 'update';
       $result = $this->client()->objectUpdate(

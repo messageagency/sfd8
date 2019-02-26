@@ -58,18 +58,18 @@ class MappedObjectForm extends ContentEntityForm {
   /**
    * MappedObjectForm constructor.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
-   *   Entity manager service.
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entityRepository
+   *   Entity repository service.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entityTypeBundleInfo
    *   Bundle info service.
-   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   * @param \Drupal\Component\Datetime\TimeInterface $time
    *   Time service.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   Event dispatcher service.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   Request stack.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   Entity type manager service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
+   *   Entity manager service.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
@@ -103,7 +103,7 @@ class MappedObjectForm extends ContentEntityForm {
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Include the parent entity on the form.
     $form = parent::buildForm($form, $form_state);
-    $drupal_entity = $entity_id = $entity_type_id = FALSE;
+    $entity_id = $entity_type_id = FALSE;
 
     if ($this->entity->isNew()) {
       if ($drupal_entity = $this->getDrupalEntityFromUrl()) {

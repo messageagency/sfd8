@@ -26,7 +26,7 @@ class SalesforceMappingLocalTask extends DeriverBase implements ContainerDeriver
   /**
    * Creates an SalesforceMappingLocalTask object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity manager.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager.

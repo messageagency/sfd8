@@ -50,7 +50,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
   /**
    * Storage handler for Mapped Objects.
    *
-   * @var \Drupal\salesforce_mapping\Entity\MappedObjectStorage
+   * @var \Drupal\salesforce_mapping\MappedObjectStorage
    */
   protected $mappedObjectStorage;
 
@@ -102,8 +102,10 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *
    * @return string|null
    *   Return \Drupal\salesforce_mapping\MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE
-   * or Return \Drupal\salesforce_mapping\MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
-   * on successful update or create, NULL otherwise.
+   *   or Return \Drupal\salesforce_mapping\MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
+   *   on successful update or create, NULL otherwise.
+   *
+   * @throws \Exception
    */
   public function processItem($item) {
     $sf_object = $item->getSobject();
@@ -143,7 +145,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *
    * @return string|null
    *   Return \Drupal\salesforce_mapping\MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE
-   * on successful update, NULL otherwise.
+   *   on successful update, NULL otherwise.
+   *
+   * @throws \Exception
    */
   protected function updateEntity(SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object, SObject $sf_object, $force_pull = FALSE) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
@@ -229,7 +233,9 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *
    * @return string|null
    *   Return \Drupal\salesforce_mapping\MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
-   * on successful create, NULL otherwise.
+   *   on successful create, NULL otherwise.
+   *
+   * @throws \Exception
    */
   protected function createEntity(SalesforceMappingInterface $mapping, SObject $sf_object) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE])) {

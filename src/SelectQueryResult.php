@@ -19,6 +19,8 @@ class SelectQueryResult {
    *
    * @param array $results
    *   The query results.
+   *
+   * @throws \Exception
    */
   public function __construct(array $results) {
     $this->totalSize = $results['totalSize'];

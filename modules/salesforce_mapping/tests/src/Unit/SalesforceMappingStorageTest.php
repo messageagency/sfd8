@@ -63,7 +63,7 @@ class SalesforceMappingStorageTest extends UnitTestCase {
   /**
    * Mapping storage service mock.
    *
-   * @var \PHPUnit\Framework\MockObject\MockObject
+   * @var \PHPUnit_Framework_MockObject_MockObject
    */
   protected $salesforceMappingStorage;
 

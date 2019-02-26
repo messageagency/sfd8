@@ -60,6 +60,8 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *   Rest client.
    * @param \Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface $mappableEntityTypes
    *   Mappable types.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundleInfo
+   *   Bundle info service.
    */
   public function __construct(SalesforceMappingFieldPluginManager $mappingFieldPluginManager, RestClientInterface $client, SalesforceMappableEntityTypesInterface $mappableEntityTypes, EntityTypeBundleInfoInterface $bundleInfo) {
     $this->mappingFieldPluginManager = $mappingFieldPluginManager;

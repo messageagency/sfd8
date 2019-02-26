@@ -83,6 +83,8 @@ class SalesforceMappingCommands extends SalesforceMappingCommandsBase {
    *   If $limit is not specified,
    *   salesforce.settings.limit_mapped_object_revisions is used.
    *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   *
    * @command salesforce_mapping:prune-revisions
    * @aliases sfprune,sf-prune-revisions
    */
@@ -159,6 +161,8 @@ class SalesforceMappingCommands extends SalesforceMappingCommandsBase {
    *
    * @param string $name
    *   Id of the salesforce mapping whose mapped objects should be purged.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    *
    * @command salesforce_mapping:purge-drupal
    * @aliases sfpd,sf-purge-drupal
@@ -243,6 +247,8 @@ class SalesforceMappingCommands extends SalesforceMappingCommandsBase {
    * @param string $name
    *   Id of the salesforce mapping whose mapped objects should be purged.
    *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   *
    * @command salesforce_mapping:purge-salesforce
    * @aliases sfpsf,sf-purge-salesforce
    */
@@ -315,6 +321,8 @@ class SalesforceMappingCommands extends SalesforceMappingCommandsBase {
    *
    * @param string $name
    *   Mapping id.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    *
    * @command sf:purge-mapping
    * @aliases sfpmap,sf-purge-mapping

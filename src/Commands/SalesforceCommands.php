@@ -89,6 +89,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *
    * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
    *   The objects.
+   *
+   * @throws \Exception
    */
   public function listObjects() {
     if ($objects = $this->client->objects()) {
@@ -206,6 +208,11 @@ class SalesforceCommands extends SalesforceCommandsBase {
    * @param string $object
    *   The object name in Salesforce.
    *
+   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields|null
+   *   The record types, or null if the object was not found.
+   *
+   * @throws \Exception
+   *
    * @command salesforce:describe-record-types
    * @aliases sfdrt,sf-describe-record-types
    *
@@ -220,9 +227,6 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   urls: URLs
    *
    * @default-fields name,recordTypeId,developerName,active,available,defaultRecordTypeMapping,master
-   *
-   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields|null
-   *   The record types, or null if the object was not found.
    */
   public function describeRecordTypes($object) {
     $objectDescription = $this->client->objectDescribe($object);
@@ -246,6 +250,11 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *
    * @param string $object
    *   The object name in Salesforce.
+   *
+   * @return \Consolidation\OutputFormatters\StructuredData\PropertyList|null
+   *   The metadata, or null if object was not found.
+   *
+   * @throws \Exception
    *
    * @command salesforce:describe-metadata
    * @aliases sfdom,sf-describe-metadata
@@ -283,9 +292,6 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   undeletable: Undeletable
    *   updateable: Updateable
    *   urls: Urls
-   *
-   * @return \Consolidation\OutputFormatters\StructuredData\PropertyList|null
-   *   The metadata, or null if object was not found.
    */
   public function describeMetadata($object) {
     $objectDescription = $this->client->objectDescribe($object);
@@ -319,6 +325,11 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *
    * @param string $object
    *   The object name in Salesforce.
+   *
+   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields|null
+   *   The fields, or null if the object was not found.
+   *
+   * @throws \Exception
    *
    * @command salesforce:describe-fields
    * @aliases salesforce:describe-object,sfdo,sfdf,sf-describe-fields
@@ -385,9 +396,6 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   writeRequiresMasterRead: WriteRequiresMasterRead
    *
    * @default-fields label,name,type
-   *
-   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields|null
-   *   The fields, or null if the object was not found.
    */
   public function describeFields($object) {
     $objectDescription = $this->client->objectDescribe($object);
@@ -459,6 +467,8 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *
    * @param string $id
    *   A Salesforce ID.
+   *
+   * @throws \Exception
    *
    * @todo create a proper StructuredData return value
    *
@@ -581,6 +591,11 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   An associative array of options whose values come from cli, aliases,
    *   config, etc.
    *
+   * @return \Drupal\salesforce\Commands\QueryResult
+   *   The query result.
+   *
+   * @throws \Exception
+   *
    * @option where
    *   A WHERE clause to add to the SOQL query
    * @option fields
@@ -591,9 +606,6 @@ class SalesforceCommands extends SalesforceCommandsBase {
    * @option order
    *   Comma-separated fields by which to sort results. Make sure to enclose in
    *   quotes for any whitespace.
-   *
-   * @return \Drupal\salesforce\Commands\QueryResult
-   *   The query result.
    *
    * @command salesforce:query-object
    * @aliases sfqo,sf-query-object

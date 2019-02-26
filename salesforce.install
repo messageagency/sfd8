@@ -281,7 +281,6 @@ function salesforce_update_8005() {
     }
   }
 
-  $message = '';
   // If auth plugin providers have not been created already, convert existing.
   if (SalesforceAuthConfig::load('oauth_default')) {
     // If an auth config with our name already exists, we are done here.

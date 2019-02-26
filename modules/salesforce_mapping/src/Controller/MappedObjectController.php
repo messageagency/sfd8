@@ -74,6 +74,9 @@ class MappedObjectController extends ControllerBase {
    *
    * @return \Drupal\salesforce_mapping\Entity\MappedObject[]
    *   The Mapped Objects corresponding to the given entity.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   private function getMappedObjects(EntityInterface $entity) {
     // @TODO this probably belongs in a service
@@ -91,6 +94,8 @@ class MappedObjectController extends ControllerBase {
    *
    * @return array
    *   Array of page elements to render.
+   *
+   * @throws \Exception
    */
   public function listing(RouteMatchInterface $route_match) {
     $entity = $this->getEntity($route_match);
