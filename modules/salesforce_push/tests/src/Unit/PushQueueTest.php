@@ -49,27 +49,27 @@ class PushQueueTest extends UnitTestCase {
     $this->database->expects($this->any())
       ->method('schema')
       ->willReturn($this->schema);
-    $this->state = $this->getMock(StateInterface::class);
+    $this->state = $this->getMockBuilder(StateInterface::class)->getMock();
     $this->push_queue_processor_plugin_manager =
       $this->getMockBuilder(PushQueueProcessorPluginManager::class)
         ->disableOriginalConstructor()
         ->getMock();
     $this->entityTypeManager =
-      $this->getMock(EntityTypeManagerInterface::class);
-    $this->eventDispatcher = $this->getMock(EventDispatcherInterface::CLASS);
+      $this->getMockBuilder(EntityTypeManagerInterface::class)->getMock();
+    $this->eventDispatcher = $this->getMockBuilder(EventDispatcherInterface::CLASS)->getMock();
     $this->eventDispatcher->expects($this->any())
       ->method('dispatch')
       ->willReturn(NULL);
-    $this->string_translation = $this->getMock(TranslationInterface::class);
-    $this->time = $this->getMock(TimeInterface::class);
+    $this->string_translation = $this->getMockBuilder(TranslationInterface::class)->getMock();
+    $this->time = $this->getMockBuilder(TimeInterface::class)->getMock();
 
     $this->mappingStorage = $this->getMockBuilder(SalesforceMappingStorage::CLASS)
       ->disableOriginalConstructor()
       ->getMock();
 
-    $this->mappedObjectStorage = $this->getMock(SqlEntityStorageInterface::CLASS);
+    $this->mappedObjectStorage = $this->getMockBuilder(SqlEntityStorageInterface::CLASS)->getMock();
 
-    $this->entityStorage = $this->getMock(SqlEntityStorageInterface::CLASS);
+    $this->entityStorage = $this->getMockBuilder(SqlEntityStorageInterface::CLASS)->getMock();
 
     $this->entityTypeManager->expects($this->at(0))
       ->method('getStorage')
@@ -120,7 +120,7 @@ class PushQueueTest extends UnitTestCase {
 
     // Test claiming items.
     $items = [1, 2, 3];
-    $this->queryRange = $this->getMock(StatementInterface::class);
+    $this->queryRange = $this->getMockBuilder(StatementInterface::class)->getMock();
     $this->queryRange->expects($this->once())
       ->method('fetchAllAssoc')
       ->willReturn($items);
@@ -152,7 +152,7 @@ class PushQueueTest extends UnitTestCase {
    */
   public function testProcessQueue() {
     $items = [1, 2, 3];
-    $mapping1 = $this->getMock(SalesforceMappingInterface::CLASS);
+    $mapping1 = $this->getMockBuilder(SalesforceMappingInterface::CLASS)->getMock();
     $mapping1->expects($this->any())
       ->method('getNextPushTime')
       ->willReturn(0);
@@ -162,7 +162,7 @@ class PushQueueTest extends UnitTestCase {
     $mapping1->push_limit = 1;
     $mapping1->push_retries = 1;
 
-    $this->worker = $this->getMock(PushQueueProcessorInterface::class);
+    $this->worker = $this->getMockBuilder(PushQueueProcessorInterface::class)->getMock();
     $this->worker->expects($this->once())
       ->method('process')
       ->willReturn(NULL);
@@ -170,19 +170,22 @@ class PushQueueTest extends UnitTestCase {
       ->method('createInstance')
       ->willReturn($this->worker);
 
-    $this->queue = $this->getMock(PushQueue::class, [
-      'claimItems',
-      'setName',
-      'garbageCollection',
-    ], [
-      $this->database,
-      $this->state,
-      $this->push_queue_processor_plugin_manager,
-      $this->entityTypeManager,
-      $this->eventDispatcher,
-      $this->time,
-      $this->configFactory,
-    ]);
+    $this->queue = $this->getMockBuilder(PushQueue::class)
+      ->setMethods([
+        'claimItems',
+        'setName',
+        'garbageCollection',
+      ])
+      ->setConstructorArgs([
+        $this->database,
+        $this->state,
+        $this->push_queue_processor_plugin_manager,
+        $this->entityTypeManager,
+        $this->eventDispatcher,
+        $this->time,
+        $this->configFactory,
+      ])
+      ->getMock();
 
     $this->queue->expects($this->once())
       ->method('setName')

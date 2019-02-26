@@ -156,6 +156,8 @@ class DeleteHandler {
    *   Record array.
    * @param string $type
    *   Salesforce object type.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   protected function handleDeletedRecord(array $record, $type) {
     $mapped_objects = $this->mappedObjectStorage->loadBySfid(new SFID($record['id']));

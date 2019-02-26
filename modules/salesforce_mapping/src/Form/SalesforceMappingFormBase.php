@@ -126,7 +126,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    * @return \Drupal\salesforce\Rest\RestResponseDescribe
    *   Information about the Salesforce object as provided by Salesforce.
    *
-   * @throws Exception if $salesforce_object_type is not provided and
+   * @throws \Exception if $salesforce_object_type is not provided and
    *   $this->entity->salesforce_object_type is not set.
    */
   protected function getSalesforceObject($salesforce_object_type = '') {

@@ -54,7 +54,7 @@ class DeleteHandlerTest extends UnitTestCase {
     $prophecy->label()->willReturn('foo');
     $this->entity = $prophecy->reveal();
 
-    $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
+    $this->mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)->getMock();
     $this->mapping->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('id'))
@@ -82,7 +82,7 @@ class DeleteHandlerTest extends UnitTestCase {
     $this->entityId->value = '1';
     $this->entityRef->entity = $this->mapping;
 
-    $this->mappedObject = $this->getMock(MappedObjectInterface::CLASS);
+    $this->mappedObject = $this->getMockBuilder(MappedObjectInterface::CLASS)->getMock();
     $this->mappedObject
       ->expects($this->any())
       ->method('delete')

@@ -74,7 +74,7 @@ class PullBaseTest extends UnitTestCase {
       ->willReturn(TRUE);
 
     // Mock mapping object.
-    $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
+    $this->mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)->getMock();
     $this->mapping->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('id'))
@@ -95,7 +95,7 @@ class PullBaseTest extends UnitTestCase {
       ->willReturn([]);
 
     // Mock mapped object.
-    $this->mappedObject = $this->getMock(MappedObjectInterface::CLASS);
+    $this->mappedObject = $this->getMockBuilder(MappedObjectInterface::CLASS)->getMock();
     $this->mappedObject->expects($this->any())
       ->method('getChanged')
       ->willReturn('1486490500');
@@ -179,7 +179,7 @@ class PullBaseTest extends UnitTestCase {
     $this->sqr = new SelectQueryResult($result);
 
     // Mock rest cient.
-    $this->sfapi = $this->getMock(RestClientInterface::CLASS);
+    $this->sfapi = $this->getMockBuilder(RestClientInterface::CLASS)->getMock();
     $this->sfapi
       ->expects($this->any())
       ->method('query')
@@ -194,7 +194,7 @@ class PullBaseTest extends UnitTestCase {
       ->willReturn($this->sfid);
 
     // Mock event dispatcher.
-    $this->ed = $this->getMock('\Symfony\Component\EventDispatcher\EventDispatcherInterface');
+    $this->ed = $this->getMockBuilder('\Symfony\Component\EventDispatcher\EventDispatcherInterface')->getMock();
     $this->ed
       ->expects($this->any())
       ->method('dispatch')
@@ -206,11 +206,15 @@ class PullBaseTest extends UnitTestCase {
     $container->set('entity_type.manager', $this->etm);
     \Drupal::setContainer($container);
 
-    $this->pullWorker = $this->getMock(PullBase::CLASS, ['getMappedEntity'], [
-      $this->etm,
-      $this->sfapi,
-      $this->ed,
-    ]);
+    $this->pullWorker = $this
+      ->getMockBuilder(PullBase::CLASS)
+      ->setMethods(['getMappedEntity'])
+      ->setConstructorArgs([
+        $this->etm,
+        $this->sfapi,
+        $this->ed,
+      ])
+      ->getMock();
     $this->pullWorker->expects($this->any())
       ->method('getMappedEntity')
       ->willReturn($this->entity);

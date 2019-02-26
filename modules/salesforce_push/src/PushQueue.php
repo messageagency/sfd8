@@ -550,6 +550,9 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
    * @param array $items
    *   Indexes must be item ids. Values are ignored. Return from claimItems()
    *   is acceptable.
+   *
+   * @return bool
+   *   TRUE if the items were released, FALSE otherwise.
    */
   public function releaseItems(array $items) {
     try {

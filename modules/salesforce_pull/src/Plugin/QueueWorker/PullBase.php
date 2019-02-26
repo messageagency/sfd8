@@ -99,6 +99,11 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    * @param \Drupal\salesforce_pull\PullQueueItem $item
    *   Pull queue item. Note: typehint missing because we can't change the
    *   inherited API.
+   *
+   * @return string|null
+   *   Return \Drupal\salesforce_mapping\MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE
+   * or Return \Drupal\salesforce_mapping\MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
+   * on successful update or create, NULL otherwise.
    */
   public function processItem($item) {
     $sf_object = $item->getSobject();
@@ -135,6 +140,10 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *   Current Salesforce record array.
    * @param bool $force_pull
    *   If true, ignore entity and SF timestamps.
+   *
+   * @return string|null
+   *   Return \Drupal\salesforce_mapping\MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE
+   * on successful update, NULL otherwise.
    */
   protected function updateEntity(SalesforceMappingInterface $mapping, MappedObjectInterface $mapped_object, SObject $sf_object, $force_pull = FALSE) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE])) {
@@ -217,6 +226,10 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *   Object of field maps.
    * @param \Drupal\salesforce\SObject $sf_object
    *   Current Salesforce record array.
+   *
+   * @return string|null
+   *   Return \Drupal\salesforce_mapping\MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE
+   * on successful create, NULL otherwise.
    */
   protected function createEntity(SalesforceMappingInterface $mapping, SObject $sf_object) {
     if (!$mapping->checkTriggers([MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE])) {

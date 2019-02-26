@@ -106,7 +106,6 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static($configuration, $plugin_id, $plugin_definition,
       $container->get('queue.salesforce_push'),
-      $container->get('salesforce.client'),
       $container->get('entity_type.manager'),
       $container->get('event_dispatcher'),
       $container->get('plugin.manager.salesforce.auth_providers')

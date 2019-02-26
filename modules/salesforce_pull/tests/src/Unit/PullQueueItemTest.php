@@ -21,7 +21,7 @@ class PullQueueItemTest extends UnitTestCase {
   public function testObject() {
     $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'dummy']]);
     // OF COURSE Prophesy doesn't do magic methods well.
-    $mapping = $this->getMock(SalesforceMappingInterface::CLASS);
+    $mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)->getMock();
     $mapping->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('id'))
