@@ -375,6 +375,8 @@ class SalesforceMappingCommands extends SalesforceMappingCommandsBase {
    *
    * @command salesforce_mapping:purge-all
    * @aliases sfpall,sf-purge-all
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function purgeAll($name) {
     $this->purgeDrupal($name);

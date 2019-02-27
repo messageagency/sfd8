@@ -34,8 +34,6 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
   /**
    * Constructor which initializes the consumer.
    *
-   * @param \Drupal\salesforce\Rest\RestClientInterface $rest_api
-   *   The Salesforce REST API client.
    * @param \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface $authMan
    *   Auth manager.
    * @param string $wsdl

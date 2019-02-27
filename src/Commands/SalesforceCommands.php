@@ -177,6 +177,10 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *
    * @command salesforce:describe-object-deprecated
    * @deprecated Use describeFields, describeMetadata, describeRecordTypes...
+   *
+   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields|null
+   *
+   * @throws \Exception
    */
   public function describeObject($object, array $options = [
     'output' => NULL,

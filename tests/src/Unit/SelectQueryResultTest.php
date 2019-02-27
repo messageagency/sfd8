@@ -48,7 +48,7 @@ class SelectQueryResultTest extends UnitTestCase {
   /**
    * Test object instantiation with no ID.
    *
-   * @expectedException Exception
+   * @expectedException \Exception
    */
   public function testNoId() {
     $sfid = new SFID('1234567890abcdg');

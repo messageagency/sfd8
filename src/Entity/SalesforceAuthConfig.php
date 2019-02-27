@@ -113,6 +113,8 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
    *
    * @return \Drupal\salesforce\Consumer\SalesforceCredentialsInterface|false
    *   Credentials or FALSE.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function getCredentials() {
     return $this->getPlugin() ? $this->getPlugin()->getCredentials() : FALSE;

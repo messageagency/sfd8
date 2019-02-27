@@ -14,6 +14,7 @@ use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\MappingConstants;
 use Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor\Rest;
 use Drupal\salesforce_push\PushQueueInterface;
+use OAuth\Common\Token\TokenInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;

@@ -455,7 +455,8 @@ function drush_salesforce_sf_query_object($name) {
 function drush_salesforce_sf_execute_query($query = NULL) {
   _drush_salesforce_deprecated();
   if (!$query) {
-    return drush_log('Please specify a query as an argument.', 'error');
+    drush_log('Please specify a query as an argument.', 'error');
+    return;
   }
   $salesforce = \Drupal::service('salesforce.client');
   try {

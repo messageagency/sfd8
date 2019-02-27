@@ -27,6 +27,6 @@
   "require": {
     "drupal/key": "^1.7",
     "firebase/php-jwt": "^5.0",
-    "lusitanian/oauth": "^0.8.11",
+    "lusitanian/oauth": "^0.8.11"
   }
 }

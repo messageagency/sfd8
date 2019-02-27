@@ -131,6 +131,8 @@ class DeleteHandler {
    *   Array of deleted records.
    * @param string $type
    *   Salesforce object type.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   protected function handleDeletedRecords(array $deleted, $type) {
     if (empty($deleted['deletedRecords'])) {
