@@ -19,6 +19,8 @@ use Drupal\salesforce_pull\DeleteHandler;
 use Drupal\salesforce_pull\QueueHandler;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -86,12 +88,19 @@ class PullController extends ControllerBase {
   protected $time;
 
   /**
+   * Current Request.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
+  /**
    * PushController constructor.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(QueueHandler $queueHandler, DeleteHandler $deleteHandler, EntityTypeManagerInterface $etm, ConfigFactoryInterface $config, StateInterface $state, QueueFactory $queueService, QueueWorkerManagerInterface $queueWorkerManager, EventDispatcherInterface $eventDispatcher, Time $time) {
+  public function __construct(QueueHandler $queueHandler, DeleteHandler $deleteHandler, EntityTypeManagerInterface $etm, ConfigFactoryInterface $config, StateInterface $state, QueueFactory $queueService, QueueWorkerManagerInterface $queueWorkerManager, EventDispatcherInterface $eventDispatcher, Time $time, RequestStack $requestStack) {
     $this->queueHandler = $queueHandler;
     $this->deleteHandler = $deleteHandler;
     $this->mappingStorage = $etm->getStorage('salesforce_mapping');
@@ -101,7 +110,9 @@ class PullController extends ControllerBase {
     $this->queueWorkerManager = $queueWorkerManager;
     $this->eventDispatcher = $eventDispatcher;
     $this->time = $time;
+    $this->request = $requestStack->getCurrentRequest();
   }
+
 
   /**
    * {@inheritdoc}
@@ -116,7 +127,8 @@ class PullController extends ControllerBase {
       $container->get('queue'),
       $container->get('plugin.manager.queue_worker'),
       $container->get('event_dispatcher'),
-      $container->get('datetime.time')
+      $container->get('datetime.time'),
+      $container->get('request_stack')
     );
   }
 
@@ -146,6 +158,9 @@ class PullController extends ControllerBase {
     }
     $this->populateQueue($salesforce_mapping, $id);
     $this->processQueue();
+    if ($this->request->get('destination')) {
+      return new RedirectResponse($this->request->get('destination'));
+    }
     return new Response('', 204);
   }
 
