@@ -83,18 +83,18 @@ AUTHORIZATION / CONNECTED APP CONFIGURATION
 
 JWT AUTHORIZATION  / CONNECTED APP CONFIGURATION CHANGES
 --------------------------------------------------------
-  In 8.x-4.0, support for JWT OAuth is added to provide be a more robust and
+  In 8.x-4.0, support for JWT OAuth is added to provide a more robust and
   secure connection mechanism over the now deprecated encrypt module. All existing
   installations are encouraged to implement JWT authentication.
 
   To add use JWTs for auth:
-  1) Create an x509 certificate pair as you would for SSH keys.
+  1) Create a self-signed x509 certificate and private key pair.
 
   2) In Salesforce, edit an existing remote application/connected app or add a
   new one. Follow the exisiting directions under REQUIREMENTS above, with the
   following differences:
    - Under "API (Enable OAuth Settings)" section when editing, check the
-   "Use digital signature" checkbox and then upload the public key from the
+   "Use digital signature" checkbox and then upload the certificate from the
    cert pair generated in step 1. Make sure to save to upload the key file.
    - Under the app management screen (the Manage link in the app list), click
    on the "Edit policies" button in the "Connected App Detail" section. In the
@@ -109,8 +109,9 @@ JWT AUTHORIZATION  / CONNECTED APP CONFIGURATION CHANGES
   The key type will be "Authentication" and the key provider will be "File".
 
   4) Place the private key from the cert pair created above into an appropriate
-  location on the web server. Best practice is a directory above DRUPAL_ROOT.
-  Enter the file name and location in the file location field.
+  location on the web server. Best practice is a directory above DRUPAL_ROOT,
+  where it cannot be served by the webserver. Enter the file name and location
+  in the file location field.
 
   5) With the key set up, go to Admin > Configuration > Salesforce > Salesforce
   Authentication and add an auth provider.
@@ -125,16 +126,16 @@ JWT AUTHORIZATION  / CONNECTED APP CONFIGURATION CHANGES
 
   9) Add the login URL to Salesforce.
 
-  10) Select the key option you set up above from the "Privae key" field.
+  10) Select the key option you set up above from the "Private key" field.
 
   11) Save to save the config and validate the settings.
 
   12) From the auth providers listing, select the newly added provider config
-  as the defau;lt provider and save.
+  as the default provider and save.
 
   Gotchas:
-   - Make sure to use the correct Login URL based on live or sandbox Salsforce instance use.
-   - MAke sure they proper keys are in their respective locations in Drupal and in Salesforce.
+   - Make sure to use the correct Login URL based on live or sandbox Salesforce instance use.
+   - Make sure they proper keys are in their respective locations in Drupal and in Salesforce.
    - Make sure the login user is the corrected email, taking into account sandbox login changes.
    - Make sure the consumer key is the correct one in Drupal.
    - Make sure the profiles checked off in Salesforce match the user used to login in Drupal.
@@ -151,7 +152,7 @@ MODULES:
   Salesforce (salesforce):
     Authorization provider and wrapper around the Salesforce REST API.
 
-  Salecforce Examples (salesforce_example)
+  Salesforce Examples (salesforce_example)
     Example code samples demonstrating hooks, alters, and events.
 
   Salesforce Mapping (salesforce_mapping)
