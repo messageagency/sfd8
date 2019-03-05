@@ -2,7 +2,9 @@
 
 /**
  * @file
- * This line for "security" purposes:.
+ * Examples.
+ *
+ * @noinspection ALL
  */
 
 exit;

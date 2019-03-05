@@ -124,9 +124,10 @@ abstract class SalesforceMappingCommandsBase extends SalesforceCommandsBase {
    *
    * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
    *   The mappings.
+   *
+   * @throws \Exception
    */
   protected function getMappingsFromName($name, $dir = NULL) {
-    $mappings = [];
     if ($name == 'ALL') {
       if ($dir == 'pull') {
         $mappings = $this->mappingStorage->loadPullMappings();

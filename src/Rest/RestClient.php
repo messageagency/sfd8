@@ -7,7 +7,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
-use Drupal\salesforce\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface;
 use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
@@ -81,7 +81,7 @@ class RestClient implements RestClientInterface {
   /**
    * Auth provider manager.
    *
-   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface
    */
   protected $authManager;
 
@@ -126,10 +126,10 @@ class RestClient implements RestClientInterface {
    *   The JSON serializer service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The Time service.
-   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager $authManager
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface $authManager
    *   Auth manager service.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, SalesforceAuthProviderPluginManager $authManager) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, SalesforceAuthProviderPluginManagerInterface $authManager) {
     $this->configFactory = $config_factory;
     $this->httpClient = $http_client;
     $this->immutableConfig = $this->configFactory->get('salesforce.settings');
@@ -403,6 +403,9 @@ class RestClient implements RestClientInterface {
             $sobjects[$object['name']] = $object;
           }
         }
+      }
+      else {
+        $sobjects[$object['name']] = $object;
       }
     }
     return $sobjects;

@@ -4,9 +4,6 @@ namespace Drupal\salesforce\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\salesforce\Plugin\SalesforceAuthProviderFormInterface;
-use Drupal\salesforce_oauth\Entity\OAuthConfig;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Entity form for salesforce_auth.
@@ -143,6 +140,9 @@ class SalesforceAuthForm extends EntityForm {
    *
    * @return bool
    *   TRUE if the config exists, FALSE otherwise.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function exists($id) {
     $action = \Drupal::entityTypeManager()->getStorage($this->entity->getEntityTypeId())->load($id);

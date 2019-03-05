@@ -3,6 +3,7 @@
 namespace Drupal\salesforce_mapping\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**

@@ -35,7 +35,7 @@ function salesforce_push_update_8001() {
   if (\Drupal::state()->get('salesforce.push_queue_processor', FALSE) === FALSE) {
     \Drupal::state()->set('salesforce.push_queue_processor', PushQueue::DEFAULT_QUEUE_PROCESSOR);
   }
-  if (\Drupal::state()->get('salesforce.push_queue_max_fails', PushQueue::DEFAULT_MAX_FAILS, FALSE) === FALSE) {
+  if (\Drupal::state()->get('salesforce.push_queue_max_fails', FALSE) === FALSE) {
     \Drupal::state()->set('salesforce.push_queue_max_fails', PushQueue::DEFAULT_MAX_FAILS);
   }
 }
@@ -44,7 +44,7 @@ function salesforce_push_update_8001() {
  * Create new variables for more granualar push limits.
  */
 function salesforce_push_update_8002() {
-  if (\Drupal::state()->get('salesforce.global_push_limit', PushQueue::DEFAULT_GLOBAL_LIMIT, FALSE) === FALSE) {
+  if (\Drupal::state()->get('salesforce.global_push_limit', FALSE) === FALSE) {
     \Drupal::state()->set('salesforce.global_push_limit', PushQueue::DEFAULT_GLOBAL_LIMIT);
   }
   \Drupal::state()->delete('salesforce.push_limit');

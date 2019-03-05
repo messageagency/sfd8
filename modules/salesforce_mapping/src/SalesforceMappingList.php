@@ -63,7 +63,7 @@ class SalesforceMappingList extends DraggableListBuilder {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
 
-    drupal_set_message(t('The configuration options have been saved.'));
+    $this->messenger()->addStatus(t('The configuration options have been saved.'));
   }
 
   /**

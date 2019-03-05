@@ -43,7 +43,7 @@ class RestClientTest extends UnitTestCase {
       'httpRequest',
     ];
 
-    $this->httpClient = $this->getMock(Client::CLASS);
+    $this->httpClient = $this->getMockBuilder(Client::CLASS)->getMock();
     $this->configFactory =
       $this->getMockBuilder(ConfigFactory::CLASS)
         ->disableOriginalConstructor()
@@ -52,10 +52,10 @@ class RestClientTest extends UnitTestCase {
       $this->getMockBuilder(State::CLASS)
         ->disableOriginalConstructor()
         ->getMock();
-    $this->cache = $this->getMock(CacheBackendInterface::CLASS);
-    $this->json = $this->getMock(Json::CLASS);
-    $this->time = $this->getMock(TimeInterface::CLASS);
-    $this->authToken = $this->getMock(TokenInterface::CLASS);
+    $this->cache = $this->getMockBuilder(CacheBackendInterface::CLASS)->getMock();
+    $this->json = $this->getMockBuilder(Json::CLASS)->getMock();
+    $this->time = $this->getMockBuilder(TimeInterface::CLASS)->getMock();
+    $this->authToken = $this->getMockBuilder(TokenInterface::CLASS)->getMock();
     $this->authProvider = $this->getMockBuilder(SalesforceAuthProviderInterface::CLASS)
       ->disableOriginalConstructor()
       ->getMock();
@@ -100,7 +100,11 @@ class RestClientTest extends UnitTestCase {
       $this->authMan,
     ];
 
-    $this->client = $this->getMock(RestClient::CLASS, $methods, $args);
+    $this->client = $this
+      ->getMockBuilder(RestClient::CLASS)
+      ->setMethods($methods)
+      ->setConstructorArgs($args)
+      ->getMock();
   }
 
   /**

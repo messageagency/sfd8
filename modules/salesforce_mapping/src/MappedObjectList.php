@@ -36,7 +36,7 @@ class MappedObjectList extends EntityListBuilder {
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
     return new static(
       $entity_type,
-      $container->get('entity.manager')->getStorage($entity_type->id()),
+      $container->get('entity_type.manager')->getStorage($entity_type->id()),
       $container->get('url_generator')
     );
   }
@@ -118,7 +118,7 @@ class MappedObjectList extends EntityListBuilder {
     $operations['view'] = [
       'title' => $this->t('View'),
       'weight' => -100,
-      'url' => $entity->urlInfo('canonical'),
+      'url' => $entity->toUrl(),
     ];
     $operations += parent::getDefaultOperations($entity);
     return $operations;

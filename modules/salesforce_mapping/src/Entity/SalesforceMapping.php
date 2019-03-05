@@ -265,10 +265,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
   }
 
   /**
-   * Save the entity.
-   *
-   * @return object
-   *   The newly saved version of the entity.
+   * {@inheritdoc}
    */
   public function save() {
     $this->updated = $this->getRequestTime();

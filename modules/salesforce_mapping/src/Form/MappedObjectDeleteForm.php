@@ -27,7 +27,7 @@ class MappedObjectDeleteForm extends ContentEntityConfirmFormBase {
    * If the delete command is canceled, return to the contact list.
    */
   public function getCancelUrl() {
-    return $this->getEntity()->urlInfo();
+    return $this->getEntity()->toUrl();
   }
 
   /**

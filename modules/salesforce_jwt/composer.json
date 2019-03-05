@@ -1,6 +1,6 @@
 {
-  "name": "drupal/salesforce",
-  "description": "Provides Drupal modules to integrate with Salesforce.",
+  "name": "drupal/salesforce_jwt",
+  "description": "Salesforce JWT OAuth provider.",
   "type": "drupal-module",
   "homepage": "https://drupal.org/project/salesforce",
   "authors": [
@@ -24,21 +24,9 @@
     "issues": "https://drupal.org/project/issues/salesforce",
     "source": "http://cgit.drupalcode.org/salesforce"
   },
-  "extra": {
-    "drush": {
-      "services": {
-        "drush.services.yml": "^9"
-      }
-    }
-  },
   "require": {
-    "consolidation/output-formatters": "^3.2.0",
-    "drupal/dynamic_entity_reference": "^2.0@alpha",
     "drupal/key": "^1.7",
-    "drupal/typed_data": "^1.0@alpha",
     "firebase/php-jwt": "^5.0",
-    "lusitanian/oauth": "^0.8.11",
-    "messageagency/force.com-toolkit-for-php": "^1.0.0",
-    "ext-json": "*"
+    "lusitanian/oauth": "^0.8.11"
   }
 }

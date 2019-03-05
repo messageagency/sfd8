@@ -69,7 +69,7 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
   }
 
   /** @var \Drupal\salesforce_mapping\Entity\SalesforceMapping[] $mappings */
-  $mappings = \Drupal::service('entity.manager')
+  $mappings = \Drupal::service('entity_type.manager')
     ->getStorage('salesforce_mapping')
     ->loadPushMappingsByProperties($properties);
   if (empty($mappings)) {
@@ -99,6 +99,8 @@ function salesforce_push_entity_crud(EntityInterface $entity, $op) {
  *   The current CRUD operation.
  * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
  *   The mapping.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, SalesforceMappingInterface $mapping) {
   $mapped_object = NULL;
@@ -110,7 +112,7 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
     'salesforce_mapping' => $mapping->id(),
   ];
 
-  $mapped_objects = \Drupal::service('entity.manager')
+  $mapped_objects = \Drupal::service('entity_type.manager')
     ->getStorage('salesforce_mapped_object')
     ->loadByProperties($props);
 
@@ -140,7 +142,7 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
     new SalesforcePushAllowedEvent($mapped_object, $op)
   );
   if ($event->isPushAllowed() === FALSE) {
-    return FALSE;
+    return;
   }
 
   // Enqueue async push if the mapping is configured to do so, and quit.
@@ -236,7 +238,7 @@ function salesforce_push_cron() {
   }
   try {
     // Process mappings only for those which are not marked standalone.
-    $mappings = \Drupal::service('entity.manager')
+    $mappings = \Drupal::service('entity_type.manager')
       ->getStorage('salesforce_mapping')
       ->loadCronPushMappings();
     if (empty($mappings)) {

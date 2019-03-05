@@ -136,7 +136,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->get('limit_mapped_object_revisions');
     if ($limit <= 0) {
       // Limit 0 means no limit.
-      return;
+      return $this;
     }
     $count = $storage
       ->getQuery()
@@ -147,7 +147,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
 
     // Query for any revision id beyond the limit.
     if ($count <= $limit) {
-      return;
+      return $this;
     }
     $vids_to_delete = $storage
       ->getQuery()
@@ -157,7 +157,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->sort('changed', 'DESC')
       ->execute();
     if (empty($vids_to_delete)) {
-      return;
+      return $this;
     }
     foreach ($vids_to_delete as $vid => $dummy) {
       $storage->deleteRevision($vid);
@@ -390,9 +390,6 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
     //    set?  Update.
     // 2. Not mapped, but upsert key is defined?  Upsert.
     // 3. Not mapped & no upsert key?  Create.
-    $result = FALSE;
-    $action = '';
-
     if ($this->sfid() && !$mapping->alwaysUpsert()) {
       $action = 'update';
       $result = $this->client()->objectUpdate(

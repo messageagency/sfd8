@@ -2,16 +2,10 @@
 
 namespace Drupal\salesforce_mapping;
 
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Class MappedObjectStorage.
@@ -21,46 +15,6 @@ use Drupal\Core\Entity\EntityTypeInterface;
  * @package Drupal\salesforce_mapping
  */
 class MappedObjectStorage extends SqlContentEntityStorage {
-
-  /**
-   * MappedObjectStorage constructor.
-   *
-   * @param string $entity_type_id
-   *   Entity type id.
-   * @param \Drupal\Core\Database\Connection $database
-   *   Database service.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   Entity manager service.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
-   *   Cache service.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
-   *   Language service.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   */
-  public function __construct($entity_type_id, Connection $database, EntityManagerInterface $entity_manager, CacheBackendInterface $cache, LanguageManagerInterface $language_manager) {
-    // @TODO the $entity_type needs to be in the constructor and not
-    // devrived from from $entity_type_id. This is because of the parent
-    // class SqlContentEntityStorage's createInstance method, which while
-    // ultimately calls it's own constructor through here, is calling this
-    // constuctor with the same paramter blueprint, which expects
-    // EntityTypeInterface and not a string.
-    $entity_type = $entity_manager->getDefinition($entity_type_id);
-    parent::__construct($entity_type, $database, $entity_manager, $cache, $language_manager);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type->id(),
-      $container->get('database'),
-      $container->get('entity.manager'),
-      $container->get('cache.entity'),
-      $container->get('language_manager')
-    );
-  }
 
   /**
    * Load MappedObjects by entity type id and entity id.

@@ -66,7 +66,7 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
   /**
    * Auth manager.
    *
-   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface
    */
   protected $manager;
 
@@ -89,6 +89,8 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
    *
    * @return \Drupal\salesforce\SalesforceAuthProviderInterface|null
    *   The auth provider plugin, or null.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function getPlugin() {
     $settings = $this->provider_settings ?: [];
@@ -109,8 +111,10 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
   /**
    * Get credentials.
    *
-   * @return \Drupal\salesforce\Consumer\SalesforceCredentialsInterface|FALSE
+   * @return \Drupal\salesforce\Consumer\SalesforceCredentialsInterface|false
    *   Credentials or FALSE.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function getCredentials() {
     return $this->getPlugin() ? $this->getPlugin()->getCredentials() : FALSE;
@@ -119,7 +123,7 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
   /**
    * Auth manager wrapper.
    *
-   * @return \Drupal\salesforce\SalesforceAuthProviderPluginManager|mixed
+   * @return \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface|mixed
    *   The auth provider plugin manager.
    */
   public function authManager() {

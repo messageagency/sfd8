@@ -428,6 +428,8 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
    * @return int
    *   The number of items procesed, or -1 if there was any error, And also
    *   dispatches a SalesforceEvents::ERROR event.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function processQueue(SalesforceMappingInterface $mapping) {
     if (!$this->connection->schema()->tableExists(static::TABLE_NAME)) {
@@ -550,6 +552,11 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
    * @param array $items
    *   Indexes must be item ids. Values are ignored. Return from claimItems()
    *   is acceptable.
+   *
+   * @return bool
+   *   TRUE if the items were released, FALSE otherwise.
+   *
+   * @throws \Exception
    */
   public function releaseItems(array $items) {
     try {
@@ -611,7 +618,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
           'expire' => 0,
         ])
         ->condition('expire', 0, '<>')
-        ->condition('expire', REQUEST_TIME, '<')
+        ->condition('expire', $this->time->getRequestTime(), '<')
         ->execute();
       $this->garbageCollected = TRUE;
     }

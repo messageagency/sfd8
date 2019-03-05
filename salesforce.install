@@ -8,7 +8,6 @@
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
-use Drupal\salesforce\SalesforceAuthProviderPluginManager;
 use Drupal\salesforce\Token\SalesforceToken;
 use Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
@@ -50,7 +49,7 @@ function salesforce_requirements($phase) {
   }
 
   $requirements['salesforce_tls'] = salesforce_get_tls_requirements();
-  if ($last < REQUEST_TIME - (60 * 60 * 24) || empty($requirements['salesforce_tls'])) {
+  if ($last < time() - (60 * 60 * 24) || empty($requirements['salesforce_tls'])) {
     salesforce_fetch_new_tls();
     $requirements['salesforce_tls'] = salesforce_get_tls_requirements();
   }
@@ -66,7 +65,7 @@ function salesforce_get_auth_provider_requirements() {
     'title' => t('Salesforce Authentication Status'),
     'value' => t('Provider Status'),
   ];
-  /** @var \Drupal\salesforce\SalesforceAuthProviderPluginManager $authMan */
+  /** @var \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface $authMan */
   $authMan = \Drupal::service('plugin.manager.salesforce.auth_providers');
   if (!$authMan->hasProviders()) {
     $requirements += [
@@ -113,7 +112,7 @@ function salesforce_fetch_new_tls() {
   try {
     // Ping the howsmyssl web service to check TLS version support for this
     // client.
-    \Drupal::state()->set('salesforce.last_requirements_check', REQUEST_TIME);
+    \Drupal::state()->set('salesforce.last_requirements_check', time());
     $raw_response = \Drupal::service('http_client')->get('https://www.howsmyssl.com/a/check', ['json' => TRUE, 'timeout' => 5]);
     $body = $raw_response->getBody();
     if (!empty($body)) {
@@ -282,7 +281,6 @@ function salesforce_update_8005() {
     }
   }
 
-  $message = '';
   // If auth plugin providers have not been created already, convert existing.
   if (SalesforceAuthConfig::load('oauth_default')) {
     // If an auth config with our name already exists, we are done here.
@@ -367,11 +365,11 @@ function salesforce_update_8401() {
  * See change record https://www.drupal.org/node/3034230 for more info.
  */
 function salesforce_update_8402() {
-  // Manually uninstall salesforce_encrypt, which was removed from.
-    \Drupal::database()->delete('key_value')
-      ->condition('collection', 'system.schema')
-      ->condition('name', 'module_name')
-      ->execute();
+  // Manually uninstall salesforce_encrypt, which was removed.
+  \Drupal::database()->delete('key_value')
+    ->condition('collection', 'system.schema')
+    ->condition('name', 'salesforce_encrypt')
+    ->execute();
 
   // Check to see if our profile exists, and if our creds are encrypted.
   // If so, try to unencrypt them and delete our profile.
@@ -382,6 +380,10 @@ function salesforce_update_8402() {
 
   \Drupal::state()->delete('salesforce_encrypt.profile');
 
+  if (!\Drupal::hasService('encrypt.encryption_profile.manager') || !\Drupal::hasService('encryption')) {
+    return;
+  }
+
   $profile = \Drupal::service('encrypt.encryption_profile.manager')->getEncryptionProfile($profile);
   if (!$profile) {
     return;
@@ -390,7 +392,6 @@ function salesforce_update_8402() {
   $encryption = \Drupal::service('encryption');
 
   // Encryption exists. Profile exists. Look for encrypted credentials.
-  // Load auth config
   /** @var \Drupal\salesforce\Entity\SalesforceAuthConfig $authConfig */
   $authConfig = SalesforceAuthConfig::load('oauth_default');
   if (!$authConfig) {

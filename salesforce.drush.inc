@@ -7,6 +7,7 @@
 
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\Exception as SalesforceException;
 
 /**
  * Implements hook_drush_command().
@@ -317,6 +318,8 @@ function drush_salesforce_sf_list_objects() {
  * @param string $id
  *   The Salesforce ID.
  *
+ * @throws \Exception
+ *
  * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_sf_read_object($id) {
@@ -452,7 +455,8 @@ function drush_salesforce_sf_query_object($name) {
 function drush_salesforce_sf_execute_query($query = NULL) {
   _drush_salesforce_deprecated();
   if (!$query) {
-    return drush_log('Please specify a query as an argument.', 'error');
+    drush_log('Please specify a query as an argument.', 'error');
+    return;
   }
   $salesforce = \Drupal::service('salesforce.client');
   try {

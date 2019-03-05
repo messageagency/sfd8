@@ -2,7 +2,7 @@
 
 namespace Drupal\salesforce_push\Plugin\SalesforcePushQueueProcessor;
 
-use Drupal\salesforce\SalesforceAuthProviderPluginManager;
+use Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\PluginBase;
@@ -65,7 +65,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   /**
    * Auth manager.
    *
-   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManager
+   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface
    */
   protected $authMan;
 
@@ -84,13 +84,13 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
    *   ETM service.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   Event dispatcher service.
-   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManager $authMan
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface $authMan
    *   Auth manager.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueueInterface $queue, EntityTypeManagerInterface $etm, EventDispatcherInterface $eventDispatcher, SalesforceAuthProviderPluginManager $authMan) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, PushQueueInterface $queue, EntityTypeManagerInterface $etm, EventDispatcherInterface $eventDispatcher, SalesforceAuthProviderPluginManagerInterface $authMan) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->queue = $queue;
     $this->etm = $etm;
@@ -106,7 +106,6 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static($configuration, $plugin_id, $plugin_definition,
       $container->get('queue.salesforce_push'),
-      $container->get('salesforce.client'),
       $container->get('entity_type.manager'),
       $container->get('event_dispatcher'),
       $container->get('plugin.manager.salesforce.auth_providers')
@@ -199,7 +198,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   /**
    * Return the mapped object given a queue item and mapping.
    *
-   * @param object $item
+   * @param \stdClass $item
    *   Push queue item.
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *   The mapping.
@@ -242,7 +241,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   /**
    * Helper method to generate a new MappedObject during push procesing.
    *
-   * @param object $item
+   * @param \stdClass $item
    *   Push queue item.
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *   The mapping.

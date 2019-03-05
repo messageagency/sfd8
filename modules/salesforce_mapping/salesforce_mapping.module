@@ -28,7 +28,7 @@ function salesforce_mapping_entity_type_alter(array &$entity_types) {
  * Implements hook_local_actions_alter().
  */
 function salesforce_mapping_menu_local_actions_alter(&$local_actions) {
-  foreach (\Drupal::entityManager()->getDefinitions() as $entity_type_id => $entity_type) {
+  foreach (\Drupal::entityTypeManager()->getDefinitions() as $entity_type_id => $entity_type) {
     if (\Drupal::entityTypeManager()
       ->getStorage('salesforce_mapping')
       ->loadByDrupal($entity_type_id)) {
@@ -62,7 +62,7 @@ function salesforce_mapping_entity_extra_field_info() {
   // Include Salesforce data for mapped entities.
   // @TODO: these don't actually show up on the entity view. Have to implement hook_entity_view as well?
   $extra = [];
-  $mappings = \Drupal::service('entity.manager')
+  $mappings = \Drupal::service('entity_type.manager')
     ->getStorage('salesforce_mapping')
     ->loadPushMappings();
   foreach ($mappings as $mapping) {
@@ -91,7 +91,7 @@ function salesforce_mapping_entity_extra_field_info() {
  */
 function salesforce_mapping_entity_update(EntityInterface $entity) {
   // Check for mappings (much faster than looking for mapped objects.)
-  $mappings = \Drupal::service('entity.manager')
+  $mappings = \Drupal::service('entity_type.manager')
     ->getStorage('salesforce_mapping')
     ->loadByDrupal($entity->getEntityTypeId());
   if (empty($mappings)) {
@@ -99,7 +99,7 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
   }
 
   // If mappings, check for mapped objects.
-  $mapped_objects = \Drupal::service('entity.manager')
+  $mapped_objects = \Drupal::service('entity_type.manager')
     ->getStorage('salesforce_mapped_object')
     ->loadByDrupal($entity->getEntityTypeId(), $entity->id());
 

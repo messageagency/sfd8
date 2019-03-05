@@ -82,6 +82,8 @@ class SalesforcePushCommands extends SalesforceMappingCommandsBase {
    * @param string $name
    *   Mapping name.
    *
+   * @throws \Exception
+   *
    * @usage drush sfpushq
    *   Process all push queue items.
    * @usage drush sfpushq foo
@@ -107,6 +109,9 @@ class SalesforcePushCommands extends SalesforceMappingCommandsBase {
    * @param array $options
    *   An associative array of options whose values come from cli, aliases,
    *   config, etc.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    *
    * @option count
    *   The number of entities to try to sync. (Default is 50).

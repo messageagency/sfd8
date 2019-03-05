@@ -2,13 +2,7 @@
 
 namespace Drupal\salesforce_mapping;
 
-use Drupal\Component\Uuid\UuidInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
-use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Language\LanguageManagerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
@@ -19,55 +13,6 @@ use Drupal\Core\Entity\EntityInterface;
  * @package Drupal\salesforce_mapping
  */
 class SalesforceMappingStorage extends ConfigEntityStorage {
-
-  /**
-   * Drupal\Core\Config\ConfigFactory definition.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * Drupal\Component\Uuid\Php definition.
-   *
-   * @var \Drupal\Component\Uuid\UuidInterface
-   */
-  protected $uuidService;
-
-  /**
-   * Drupal\Core\Language\LanguageManager definition.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
-   * Drupal\Core\Entity\EntityManager definition.
-   *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
-   */
-  protected $entityManager;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct($entity_type_id, ConfigFactoryInterface $config_factory, UuidInterface $uuid_service, LanguageManagerInterface $language_manager, EntityManagerInterface $entity_manager) {
-    $entity_type = $entity_manager->getDefinition($entity_type_id);
-    parent::__construct($entity_type, $config_factory, $uuid_service, $language_manager);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type->id(),
-      $container->get('config.factory'),
-      $container->get('uuid'),
-      $container->get('language_manager'),
-      $container->get('entity.manager')
-    );
-  }
 
   /**
    * Pass-through for loadMultipleMapping()

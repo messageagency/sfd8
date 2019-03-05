@@ -284,6 +284,8 @@ class QueueHandler {
    *   Salesforce data.
    * @param bool $force_pull
    *   If TRUE, ignore timestamps and force data to be pulled.
+   *
+   * @throws \Exception
    */
   public function enqueueRecord(SalesforceMappingInterface $mapping, SObject $record, $force_pull = FALSE) {
     $this->queue->createItem(new PullQueueItem($record, $mapping, $force_pull));

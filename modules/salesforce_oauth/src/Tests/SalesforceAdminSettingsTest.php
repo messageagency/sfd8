@@ -1,7 +1,8 @@
 <?php
 
-namespace Drupal\salesforce\Tests;
+namespace Drupal\salesforce_oauth\Tests;
 
+use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\simpletest\WebTestBase;
 
 /**
@@ -9,7 +10,7 @@ use Drupal\simpletest\WebTestBase;
  *
  * @group Salesforce
  */
-class SalesforceAdminSettingsTest extends WebTestBase {
+class SalesforceOAuthSettingsTest extends WebTestBase {
 
   /**
    * Modules to enable.
@@ -53,11 +54,16 @@ class SalesforceAdminSettingsTest extends WebTestBase {
     $secret = rand(100000, 10000000);
     $url = 'https://login.salesforce.com';
     $post = [
-      'consumer_key' => $key,
-      'consumer_secret' => $secret,
-      'login_url' => $url,
+      'id' => $this->randomMachineName(),
+      'label' => $this->randomMachineName(),
+      'provider' => 'oauth',
+      'provider_settings' => [
+        'consumer_key' => $key,
+        'consumer_secret' => $secret,
+        'login_url' => $url,
+      ],
     ];
-    $this->drupalPostForm('admin/config/salesforce/authorize', $post, t('Save configuration'));
+    $this->drupalPostForm('admin/config/salesforce/authorize/add', $post, t('Save'));
 
     $newurl = parse_url($this->getUrl());
 
@@ -69,12 +75,8 @@ class SalesforceAdminSettingsTest extends WebTestBase {
     $this->assertEqual('code', $query['response_type']);
     $this->assertEqual(str_replace('http://', 'https://', $base_url) . '/salesforce/oauth_callback', $query['redirect_uri']);
 
-    // Check that our config was updated:
-    $config = \Drupal::config('salesforce.settings');
-    $this->assertEqual($key, $config->get('consumer_key'));
-    $this->assertEqual($secret, $config->get('consumer_secret'));
-    $this->assertEqual($url, $config->get('login_url'));
-
+    // Check that our config was created:
+    $this->assertNotNull(SalesforceAuthConfig::load($post['id']));
   }
 
   /**

@@ -39,7 +39,7 @@ class SalesforceMappingDeleteForm extends EntityConfirmFormBase {
     $this->entity->delete();
 
     // Set a message that the entity was deleted.
-    drupal_set_message($this->t('Salesforce %label was deleted.', [
+    $this->messenger()->addStatus($this->t('Salesforce %label was deleted.', [
       '%label' => $this->entity->label(),
     ]));
 

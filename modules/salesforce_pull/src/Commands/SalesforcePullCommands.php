@@ -118,6 +118,8 @@ class SalesforcePullCommands extends SalesforceMappingCommandsBase {
    *   An associative array of options whose values come from cli, aliases,
    *   config, etc.
    *
+   * @throws \Exception
+   *
    * @option where
    *   A WHERE clause to add to the SOQL pull query. Default behavior is to
    *   query and pull all records.
@@ -238,7 +240,6 @@ class SalesforcePullCommands extends SalesforceMappingCommandsBase {
     // condition, etc.
     $queries = [];
     foreach (array_chunk($rows, 1000) as $i => $chunk) {
-      $base = $i * 1000;
       // Reset our base query:
       $soql = $mapping->getPullQuery([], 1, 0);
 
@@ -310,6 +311,9 @@ class SalesforcePullCommands extends SalesforceMappingCommandsBase {
    *   An associative array of options whose values come from cli, aliases,
    *   config, etc.
    *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   *
    * @option delete
    *   Reset delete date timestamp (instead of pull date timestamp)
    * @usage drush sf-pull-reset
@@ -349,6 +353,8 @@ class SalesforcePullCommands extends SalesforceMappingCommandsBase {
    *   Timestamp.
    * @param array $options
    *   Assoc array of options.
+   *
+   * @throws \Exception
    *
    * @option delete
    *   Reset delete date timestamp (instead of pull date timestamp)

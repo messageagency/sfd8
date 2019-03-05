@@ -46,7 +46,7 @@ class SalesforcePushOpEvent extends SalesforcePushEvent {
    * \Drupal\salesforce_mapping\MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE
    * \Drupal\salesforce_mapping\MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE.
    *
-   * @var string
+   * @return string
    *   The op.
    */
   public function getOp() {

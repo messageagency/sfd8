@@ -3,7 +3,7 @@
 namespace Drupal\salesforce_mapping\Plugin\Derivative;
 
 use Drupal\Component\Plugin\Derivative\DeriverBase;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -19,20 +19,20 @@ class SalesforceMappingLocalTask extends DeriverBase implements ContainerDeriver
   /**
    * The entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $etm;
 
   /**
    * Creates an SalesforceMappingLocalTask object.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity manager.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager, TranslationInterface $string_translation) {
-    $this->entityManager = $entity_manager;
+  public function __construct(EntityTypeManagerInterface $etm, TranslationInterface $string_translation) {
+    $this->etm = $etm;
     $this->stringTranslation = $string_translation;
   }
 
@@ -41,7 +41,7 @@ class SalesforceMappingLocalTask extends DeriverBase implements ContainerDeriver
    */
   public static function create(ContainerInterface $container, $base_plugin_id) {
     return new static(
-      $container->get('entity.manager'),
+      $container->get('entity_type.manager'),
       $container->get('string_translation')
     );
   }
@@ -52,7 +52,7 @@ class SalesforceMappingLocalTask extends DeriverBase implements ContainerDeriver
   public function getDerivativeDefinitions($base_plugin_definition) {
     $this->derivatives = [];
 
-    foreach ($this->entityManager->getDefinitions() as $entity_type_id => $entity_type) {
+    foreach ($this->etm->getDefinitions() as $entity_type_id => $entity_type) {
       if (!($has_canonical_path = $entity_type->hasLinkTemplate('salesforce'))) {
         continue;
       }

@@ -166,7 +166,6 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
   $query = \Drupal::service('database')
     ->select($mapped_obj_table, 'm');
   $query->addExpression('distinct substr(salesforce_id, 1, 3)');
-  $mapping_id = FALSE;
   if ($mapping_id = drush_get_option('mapping')) {
     $query->condition('salesforce_mapping', $mapping_id);
   }

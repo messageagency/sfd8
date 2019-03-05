@@ -24,7 +24,7 @@ class SFIDTest extends UnitTestCase {
   /**
    * Test object instantiation with bad ID.
    *
-   * @expectedException Exception
+   * @expectedException \Exception
    */
   public function testBadId() {
     new SFID('1234567890');

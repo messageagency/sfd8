@@ -80,7 +80,7 @@ function _salesforce_example_entity_manage(EntityInterface &$entity, $op) {
   $mapped_object_storage = &drupal_static(__FUNCTION__);
 
   if (!isset($mapped_object_storage)) {
-    $mapped_object_storage = \Drupal::service('entity.manager')
+    $mapped_object_storage = \Drupal::service('entity_type.manager')
       ->getStorage('salesforce_mapped_object');
   }
 

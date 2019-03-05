@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_mapping\Form;
 
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Url;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager;
 use Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface;
@@ -44,6 +45,13 @@ abstract class SalesforceMappingFormBase extends EntityForm {
   protected $entity;
 
   /**
+   * Bundle info service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected $bundleInfo;
+
+  /**
    * SalesforceMappingFormBase constructor.
    *
    * @param \Drupal\salesforce_mapping\SalesforceMappingFieldPluginManager $mappingFieldPluginManager
@@ -52,11 +60,14 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *   Rest client.
    * @param \Drupal\salesforce_mapping\SalesforceMappableEntityTypesInterface $mappableEntityTypes
    *   Mappable types.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundleInfo
+   *   Bundle info service.
    */
-  public function __construct(SalesforceMappingFieldPluginManager $mappingFieldPluginManager, RestClientInterface $client, SalesforceMappableEntityTypesInterface $mappableEntityTypes) {
+  public function __construct(SalesforceMappingFieldPluginManager $mappingFieldPluginManager, RestClientInterface $client, SalesforceMappableEntityTypesInterface $mappableEntityTypes, EntityTypeBundleInfoInterface $bundleInfo) {
     $this->mappingFieldPluginManager = $mappingFieldPluginManager;
     $this->client = $client;
     $this->mappableEntityTypes = $mappableEntityTypes;
+    $this->bundleInfo = $bundleInfo;
   }
 
   /**
@@ -66,7 +77,8 @@ abstract class SalesforceMappingFormBase extends EntityForm {
     return new static(
       $container->get('plugin.manager.salesforce_mapping_field'),
       $container->get('salesforce.client'),
-      $container->get('salesforce_mapping.mappable_entity_types')
+      $container->get('salesforce_mapping.mappable_entity_types'),
+      $container->get('entity_type.bundle.info')
     );
   }
 
@@ -98,11 +110,11 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     if (!$this->entity->save()) {
-      drupal_set_message($this->t('An error occurred while trying to save the mapping.'));
+      $this->messenger()->addError($this->t('An error occurred while trying to save the mapping.'));
       return;
     }
 
-    drupal_set_message($this->t('The mapping has been successfully saved.'));
+    $this->messenger()->addStatus($this->t('The mapping has been successfully saved.'));
   }
 
   /**
@@ -116,7 +128,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    * @return \Drupal\salesforce\Rest\RestResponseDescribe
    *   Information about the Salesforce object as provided by Salesforce.
    *
-   * @throws Exception if $salesforce_object_type is not provided and
+   * @throws \Exception if $salesforce_object_type is not provided and
    *   $this->entity->salesforce_object_type is not set.
    */
   protected function getSalesforceObject($salesforce_object_type = '') {

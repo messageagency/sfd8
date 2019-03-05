@@ -3,7 +3,7 @@
 namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
-use Drupal\Core\Entity\Entity;
+use Drupal\Core\Entity\EntityBase;
 use Drupal\Core\Entity\EntityStorageBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
@@ -48,13 +48,13 @@ class DeleteHandlerTest extends UnitTestCase {
     $this->sfapi = $prophecy->reveal();
 
     // Mock Drupal entity.
-    $prophecy = $this->prophesize(Entity::CLASS);
+    $prophecy = $this->prophesize(EntityBase::CLASS);
     $prophecy->delete()->willReturn(TRUE);
     $prophecy->id()->willReturn(1);
     $prophecy->label()->willReturn('foo');
     $this->entity = $prophecy->reveal();
 
-    $this->mapping = $this->getMock(SalesforceMappingInterface::CLASS);
+    $this->mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)->getMock();
     $this->mapping->expects($this->any())
       ->method('__get')
       ->with($this->equalTo('id'))
@@ -82,7 +82,7 @@ class DeleteHandlerTest extends UnitTestCase {
     $this->entityId->value = '1';
     $this->entityRef->entity = $this->mapping;
 
-    $this->mappedObject = $this->getMock(MappedObjectInterface::CLASS);
+    $this->mappedObject = $this->getMockBuilder(MappedObjectInterface::CLASS)->getMock();
     $this->mappedObject
       ->expects($this->any())
       ->method('delete')

@@ -3,9 +3,9 @@
 namespace Drupal\salesforce_push;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Drupal\Core\Entity\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
@@ -32,15 +32,15 @@ class PushController extends ControllerBase {
    *
    * @param \Drupal\salesforce_push\PushQueue $pushQueue
    *   Push queue service.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   Entity manager service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
+   *   Entity type manager service.
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(PushQueue $pushQueue, EntityManagerInterface $entity_manager) {
+  public function __construct(PushQueue $pushQueue, EntityTypeManagerInterface $etm) {
     $this->pushQueue = $pushQueue;
-    $this->mappingStorage = $entity_manager->getStorage('salesforce_mapping');
+    $this->mappingStorage = $etm->getStorage('salesforce_mapping');
   }
 
   /**
@@ -49,7 +49,7 @@ class PushController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('queue.salesforce_push'),
-      $container->get('entity.manager')
+      $container->get('entity_type.manager')
     );
   }
 
