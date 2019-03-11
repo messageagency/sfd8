@@ -12,6 +12,14 @@ use Drupal\salesforce\SelectQueryResult;
 interface RestClientInterface {
 
   /**
+   * Check if the client is ready to perform API calls.
+   *
+   * @return bool
+   *   TRUE if the client is ready to perform API calls. Otherwise FALSE.
+   */
+  public function isReady();
+
+  /**
    * Make a call to the Salesforce REST API.
    *
    * @param string $path

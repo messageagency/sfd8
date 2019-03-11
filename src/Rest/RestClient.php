@@ -145,6 +145,13 @@ class RestClient implements RestClientInterface {
     return $this;
   }
 
+  public function isReady() {
+    if (!$this->authProvider || !$this->authToken) {
+      return FALSE;
+    }
+    return TRUE;
+  }
+
   /**
    * {@inheritdoc}
    */
