@@ -140,11 +140,13 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
    *   The list of plugins, indexed by ID.
    */
   public function getPluginsAsOptions() {
-    $options = ['' => t('- Select -')];
     foreach ($this->authManager()->getDefinitions() as $id => $definition) {
       $options[$id] = ($definition['label']);
     }
-    return $options;
+    if (!empty($options)) {
+      return ['' => t('- Select -')] + $options;
+    }
+    return [];
   }
 
 }

@@ -22,6 +22,11 @@ class SalesforceAuthForm extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $auth = $this->entity;
+    if (empty($auth->getPluginsAsOptions())) {
+      $this->messenger()->addError('No auth provider plugins found. Please enable an auth provider module, e.g. salesforce_jwt, before adding an auth config.');
+      $form['#access'] = FALSE;
+      return $form;
+    }
     $form_state->setBuildInfo($form_state->getBuildInfo()
       + ['auth_config' => $this->config($auth->getConfigDependencyName())]);
     $form['label'] = [
