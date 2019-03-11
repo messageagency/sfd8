@@ -85,6 +85,11 @@ class SalesforceAuthForm extends EntityForm {
     else {
       $form['settings']['provider_settings'] = $default;
     }
+    $form['save_default'] = [
+      '#type' => 'checkbox',
+      '#title' => 'Save and set default',
+      '#default_value' => $this->entity->isNew() || ($this->entity->authManager()->getProvider() && $this->entity->authManager()->getProvider()->id() == $this->entity->id())
+    ];
     return parent::form($form, $form_state);
   }
 
@@ -129,12 +134,20 @@ class SalesforceAuthForm extends EntityForm {
     }
   }
 
+
   /**
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
     parent::save($form, $form_state);
     $this->entity->getPlugin()->save($form, $form_state);
+    if ($form_state->getValue('save_default')) {
+      $this
+        ->configFactory()
+        ->getEditable('salesforce.settings')
+        ->set('salesforce_auth_provider', $this->entity->id())
+        ->save();
+    }
   }
 
   /**
