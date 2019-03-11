@@ -26,8 +26,37 @@ class SFID {
     }
     $this->id = $id;
     if (strlen($this->id) == 15) {
-      $this->id = self::convertId($id);
+      $this->id = static::convertId($id);
     }
+  }
+
+  /**
+   * Given a potential SFID, return a new SFID object if it's valid.
+   *
+   * @param $id
+   *   A potential sfid.
+   *
+   * @return \Drupal\salesforce\SFID|false
+   *   A new SFID if $id is valid, otherwise FALSE.
+   */
+  public static function createIfValid($id) {
+    if (static::isValid($id)) {
+      return new static($id);
+    }
+    return FALSE;
+  }
+
+  /**
+   * Returns TRUE if $id is a valid length.
+   *
+   * @param $id
+   *   An sfid.
+   *
+   * @return bool
+   *   Returns TRUE if $id is a valid length.
+   */
+  public static function isValid($id) {
+    return strlen($id) == 15 || strlen($id) == self::MAX_LENGTH;
   }
 
   /**

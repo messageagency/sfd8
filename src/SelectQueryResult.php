@@ -19,8 +19,6 @@ class SelectQueryResult {
    *
    * @param array $results
    *   The query results.
-   *
-   * @throws \Exception
    */
   public function __construct(array $results) {
     $this->totalSize = $results['totalSize'];
@@ -30,7 +28,9 @@ class SelectQueryResult {
     }
     $this->records = [];
     foreach ($results['records'] as $record) {
-      $this->records[$record['Id']] = new SObject($record);
+      if ($sobj = SObject::createIfValid($record)) {
+        $this->records[$record['Id']] = $sobj;
+      }
     }
   }
 
@@ -80,17 +80,11 @@ class SelectQueryResult {
    * @param \Drupal\salesforce\SFID $id
    *   The SFID.
    *
-   * @return \Drupal\salesforce\SObject
-   *   The record.
-   *
-   * @throws \Exception
-   *   If the given SFID doesn't exist in these results.
+   * @return \Drupal\salesforce\SObject|false
+   *   The record, or FALSE if no record exists for given id.
    */
   public function record(SFID $id) {
-    if (!isset($this->records[(string) $id])) {
-      throw new \Exception('No record found');
-    }
-    return $this->records[(string) $id];
+    return isset($this->records[(string) $id]) ? $this->records[(string) $id] : FALSE;
   }
 
 }

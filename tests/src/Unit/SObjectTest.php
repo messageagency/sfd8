@@ -51,12 +51,10 @@ class SObjectTest extends UnitTestCase {
 
   /**
    * Test invalid field call.
-   *
-   * @expectedException \Exception
    */
   public function testFieldNotExists() {
     $sobject = new SObject(['id' => '1234567890abcde', 'attributes' => ['type' => 'dummy']]);
-    $sobject->field('key');
+    $this->assertNull($sobject->field('key'));
   }
 
   /**

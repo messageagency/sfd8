@@ -594,11 +594,11 @@ class RestClient implements RestClientInterface {
 
     if ($name != NULL) {
       if (!isset($record_types[$name])) {
-        throw new \Exception("No record types for $name");
+        return FALSE;
       }
       return $record_types[$name];
     }
-    return $record_types;
+    return $record_types ?: FALSE;
   }
 
   /**
@@ -607,7 +607,7 @@ class RestClient implements RestClientInterface {
   public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE) {
     $record_types = $this->getRecordTypes($name, $reset);
     if (empty($record_types[$devname])) {
-      throw new \Exception("No record type $devname for $name");
+      return FALSE;
     }
     return $record_types[$devname]->id();
   }
@@ -623,7 +623,7 @@ class RestClient implements RestClientInterface {
         return $object['name'];
       }
     }
-    throw new \Exception('No matching object type');
+    return FALSE;
   }
 
   /**

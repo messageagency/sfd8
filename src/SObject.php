@@ -17,8 +17,6 @@ class SObject {
    *
    * @param array $data
    *   The SObject field data.
-   *
-   * @throws \Exception
    */
   public function __construct(array $data = []) {
     if (!isset($data['id']) && !isset($data['Id'])) {
@@ -43,6 +41,31 @@ class SObject {
       $this->fields[$key] = $value;
     }
     $this->fields['Id'] = (string) $this->id;
+  }
+
+  /**
+   * Given SObject data, instantiate a new SObject if data is valid.
+   *
+   * @param array $data
+   *   SOBject data.
+   *
+   * @return \Drupal\salesforce\SObject|false
+   *   SObject, or FALSE if data is not valid.
+   */
+  public static function createIfValid(array $data = []) {
+    if (!isset($data['id']) && !isset($data['Id'])) {
+      return FALSE;
+    }
+    if (isset($data['id'])) {
+      $data['Id'] = $data['id'];
+    }
+    if (!SFID::isValid($data['Id'])) {
+      return FALSE;
+    }
+    if (empty($data['attributes']) || !isset($data['attributes']['type'])) {
+      return FALSE;
+    }
+    return new static($data);
   }
 
   /**
@@ -78,15 +101,24 @@ class SObject {
   /**
    * Given $key, return corresponding field value.
    *
-   * @return mixed
+   * @return mixed|false
    *   The value.
+   */
+  public function hasField($key) {
+    return array_key_exists($key, $this->fields);
+  }
+
+  /**
+   * Given $key, return corresponding field value.
    *
-   * @throws \Exception
-   *   If $key is not found.
+   * @return mixed|NULL
+   *   The value, or NULL if given $key is not set.
+   *
+   * @see hasField()
    */
   public function field($key) {
     if (!array_key_exists($key, $this->fields)) {
-      throw new \Exception('Index not found');
+      return NULL;
     }
     return $this->fields[$key];
   }

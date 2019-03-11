@@ -371,9 +371,10 @@ interface RestClientInterface {
    * @param string $name
    *   Object type name, e.g. Contact, Account, etc.
    *
-   * @return array
+   * @return array|false
    *   If $name is given, a record type array indexed by developer name.
    *   Otherwise, an array of record type arrays, indexed by object type name.
+   *   FALSE if no record types found.
    */
   public function getRecordTypes($name = NULL);
 
@@ -390,11 +391,8 @@ interface RestClientInterface {
    * @param bool $reset
    *   If true, clear the local cache and fetch record types from API.
    *
-   * @return \Drupal\salesforce\SFID
-   *   The Salesforce ID of the given Record Type, or null.
-   *
-   * @throws \Exception
-   *   If record type is not found.
+   * @return \Drupal\salesforce\SFID|false
+   *   The Salesforce ID of the given Record Type, or FALSE if not found.
    */
   public function getRecordTypeIdByDeveloperName($name, $devname, $reset = FALSE);
 
@@ -404,11 +402,8 @@ interface RestClientInterface {
    * @param \Drupal\salesforce\SFID $id
    *   The SFID.
    *
-   * @return string
-   *   The object type name.
-   *
-   * @throws \Exception
-   *   If SFID doesn't match any object type.
+   * @return string|false
+   *   The object type name, or FALSE if not found.
    */
   public function getObjectTypeName(SFID $id);
 

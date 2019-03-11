@@ -447,8 +447,6 @@ class RestClientTest extends UnitTestCase {
 
   /**
    * @covers ::getRecordTypes
-   *
-   * @expectedException Exception
    */
   public function testGetRecordTypes() {
     $this->initClient(array_merge($this->methods, ['query']));
@@ -498,7 +496,7 @@ class RestClientTest extends UnitTestCase {
 
     $this->assertEquals($recordTypes[$sObjectType], $this->client->getRecordTypes($sObjectType));
 
-    $this->client->getRecordTypes('fail');
+    $this->assertFalse($this->client->getRecordTypes('fail'));
   }
 
 }
