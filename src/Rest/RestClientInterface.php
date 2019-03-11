@@ -12,6 +12,18 @@ use Drupal\salesforce\SelectQueryResult;
 interface RestClientInterface {
 
   /**
+   * Check if the client is ready to perform API calls.
+   *
+   * TRUE indicates that the various dependencies are in place to initiate an
+   * API call. It does NOT indicate that the API call will be successful, or
+   * return a 200 status.
+   *
+   * @return bool
+   *   FALSE if the client is not initialized. TRUE otherwise.
+   */
+  public function isInit();
+
+  /**
    * Make a call to the Salesforce REST API.
    *
    * @param string $path

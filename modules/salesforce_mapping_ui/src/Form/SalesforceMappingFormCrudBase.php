@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce_mapping\Form;
+namespace Drupal\salesforce_mapping_ui\Form;
 
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;

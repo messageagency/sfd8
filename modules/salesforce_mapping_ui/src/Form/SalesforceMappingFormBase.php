@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce_mapping\Form;
+namespace Drupal\salesforce_mapping_ui\Form;
 
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Url;
@@ -94,15 +94,25 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    *   TRUE if Salesforce endpoint (or cache) responded correctly.
    */
   protected function ensureConnection($method = 'objects', $arg = []) {
-    try {
-      $this->client->{$method}($arg);
+    $message = '';
+    if ($this->client->isInit()) {
+      try {
+        $this->client->{$method}($arg);
+        return TRUE;
+      }
+      catch (\Exception $e) {
+        // Fall through.
+        $message = $e->getMessage() ?: get_class($e);
+      }
     }
-    catch (\Exception $e) {
-      $href = new Url('salesforce.auth_config');
-      $this->messenger()->addError($this->t('Error when connecting to Salesforce. Please <a href="@href">check your credentials</a> and try again: %message', ['@href' => $href->toString(), '%message' => $e->getMessage() ?: get_class($e)]), 'error');
-      return FALSE;
-    }
-    return TRUE;
+
+    $href = new Url('salesforce.auth_config');
+    $this->messenger()
+      ->addError($this->t('Error when connecting to Salesforce. Please <a href="@href">check your credentials</a> and try again: %message', [
+        '@href' => $href->toString(),
+        '%message' => $message,
+      ]), 'error');
+    return FALSE;
   }
 
   /**

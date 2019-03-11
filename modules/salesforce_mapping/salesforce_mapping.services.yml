@@ -6,9 +6,3 @@ services:
   salesforce_mapping.mappable_entity_types:
     class: Drupal\salesforce_mapping\SalesforceMappableEntityTypes
     arguments: ['@entity_type.manager']
-
-  salesforce_mapping.route_subscriber:
-    class: Drupal\salesforce_mapping\Routing\RouteSubscriber
-    arguments: ['@entity_type.manager']
-    tags:
-      - { name: event_subscriber }

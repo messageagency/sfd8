@@ -1,0 +1,6 @@
+services:
+  salesforce_mapping.route_subscriber:
+    class: Drupal\salesforce_mapping_ui\Routing\RouteSubscriber
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: event_subscriber }

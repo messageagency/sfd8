@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce_mapping\Plugin\Derivative;
+namespace Drupal\salesforce_mapping_ui\Plugin\Derivative;
 
 use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;

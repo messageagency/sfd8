@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce_mapping\Controller;
+namespace Drupal\salesforce_mapping_ui\Controller;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Controller\ControllerBase;
