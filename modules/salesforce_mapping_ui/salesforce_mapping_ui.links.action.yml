@@ -45,7 +45,7 @@ salesforce_mapped_object.list_action:
 
 salesforce_mapped_object.add_action:
   route_name: entity.salesforce_mapped_object.add_form
-  class: '\Drupal\salesforce_mapping\Plugin\Menu\LocalAction\SalesforceMappedObjectAddLocalAction'
+  class: '\Drupal\salesforce_mapping_ui\Plugin\Menu\LocalAction\SalesforceMappedObjectAddLocalAction'
   title: 'Create Mapped Object'
   appears_on:
     - entity.salesforce_mapped_object.list

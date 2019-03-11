@@ -52,11 +52,11 @@ class RouteSubscriber extends RouteSubscriberBase {
       $route = new Route($path);
       $route
         ->addDefaults([
-          '_controller' => "\Drupal\salesforce_mapping\Controller\MappedObjectController::listing",
+          '_controller' => "\Drupal\salesforce_mapping_ui\Controller\MappedObjectController::listing",
           '_title' => "Salesforce mapped objects",
         ])
         ->addRequirements([
-          '_custom_access' => '\Drupal\salesforce_mapping\Controller\MappedObjectController::access',
+          '_custom_access' => '\Drupal\salesforce_mapping_ui\Controller\MappedObjectController::access',
         ])
         ->setOption('_admin_route', TRUE)
         ->setOption('_salesforce_entity_type_id', $entity_type_id)
