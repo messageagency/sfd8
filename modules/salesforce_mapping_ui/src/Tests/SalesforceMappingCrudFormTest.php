@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce_mapping\Tests;
+namespace Drupal\salesforce_mapping_ui\Tests;
 
 use Drupal\simpletest\WebTestBase;
 
@@ -20,6 +20,7 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
     'salesforce',
     'salesforce_test_rest_client',
     'salesforce_mapping',
+    'salesforce_mapping_ui',
     'user',
     'link',
     'dynamic_entity_reference',

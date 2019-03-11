@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce_mapping\Controller;
+namespace Drupal\salesforce_mapping_ui\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;

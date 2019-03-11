@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce_mapping\Routing;
+namespace Drupal\salesforce_mapping_ui\Routing;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;

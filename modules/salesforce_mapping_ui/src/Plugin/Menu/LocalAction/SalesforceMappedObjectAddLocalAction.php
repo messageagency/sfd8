@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce_mapping\Plugin\Menu\LocalAction;
+namespace Drupal\salesforce_mapping_ui\Plugin\Menu\LocalAction;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Menu\LocalActionDefault;

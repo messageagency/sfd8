@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce_mapping\Form;
+namespace Drupal\salesforce_mapping_ui\Form;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\ContentEntityForm;

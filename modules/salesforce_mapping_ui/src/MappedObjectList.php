@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\salesforce_mapping;
+namespace Drupal\salesforce_mapping_ui;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
