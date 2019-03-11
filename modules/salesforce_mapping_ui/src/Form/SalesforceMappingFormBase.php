@@ -95,7 +95,7 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    */
   protected function ensureConnection($method = 'objects', $arg = []) {
     $message = '';
-    if ($this->client->isReady()) {
+    if ($this->client->isInit()) {
       try {
         $this->client->{$method}($arg);
         return TRUE;

@@ -14,10 +14,14 @@ interface RestClientInterface {
   /**
    * Check if the client is ready to perform API calls.
    *
+   * TRUE indicates that the various dependencies are in place to initiate an
+   * API call. It does NOT indicate that the API call will be successful, or
+   * return a 200 status.
+   *
    * @return bool
-   *   TRUE if the client is ready to perform API calls. Otherwise FALSE.
+   *   FALSE if the client is not initialized. TRUE otherwise.
    */
-  public function isReady();
+  public function isInit();
 
   /**
    * Make a call to the Salesforce REST API.
