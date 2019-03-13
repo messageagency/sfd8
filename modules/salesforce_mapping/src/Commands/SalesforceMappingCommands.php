@@ -10,6 +10,8 @@ use Drupal\salesforce\SelectQuery;
 use Drush\Exceptions\UserAbortException;
 use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Output\Output;
+use Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface;
+use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
 
 /**
  * A Drush commandfile.
@@ -34,6 +36,10 @@ class SalesforceMappingCommands extends SalesforceMappingCommandsBase {
    *   The salesforce.client service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   The entity_type.manager service.
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface $auth_man
+   *   Auth plugin manager.
+   * @param \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface $token_storage
+   *   Token storage.
    * @param \Drupal\Core\Config\ConfigFactory $configFactory
    *   The config.factory service.
    * @param \Drupal\Core\Database\Connection $database
@@ -42,8 +48,8 @@ class SalesforceMappingCommands extends SalesforceMappingCommandsBase {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(RestClient $client, EntityTypeManagerInterface $etm, ConfigFactory $configFactory, Connection $database) {
-    parent::__construct($client, $etm);
+  public function __construct(RestClient $client, EntityTypeManagerInterface $etm, SalesforceAuthProviderPluginManagerInterface $auth_man, SalesforceAuthTokenStorageInterface $token_storage, ConfigFactory $configFactory, Connection $database) {
+    parent::__construct($client, $etm, $auth_man, $token_storage);
     $this->database = $database;
     $this->salesforceConfig = $configFactory->get('salesforce.settings');
   }

@@ -9,6 +9,8 @@ use Drupal\salesforce\Rest\RestClient;
 use Drupal\salesforce_push\PushQueue;
 use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Output\Output;
+use Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface;
+use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
 
 /**
  * A Drush commandfile.
@@ -44,6 +46,10 @@ class SalesforcePushCommands extends SalesforceMappingCommandsBase {
    *   Salesforce service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $etm
    *   ETM service.
+   * @param \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface $auth_man
+   *   Auth plugin manager.
+   * @param \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface $token_storage
+   *   Token storage.
    * @param \Drupal\salesforce_push\PushQueue $pushQueue
    *   Push queue service.
    * @param \Drupal\Core\Database\Connection $database
@@ -52,8 +58,8 @@ class SalesforcePushCommands extends SalesforceMappingCommandsBase {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(RestClient $client, EntityTypeManagerInterface $etm, PushQueue $pushQueue, Connection $database) {
-    parent::__construct($client, $etm);
+  public function __construct(RestClient $client, EntityTypeManagerInterface $etm, SalesforceAuthProviderPluginManagerInterface $auth_man, SalesforceAuthTokenStorageInterface $token_storage, PushQueue $pushQueue, Connection $database) {
+    parent::__construct($client, $etm, $auth_man, $token_storage);
     $this->pushQueue = $pushQueue;
     $this->database = $database;
   }

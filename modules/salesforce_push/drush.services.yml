@@ -1,6 +1,6 @@
 services:
   salesforce_push.commands:
     class: \Drupal\salesforce_push\Commands\SalesforcePushCommands
-    arguments: ['@salesforce.client', '@entity_type.manager', '@queue.salesforce_push', '@database']
+    arguments: ['@salesforce.client', '@entity_type.manager', '@plugin.manager.salesforce.auth_providers', '@salesforce.auth_token_storage', '@queue.salesforce_push', '@database']
     tags:
       - { name: drush.command }

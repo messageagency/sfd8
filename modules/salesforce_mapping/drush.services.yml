@@ -1,6 +1,6 @@
 services:
   salesforce_mapping.commands:
     class: \Drupal\salesforce_mapping\Commands\SalesforceMappingCommands
-    arguments: ['@salesforce.client', '@entity_type.manager', '@config.factory', '@database']
+    arguments: ['@salesforce.client', '@entity_type.manager', '@plugin.manager.salesforce.auth_providers', '@salesforce.auth_token_storage', '@config.factory', '@database']
     tags:
       - { name: drush.command }
