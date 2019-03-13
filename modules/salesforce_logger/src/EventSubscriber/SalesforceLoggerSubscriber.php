@@ -65,8 +65,9 @@ class SalesforceLoggerSubscriber implements EventSubscriberInterface {
     if ($exception) {
       $this->logger->log($event->getLevel(), self::EXCEPTION_MESSAGE_PLACEHOLDER, Error::decodeException($exception));
     }
-
-    $this->logger->log($event->getLevel(), $event->getMessage(), $event->getContext());
+    else {
+      $this->logger->log($event->getLevel(), $event->getMessage(), $event->getContext());
+    }
   }
 
 }

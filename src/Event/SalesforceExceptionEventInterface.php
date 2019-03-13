@@ -28,9 +28,7 @@ interface SalesforceExceptionEventInterface {
    * Getter for message string.
    *
    * @return string
-   *   The formatted message for this event. (Note: to get the Exception
-   *   message, use ::getExceptionMessage()). If no message was given,
-   *   FormattableMarkup will be an empty string.
+   *   The message for this event, or a default message.
    */
   public function getMessage();
 
