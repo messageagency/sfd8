@@ -3,7 +3,6 @@
 namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
-use Drupal\Core\Entity\EntityBase;
 use Drupal\Core\Entity\EntityStorageBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
@@ -15,6 +14,7 @@ use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_pull\DeleteHandler;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\Tests\UnitTestCase;
+use Drupal\user\Entity\User;
 use Prophecy\Argument;
 
 /**
@@ -47,8 +47,8 @@ class DeleteHandlerTest extends UnitTestCase {
       ->willReturn($result);
     $this->sfapi = $prophecy->reveal();
 
-    // Mock Drupal entity.
-    $prophecy = $this->prophesize(EntityBase::CLASS);
+    // Mock an atribtary Drupal entity.
+    $prophecy = $this->prophesize(User::CLASS);
     $prophecy->delete()->willReturn(TRUE);
     $prophecy->id()->willReturn(1);
     $prophecy->label()->willReturn('foo');
