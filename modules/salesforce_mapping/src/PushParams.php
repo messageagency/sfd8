@@ -87,7 +87,7 @@ class PushParams {
   /**
    * Return TRUE if the given $key is set.
    *
-   * @param $key
+   * @param string $key
    *   A key.
    *
    * @return bool

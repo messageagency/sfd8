@@ -33,7 +33,7 @@ class SFID {
   /**
    * Given a potential SFID, return a new SFID object if it's valid.
    *
-   * @param $id
+   * @param string $id
    *   A potential sfid.
    *
    * @return \Drupal\salesforce\SFID|false
@@ -49,7 +49,7 @@ class SFID {
   /**
    * Returns TRUE if $id is a valid length.
    *
-   * @param $id
+   * @param string $id
    *   An sfid.
    *
    * @return bool

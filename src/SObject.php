@@ -111,7 +111,7 @@ class SObject {
   /**
    * Given $key, return corresponding field value.
    *
-   * @return mixed|NULL
+   * @return mixed|null
    *   The value, or NULL if given $key is not set.
    *
    * @see hasField()

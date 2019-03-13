@@ -15,7 +15,6 @@ use Symfony\Component\Console\Output\Output;
 use Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface;
 use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
 
-
 /**
  * A Drush commandfile.
  *

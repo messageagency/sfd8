@@ -134,7 +134,6 @@ class SalesforceAuthForm extends EntityForm {
     }
   }
 
-
   /**
    * {@inheritdoc}
    */

@@ -179,6 +179,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    * @deprecated Use describeFields, describeMetadata, describeRecordTypes...
    *
    * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields|null
+   *   Describe result.
    *
    * @throws \Exception
    */

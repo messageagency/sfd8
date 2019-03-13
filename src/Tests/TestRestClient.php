@@ -18,6 +18,9 @@ class TestRestClient extends RestClient {
 
   const AUTH_TOKEN_URL = 'https://example.com/fake/token/url/for/testing';
 
+  /**
+   * {@inheritdoc}
+   */
   public function isInit() {
     return TRUE;
   }
@@ -32,7 +35,7 @@ class TestRestClient extends RestClient {
    * Hard-code a short list of objects for testing.
    */
   public function objects(array $conditions = ['updateable' => TRUE], $reset = FALSE) {
-    return json_decode(file_get_contents(__DIR__ . '/objects.json'),  JSON_OBJECT_AS_ARRAY);
+    return json_decode(file_get_contents(__DIR__ . '/objects.json'), JSON_OBJECT_AS_ARRAY);
   }
 
   /**
@@ -40,14 +43,14 @@ class TestRestClient extends RestClient {
    */
   public function objectDescribe($name, $reset = FALSE) {
     $contents = file_get_contents(__DIR__ . '/objectDescribe.json');
-    return new RestResponseDescribe(new RestResponse(new Response(200, ['Content-Type'=>'application/json;charset=UTF-8'], $contents)));
+    return new RestResponseDescribe(new RestResponse(new Response(200, ['Content-Type' => 'application/json;charset=UTF-8'], $contents)));
   }
 
   /**
    * Hard-code record types for testing.
    */
   public function getRecordTypes($name = NULL, $reset = FALSE) {
-    $json = json_decode(file_get_contents(__DIR__ . '/recordTypes.json'),  JSON_OBJECT_AS_ARRAY);
+    $json = json_decode(file_get_contents(__DIR__ . '/recordTypes.json'), JSON_OBJECT_AS_ARRAY);
     $result = new SelectQueryResult($json);
     $record_types = [];
     foreach ($result->records() as $rt) {
