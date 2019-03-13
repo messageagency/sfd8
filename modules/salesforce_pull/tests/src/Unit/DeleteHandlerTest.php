@@ -3,7 +3,7 @@
 namespace Drupal\Tests\salesforce_pull\Unit;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
-use Drupal\Core\Entity\Entity;
+use Drupal\Core\Entity\EntityBase;
 use Drupal\Core\Entity\EntityStorageBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
@@ -48,7 +48,7 @@ class DeleteHandlerTest extends UnitTestCase {
     $this->sfapi = $prophecy->reveal();
 
     // Mock Drupal entity.
-    $prophecy = $this->prophesize(Entity::CLASS);
+    $prophecy = $this->prophesize(EntityBase::CLASS);
     $prophecy->delete()->willReturn(TRUE);
     $prophecy->id()->willReturn(1);
     $prophecy->label()->willReturn('foo');
