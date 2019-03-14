@@ -19,6 +19,7 @@ class SalesforceOAuthSettingsTest extends WebTestBase {
    */
   protected static $modules = [
     'salesforce',
+    'salesforce_oauth',
     'user',
     'salesforce_test_rest_client',
   ];
