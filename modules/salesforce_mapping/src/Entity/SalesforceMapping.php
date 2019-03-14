@@ -20,15 +20,6 @@ use Drupal\salesforce_mapping\MappingConstants;
  *     "storage" = "Drupal\salesforce_mapping\SalesforceMappingStorage",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "access" = "Drupal\salesforce_mapping\SalesforceMappingAccessController",
- *     "list_builder" = "Drupal\salesforce_mapping_ui\SalesforceMappingList",
- *     "form" = {
- *       "add" = "Drupal\salesforce_mapping_ui\Form\SalesforceMappingAddForm",
- *       "edit" = "Drupal\salesforce_mapping_ui\Form\SalesforceMappingEditForm",
- *       "disable" = "Drupal\salesforce_mapping_ui\Form\SalesforceMappingDisableForm",
- *       "delete" = "Drupal\salesforce_mapping_ui\Form\SalesforceMappingDeleteForm",
- *       "enable" = "Drupal\salesforce_mapping_ui\Form\SalesforceMappingEnableForm",
- *       "fields" = "Drupal\salesforce_mapping_ui\Form\SalesforceMappingFieldsForm",
- *      }
  *   },
  *   admin_permission = "administer salesforce mapping",
  *   entity_keys = {

@@ -6,6 +6,13 @@
  */
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\salesforce_mapping_ui\SalesforceMappingList;
+use Drupal\salesforce_mapping_ui\Form\SalesforceMappingAddForm;
+use Drupal\salesforce_mapping_ui\Form\SalesforceMappingEditForm;
+use Drupal\salesforce_mapping_ui\Form\SalesforceMappingDisableForm;
+use Drupal\salesforce_mapping_ui\Form\SalesforceMappingDeleteForm;
+use Drupal\salesforce_mapping_ui\Form\SalesforceMappingEnableForm;
+use Drupal\salesforce_mapping_ui\Form\SalesforceMappingFieldsForm;
 
 /**
  * Implements hook_entity_type_alter().
@@ -22,6 +29,14 @@ function salesforce_mapping_ui_entity_type_alter(array &$entity_types) {
       $entity_type->setLinkTemplate('salesforce', "/$entity_type_id/{{$entity_type_id}}/salesforce");
     }
   }
+  // Set our UI classes for SalesforceMappingEntity
+  $entity_types['salesforce_mapping']->setHandlerClass('list_builder', SalesforceMappingList::class);
+  $entity_types['salesforce_mapping']->setFormClass('add', SalesforceMappingAddForm::class);
+  $entity_types['salesforce_mapping']->setFormClass('edit', SalesforceMappingEditForm::class);
+  $entity_types['salesforce_mapping']->setFormClass('disable', SalesforceMappingDisableForm::class);
+  $entity_types['salesforce_mapping']->setFormClass('delete', SalesforceMappingDeleteForm::class);
+  $entity_types['salesforce_mapping']->setFormClass('enable', SalesforceMappingEnableForm::class);
+  $entity_types['salesforce_mapping']->setFormClass('fields', SalesforceMappingFieldsForm::class);
 }
 
 /**

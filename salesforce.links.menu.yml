@@ -1,9 +1,3 @@
-salesforce.structure_index:
-  route_name: salesforce.structure_index
-  parent: system.admin_structure
-  title: Salesforce
-  description: 'Manage Salesforce mappings.'
-
 salesforce.admin_config_salesforce:
   route_name: salesforce.admin_config_salesforce
   parent: system.admin_config

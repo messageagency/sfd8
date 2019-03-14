@@ -16,15 +16,6 @@ salesforce.admin_config_salesforce:
   requirements:
     _permission: 'administer salesforce+authorize salesforce'
 
-salesforce.structure_index:
-  path: '/admin/structure/salesforce'
-  defaults:
-    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
-    _title: 'Salesforce'
-    _description: 'Manage Salesforce mappings.'
-  requirements:
-    _permission: 'administer salesforce'
-
 salesforce.auth_config:
   path: '/admin/config/salesforce/authorize'
   defaults:

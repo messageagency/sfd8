@@ -15,7 +15,7 @@ function salesforce_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'salesforce.structure_index':
       $output = '';
-      if (!\Drupal::moduleHandler()->moduleExists('salesforce_mapping')) {
+      if (!\Drupal::moduleHandler()->moduleExists('salesforce_mapping_ui')) {
         $output .= '<p>' . t('In order to configure Salesforce Mappings, you must first enable the <a href=":url">Salesforce Mapping</a> module.', [':url' => (new Url('system.modules_list'))->toString()]) . '</p>';
       }
 
