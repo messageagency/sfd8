@@ -37,6 +37,8 @@ function salesforce_mapping_ui_entity_type_alter(array &$entity_types) {
   $entity_types['salesforce_mapping']->setFormClass('delete', SalesforceMappingDeleteForm::class);
   $entity_types['salesforce_mapping']->setFormClass('enable', SalesforceMappingEnableForm::class);
   $entity_types['salesforce_mapping']->setFormClass('fields', SalesforceMappingFieldsForm::class);
+  $entity_types['salesforce_mapping']->setLinkTemplate('edit-form', '/admin/structure/salesforce/mappings/manage/{salesforce_mapping}');
+  $entity_types['salesforce_mapping']->setLinkTemplate('delete-form', '/admin/structure/salesforce/mappings/manage/{salesforce_mapping}/delete');
 }
 
 /**

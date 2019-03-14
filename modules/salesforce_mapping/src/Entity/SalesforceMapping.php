@@ -27,10 +27,6 @@ use Drupal\salesforce_mapping\MappingConstants;
  *     "label" = "label",
  *     "weight" = "weight",
  *   },
- *   links = {
- *     "edit-form" = "/admin/structure/salesforce/mappings/manage/{salesforce_mapping}",
- *     "delete-form" = "/admin/structure/salesforce/mappings/manage/{salesforce_mapping}/delete"
- *   },
  *   config_export = {
  *    "id",
  *    "label",
