@@ -9,7 +9,6 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\salesforce\Token\SalesforceToken;
-use Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;
 
 /**
@@ -399,7 +398,7 @@ function salesforce_update_8402() {
     return;
   }
   $credentials = $authConfig->getPlugin()->getCredentials();
-  if (!$credentials instanceof SalesforceOAuthCredentials) {
+  if (!$credentials instanceof \Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials) {
     // If we're not using OAuth, we are done.
     return;
   }
