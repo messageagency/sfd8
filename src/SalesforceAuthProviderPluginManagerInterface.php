@@ -3,13 +3,14 @@
 namespace Drupal\salesforce;
 
 use Drupal\Component\Plugin\Discovery\CachedDiscoveryInterface;
+use Drupal\Component\Plugin\FallbackPluginManagerInterface;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 
 /**
  * Auth provider plugin manager interface.
  */
-interface SalesforceAuthProviderPluginManagerInterface extends PluginManagerInterface, CachedDiscoveryInterface, CacheableDependencyInterface {
+interface SalesforceAuthProviderPluginManagerInterface extends PluginManagerInterface, CachedDiscoveryInterface, CacheableDependencyInterface, FallbackPluginManagerInterface {
 
   /**
    * All Salesforce auth providers.

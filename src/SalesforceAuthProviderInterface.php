@@ -36,14 +36,6 @@ interface SalesforceAuthProviderInterface extends ServiceInterface, PluginFormIn
   public function label();
 
   /**
-   * Auth type id for this service, e.g. oauth, jwt, etc.
-   *
-   * @return string
-   *   Provider type for this auth provider.
-   */
-  public function type();
-
-  /**
    * Perform a refresh of the given token.
    *
    * @param \OAuth\Common\Token\TokenInterface $token

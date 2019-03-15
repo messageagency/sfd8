@@ -162,4 +162,11 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager implement
     return $this->config;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getFallbackPluginId($plugin_id, array $configuration = []) {
+    return 'broken';
+  }
+
 }

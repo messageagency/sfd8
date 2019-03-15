@@ -29,7 +29,7 @@ function salesforce_mapping_ui_entity_type_alter(array &$entity_types) {
       $entity_type->setLinkTemplate('salesforce', "/$entity_type_id/{{$entity_type_id}}/salesforce");
     }
   }
-  // Set our UI classes for SalesforceMappingEntity
+  // Set our UI classes for SalesforceMappingEntity.
   $entity_types['salesforce_mapping']->setHandlerClass('list_builder', SalesforceMappingList::class);
   $entity_types['salesforce_mapping']->setFormClass('add', SalesforceMappingAddForm::class);
   $entity_types['salesforce_mapping']->setFormClass('edit', SalesforceMappingEditForm::class);

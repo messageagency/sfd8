@@ -18,8 +18,8 @@ class SalesforceAuthListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\salesforce\SalesforceAuthProviderInterface $plugin */
     $plugin = $entity->getPlugin();
     $row['default'] = $entity->authManager()
-      ->getProvider() && $entity->authManager()
-      ->getProvider()
+      ->getConfig() && $entity->authManager()
+      ->getConfig()
       ->id() == $entity->id()
       ? $this->t('Default') : '';
     $row['label'] = $entity->label();

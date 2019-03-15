@@ -20,6 +20,19 @@ class SalesforceOAuthCredentials extends SalesforceCredentials {
   }
 
   /**
+   * Constructor helper.
+   *
+   * @param array $configuration
+   *   Plugin configuration.
+   *
+   * @return \Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials
+   *   Credentials, valid or not.
+   */
+  public static function create(array $configuration) {
+    return new static($configuration['consumer_key'], $configuration['consumer_secret'], $configuration['login_url']);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getCallbackUrl() {
@@ -37,6 +50,13 @@ class SalesforceOAuthCredentials extends SalesforceCredentials {
       'absolute' => TRUE,
       'https' => TRUE,
     ])->toString();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isValid() {
+    return !empty($this->loginUrl) && !empty($this->consumerSecret) && !empty($this->consumerId);
   }
 
 }

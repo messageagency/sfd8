@@ -3,7 +3,8 @@
 namespace Drupal\salesforce\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
+use Drupal\Core\Plugin\DefaultSingleLazyPluginCollection;
 
 /**
  * Defines a Salesforce Auth entity.
@@ -33,7 +34,7 @@ use Drupal\Core\Entity\EntityInterface;
  *   admin_permission = "authorize salesforce",
  * )
  */
-class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
+class SalesforceAuthConfig extends ConfigEntityBase implements EntityWithPluginCollectionInterface {
 
   /**
    * Auth id. e.g. "oauth_full_sandbox".
@@ -71,6 +72,13 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
   protected $manager;
 
   /**
+   * The plugin provider.
+   *
+   * @var \Drupal\salesforce\SalesforceAuthProviderInterface
+   */
+  protected $plugin;
+
+  /**
    * Id getter.
    */
   public function id() {
@@ -93,9 +101,20 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function getPlugin() {
-    $settings = $this->provider_settings ?: [];
-    $settings += ['id' => $this->id()];
-    return $this->provider ? $this->authManager()->createInstance($this->provider, $settings) : NULL;
+    if (!$this->plugin) {
+      $this->plugin = $this->provider ? $this->authManager()->createInstance($this->provider, $this->getProviderSettings()) : NULL;
+    }
+    return $this->plugin;
+  }
+
+  /**
+   * Wrapper for provider settings to inject instance id, from auth config.
+   *
+   * @return array
+   *   Provider settings.
+   */
+  public function getProviderSettings() {
+    return $this->provider_settings + ['id' => $this->id()];
   }
 
   /**
@@ -141,12 +160,25 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityInterface {
    */
   public function getPluginsAsOptions() {
     foreach ($this->authManager()->getDefinitions() as $id => $definition) {
+      if ($id == 'broken') {
+        // Do not add the fallback provider.
+        continue;
+      }
       $options[$id] = ($definition['label']);
     }
     if (!empty($options)) {
       return ['' => t('- Select -')] + $options;
     }
     return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginCollections() {
+    return [
+      'auth_provider' => new DefaultSingleLazyPluginCollection($this->authManager(), $this->provider, $this->getProviderSettings()),
+    ];
   }
 
 }

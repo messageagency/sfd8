@@ -3,71 +3,27 @@
 namespace Drupal\salesforce_oauth\Plugin\SalesforceAuthProvider;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
-use Drupal\salesforce\Consumer\SalesforceCredentials;
-use Drupal\salesforce\SalesforceAuthProviderInterface;
 use Drupal\salesforce\SalesforceAuthProviderPluginBase;
-use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
-use Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials;
-use OAuth\Common\Http\Client\ClientInterface;
-use OAuth\Common\Http\Uri\Uri;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Salesforce OAuth user-agent flow auth provider plugin.
  *
  * @Plugin(
  *   id = "oauth",
- *   label = @Translation("Salesforce OAuth User-Agent")
+ *   label = @Translation("Salesforce OAuth User-Agent"),
+ *   credentials_class = "\Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials"
  * )
  */
-class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements SalesforceAuthProviderInterface {
+class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase {
 
   /**
    * Credentials.
    *
-   * @var \Drupal\salesforce\Consumer\SalesforceCredentials
+   * @var \Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials
    */
   protected $credentials;
-
-  /**
-   * {@inheritdoc}
-   */
-  const SERVICE_TYPE = 'oauth';
-
-  /**
-   * {@inheritdoc}
-   */
-  const LABEL = 'OAuth';
-
-  /**
-   * SalesforceOAuthPlugin constructor.
-   *
-   * @param string $id
-   *   The plugin id.
-   * @param \Drupal\salesforce\Consumer\SalesforceCredentials $credentials
-   *   The credentials.
-   * @param \OAuth\Common\Http\Client\ClientInterface $httpClient
-   *   The oauth http client.
-   * @param \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface $storage
-   *   Auth token storage service.
-   *
-   * @throws \OAuth\OAuth2\Service\Exception\InvalidScopeException
-   *   Comment.
-   */
-  public function __construct($id, SalesforceCredentials $credentials, ClientInterface $httpClient, SalesforceAuthTokenStorageInterface $storage) {
-    parent::__construct($credentials, $httpClient, $storage, [], new Uri($credentials->getLoginUrl()));
-    $this->id = $id;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $configuration = array_merge(self::defaultConfiguration(), $configuration);
-    $cred = new SalesforceOAuthCredentials($configuration['consumer_key'], $configuration['consumer_secret'], $configuration['login_url']);
-    return new static($configuration['id'], $cred, $container->get('salesforce.http_client_wrapper'), $container->get('salesforce.auth_token_storage'));
-  }
 
   /**
    * {@inheritdoc}
@@ -88,7 +44,7 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
       '#type' => 'textfield',
       '#description' => t('Consumer key of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
-      '#default_value' => $this->credentials->getConsumerKey(),
+      '#default_value' => $this->getCredentials()->getConsumerKey(),
     ];
 
     $form['consumer_secret'] = [
@@ -96,13 +52,13 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
       '#type' => 'textfield',
       '#description' => $this->t('Consumer secret of the Salesforce remote application.'),
       '#required' => TRUE,
-      '#default_value' => $this->credentials->getConsumerSecret(),
+      '#default_value' => $this->getCredentials()->getConsumerSecret(),
     ];
 
     $form['login_url'] = [
       '#title' => t('Login URL'),
       '#type' => 'textfield',
-      '#default_value' => $this->credentials->getLoginUrl(),
+      '#default_value' => $this->getCredentials()->getLoginUrl(),
       '#description' => t('Enter a login URL, either https://login.salesforce.com or https://test.salesforce.com.'),
       '#required' => TRUE,
     ];
@@ -114,7 +70,6 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::submitConfigurationForm($form, $form_state);
-    $settings = $form_state->getValue('provider_settings');
 
     // Write the config id to private temp store, so that we can use the same
     // callback URL for all OAuth applications in Salesforce.
@@ -125,16 +80,16 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
     try {
       $path = $this->getAuthorizationEndpoint();
       $query = [
-        'redirect_uri' => $this->credentials->getCallbackUrl(),
+        'redirect_uri' => $this->getCredentials()->getCallbackUrl(),
         'response_type' => 'code',
-        'client_id' => $settings['consumer_key'],
+        'client_id' => $this->getCredentials()->getConsumerKey(),
       ];
 
       // Send the user along to the Salesforce OAuth login form. If successful,
       // the user will be redirected to {redirect_uri} to complete the OAuth
       // handshake, and thence to the entity listing. Upon failure, the user
       // redirect URI will send the user back to the edit form.
-      $form_state->setRedirectUrl(Url::fromUri($path . '?' . http_build_query($query)));
+      $form_state->setResponse(new TrustedRedirectResponse(Url::fromUri($path . '?' . http_build_query($query))->toString()));
     }
     catch (\Exception $e) {
       $form_state->setError($form, $this->t("Error during authorization: %message", ['%message' => $e->getMessage()]));
@@ -145,7 +100,7 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase implements 
    * {@inheritdoc}
    */
   public function getConsumerSecret() {
-    return $this->credentials->getConsumerSecret();
+    return $this->getCredentials()->getConsumerSecret();
   }
 
 }

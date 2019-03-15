@@ -23,4 +23,22 @@ interface SalesforceCredentialsInterface {
    */
   public function getLoginUrl();
 
+  /**
+   * Sanity check for credentials validity.
+   *
+   * @return bool
+   *   TRUE if credentials are set properly. Otherwise false.
+   */
+  public function isValid();
+
+  /**
+   * Create helper.
+   *
+   * @param array $configuration
+   *   Plugin configuration.
+   *
+   * @return static
+   */
+  public static function create(array $configuration);
+
 }

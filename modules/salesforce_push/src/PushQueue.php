@@ -229,7 +229,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
    *
    * @TODO convert $data to a proper class and make sure that's what we get for this argument.
    */
-  protected function doCreateItem($data) {
+  protected function doCreateItem($data) { // @codingStandardsIgnoreLine
     if (empty($data['name'])
     || empty($data['entity_id'])
     || empty($data['op'])) {

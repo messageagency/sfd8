@@ -398,7 +398,7 @@ function salesforce_update_8402() {
     return;
   }
   $credentials = $authConfig->getPlugin()->getCredentials();
-  if (!$credentials instanceof \Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials) {
+  if (!$credentials instanceof \Drupal\salesforce_oauth\Consumer\SalesforceOAuthCredentials) { // @codingStandardsIgnoreLine
     // If we're not using OAuth, we are done.
     return;
   }

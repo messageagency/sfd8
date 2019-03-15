@@ -35,6 +35,19 @@ class JWTCredentials extends SalesforceCredentials {
   }
 
   /**
+   * Constructor helper.
+   *
+   * @param array $configuration
+   *   Plugin configuration.
+   *
+   * @return \Drupal\salesforce_jwt\Consumer\JWTCredentials
+   *   Credentials, valid or not.
+   */
+  public static function create(array $configuration) {
+    return new static($configuration['consumer_key'], $configuration['login_url'], $configuration['login_user'], $configuration['encrypt_key']);
+  }
+
+  /**
    * Login user getter.
    *
    * @return string
@@ -52,6 +65,13 @@ class JWTCredentials extends SalesforceCredentials {
    */
   public function getKeyId() {
     return $this->keyId;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isValid() {
+    return !empty($this->loginUser) && !empty($this->consumerId) && !empty($this->keyId);
   }
 
 }

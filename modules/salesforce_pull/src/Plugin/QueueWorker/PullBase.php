@@ -107,7 +107,7 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
    *
    * @throws \Exception
    */
-  public function processItem($item) {
+  public function processItem($item) { // @codingStandardsIgnoreLine
     $sf_object = $item->getSobject();
     $mapping = $this->mappingStorage->load($item->getMappingId());
     if (!$mapping) {

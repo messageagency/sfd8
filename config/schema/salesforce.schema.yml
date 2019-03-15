@@ -69,7 +69,7 @@ salesforce.salesforce_auth.*:
       label: 'Label'
       translatable: true
     provider:
-      type: string
+      type: salesforce.auth_provider_settings.[id]
       label: 'Provider Plugin'
     provider_settings:
       type: salesforce.auth_provider_settings.[%parent.provider]

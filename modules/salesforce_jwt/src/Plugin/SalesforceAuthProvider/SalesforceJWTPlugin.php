@@ -5,7 +5,6 @@ namespace Drupal\salesforce_jwt\Plugin\SalesforceAuthProvider;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\key\KeyRepositoryInterface;
-use Drupal\salesforce_jwt\Consumer\JWTCredentials;
 use Drupal\salesforce\SalesforceAuthProviderPluginBase;
 use OAuth\Common\Http\Uri\Uri;
 use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
@@ -19,7 +18,8 @@ use Firebase\JWT\JWT;
  *
  * @Plugin(
  *   id = "jwt",
- *   label = @Translation("Salesforce JWT OAuth")
+ *   label = @Translation("Salesforce JWT OAuth"),
+ *   credentials_class = "\Drupal\salesforce_jwt\Consumer\JWTCredentials"
  * )
  */
 class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
@@ -39,22 +39,14 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
   protected $keyRepository;
 
   /**
-   * {@inheritdoc}
-   */
-  const SERVICE_TYPE = 'jwt';
-
-  /**
-   * {@inheritdoc}
-   */
-  const LABEL = 'JWT';
-
-  /**
    * SalesforceAuthServiceBase constructor.
    *
-   * @param string $id
-   *   The plugin / auth config id.
-   * @param \Drupal\salesforce_jwt\Consumer\JWTCredentials $credentials
-   *   The credentials.
+   * @param array $configuration
+   *   Configuration.
+   * @param string $plugin_id
+   *   Plugin id.
+   * @param mixed $plugin_definition
+   *   Plugin definition.
    * @param \OAuth\Common\Http\Client\ClientInterface $httpClient
    *   Http client wrapper.
    * @param \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface $storage
@@ -65,10 +57,9 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    * @throws \OAuth\OAuth2\Service\Exception\InvalidScopeException
    *   On error.
    */
-  public function __construct($id, JWTCredentials $credentials, ClientInterface $httpClient, SalesforceAuthTokenStorageInterface $storage, KeyRepositoryInterface $keyRepository) {
-    parent::__construct($credentials, $httpClient, $storage, [], new Uri($credentials->getLoginUrl()));
-    $this->id = $id;
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $httpClient, SalesforceAuthTokenStorageInterface $storage, KeyRepositoryInterface $keyRepository) {
     $this->keyRepository = $keyRepository;
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $httpClient, $storage);
   }
 
   /**
@@ -76,8 +67,7 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $configuration = array_merge(self::defaultConfiguration(), $configuration);
-    $cred = new JWTCredentials($configuration['consumer_key'], $configuration['login_url'], $configuration['login_user'], $configuration['encrypt_key']);
-    return new static($configuration['id'], $cred, $container->get('salesforce.http_client_wrapper'), $container->get('salesforce.auth_token_storage'), $container->get('key.repository'));
+    return new static($configuration, $plugin_id, $plugin_definition, $container->get('salesforce.http_client_wrapper'), $container->get('salesforce.auth_token_storage'), $container->get('key.repository'));
   }
 
   /**
@@ -95,7 +85,7 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    * {@inheritdoc}
    */
   public function getLoginUrl() {
-    return $this->credentials->getLoginUrl();
+    return $this->getCredentials()->getLoginUrl();
   }
 
   /**
@@ -111,7 +101,7 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
       '#type' => 'textfield',
       '#description' => t('Consumer key of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
-      '#default_value' => $this->credentials->getConsumerKey(),
+      '#default_value' => $this->getCredentials()->getConsumerKey(),
     ];
 
     $form['login_user'] = [
@@ -119,13 +109,13 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
       '#type' => 'textfield',
       '#description' => $this->t('User account to issue token to'),
       '#required' => TRUE,
-      '#default_value' => $this->credentials->getLoginUser(),
+      '#default_value' => $this->getCredentials()->getLoginUser(),
     ];
 
     $form['login_url'] = [
       '#title' => t('Login URL'),
       '#type' => 'textfield',
-      '#default_value' => $this->credentials->getLoginUrl(),
+      '#default_value' => $this->getCredentials()->getLoginUrl(),
       '#description' => t('Enter a login URL, either https://login.salesforce.com or https://test.salesforce.com.'),
       '#required' => TRUE,
     ];
@@ -137,7 +127,7 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
       '#type' => 'select',
       '#options' => $this->keyRepository->getKeyNamesAsOptions(['type' => 'authentication']),
       '#required' => TRUE,
-      '#default_value' => $this->credentials->getKeyId(),
+      '#default_value' => $this->getCredentials()->getKeyId(),
     ];
 
     return $form;
@@ -148,12 +138,10 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
-    $this->setConfiguration($form_state->getValues());
+    $this->setConfiguration($form_state->getValue('provider_settings'));
     try {
-      $values = $form_state->getValues();
-      $this->id = $values['id'];
-      $settings = $values['provider_settings'];
-      $this->credentials = new JWTCredentials($settings['consumer_key'], $settings['login_url'], $settings['login_user'], $settings['encrypt_key']);
+      // Bootstrap here by setting ID to provide a key to token storage.
+      $this->id = $form_state->getValue('id');
       $this->requestAccessToken($this->generateAssertion());
     }
     catch (\Exception $e) {
@@ -210,7 +198,7 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    *   JWT Assertion.
    */
   protected function generateAssertion() {
-    $key = $this->keyRepository->getKey($this->credentials->getKeyId())->getKeyValue();
+    $key = $this->keyRepository->getKey($this->getCredentials()->getKeyId())->getKeyValue();
     $token = $this->generateAssertionClaim();
     return JWT::encode($token, $key, 'RS256');
   }
@@ -222,12 +210,24 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    *   The claim array.
    */
   protected function generateAssertionClaim() {
+    $cred = $this->getCredentials();
     return [
-      'iss' => $this->credentials->getConsumerKey(),
-      'sub' => $this->credentials->getLoginUser(),
-      'aud' => $this->credentials->getLoginUrl(),
+      'iss' => $cred->getConsumerKey(),
+      'sub' => $cred->getLoginUser(),
+      'aud' => $cred->getLoginUrl(),
       'exp' => \Drupal::time()->getCurrentTime() + 60,
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginDefinition() {
+    $definition = parent::getPluginDefinition();
+    if ($this->configuration['encrypt_key'] && $key = $this->keyRepository->getKey($this->configuration['encrypt_key'])) {
+      $definition['config_dependencies']['config'][] = $key->getConfigDependencyName();
+    }
+    return $definition;
   }
 
 }
