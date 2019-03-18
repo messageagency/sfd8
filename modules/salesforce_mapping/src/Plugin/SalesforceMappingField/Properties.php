@@ -4,6 +4,7 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 
@@ -101,6 +102,26 @@ class Properties extends SalesforceMappingFieldPluginBase {
     }
     asort($options);
     return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginDefinition() {
+    $definition = parent::getPluginDefinition();
+    if ($field = FieldConfig::loadByName($this->mapping->getDrupalEntityType(), $this->mapping->getDrupalBundle(), $this->config('drupal_field_value'))) {
+      $definition['config_dependencies']['config'][] = $field->getConfigDependencyName();
+    }
+    return $definition;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkFieldMappingDependency(array $dependencies) {
+    if ($field = FieldConfig::loadByName($this->mapping->getDrupalEntityType(), $this->mapping->getDrupalBundle(), $this->config('drupal_field_value'))) {
+      return !empty($dependencies['config'][$field->getConfigDependencyName()]);
+    }
   }
 
 }

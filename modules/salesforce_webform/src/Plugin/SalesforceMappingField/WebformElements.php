@@ -85,6 +85,35 @@ class WebformElements extends SalesforceMappingFieldPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getPluginDefinition() {
+    $definition = parent::getPluginDefinition();
+    $element_parts = explode('__', $this->config('drupal_field_value'));
+    $main_element_name = reset($element_parts);
+    $webform = $this->entityTypeManager->getStorage('webform')->load($this->mapping->get('drupal_bundle'));
+    $definition['config_dependencies']['config'][] = $webform->getConfigDependencyName();
+    $webform_element = $webform->getElement($main_element_name);
+    // Unfortunately, the best we can do for webform dependencies is a single
+    // dependency on the top-level webform, which is itself a monolithic config.
+    // @TODO implement webform-element-changed hook, if that exists.
+    $definition['config_dependencies']['config'][] = $webform->getConfigDependencyName();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkFieldMappingDependency(array $dependencies) {
+    $definition = $this->getPluginDefinition();
+    foreach ($definition['config_dependencies']['config'] as $dependency) {
+      if (!empty($dependencies['config'][$dependency])) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
    * Form options helper.
    */
   protected function getConfigurationOptions($mapping) {

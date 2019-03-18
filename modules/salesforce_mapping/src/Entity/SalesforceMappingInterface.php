@@ -4,11 +4,12 @@ namespace Drupal\salesforce_mapping\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
 
 /**
  * Mapping between Drupal and Salesforce records.
  */
-interface SalesforceMappingInterface extends ConfigEntityInterface {
+interface SalesforceMappingInterface extends ConfigEntityInterface, EntityWithPluginCollectionInterface {
 
   /**
    * Magic getter method for mapping properties.
