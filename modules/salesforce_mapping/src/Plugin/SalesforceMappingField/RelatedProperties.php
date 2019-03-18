@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 
+use Drupal\field\Entity\FieldConfig;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
 
@@ -88,6 +89,39 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
     }
     catch (\Exception $e) {
       return NULL;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginDefinition() {
+    $definition = parent::getPluginDefinition();
+    list($field_name, $referenced_field_name) = explode(':', $this->config('drupal_field_value'), 2);
+    // Add reference field.
+    if ($field = FieldConfig::loadByName($this->mapping->getDrupalEntityType(), $this->mapping->getDrupalBundle(), $field_name)) {
+      $definition['config_dependencies']['config'][] = $field->getConfigDependencyName();
+      // Add dependencies of referenced field.
+      foreach ($field->getDependencies() as $type => $dependency) {
+        foreach ($dependency as $item) {
+          $definition['config_dependencies'][$type][] = $item;
+        }
+      }
+    }
+    return $definition;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkFieldMappingDependency(array $dependencies) {
+    $definition = $this->getPluginDefinition();
+    foreach ($definition['config_dependencies'] as $type => $dependency) {
+      foreach ($dependency as $item) {
+        if (!empty($dependencies[$type][$item])) {
+          return TRUE;
+        }
+      }
     }
   }
 

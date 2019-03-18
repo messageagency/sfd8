@@ -194,17 +194,22 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    * Helper function to return an empty row for the field mapping form.
    */
   private function getRow(FieldPluginInterface $field_plugin = NULL, $form, FormStateInterface $form_state) {
+    static $i = 0;
     $input = $form_state->getUserInput();
     if ($field_plugin == NULL) {
       $field_type = $input['field_type'];
       $field_plugin_definition = $this->getFieldPlugin($field_type);
       $field_plugin = $this->mappingFieldPluginManager->createInstance(
-        $field_plugin_definition['id']
+        $field_plugin_definition['id'],
+        ['mapping' => $this->entity, 'id' => $i++]
       );
+    }
+    else {
+      $i++;
     }
 
     $row['config'] = $field_plugin->buildConfigurationForm($form, $form_state);
-
+    $row['config']['id'] = ['#type' => 'value', 'value' => $i];
     // @TODO implement "lock/unlock" logic here:
     // @TODO convert these to AJAX operations
     $operations = [
@@ -228,6 +233,8 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+
     // Transform data from the operations column into the expected schema.
     // Copy the submitted values so we don't run into problems with array
     // indexing while removing delete field mappings.
@@ -269,6 +276,8 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    * Submit handler.
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    parent::submitForm($form, $form_state);
+
     // Need to transform the schema slightly to remove the "config" dereference.
     // Also trigger submit handlers on plugins.
     $form_state->unsetValue(['field_type', 'ops']);
@@ -280,9 +289,10 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       $sub_form_state = SubformState::createForSubform($form['field_mappings_wrapper']['field_mappings'][$i], $form, $form_state);
       $field_plugin->submitConfigurationForm($form['field_mappings_wrapper']['field_mappings'][$i], $sub_form_state);
 
-      $value = $value + $value['config'];
+      $value = $value + $value['config'] + ['id' => $i];
       unset($value['config'], $value['ops']);
     }
+    $this->entity->set('field_mappings', $values['field_mappings']);
     parent::submitForm($form, $form_state);
   }
 

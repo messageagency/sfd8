@@ -15,6 +15,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\DataDefinitionInterface;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceWarningEvent;
 use Drupal\salesforce\Exception as SalesforceException;
@@ -34,7 +35,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  * @see \Drupal\salesforce_mapping\SalesforceMappingFieldPluginInterface
  * @see \Drupal\Core\Plugin\PluginFormInterface
  */
-abstract class SalesforceMappingFieldPluginBase extends PluginBase implements SalesforceMappingFieldPluginInterface, PluginFormInterface, ConfigurablePluginInterface, ContainerFactoryPluginInterface {
+abstract class SalesforceMappingFieldPluginBase extends PluginBase implements SalesforceMappingFieldPluginInterface {
 
   /**
    * The label of the mapping.
@@ -100,6 +101,13 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   protected $eventDispatcher;
 
   /**
+   * The mapping to which this instance is attached.
+   *
+   * @var \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface
+   */
+  protected $mapping;
+
+  /**
    * SalesforceMappingFieldPluginBase constructor.
    *
    * @param array $configuration
@@ -126,6 +134,9 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, RestClientInterface $rest_client, EntityTypeManagerInterface $etm, DateFormatterInterface $dateFormatter, EventDispatcherInterface $event_dispatcher) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+    if (!empty($configuration['mapping'])) {
+      $this->mapping = $configuration['mapping'];
+    }
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->entityFieldManager = $entity_field_manager;
     $this->salesforceClient = $rest_client;
@@ -518,8 +529,9 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
   /**
    * {@inheritdoc}
    */
-  public function getDependencies(SalesforceMappingInterface $mapping) {
-    return [];
+  public function checkFieldMappingDependency(array $dependencies) {
+    // No config dependencies by default.
+    return FALSE;
   }
 
   /**

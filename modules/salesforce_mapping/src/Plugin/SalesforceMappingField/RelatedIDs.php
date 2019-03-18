@@ -5,6 +5,7 @@ namespace Drupal\salesforce_mapping\Plugin\SalesforceMappingField;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 
+use Drupal\field\Entity\FieldConfig;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
@@ -132,6 +133,41 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     }
     asort($options);
     return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginDefinition() {
+    $definition = parent::getPluginDefinition();
+    // Add reference field.
+    if ($field = FieldConfig::loadByName($this->mapping->getDrupalEntityType(), $this->mapping->getDrupalBundle(), $this->config('drupal_field_value'))) {
+      $definition['config_dependencies']['config'][] = $field->getConfigDependencyName();
+      // Add dependencies of referenced field.
+      foreach ($field->getDependencies() as $type => $dependency) {
+        foreach ($dependency as $item) {
+          $definition['config_dependencies'][$type][] = $item;
+        }
+      }
+    }
+    return $definition;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkFieldMappingDependency(array $dependencies) {
+    $definition = $this->getPluginDefinition();
+    foreach ($definition['config_dependencies'] as $type => $dependency) {
+      foreach ($dependency as $item) {
+        if (!empty($dependencies[$type][$item])) {
+          return TRUE;
+        }
+      }
+    }
   }
 
 }

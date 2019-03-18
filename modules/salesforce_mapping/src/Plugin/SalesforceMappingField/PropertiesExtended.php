@@ -15,6 +15,7 @@ use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\Core\TypedData\Exception\MissingDataException;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\SalesforceMappingFieldPluginBase;
@@ -102,8 +103,34 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getDependencies(SalesforceMappingInterface $mapping) {
-    return ['module' => ['typed_data']];
+  public function getPluginDefinition() {
+    $definition = parent::getPluginDefinition();
+    list($field_name, $referenced_field_name) = explode('.', $this->config('drupal_field_value'), 2);
+    // Add reference field.
+    if ($field = FieldConfig::loadByName($this->mapping->getDrupalEntityType(), $this->mapping->getDrupalBundle(), $field_name)) {
+      $definition['config_dependencies']['config'][] = $field->getConfigDependencyName();
+      // Add dependencies of referenced field.
+      foreach ($field->getDependencies() as $type => $dependency) {
+        foreach ($dependency as $item) {
+          $definition['config_dependencies'][$type][] = $item;
+        }
+      }
+    }
+    return $definition;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkFieldMappingDependency(array $dependencies) {
+    $definition = $this->getPluginDefinition();
+    foreach ($definition['config_dependencies'] as $type => $dependency) {
+      foreach ($dependency as $item) {
+        if (!empty($dependencies[$type][$item])) {
+          return TRUE;
+        }
+      }
+    }
   }
 
   /**
