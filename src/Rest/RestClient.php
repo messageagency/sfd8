@@ -190,7 +190,7 @@ class RestClient implements RestClientInterface {
       // The session ID or OAuth token used has expired or is invalid: refresh
       // token. If refresh_token() throws an exception, or if apiHttpRequest()
       // throws anything but a RequestException, let it bubble up.
-      $this->authManager->refreshToken();
+      $this->authToken = $this->authManager->refreshToken();
       try {
         $this->response = new RestResponse($this->apiHttpRequest($url, $params, $method));
       }

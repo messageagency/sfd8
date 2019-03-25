@@ -17,7 +17,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    if (!$this->ensureConnection('objectDescribe', $this->entity->getSalesforceObjectType())) {
+    if (!$this->ensureConnection('objectDescribe', [$this->entity->getSalesforceObjectType(), TRUE])) {
       return $form;
     }
     $form = parent::buildForm($form, $form_state);

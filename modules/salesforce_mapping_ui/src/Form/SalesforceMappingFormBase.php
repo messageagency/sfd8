@@ -93,11 +93,11 @@ abstract class SalesforceMappingFormBase extends EntityForm {
    * @return bool
    *   TRUE if Salesforce endpoint (or cache) responded correctly.
    */
-  protected function ensureConnection($method = 'objects', $arg = []) {
+  protected function ensureConnection($method = 'objects', $arg = [[], TRUE]) {
     $message = '';
     if ($this->client->isInit()) {
       try {
-        $this->client->{$method}($arg);
+        call_user_func_array([$this->client, $method], $arg);
         return TRUE;
       }
       catch (\Exception $e) {
