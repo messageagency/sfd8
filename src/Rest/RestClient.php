@@ -163,7 +163,7 @@ class RestClient implements RestClientInterface {
       throw new RestException(NULL, 'RestClient is not initialized.');
     }
     if (!$this->authToken) {
-      $this->authManager->refreshToken();
+      $this->authToken = $this->authManager->refreshToken();
     }
 
     if (strpos($path, '/') === 0) {

@@ -37,6 +37,34 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager implement
   protected $authStorage;
 
   /**
+   * Active auth config.
+   *
+   * @var \Drupal\salesforce\Entity\SalesforceAuthConfig
+   */
+  protected $authConfig;
+
+  /**
+   * Active auth provider.
+   *
+   * @var \Drupal\salesforce\SalesforceAuthProviderInterface
+   */
+  protected $authProvider;
+
+  /**
+   * Active credentials.
+   *
+   * @var \Drupal\salesforce\Consumer\SalesforceCredentialsInterface
+   */
+  protected $authCredentials;
+
+  /**
+   * Active auth token.
+   *
+   * @var \OAuth\OAuth2\Token\TokenInterface|null
+   */
+  protected $authToken;
+
+  /**
    * Constructor.
    *
    * @param \Traversable $namespaces
@@ -90,49 +118,61 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager implement
    * {@inheritdoc}
    */
   public function getConfig() {
-    $provider_id = $this->config()->get('salesforce_auth_provider');
-    if (empty($provider_id)) {
-      return NULL;
+    if (!$this->authConfig) {
+      $provider_id = $this->config()->get('salesforce_auth_provider');
+      if (empty($provider_id)) {
+        return NULL;
+      }
+      $this->authConfig = SalesforceAuthConfig::load($provider_id);
     }
-    return SalesforceAuthConfig::load($provider_id);
+    return $this->authConfig;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getProvider() {
-    if (!$this->getConfig()) {
-      return NULL;
+    if (!$this->authProvider) {
+      if (!$this->getConfig()) {
+        return NULL;
+      }
+      $this->authProvider = $this->getConfig()->getPlugin();
     }
-    return $this->getConfig()->getPlugin();
+    return $this->authProvider;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getCredentials() {
-    if (!$this->getProvider()) {
-      return NULL;
+    if (!$this->authCredentials) {
+      if (!$this->getProvider()) {
+        return NULL;
+      }
+      $this->authCredentials = $this->getProvider()->getCredentials();
     }
-    return $this->getProvider()->getCredentials();
+    return $this->authCredentials;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getToken() {
-    if (!$config = $this->getConfig()) {
-      return NULL;
+    if (!$this->authToken) {
+      if (!$config = $this->getConfig()) {
+        return NULL;
+      }
+      if (!$provider = $config->getPlugin()) {
+        return NULL;
+      }
+      try {
+        $this->authToken = $provider->getAccessToken();
+      }
+      catch (TokenNotFoundException $e) {
+        return NULL;
+      }
     }
-    if (!$provider = $config->getPlugin()) {
-      return NULL;
-    }
-    try {
-      return $provider->getAccessToken();
-    }
-    catch (TokenNotFoundException $e) {
-      return NULL;
-    }
+    return $this->authToken;
   }
 
   /**
@@ -146,7 +186,8 @@ class SalesforceAuthProviderPluginManager extends DefaultPluginManager implement
       return NULL;
     }
     $token = $this->getToken() ?: new StdOAuth2Token();
-    return $provider->refreshAccessToken($token);
+    $this->authToken = $provider->refreshAccessToken($token);
+    return $this->authToken;
   }
 
   /**

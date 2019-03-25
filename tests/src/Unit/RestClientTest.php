@@ -80,6 +80,9 @@ class RestClientTest extends UnitTestCase {
     $this->authMan->expects($this->any())
       ->method('getConfig')
       ->willReturn($this->authConfig);
+    $this->authMan->expects($this->any())
+      ->method('refreshToken')
+      ->willReturn($this->authToken);
   }
 
   /**

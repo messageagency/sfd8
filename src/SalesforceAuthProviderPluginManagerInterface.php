@@ -71,6 +71,8 @@ interface SalesforceAuthProviderPluginManagerInterface extends PluginManagerInte
    *
    * @return \OAuth\Common\Token\TokenInterface
    *   The token.
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \OAuth\OAuth2\Service\Exception\MissingRefreshTokenException
    */
   public function refreshToken();
 
