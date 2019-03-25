@@ -2,7 +2,6 @@
 
 namespace Drupal\salesforce_mapping;
 
-use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -11,11 +10,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
-use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\TypedData\DataDefinitionInterface;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceWarningEvent;
 use Drupal\salesforce\Exception as SalesforceException;
