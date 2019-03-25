@@ -138,9 +138,6 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  /**
-   * {@inheritdoc}
-   */
   public function getPluginDefinition() {
     $definition = parent::getPluginDefinition();
     // Add reference field.

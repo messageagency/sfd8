@@ -6,7 +6,6 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Plugin\DefaultLazyPluginCollection;
-use Drupal\Core\Plugin\DefaultSingleLazyPluginCollection;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce_mapping\MappingConstants;
@@ -385,7 +384,6 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
     }
     return $changed;
   }
-
 
   /**
    * {@inheritdoc}

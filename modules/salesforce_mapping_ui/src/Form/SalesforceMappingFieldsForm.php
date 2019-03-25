@@ -209,7 +209,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     }
 
     $row['config'] = $field_plugin->buildConfigurationForm($form, $form_state);
-    $row['config']['id'] = ['#type' => 'value', 'value' => $i];
+    $row['config']['id'] = ['#type' => 'value', '#value' => $i];
     // @TODO implement "lock/unlock" logic here:
     // @TODO convert these to AJAX operations
     $operations = [

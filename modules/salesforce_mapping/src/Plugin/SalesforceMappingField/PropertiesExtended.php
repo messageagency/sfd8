@@ -105,7 +105,10 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
    */
   public function getPluginDefinition() {
     $definition = parent::getPluginDefinition();
-    list($field_name, $referenced_field_name) = explode('.', $this->config('drupal_field_value'), 2);
+    $field_name = $this->config('drupal_field_value');
+    if (strpos($field_name, '.')) {
+      list($field_name, $dummy) = explode('.', $field_name, 2);
+    }
     // Add reference field.
     if ($field = FieldConfig::loadByName($this->mapping->getDrupalEntityType(), $this->mapping->getDrupalBundle(), $field_name)) {
       $definition['config_dependencies']['config'][] = $field->getConfigDependencyName();
