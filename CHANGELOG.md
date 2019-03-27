@@ -1,4 +1,4 @@
-/Add a summary here/
+Salesforce Encrypt [deprecated](https://www.drupal.org/node/3034230) in favor ot OAuth plugin providers including JWT Oauth support.
 
 ### Contributors (11)
 
@@ -6,7 +6,7 @@ acrosman, aaronbauman, chrisolof, gcb, mariacha1, tjhellmann, jonnyeom, asherry,
 
 ### Changelog
 
-**Issues**: 15 issues resolved.
+**Issues**: 16 issues resolved.
 
 Changes since [8.x-3.1](https://www.drupal.org/project/sfd8/releases/8.x-3.1):
 
@@ -36,6 +36,7 @@ Changes since [8.x-3.1](https://www.drupal.org/project/sfd8/releases/8.x-3.1):
 
 #### Task
 
+* Restore [#2975835](https://www.drupal.org/node/2975835) from 3.x
 * [#2899460](https://www.drupal.org/node/2899460) by [jonnyeom](https://www.drupal.org/u/jonnyeom), [aaronbauman](https://www.drupal.org/u/aaronbauman), [asherry](https://www.drupal.org/u/asherry), [Selva.M](https://www.drupal.org/u/selva.m), [cwcorrigan](https://www.drupal.org/u/cwcorrigan): Handling of field properties
 * [#3018851](https://www.drupal.org/node/3018851) by [cwcorrigan](https://www.drupal.org/u/cwcorrigan): Move mapping-related methods out of salesforce core module, and into salesforce_mapping module
 * [#2799421](https://www.drupal.org/node/2799421) by [chrisolof](https://www.drupal.org/u/chrisolof): add SOAP Client via salesforce_soap sub-module
