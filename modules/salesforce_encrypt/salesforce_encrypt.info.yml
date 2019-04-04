@@ -1,6 +1,6 @@
-name: Salesforce Encrypted Keys
+name: Salesforce Encrypted Keys - DEPRECATED
 type: module
-description: Supplants Salesforce RestClient service to provide encrypted stateful data.
+description: DEPRECATED AND WILL BE REMOVED IN 8.x-4.0 RELEASE - SEE CHANGE RECORD https://www.drupal.org/node/3034230
 package: Salesforce
 core: 8.x
 dependencies:

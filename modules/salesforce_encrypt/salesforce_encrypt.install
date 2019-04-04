@@ -16,29 +16,10 @@ use Drupal\salesforce\EntityNotFoundException;
 function salesforce_encrypt_requirements($phase) {
   $requirements = [];
   if ($phase == 'runtime') {
-    $profile_id = NULL;
-    try {
-      $profile = \Drupal::service('salesforce.client')->getEncryptionProfile();
-    }
-    catch (EntityNotFoundException $e) {
-      // Noop.
-    }
-    $requirements['salesforce_encrypt'] = [
-      'title' => t('Salesforce Encrypt'),
-      'value' => t('Encryption Profile'),
+    $requirements['salesforce_encrypt'] += [
+      'severity' => REQUIREMENT_ERROR,
+      'description' => t('This module is deprecated and will be removed in Salesforce 8.x-4.0. <a href="@url">See change record for additional information.</a>', ['@url' => 'https://www.drupal.org/node/3034230']),
     ];
-    if (empty($profile)) {
-      $requirements['salesforce_encrypt'] += [
-        'severity' => REQUIREMENT_ERROR,
-        'description' => t('You need to <a href="@url">select an encryption profile</a> in order to fully enable Salesforce Encrypt and protect sensitive information.', ['@url' => Url::fromRoute('salesforce_encrypt.settings')->toString()]),
-      ];
-    }
-    else {
-      $requirements['salesforce_encrypt'] += [
-        'severity' => REQUIREMENT_OK,
-        'description' => t('Profile id: <a href=":url">%profile</a>', ['%profile' => $profile->id(), ':url' => $profile->url()]),
-      ];
-    }
   }
   return $requirements;
 }

@@ -1,0 +1,26 @@
+{
+  "totalSize": 2,
+  "done": true,
+  "records": [
+    {
+      "attributes": {
+        "type": "RecordType",
+        "url": "\\/services\\/data\\/v45.0\\/sobjects\\/RecordType\\/012i0000001B15mAAC"
+      },
+      "Id": "012i0000001B15mAAC",
+      "Name": "Contact Type 1",
+      "DeveloperName": "Contact_Type_1",
+      "SobjectType": "Contact"
+    },
+    {
+      "attributes": {
+        "type": "RecordType",
+        "url": "\\/services\\/data\\/v45.0\\/sobjects\\/RecordType\\/012i0000001B15rAAC"
+      },
+      "Id": "012i0000001B15rAAC",
+      "Name": "Contact Type 2",
+      "DeveloperName": "Contact_Type_2",
+      "SobjectType": "Contact"
+    }
+  ]
+}

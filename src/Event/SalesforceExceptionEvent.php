@@ -72,7 +72,15 @@ abstract class SalesforceExceptionEvent extends SalesforceBaseEvent implements S
    * {@inheritdoc}
    */
   public function getMessage() {
-    return $this->message;
+    if ($this->message) {
+      return $this->message;
+    }
+    elseif ($this->exception && $this->exception->getMessage()) {
+      return $this->exception->getMessage();
+    }
+    else {
+      return 'Unknown Salesforce event.';
+    }
   }
 
   /**

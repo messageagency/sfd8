@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_logger\EventSubscriber;
 
+use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Utility\Error;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceExceptionEventInterface;
@@ -53,10 +54,10 @@ class SalesforceLoggerSubscriber implements EventSubscriberInterface {
     // Only log events whose log level is greater or equal to min log level
     // setting.
     if ($log_level_setting != SalesforceEvents::NOTICE) {
-      if ($log_level_setting == SalesforceEvents::ERROR && $event_level != SalesforceEvents::ERROR) {
+      if ($log_level_setting == SalesforceEvents::ERROR && $event_level != RfcLogLevel::ERROR) {
         return;
       }
-      if ($log_level_setting == SalesforceEvents::WARNING && $event_level == SalesforceEvents::NOTICE) {
+      if ($log_level_setting == SalesforceEvents::WARNING && $event_level == RfcLogLevel::NOTICE) {
         return;
       }
     }
@@ -65,8 +66,9 @@ class SalesforceLoggerSubscriber implements EventSubscriberInterface {
     if ($exception) {
       $this->logger->log($event->getLevel(), self::EXCEPTION_MESSAGE_PLACEHOLDER, Error::decodeException($exception));
     }
-
-    $this->logger->log($event->getLevel(), $event->getMessage(), $event->getContext());
+    else {
+      $this->logger->log($event->getLevel(), $event->getMessage(), $event->getContext());
+    }
   }
 
 }

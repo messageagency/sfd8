@@ -19,6 +19,8 @@ use Drupal\Component\Datetime\TimeInterface;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
+ *
+ * @deprecated salesforce_encrypt is deprecated and will be removed in 8.x-4.0. Please see change record https://www.drupal.org/node/3034230 for additional information.
  */
 class RestClient extends SalesforceRestClient implements EncryptedRestClientInterface {
 
@@ -73,6 +75,8 @@ class RestClient extends SalesforceRestClient implements EncryptedRestClientInte
    *   The Encryption profile manager service.
    * @param \Drupal\Core\Lock\LockBackendInterface $lock
    *   The lock backend service.
+   *
+   * @deprecated salesforce_encrypt is deprecated and will be removed in 8.x-4.0. Please see change record https://www.drupal.org/node/3034230 for additional information.
    */
   public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, StateInterface $state, CacheBackendInterface $cache, Json $json, TimeInterface $time, EncryptServiceInterface $encryption, EncryptionProfileManagerInterface $encryptionProfileManager, LockBackendInterface $lock) {
     parent::__construct($http_client, $config_factory, $state, $cache, $json, $time);
