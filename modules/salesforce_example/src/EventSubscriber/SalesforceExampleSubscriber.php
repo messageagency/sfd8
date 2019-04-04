@@ -173,6 +173,37 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * PULL_PREPULL event subscriber example.
+   */
+  public function pullPrepull(SalesforcePullEvent $event) {
+    // For the "contact" mapping, if the SF record is marked "Inactive", do not
+    // pull the record and block the user account.
+    $mapping = $event->getMapping();
+    switch ($mapping->id()) {
+      case 'contact':
+        $sf_data = $event->getMappedObject()->getSalesforceRecord();
+        /** @var \Drupal\user\Entity\User $account */
+        $account = $event->getEntity();
+        try {
+          if (!$sf_data->field('Inactive__c')) {
+            // If the SF record is not marked "Inactive", proceed as normal.
+            return;
+          }
+        }
+        catch (\Exception $e) {
+          // Fall through if "Inactive" field was not found.
+        }
+        // If we got here, SF record is marked inactive. Don't pull it.
+        $event->disallowPull();
+        if (!$account->isNew()) {
+          // If this is an update to an existing account, block the account.
+          // If this is a new account, it won't be created.
+          $account->block()->save();
+        }
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
@@ -183,6 +214,7 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
       SalesforceEvents::PUSH_FAIL => 'pushFail',
       SalesforceEvents::PULL_PRESAVE => 'pullPresave',
       SalesforceEvents::PULL_QUERY => 'pullQueryAlter',
+      SalesforceEvents::PULL_PREPULL => 'pullPrepull',
     ];
     return $events;
   }

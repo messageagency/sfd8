@@ -44,6 +44,13 @@ class SalesforcePullEvent extends SalesforceBaseEvent {
   protected $op;
 
   /**
+   * TRUE or FALSE to indicate if pull is allowed for this event.
+   *
+   * @var bool
+   */
+  protected $pullAllowed;
+
+  /**
    * SalesforcePullEvent constructor.
    *
    * @param \Drupal\salesforce_mapping\Entity\MappedObjectInterface $mappedObject
@@ -56,6 +63,7 @@ class SalesforcePullEvent extends SalesforceBaseEvent {
     $this->entity = $mappedObject->getMappedEntity();
     $this->mapping = $mappedObject->getMapping();
     $this->op = $op;
+    $this->pullAllowed = TRUE;
   }
 
   /**
@@ -101,6 +109,24 @@ class SalesforcePullEvent extends SalesforceBaseEvent {
    */
   public function getOp() {
     return $this->op;
+  }
+
+  /**
+   * Disallow and stop pull for the current queue item.
+   */
+  public function disallowPull() {
+    $this->pullAllowed = FALSE;
+    return $this;
+  }
+
+  /**
+   * Will return FALSE if any subscribers have called disallowPull().
+   *
+   * @return bool
+   *   TRUE if pull is allowed, false otherwise.
+   */
+  public function isPullAllowed() {
+    return $this->pullAllowed;
   }
 
 }
