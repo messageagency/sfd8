@@ -10,6 +10,7 @@ use Drupal\salesforce\Event\SalesforceErrorEvent;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
+use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
@@ -25,7 +26,7 @@ use Drupal\Component\Datetime\TimeInterface;
 class QueueHandler {
 
   const PULL_MAX_QUEUE_SIZE = 100000;
-
+  const PULL_QUEUE_NAME = 'cron_salesforce_pull';
   /**
    * Salesforce client.
    *
@@ -89,13 +90,13 @@ class QueueHandler {
    */
   public function __construct(RestClientInterface $sfapi, EntityTypeManagerInterface $entity_type_manager, QueueDatabaseFactory $queue_factory, ConfigFactoryInterface $config, EventDispatcherInterface $event_dispatcher, TimeInterface $time) {
     $this->sfapi = $sfapi;
-    $this->queue = $queue_factory->get('cron_salesforce_pull');
+    $this->queue = $queue_factory->get(self::PULL_QUEUE_NAME);
     $this->config = $config->get('salesforce.settings');
     $this->eventDispatcher = $event_dispatcher;
     $this->time = $time;
     $this->mappings = $entity_type_manager
       ->getStorage('salesforce_mapping')
-      ->loadPullMappings();
+      ->loadCronPullMappings();
   }
 
   /**
@@ -175,6 +176,32 @@ class QueueHandler {
       $this->enqueueAllResults($mapping, $results, $force_pull);
       return $results->size();
     }
+  }
+
+  /**
+   * Given a single mapping/id pair, enqueue it.
+   *
+   * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
+   *   The mapping.
+   * @param \Drupal\salesforce\SFID $id
+   *   The record id.
+   * @param bool $force_pull
+   *   Whether to force a pull. TRUE by default.
+   *
+   * @return bool
+   *   TRUE if the record was enqueued successfully. Otherwise FALSE.
+   */
+  public function getSingleUpdatedRecord(SalesforceMappingInterface $mapping, SFID $id, $force_pull = TRUE) {
+    if (!$mapping->doesPull()) {
+      return FALSE;
+    }
+    $record = $this->sfapi->objectRead($mapping->getSalesforceObjectType(), (string)$id);
+    if ($record) {
+      $results = SelectQueryResult::createSingle($record);
+      $this->enqueueAllResults($mapping, $results, $force_pull);
+      return TRUE;
+    }
+    return FALSE;
   }
 
   /**
