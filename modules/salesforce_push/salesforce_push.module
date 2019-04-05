@@ -190,11 +190,14 @@ function salesforce_push_entity_crud_mapping(EntityInterface $entity, $op, Sales
       \Drupal::service('event_dispatcher')->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
     }
 
-    $mapped_object
-      ->set('last_sync_action', $op)
-      ->set('last_sync_status', FALSE)
-      ->set('revision_log_message', $e->getMessage())
-      ->save();
+    if (!$mapped_object->isNew()) {
+      // Only update existing mapped objects.
+      $mapped_object
+        ->set('last_sync_action', $op)
+        ->set('last_sync_status', FALSE)
+        ->set('revision_log_message', $e->getMessage())
+        ->save();
+    }
   }
 }
 
