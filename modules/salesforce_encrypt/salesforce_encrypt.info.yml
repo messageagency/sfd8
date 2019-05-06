@@ -3,6 +3,7 @@ type: module
 description: DEPRECATED AND WILL BE REMOVED IN 8.x-4.0 RELEASE - SEE CHANGE RECORD https://www.drupal.org/node/3034230
 package: Salesforce
 core: 8.x
+configure: salesforce_encrypt.settings
 dependencies:
   - encrypt:encrypt
   - salesforce:salesforce
