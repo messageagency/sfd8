@@ -3,6 +3,7 @@ type: module
 description: Provides key-based Salesforce authentication.
 core: 8.x
 package: Salesforce
+configure: salesforce.auth_config
 dependencies:
   - salesforce:salesforce
   - key:key
