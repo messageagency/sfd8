@@ -75,7 +75,7 @@ function salesforce_get_auth_provider_requirements() {
   }
   elseif (!$authMan->getConfig()) {
     $requirements += [
-      'description' => t('Default auth provider has not been set. Please <a href="@href">choose an auth provider</a> to connect to Salesforce.', ['@href' => Url::fromRoute('salesforce.auth_config')->toString()]),
+      'description' => t('Default auth provider has not been set. Please <a href="@href">choose an auth provider</a> to connect to Salesforce.', ['@href' => Url::fromRoute('salesforce.authorize')->toString()]),
       'severity' => REQUIREMENT_WARNING,
     ];
   }
