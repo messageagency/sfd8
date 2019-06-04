@@ -49,3 +49,24 @@ salesforce.structure_index:
     _description: 'Manage Salesforce mappings.'
   requirements:
     _permission: 'administer salesforce'
+
+entity.salesforce_auth.edit_form:
+  path: '/admin/config/salesforce/authorize/edit/{salesforce_auth}'
+  defaults:
+    _entity_form: '\Drupal\salesforce\Form\AuthorizeForm'
+  requirements:
+    _permission: 'authorize salesforce'
+
+entity.salesforce_auth.delete_form:
+  path: '/admin/config/salesforce/authorize/delete/{salesforce_auth}'
+  defaults:
+    _entity_form: '\Drupal\salesforce\Form\AuthorizeForm'
+  requirements:
+    _permission: 'authorize salesforce'
+
+entity.salesforce_auth.revoke:
+  path: '/admin/config/salesforce/authorize/revoke/{salesforce_auth}'
+  defaults:
+    _entity_form: '\Drupal\salesforce\Form\RevokeAuthorizationForm'
+  requirements:
+    _permission: 'authorize salesforce'
