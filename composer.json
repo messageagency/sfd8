@@ -38,7 +38,6 @@
     "drupal/typed_data": "^1.0@alpha",
     "firebase/php-jwt": "^5.0",
     "lusitanian/oauth": "^0.8.11",
-    "messageagency/force.com-toolkit-for-php": "^1.0.0",
     "ext-json": "*"
   }
 }
