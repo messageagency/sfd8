@@ -16,7 +16,7 @@ use Drupal\salesforce\EntityNotFoundException;
 function salesforce_encrypt_requirements($phase) {
   $requirements = [];
   if ($phase == 'runtime') {
-    $requirements['salesforce_encrypt'] += [
+    $requirements['salesforce_encrypt'] = [
       'severity' => REQUIREMENT_ERROR,
       'description' => t('This module is deprecated and will be removed in Salesforce 8.x-4.0. <a href="@url">See change record for additional information.</a>', ['@url' => 'https://www.drupal.org/node/3034230']),
     ];
