@@ -1,6 +1,6 @@
 {
-  "name": "drupal/salesforce_soap",
-  "description": "Wrapper for Salesforce SOAP API client.",
+  "name": "drupal/salesforce",
+  "description": "Provides Drupal modules to integrate with Salesforce.",
   "type": "drupal-module",
   "homepage": "https://drupal.org/project/salesforce",
   "authors": [

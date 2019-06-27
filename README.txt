@@ -101,3 +101,16 @@ MODULES:
     Lightweight wrapper around the SOAP API, using the OAUTH access token, to
     fill in functional gaps missing in the REST API. Requires the Salesforce PHP
     Toolkit.
+
+  Salesforce Webform (salesforce_webform):
+    Submission handler, extending mapping support to Webform submissions.
+
+  Salesforce Example (salesforce_example):
+    Example implementations of event subscribers demonstrating some common use
+    patterns.
+
+  Salesforce Logger (salesforce_logger):
+    Consolidated logging client for Salesforce related log messages.
+
+  Salesforce Encrypt (salesforce_encrypt):
+    Deprecated, removed in 4.x. Use Salesforce JWT (salesforce_jwt) instead.
