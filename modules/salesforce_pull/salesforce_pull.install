@@ -91,3 +91,17 @@ function salesforce_pull_update_8004() {
   \Drupal::state()->set('salesforce.mapping_pull_info', $mapping_pull_info);
   \Drupal::state()->delete('salesforce.sobject_pull_info');
 }
+
+/**
+ * Update mappings with "pull standalone" property.
+ */
+function salesforce_pull_update_8005() {
+  $mappings = \Drupal::entityTypeManager()->getStorage('salesforce_mapping')->loadPullMappings();
+  foreach ($mappings as $mapping) {
+    if (empty($mapping->get('pull_standalone'))) {
+      $mapping
+        ->set('pull_standalone', FALSE)
+        ->save();
+    }
+  }
+}

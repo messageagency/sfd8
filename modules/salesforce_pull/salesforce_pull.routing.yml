@@ -1,0 +1,26 @@
+salesforce_pull.endpoint:
+  path: '/salesforce_pull/endpoint/{key}'
+  defaults:
+    _controller: '\Drupal\salesforce_pull\Controller\PullController::endpoint'
+  options:
+    no_cache: TRUE
+  requirements:
+    _access_system_cron: 'TRUE'
+
+salesforce_pull.endpoint.salesforce_mapping:
+  path: '/salesforce_pull/{salesforce_mapping}/endpoint/{key}'
+  defaults:
+    _controller: '\Drupal\salesforce_pull\Controller\PullController::endpoint'
+  options:
+    no_cache: TRUE
+  requirements:
+    _access_system_cron: 'TRUE'
+
+salesforce_pull.endpoint.single_record:
+  path: '/salesforce_pull/{salesforce_mapping}/endpoint/{key}/record/{id}'
+  defaults:
+    _controller: '\Drupal\salesforce_pull\Controller\PullController::endpoint'
+  options:
+    no_cache: TRUE
+  requirements:
+    _access_system_cron: 'TRUE'

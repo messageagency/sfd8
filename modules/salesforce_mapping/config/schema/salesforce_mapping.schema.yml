@@ -28,6 +28,9 @@ salesforce_mapping.salesforce_mapping.*:
     push_standalone:
       type: boolean
       label: 'Standalone push queue processing'
+    pull_standalone:
+      type: boolean
+      label: 'Standalone pull queue processing'
     pull_trigger_date:
       type: string
       label: 'Pull Trigger Date Field'

@@ -9,6 +9,10 @@
  * Implements hook_cron().
  */
 function salesforce_pull_cron() {
+  if (\Drupal::config('salesforce.settings')->get('standalone')) {
+    // If global standalone processing is enabled, stop here.
+    return;
+  }
   $sfapi = \Drupal::service('salesforce.client');
   if ($sfapi->isAuthorized()) {
     \Drupal::service('salesforce_pull.queue_handler')->getUpdatedRecords();
