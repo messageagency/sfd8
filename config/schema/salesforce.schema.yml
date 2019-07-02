@@ -24,8 +24,8 @@ salesforce.settings:
       description: 'Set the maximum number of items which can be enqueued for pull at any given time. Note this setting is not exactly analogous to the push queue limit, since Drupal Cron API does not offer such granularity. Use 0 for no limit.'
     standalone:
       type: boolean
-      label: 'Provide standalone push queue processing endpoint'
-      description: 'Enable standalone push processing, and do not process push mappings during cron. Note: when enabled, you must set up your own service to query this endpoint.'
+      label: 'Provide standalone queue processing endpoint and disable cron processing.'
+      description: 'Enable standalone queue processing, and do not process push mappings during cron. Pull queue will be populated and processed via standalone endpoint, and may also be processed during cron. Note: when enabled, you must set up your own service to query this endpoint.'
     show_all_objects:
       type: boolean
       label: 'Show all Salesforce objects in mapping UI, including system and non-writeable tables'

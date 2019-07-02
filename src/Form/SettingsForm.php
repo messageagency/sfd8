@@ -151,7 +151,7 @@ class SettingsForm extends ConfigFormBase {
       ];
     }
 
-    if (\Drupal::moduleHandler()->moduleExists('salesforce_push')) {
+    if (\Drupal::moduleHandler()->moduleExists('salesforce_push') || \Drupal::moduleHandler()->moduleExists('salesforce_pull')) {
       $form['standalone'] = [
         '#title' => $this->t($definition['standalone']['label']),
         '#description' => $this->t($definition['standalone']['description']),
@@ -159,20 +159,38 @@ class SettingsForm extends ConfigFormBase {
         '#default_value' => $config->get('standalone'),
       ];
 
-      $standalone_url = Url::fromRoute(
+      if (\Drupal::moduleHandler()->moduleExists('salesforce_push')) {
+        $standalone_push_url = Url::fromRoute(
           'salesforce_push.endpoint',
           ['key' => \Drupal::state()->get('system.cron_key')],
           ['absolute' => TRUE]);
-      $form['standalone_url'] = [
-        '#type' => 'item',
-        '#title' => $this->t('Standalone URL'),
-        '#markup' => $this->t('<a href="@url">@url</a>', ['@url' => $standalone_url->toString()]),
-        '#states' => [
-          'visible' => [
-            ':input#edit-standalone' => ['checked' => TRUE],
+        $form['standalone_push_url'] = [
+          '#type' => 'item',
+          '#title' => $this->t('Standalone Push URL'),
+          '#markup' => $this->t('<a href="@url">@url</a>', ['@url' => $standalone_push_url->toString()]),
+          '#states' => [
+            'visible' => [
+              ':input#edit-standalone' => ['checked' => TRUE],
+            ],
           ],
-        ],
-      ];
+        ];
+      }
+      if (\Drupal::moduleHandler()->moduleExists('salesforce_pull')) {
+        $standalone_pull_url = Url::fromRoute(
+          'salesforce_pull.endpoint',
+          ['key' => \Drupal::state()->get('system.cron_key')],
+          ['absolute' => TRUE]);
+        $form['standalone_pull_url'] = [
+          '#type' => 'item',
+          '#title' => $this->t('Standalone Pull URL'),
+          '#markup' => $this->t('<a href="@url">@url</a>', ['@url' => $standalone_pull_url->toString()]),
+          '#states' => [
+            'visible' => [
+              ':input#edit-standalone' => ['checked' => TRUE],
+            ],
+          ],
+        ];
+      }
     }
 
     $form = parent::buildForm($form, $form_state);

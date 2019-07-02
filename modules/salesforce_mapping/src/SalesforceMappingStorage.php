@@ -48,14 +48,30 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
   }
 
   /**
-   * Get Mapping entities who are standalone push-enabled.
+   * Get push Mappings to be processed during cron.
    *
    * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
-   *   The push-standalong mappings Mappings.
+   *   The Mappings to process.
    */
   public function loadCronPushMappings() {
+    if ($this->configFactory->get('salesforce.settings')->get('standalone')) {
+      return [];
+    }
     $properties["push_standalone"] = FALSE;
     return $this->loadPushMappingsByProperties($properties);
+  }
+
+  /**
+   * Get pull Mappings to be processed during cron.
+   *
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
+   *   The pull Mappings.
+   */
+  public function loadCronPullMappings() {
+    if ($this->configFactory->get('salesforce.settings')->get('standalone')) {
+      return [];
+    }
+    return $this->loadPullMappingsByProperties(["pull_standalone" => FALSE]);
   }
 
   /**
@@ -73,6 +89,31 @@ class SalesforceMappingStorage extends ConfigEntityStorage {
     $mappings = $this->loadByProperties($properties);
     foreach ($mappings as $key => $mapping) {
       if (!$mapping->doesPush()) {
+        continue;
+      }
+      $push_mappings[$key] = $mapping;
+    }
+    if (empty($push_mappings)) {
+      return [];
+    }
+    return $push_mappings;
+  }
+
+  /**
+   * Return an array push-enabled mappings by properties.
+   *
+   * @param array $properties
+   *   Properties array for storage handler.
+   *
+   * @return \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface[]
+   *   The pull mappings.
+   *
+   * @see ::loadByProperties()
+   */
+  public function loadPullMappingsByProperties(array $properties) {
+    $mappings = $this->loadByProperties($properties);
+    foreach ($mappings as $key => $mapping) {
+      if (!$mapping->doesPull()) {
         continue;
       }
       $push_mappings[$key] = $mapping;

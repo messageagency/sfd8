@@ -87,7 +87,7 @@ class QueueHandlerTest extends UnitTestCase {
 
     // Mock mapping ConfigEntityStorage object.
     $prophecy = $this->prophesize(SalesforceMappingStorage::CLASS);
-    $prophecy->loadPullMappings(Argument::any())->willReturn([$this->mapping]);
+    $prophecy->loadCronPullMappings(Argument::any())->willReturn([$this->mapping]);
     $this->mappingStorage = $prophecy->reveal();
 
     // Mock EntityTypeManagerInterface.
