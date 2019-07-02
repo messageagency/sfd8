@@ -21,6 +21,13 @@ class WebformElements extends SalesforceMappingFieldPluginBase {
   /**
    * {@inheritdoc}
    */
+  public static function isAllowed(SalesforceMappingInterface $mapping) {
+    return $mapping->getDrupalEntityType() == 'webform_submission';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $pluginForm = parent::buildConfigurationForm($form, $form_state);
 
