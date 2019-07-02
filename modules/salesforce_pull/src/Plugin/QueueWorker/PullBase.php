@@ -204,10 +204,14 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         }
       }
 
-      $this->eventDispatcher->dispatch(
+      $event = $this->eventDispatcher->dispatch(
         SalesforceEvents::PULL_PREPULL,
         new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE)
       );
+      if (!$event->isPullAllowed()) {
+        $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, 'Pull was not allowed for %label with %sfid', ['%label' => $entity->label(), '%sfid' => (string) $sf_object->id()]));
+        return FALSE;
+      }
 
       if ($sf_record_updated > $entity_updated || $mapped_object->force_pull || $force_pull) {
         // Set fields values on the Drupal entity.
@@ -272,10 +276,14 @@ abstract class PullBase extends QueueWorkerBase implements ContainerFactoryPlugi
         ->setDrupalEntity($entity)
         ->setSalesforceRecord($sf_object);
 
-      $this->eventDispatcher->dispatch(
+      $event = $this->eventDispatcher->dispatch(
         SalesforceEvents::PULL_PREPULL,
         new SalesforcePullEvent($mapped_object, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE)
       );
+      if (!$event->isPullAllowed()) {
+        $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, 'Pull was not allowed for %label with %sfid', ['%label' => $entity->label(), '%sfid' => (string) $sf_object->id()]));
+        return FALSE;
+      }
 
       $mapped_object->pull();
 

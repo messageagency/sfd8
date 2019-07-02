@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityStorageBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\Plugin\Field\FieldType\StringItem;
+use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
@@ -198,7 +199,7 @@ class PullBaseTest extends UnitTestCase {
     $this->ed
       ->expects($this->any())
       ->method('dispatch')
-      ->willReturn(NULL);
+      ->willReturn(new SalesforcePullEvent($this->mappedObject, MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE));
 
     $container = new ContainerBuilder();
     $container->set('salesforce.client', $this->sfapi);
