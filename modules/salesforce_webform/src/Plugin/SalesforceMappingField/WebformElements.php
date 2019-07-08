@@ -124,8 +124,9 @@ class WebformElements extends SalesforceMappingFieldPluginBase {
    * Form options helper.
    */
   protected function getConfigurationOptions($mapping) {
+    /** @var \Drupal\webform\Entity\Webform $webform */
     $webform = $this->entityTypeManager->getStorage('webform')->load($mapping->get('drupal_bundle'));
-    $webform_elements = $webform->getElementsDecoded();
+    $webform_elements = $webform->getElementsInitializedFlattenedAndHasValue();
     if (empty($webform_elements)) {
       return;
     }
