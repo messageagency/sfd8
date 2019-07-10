@@ -75,6 +75,11 @@ class RecordType extends SalesforceMappingFieldPluginBase {
     try {
       $record_types =
         self::client()->getRecordTypes($mapping->getSalesforceObjectType());
+
+      if ($record_types === FALSE) {
+        return FALSE;
+      }
+
       return count($record_types) > 1;
     }
     catch (\Exception $e) {
