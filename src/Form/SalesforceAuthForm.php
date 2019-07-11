@@ -74,16 +74,13 @@ class SalesforceAuthForm extends EntityForm {
       '#suffix' => '</div>',
     ];
     $form['settings']['provider_settings'] = $default;
-    if ($auth->getPlugin()) {
+    if ($auth->getPlugin() && !$form_state->isRebuilding()) {
       $form['settings']['provider_settings'] += $auth->getPlugin()
         ->buildConfigurationForm([], $form_state);
     }
     elseif ($form_state->getValue('provider')) {
       $plugin = $this->entity->authManager()->createInstance($form_state->getValue('provider'));
       $form['settings']['provider_settings'] += $plugin->buildConfigurationForm([], $form_state);
-    }
-    else {
-      $form['settings']['provider_settings'] = $default;
     }
     $form['save_default'] = [
       '#type' => 'checkbox',
