@@ -13,6 +13,9 @@ use Drupal\salesforce_mapping_ui\Form\SalesforceMappingDisableForm;
 use Drupal\salesforce_mapping_ui\Form\SalesforceMappingDeleteForm;
 use Drupal\salesforce_mapping_ui\Form\SalesforceMappingEnableForm;
 use Drupal\salesforce_mapping_ui\Form\SalesforceMappingFieldsForm;
+use Drupal\salesforce_mapping_ui\MappedObjectList;
+use Drupal\salesforce_mapping_ui\Form\MappedObjectForm;
+use Drupal\salesforce_mapping_ui\Form\MappedObjectDeleteForm;
 
 /**
  * Implements hook_entity_type_alter().
@@ -25,10 +28,14 @@ function salesforce_mapping_ui_entity_type_alter(array &$entity_types) {
   // mappable entity, and hide it for any entity types that don't have
   // mappings.
   foreach ($entity_types as $entity_type_id => $entity_type) {
+    if ($entity_type_id == 'salesforce_mapping' || $entity_type_id == 'salesforce_mapped_object') {
+      continue;
+    }
     if ($entity_type->hasViewBuilderClass() && $entity_type->hasLinkTemplate('canonical')) {
       $entity_type->setLinkTemplate('salesforce', "/$entity_type_id/{{$entity_type_id}}/salesforce");
     }
   }
+
   // Set our UI classes for SalesforceMappingEntity.
   $entity_types['salesforce_mapping']->setHandlerClass('list_builder', SalesforceMappingList::class);
   $entity_types['salesforce_mapping']->setFormClass('add', SalesforceMappingAddForm::class);
@@ -37,8 +44,20 @@ function salesforce_mapping_ui_entity_type_alter(array &$entity_types) {
   $entity_types['salesforce_mapping']->setFormClass('delete', SalesforceMappingDeleteForm::class);
   $entity_types['salesforce_mapping']->setFormClass('enable', SalesforceMappingEnableForm::class);
   $entity_types['salesforce_mapping']->setFormClass('fields', SalesforceMappingFieldsForm::class);
+  $entity_types['salesforce_mapping']->setLinkTemplate('add-form', '/admin/structure/salesforce/mappings/add');
   $entity_types['salesforce_mapping']->setLinkTemplate('edit-form', '/admin/structure/salesforce/mappings/manage/{salesforce_mapping}');
   $entity_types['salesforce_mapping']->setLinkTemplate('delete-form', '/admin/structure/salesforce/mappings/manage/{salesforce_mapping}/delete');
+
+  // Set UI classes for MappedObject.
+  $entity_types['salesforce_mapped_object']->setHandlerClass('list_builder', MappedObjectList::class);
+  $entity_types['salesforce_mapped_object']->setFormClass('add', MappedObjectForm::class);
+  $entity_types['salesforce_mapped_object']->setFormClass('edit', MappedObjectForm::class);
+  $entity_types['salesforce_mapped_object']->setFormClass('delete', MappedObjectForm::class);
+  $entity_types['salesforce_mapped_object']->setFormClass('default', MappedObjectForm::class);
+  $entity_types['salesforce_mapped_object']->setLinkTemplate('add-form', '/admin/content/salesforce/add');
+  $entity_types['salesforce_mapped_object']->setLinkTemplate('edit-form', '/admin/content/salesforce/{salesforce_mapped_object}/edit');
+  $entity_types['salesforce_mapped_object']->setLinkTemplate('delete-form', '/admin/content/salesforce/{salesforce_mapped_object}/delete');
+  $entity_types['salesforce_mapped_object']->setLinkTemplate('canonical', '/admin/content/salesforce/{salesforce_mapped_object}');
 }
 
 /**

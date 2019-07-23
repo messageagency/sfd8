@@ -1,0 +1,33 @@
+<?php
+
+use Drupal\webform\Entity\WebformSubmission;
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function salesforce_webform_menu_local_tasks_alter(&$data, $route_name) {
+  // ISSUE:
+  // Salesforce route does not use 'webform' parameter which throws an error.
+  // Some mandatory parameters are missing ("webform") to generate a URL for
+  // route "entity.webform_submission.salesforce"
+  //
+  // WORKAROUND:
+  // Make sure webform parameter is set for all routes.
+  //
+  // @see webform_menu_local_tasks_alter()
+  if ($route_name === 'entity.webform_submission.salesforce') {
+    foreach ($data['tabs'] as $tab_level) {
+      foreach ($tab_level as $tab) {
+        /** @var Drupal\Core\Url $url */
+        $url = $tab['#link']['url'];
+        $tab_route_name = $url->getRouteName();
+        $tab_route_parameters = $url->getRouteParameters();
+
+        if (strpos($tab_route_name, 'entity.webform_submission.salesforce') !== 0) {
+          $webform_submission = WebformSubmission::load($tab_route_parameters['webform_submission']);
+          $url->setRouteParameter('webform', $webform_submission->getWebform()->id());
+        }
+      }
+    }
+  }
+}

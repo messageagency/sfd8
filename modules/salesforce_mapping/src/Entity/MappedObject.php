@@ -38,25 +38,12 @@ use Drupal\salesforce_mapping\Plugin\Field\ComputedItemList;
  *     "storage" = "Drupal\salesforce_mapping\MappedObjectStorage",
  *     "storage_schema" = "Drupal\salesforce_mapping\MappedObjectStorageSchema",
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
- *      "views_data" = "Drupal\views\EntityViewsData",
- *     "list_builder" = "Drupal\salesforce_mapping\MappedObjectList",
- *     "form" = {
- *       "default" = "Drupal\salesforce_mapping\Form\MappedObjectForm",
- *       "add" = "Drupal\salesforce_mapping\Form\MappedObjectForm",
- *       "edit" = "Drupal\salesforce_mapping\Form\MappedObjectForm",
- *       "delete" = "Drupal\salesforce_mapping\Form\MappedObjectDeleteForm",
- *      },
+ *     "views_data" = "Drupal\views\EntityViewsData",
  *     "access" = "Drupal\salesforce_mapping\MappedObjectAccessControlHandler",
  *   },
  *   base_table = "salesforce_mapped_object",
  *   revision_table = "salesforce_mapped_object_revision",
  *   admin_permission = "administer salesforce mapping",
- *   links = {
- *     "canonical" = "/admin/content/salesforce/{salesforce_mapped_object}",
- *     "add-form" = "/admin/content/salesforce/add",
- *     "edit-form" = "/admin/content/salesforce/{salesforce_mapped_object}/edit",
- *     "delete-form" = "/admin/content/salesforce/{salesforce_mapped_object}/delete"
- *   },
  *   entity_keys = {
  *      "id" = "id",
  *      "entity_id" = "drupal_entity__target_id",
