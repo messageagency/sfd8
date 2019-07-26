@@ -504,5 +504,5 @@ function _salesforce_drush_get_mapping($name = NULL) {
  * Trigger a deprecation error.
  */
 function _drush_salesforce_deprecated() {
-  trigger_error('Salesforce module support for Drush 8 is deprecated and will be removed in a future release', E_DEPRECATED);
+  trigger_error('Salesforce module support for Drush 8 is deprecated and will be removed in a future release', E_USER_DEPRECATED);
 }
