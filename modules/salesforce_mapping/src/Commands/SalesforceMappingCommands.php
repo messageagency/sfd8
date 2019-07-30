@@ -6,7 +6,7 @@ use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\salesforce\Rest\RestClient;
-use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\Query\Select;
 use Drush\Exceptions\UserAbortException;
 use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Output\Output;
@@ -306,9 +306,9 @@ class SalesforceMappingCommands extends SalesforceMappingCommandsBase {
       // SOQL queries are limited to 4000-characters in where statements.
       // Chunkify in case we have more than ~200 sfids.
       foreach (array_chunk($sfids, 200, TRUE) as $chunk) {
-        $soql_query = new SelectQuery($object_types[$prefix]['name']);
-        $soql_query->fields[] = 'Id';
-        $soql_query->addCondition('Id', array_keys($chunk));
+        $soql_query = new Select($object_types[$prefix]['name']);
+        $soql_query->addField($object_types[$prefix]['name'], 'Id');
+        $soql_query->condition('Id', array_keys($chunk), 'IN');
         $results = $this->client->query($soql_query);
         foreach ($results->records() as $record) {
           unset($to_delete[(string) $record->id()]);

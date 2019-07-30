@@ -13,7 +13,7 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\Query\SelectResult;
 
 use Drupal\salesforce_mapping\Entity\MappedObjectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
@@ -165,7 +165,7 @@ class PullBaseTest extends UnitTestCase {
       ->willReturn($this->entityDefinition);
     $this->etm = $prophecy->reveal();
 
-    // SelectQueryResult for rest client call.
+    // SelectResult for rest client call.
     $result = [
       'totalSize' => 1,
       'done' => TRUE,
@@ -177,7 +177,7 @@ class PullBaseTest extends UnitTestCase {
         ],
       ],
     ];
-    $this->sqr = new SelectQueryResult($result);
+    $this->sqr = new SelectResult($result);
 
     // Mock rest cient.
     $this->sfapi = $this->getMockBuilder(RestClientInterface::CLASS)->getMock();

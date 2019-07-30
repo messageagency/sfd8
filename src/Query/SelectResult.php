@@ -1,13 +1,16 @@
 <?php
 
-namespace Drupal\salesforce;
+namespace Drupal\salesforce\Query;
+
+use Drupal\salesforce\SFID;
+use Drupal\salesforce\SObject;
 
 /**
- * Class SelectQueryResult.
+ * Class SelectResult.
  *
  * @package Drupal\salesforce
  */
-class SelectQueryResult {
+class SelectResult {
 
   protected $totalSize;
   protected $done;
@@ -15,7 +18,7 @@ class SelectQueryResult {
   protected $nextRecordsUrl;
 
   /**
-   * SelectQueryResult constructor.
+   * SelectResult constructor.
    *
    * @param array $results
    *   The query results.
@@ -35,7 +38,7 @@ class SelectQueryResult {
   }
 
   /**
-   * Create a SelectQueryResult from a single SObject record.
+   * Create a SelectResult from a single SObject record.
    *
    * @param \Drupal\salesforce\SObject $record
    */

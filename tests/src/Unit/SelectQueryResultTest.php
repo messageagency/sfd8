@@ -4,14 +4,14 @@ namespace Drupal\Tests\salesforce\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\SFID;
-use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\Query\SelectResult;
 
 /**
  * Test Object instantitation.
  *
  * @group salesforce_pull
  */
-class SelectQueryResultTest extends UnitTestCase {
+class SelectResultTest extends UnitTestCase {
   static public $modules = ['salesforce'];
 
   /**
@@ -35,14 +35,14 @@ class SelectQueryResultTest extends UnitTestCase {
         ],
       ],
     ];
-    $this->sqr = new SelectQueryResult($result);
+    $this->sqr = new SelectResult($result);
   }
 
   /**
    * Test object instantiation with good resultd.
    */
   public function testGoodId() {
-    $this->assertTrue($this->sqr instanceof SelectQueryResult);
+    $this->assertTrue($this->sqr instanceof SelectResult);
   }
 
   /**

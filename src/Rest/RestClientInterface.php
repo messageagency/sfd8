@@ -2,9 +2,9 @@
 
 namespace Drupal\salesforce\Rest;
 
-use Drupal\salesforce\SelectQueryInterface;
+use Drupal\salesforce\Query\SelectInterface;
 use Drupal\salesforce\SFID;
-use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\Query\SelectResult;
 
 /**
  * Objects, properties, and methods to communicate with the Salesforce REST API.
@@ -156,39 +156,39 @@ interface RestClientInterface {
   /**
    * Use SOQL to get objects based on query string.
    *
-   * @param \Drupal\salesforce\SelectQueryInterface $query
+   * @param \Drupal\salesforce\Query\SelectInterface $query
    *   The constructed SOQL query.
    *
-   * @return \Drupal\salesforce\SelectQueryResult
+   * @return \Drupal\salesforce\Query\SelectResult
    *   The query result.
    *
    * @addtogroup salesforce_apicalls
    */
-  public function query(SelectQueryInterface $query);
+  public function query(SelectInterface $query);
 
   /**
    * Same as ::query(), but also returns deleted or archived records.
    *
-   * @param \Drupal\salesforce\SelectQueryInterface $query
+   * @param \Drupal\salesforce\Query\SelectInterface $query
    *   The constructed SOQL query.
    *
-   * @return \Drupal\salesforce\SelectQueryResult
+   * @return \Drupal\salesforce\Query\SelectResult
    *   The query result.
    *
    * @addtogroup salesforce_apicalls
    */
-  public function queryAll(SelectQueryInterface $query);
+  public function queryAll(SelectInterface $query);
 
   /**
    * Given a select query result, fetch the next results set, if it exists.
    *
-   * @param \Drupal\salesforce\SelectQueryResult $results
+   * @param \Drupal\salesforce\Query\SelectResult $results
    *   The query result which potentially has more records.
    *
-   * @return \Drupal\salesforce\SelectQueryResult
+   * @return \Drupal\salesforce\Query\SelectResult
    *   If there are no more results, $results->records will be empty.
    */
-  public function queryMore(SelectQueryResult $results);
+  public function queryMore(SelectResult $results);
 
   /**
    * Retrieve all the metadata for an object.

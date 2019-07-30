@@ -12,7 +12,7 @@ use Drupal\salesforce\Event\SalesforceNoticeEvent;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\Query\SelectResult;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\Event\SalesforceQueryEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -197,7 +197,7 @@ class QueueHandler {
     }
     $record = $this->sfapi->objectRead($mapping->getSalesforceObjectType(), (string)$id);
     if ($record) {
-      $results = SelectQueryResult::createSingle($record);
+      $results = SelectResult::createSingle($record);
       $this->enqueueAllResults($mapping, $results, $force_pull);
       return TRUE;
     }
@@ -218,7 +218,7 @@ class QueueHandler {
    *   Timestamp of ending window from which to pull records. If omitted, use
    *   "now".
    *
-   * @return \Drupal\salesforce\SelectQueryResult
+   * @return \Drupal\salesforce\Query\SelectResult
    *   returned result object from Salesforce
    *
    * @see SalesforceMappingInterface
@@ -246,12 +246,12 @@ class QueueHandler {
    *
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *   Mapping.
-   * @param \Drupal\salesforce\SelectQueryResult $results
+   * @param \Drupal\salesforce\Query\SelectResult $results
    *   Results.
    * @param bool $force_pull
    *   Force flag.
    */
-  public function enqueueAllResults(SalesforceMappingInterface $mapping, SelectQueryResult $results, $force_pull = FALSE) {
+  public function enqueueAllResults(SalesforceMappingInterface $mapping, SelectResult $results, $force_pull = FALSE) {
     while (!$this->enqueueResultSet($mapping, $results, $force_pull)) {
       try {
         $results = $this->sfapi->queryMore($results);
@@ -271,7 +271,7 @@ class QueueHandler {
    *
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *   Mapping object currently being processed.
-   * @param \Drupal\salesforce\SelectQueryResult $results
+   * @param \Drupal\salesforce\Query\SelectResult $results
    *   Result record set.
    * @param bool $force_pull
    *   Whether to force pull for enqueued items.
@@ -280,7 +280,7 @@ class QueueHandler {
    *   Returns results->done(): TRUE if there are no more results, or FALSE if
    *   there are additional records to be queried.
    */
-  public function enqueueResultSet(SalesforceMappingInterface $mapping, SelectQueryResult $results, $force_pull = FALSE) {
+  public function enqueueResultSet(SalesforceMappingInterface $mapping, SelectResult $results, $force_pull = FALSE) {
     $max_time = 0;
     $triggerField = $mapping->getPullTriggerDate();
     try {

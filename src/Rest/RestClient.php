@@ -8,11 +8,11 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface;
-use Drupal\salesforce\SelectQueryInterface;
+use Drupal\salesforce\Query\SelectInterface;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\Query\Select;
+use Drupal\salesforce\Query\SelectResult;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Drupal\Component\Datetime\TimeInterface;
@@ -427,25 +427,25 @@ class RestClient implements RestClientInterface {
   /**
    * {@inheritdoc}
    */
-  public function query(SelectQueryInterface $query) {
+  public function query(SelectInterface $query) {
     // $this->moduleHandler->alter('salesforce_query', $query);
-    // Casting $query as a string calls SelectQuery::__toString().
-    return new SelectQueryResult($this->apiCall('query?q=' . (string) $query));
+    // Casting $query as a string calls Select::__toString().
+    return new SelectResult($this->apiCall('query?q=' . (string) $query));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function queryAll(SelectQueryInterface $query) {
-    return new SelectQueryResult($this->apiCall('queryAll?q=' . (string) $query));
+  public function queryAll(SelectInterface $query) {
+    return new SelectResult($this->apiCall('queryAll?q=' . (string) $query));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function queryMore(SelectQueryResult $results) {
+  public function queryMore(SelectResult $results) {
     if ($results->done()) {
-      return new SelectQueryResult([
+      return new SelectResult([
         'totalSize' => $results->size(),
         'done' => TRUE,
         'records' => [],
@@ -453,7 +453,7 @@ class RestClient implements RestClientInterface {
     }
     $version_path = parse_url($this->authProvider->getApiEndPoint(), PHP_URL_PATH);
     $next_records_url = str_replace($version_path, '', $results->nextRecordsUrl());
-    return new SelectQueryResult($this->apiCall($next_records_url));
+    return new SelectResult($this->apiCall($next_records_url));
   }
 
   /**
@@ -582,8 +582,8 @@ class RestClient implements RestClientInterface {
       $record_types = $cache->data;
     }
     else {
-      $query = new SelectQuery('RecordType');
-      $query->fields = ['Id', 'Name', 'DeveloperName', 'SobjectType'];
+      $query = new Select('RecordType', 'r');
+      $query->fields('r', ['Id', 'Name', 'DeveloperName', 'SobjectType']);
       $result = $this->query($query);
       $record_types = [];
       foreach ($result->records() as $rt) {
