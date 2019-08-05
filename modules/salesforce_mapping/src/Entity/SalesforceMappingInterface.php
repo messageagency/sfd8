@@ -216,7 +216,7 @@ interface SalesforceMappingInterface extends ConfigEntityInterface, EntityWithPl
    *   Timestamp of ending window from which to pull records. If omitted, use
    *   "now".
    *
-   * @return \Drupal\salesforce\SelectQuery
+   * @return \Drupal\salesforce\Query\Select
    *   The pull query.
    */
   public function getPullQuery(array $mapped_fields = [], $start = 0, $stop = 0);

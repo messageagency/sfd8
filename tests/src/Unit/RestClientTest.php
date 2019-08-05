@@ -16,8 +16,8 @@ use Drupal\salesforce\Rest\RestResponseDescribe;
 use Drupal\salesforce\Rest\RestResponseResources;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
-use Drupal\salesforce\SelectQueryResult;
-use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\Query\SelectResult;
+use Drupal\salesforce\Query\Select;
 use OAuth\OAuth2\Token\TokenInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
@@ -230,7 +230,7 @@ class RestClientTest extends UnitTestCase {
       ->willReturn($rawQueryResult);
 
     // @TODO this doesn't seem like a very good test.
-    $this->assertEquals(new SelectQueryResult($rawQueryResult), $this->client->query(new SelectQuery("")));
+    $this->assertEquals(new SelectResult($rawQueryResult), $this->client->query(new Select("")));
   }
 
   /**
@@ -493,7 +493,7 @@ class RestClientTest extends UnitTestCase {
       ->willReturn($cache);
     $this->client->expects($this->once())
       ->method('query')
-      ->willReturn(new SelectQueryResult($rawQueryResult));
+      ->willReturn(new SelectResult($rawQueryResult));
 
     $this->assertEquals($recordTypes, $this->client->getRecordTypes());
 

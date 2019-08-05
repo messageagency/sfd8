@@ -4,7 +4,7 @@ namespace Drupal\salesforce\Tests;
 
 use Drupal\salesforce\Rest\RestResponse;
 use Drupal\salesforce\Rest\RestResponseDescribe;
-use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\Query\SelectResult;
 use GuzzleHttp\Psr7\Response;
 use Drupal\salesforce\Rest\RestClient;
 
@@ -51,7 +51,7 @@ class TestRestClient extends RestClient {
    */
   public function getRecordTypes($name = NULL, $reset = FALSE) {
     $json = json_decode(file_get_contents(__DIR__ . '/recordTypes.json'), JSON_OBJECT_AS_ARRAY);
-    $result = new SelectQueryResult($json);
+    $result = new SelectResult($json);
     $record_types = [];
     foreach ($result->records() as $rt) {
       $record_types[$rt->field('SobjectType')][$rt->field('DeveloperName')] = $rt;

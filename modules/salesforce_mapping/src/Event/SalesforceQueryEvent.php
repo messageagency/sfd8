@@ -2,7 +2,7 @@
 
 namespace Drupal\salesforce_mapping\Event;
 
-use Drupal\salesforce\SelectQueryInterface;
+use Drupal\salesforce\Query\SelectInterface;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce\Event\SalesforceBaseEvent;
 
@@ -14,7 +14,7 @@ class SalesforceQueryEvent extends SalesforceBaseEvent {
   /**
    * The query to be issued.
    *
-   * @var \Drupal\salesforce\SelectQueryInterface
+   * @var \Drupal\salesforce\Query\SelectInterface
    */
   protected $query;
 
@@ -30,10 +30,10 @@ class SalesforceQueryEvent extends SalesforceBaseEvent {
    *
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *   The mapping.
-   * @param \Drupal\salesforce\SelectQueryInterface $query
+   * @param \Drupal\salesforce\Query\SelectInterface $query
    *   The query.
    */
-  public function __construct(SalesforceMappingInterface $mapping, SelectQueryInterface $query) {
+  public function __construct(SalesforceMappingInterface $mapping, SelectInterface $query) {
     $this->mapping = $mapping;
     $this->query = $query;
   }
@@ -41,7 +41,7 @@ class SalesforceQueryEvent extends SalesforceBaseEvent {
   /**
    * Getter.
    *
-   * @return \Drupal\salesforce\SelectQueryInterface
+   * @return \Drupal\salesforce\Query\SelectInterface
    *   The query.
    */
   public function getQuery() {

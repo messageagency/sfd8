@@ -5,8 +5,8 @@ namespace Drupal\salesforce\Commands;
 use Consolidation\OutputFormatters\StructuredData\PropertyList;
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
 use Drupal\salesforce\Rest\RestException;
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce\SelectQueryRaw;
+use Drupal\salesforce\Query\Select;
+use Drupal\salesforce\Query\SelectRaw;
 use Drupal\salesforce\SFID;
 use Drush\Exceptions\UserAbortException;
 use Symfony\Component\Console\Helper\TableCell;
@@ -622,32 +622,31 @@ class SalesforceCommands extends SalesforceCommandsBase {
     'limit' => NULL,
     'order' => NULL,
   ]) {
-    $query = new SelectQuery($object);
+    $query = new Select($object);
 
     if (!$options['fields']) {
       $object = $this->client->objectDescribe($object);
-      $query->fields = array_keys($object->getFields());
+      $query->fields($object, array_keys($object->getFields()));
     }
     else {
-      $query->fields = explode(',', $options['fields']);
+      $query->fields($object, explode(',', $options['fields']));
       // Query must include Id.
-      if (!in_array('Id', $query->fields)) {
-        $query->fields[] = 'Id';
+      if (!in_array('Id', $query->getFields())) {
+        $query->addField($object, 'Id');
       }
     }
 
-    $query->limit = $options['limit'];
+    $query->range(0, $options['limit']);
 
     if ($options['where']) {
-      $query->conditions = [[$options['where']]];
+      $query->where($options['where']);
     }
 
     if ($options['order']) {
-      $query->order = [];
       $orders = explode(',', $options['order']);
       foreach ($orders as $order) {
         list($field, $dir) = preg_split('/\s+/', $order, 2);
-        $query->order[$field] = $dir;
+        $query->orderBy($field, $dir);
       }
     }
     return $this->returnQueryResult(new QueryResult($query, $this->client->query($query)));
@@ -666,7 +665,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    * @aliases sfeq,soql,sf-execute-query
    */
   public function executeQuery($query) {
-    $query = new SelectQueryRaw($query);
+    $query = new SelectRaw($query);
     return $this->returnQueryResult(new QueryResult($query, $this->client->query($query)));
   }
 

@@ -11,8 +11,8 @@ use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce\Rest\RestClientInterface;
-use Drupal\salesforce\SelectQuery;
-use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\Query\Select;
+use Drupal\salesforce\Query\SelectResult;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Drupal\salesforce_mapping\SalesforceMappingStorage;
 use Drupal\salesforce_pull\QueueHandler;
@@ -37,7 +37,7 @@ class QueueHandlerTest extends UnitTestCase {
       'done' => TRUE,
       'records' => [],
     ];
-    $this->sqrDone = new SelectQueryResult($result);
+    $this->sqrDone = new SelectResult($result);
 
     $result['records'] = [
       [
@@ -46,11 +46,11 @@ class QueueHandlerTest extends UnitTestCase {
         'name' => 'Example',
       ],
     ];
-    $this->sqr = new SelectQueryResult($result);
+    $this->sqr = new SelectResult($result);
 
-    $soql = new SelectQuery('dummy');
-    $soql->fields = ['Id'];
-    $soql->addCondition('LastModifiedDate', '1970-1-1T00:00:00Z', '>');
+    $soql = new Select('dummy');
+    $soql->addField('dummy', 'Id');
+    $soql->condition('LastModifiedDate', '1970-1-1T00:00:00Z', '>');
 
     $prophecy = $this->prophesize(RestClientInterface::CLASS);
     $prophecy->query(Argument::any())

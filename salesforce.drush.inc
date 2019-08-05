@@ -6,7 +6,7 @@
  */
 
 use Drupal\salesforce\SFID;
-use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\Query\Select;
 use Drupal\salesforce\Exception as SalesforceException;
 
 /**
@@ -392,31 +392,32 @@ function drush_salesforce_sf_create_object($name, $data) {
  */
 function drush_salesforce_sf_query_object($name) {
   _drush_salesforce_deprecated();
+  /** @var \Drupal\salesforce\Rest\RestClientInterface $salesforce */
   $salesforce = \Drupal::service('salesforce.client');
 
-  $query = new SelectQuery($name);
+  $query = new Select($name);
 
   $fields = drush_get_option('fields', '');
   if (!$fields) {
     $object = $salesforce->objectDescribe($name);
-    $query->fields = array_keys($object->getFields());
+    $fields = implode(', ', $object->getFields());
+    $query->fields($name, array_keys($object->getFields()));
   }
   else {
-    $query->fields = explode(',', $fields);
+    $query->fields($name, explode(',', $fields));
   }
 
-  $query->limit = drush_get_option('limit', '');
+  $query->range(0, drush_get_option('limit', ''));
 
   if ($where = drush_get_option('where', '')) {
-    $query->conditions = [[$where]];
+    $query->where($where);
   }
 
   if ($order = drush_get_option('order', '')) {
-    $query->order = [];
     $orders = explode(',', $order);
     foreach ($orders as $order) {
       list($field, $dir) = preg_split('/\s+/', $order, 2);
-      $query->order[$field] = $dir;
+      $query->orderBy($field, $dir);
     }
   }
 
@@ -432,10 +433,6 @@ function drush_salesforce_sf_query_object($name) {
     drush_print(drush_format([$sfid => $record->fields()]));
   }
   $pretty_query = str_replace('+', ' ', (string) $query);
-  if (!$fields) {
-    $fields = implode(',', $query->fields);
-    $pretty_query = str_replace($fields, ' * ', $pretty_query);
-  }
   drush_print(dt("Showing !size of !total records for query:\n!query", [
     '!size' => count($result->records()),
     '!total' => $result->size(),
@@ -458,6 +455,7 @@ function drush_salesforce_sf_execute_query($query = NULL) {
     drush_log('Please specify a query as an argument.', 'error');
     return;
   }
+  /** @var \Drupal\salesforce\Rest\RestClientInterface $salesforce */
   $salesforce = \Drupal::service('salesforce.client');
   try {
     $result = $salesforce->apiCall('query?q=' . urlencode($query));

@@ -5,7 +5,7 @@
  * Drush integration for Salesforce.
  */
 
-use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\Query\Select;
 use Drupal\salesforce\Rest\RestClientInterface;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
 
@@ -155,6 +155,7 @@ function drush_salesforce_mapping_sf_purge_drupal() {
 function drush_salesforce_mapping_sf_purge_salesforce() {
   _drush_salesforce_deprecated();
   $etm = \Drupal::service('entity_type.manager');
+  /** @var \Drupal\salesforce\Rest\RestClientInterface $client */
   $client = \Drupal::service('salesforce.client');
   $object_types = _drush_salesforce_mapping_object_types_by_prefix($client);
 
@@ -163,6 +164,7 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
     ->getDefinition('salesforce_mapped_object')
     ->getBaseTable();
 
+  /** @var \Drupal\Core\Database\Query\Select $query */
   $query = \Drupal::service('database')
     ->select($mapped_obj_table, 'm');
   $query->addExpression('distinct substr(salesforce_id, 1, 3)');
@@ -188,6 +190,7 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
       _drush_salesforce_mapping_confirm_and_delete($mapped_obj_ids, $mapped_obj_storage, 'prefix ' . $prefix);
       continue;
     }
+    /** @var \Drupal\Core\Database\Query\Select $query */
     $query = \Drupal::service('database')
       ->select($mapped_obj_table, 'm')
       ->fields('m', ['salesforce_id', 'id']);
@@ -204,9 +207,9 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
     // SOQL queries are limited to 4000-characters in where statements.
     // Chunkify in case we have more than ~200 sfids.
     foreach (array_chunk($sfids, 200, TRUE) as $chunk) {
-      $soql_query = new SelectQuery($object_types[$prefix]['name']);
-      $soql_query->fields[] = 'Id';
-      $soql_query->addCondition('Id', array_keys($chunk));
+      $soql_query = new Select($object_types[$prefix]['name']);
+      $soql_query->addField($object_types[$prefix]['name'], 'Id');
+      $soql_query->condition('Id', array_keys($chunk), 'IN');
       $results = $client->query($soql_query);
       foreach ($results->records() as $record) {
         unset($to_delete[(string) $record->id()]);

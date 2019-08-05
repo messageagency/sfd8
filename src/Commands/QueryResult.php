@@ -3,8 +3,8 @@
 namespace Drupal\salesforce\Commands;
 
 use Consolidation\OutputFormatters\StructuredData\RowsOfFieldsWithMetadata;
-use Drupal\salesforce\SelectQueryInterface;
-use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\Query\SelectInterface;
+use Drupal\salesforce\Query\SelectResult;
 
 /**
  * Adds structured metadata to RowsOfFieldsWithMetadata.
@@ -18,12 +18,12 @@ class QueryResult extends RowsOfFieldsWithMetadata {
   /**
    * QueryResult constructor.
    *
-   * @param \Drupal\salesforce\SelectQueryInterface $query
+   * @param \Drupal\salesforce\Query\SelectInterface $query
    *   SOQL query.
-   * @param \Drupal\salesforce\SelectQueryResult $queryResult
+   * @param \Drupal\salesforce\Query\SelectResult $queryResult
    *   SOQL result.
    */
-  public function __construct(SelectQueryInterface $query, SelectQueryResult $queryResult) {
+  public function __construct(SelectInterface $query, SelectResult $queryResult) {
     print_r($queryResult->records());
     $data = [];
     foreach ($queryResult->records() as $id => $record) {
@@ -58,7 +58,7 @@ class QueryResult extends RowsOfFieldsWithMetadata {
   /**
    * Getter for query.
    *
-   * @return \Drupal\salesforce\SelectQuery
+   * @return \Drupal\salesforce\Query\Select
    *   The query.
    */
   public function getQuery() {

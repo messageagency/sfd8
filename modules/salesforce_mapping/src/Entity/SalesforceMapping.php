@@ -7,7 +7,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Plugin\DefaultLazyPluginCollection;
 use Drupal\salesforce\Exception;
-use Drupal\salesforce\SelectQuery;
+use Drupal\salesforce\Query\Select;
 use Drupal\salesforce_mapping\MappingConstants;
 
 /**
@@ -658,32 +658,32 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
       throw new Exception('Mapping does not pull.');
     }
     $object_type = $this->getSalesforceObjectType();
-    $soql = new SelectQuery($object_type);
+    $soql = new Select($object_type);
 
     // Convert field mappings to SOQL.
     if (empty($mapped_fields)) {
       $mapped_fields = $this->getPullFieldsArray();
     }
-    $soql->fields = $mapped_fields;
-    $soql->fields[] = 'Id';
-    $soql->fields[] = $this->getPullTriggerDate();
+    $soql->fields($object_type, $mapped_fields);
+    $soql->addField($object_type, 'Id');
+    $soql->addField($object_type, $this->getPullTriggerDate());
 
     $start = $start > 0 ? $start : $this->getLastPullTime();
     // If no lastupdate and no start window provided, get all records.
     if ($start) {
       $start = gmdate('Y-m-d\TH:i:s\Z', $start);
-      $soql->addCondition($this->getPullTriggerDate(), $start, '>');
+      $soql->condition($this->getPullTriggerDate(), $start, '>');
     }
 
     if ($stop) {
       $stop = gmdate('Y-m-d\TH:i:s\Z', $stop);
-      $soql->addCondition($this->getPullTriggerDate(), $stop, '<');
+      $soql->condition($this->getPullTriggerDate(), $stop, '<');
     }
 
     if (!empty($this->pull_where_clause)) {
-      $soql->conditions[] = [$this->pull_where_clause];
+      $soql->where($this->pull_where_clause);
     }
-    $soql->order[$this->getPullTriggerDate()] = 'ASC';
+    $soql->orderBy($this->getPullTriggerDate(), 'ASC');
     return $soql;
   }
 

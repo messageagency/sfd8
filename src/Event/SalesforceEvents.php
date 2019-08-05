@@ -91,7 +91,7 @@ final class SalesforceEvents {
    * Previously hook_salesforce_pull_select_query_alter().
    *
    * Subscribers receive a Drupal\salesforce_mapping\Event\SalesforcePullEvent
-   * instance, via which Drupal\salesforce\SelectQuery may be altered before
+   * instance, via which Drupal\salesforce\Query\Select may be altered before
    * building Salesforce Drupal\salesforce_pull\PullQueueItem items.
    *
    * @Event
