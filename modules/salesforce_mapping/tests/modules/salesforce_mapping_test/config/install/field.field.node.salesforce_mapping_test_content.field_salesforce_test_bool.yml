@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_salesforce_test_bool
+    - node.type.salesforce_mapping_test_content
+id: node.salesforce_mapping_test_content.field_salesforce_test_bool
+field_name: field_salesforce_test_bool
+entity_type: node
+bundle: salesforce_mapping_test_content
+label: 'Salesforce Test Bool'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

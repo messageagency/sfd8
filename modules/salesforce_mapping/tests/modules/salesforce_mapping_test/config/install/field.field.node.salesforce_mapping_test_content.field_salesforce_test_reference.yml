@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_salesforce_test_reference
+    - node.type.salesforce_mapping_test_content
+id: node.salesforce_mapping_test_content.field_salesforce_test_reference
+field_name: field_salesforce_test_reference
+entity_type: node
+bundle: salesforce_mapping_test_content
+label: 'Salesforce Test Reference'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      salesforce_mapping_test_content: salesforce_mapping_test_content
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

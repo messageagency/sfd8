@@ -6,6 +6,7 @@ use Drupal\Core\Config\Entity\ConfigEntityTypeInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\salesforce\SelectQuery;
 use Drupal\Tests\UnitTestCase;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\MappingConstants;
@@ -19,6 +20,7 @@ use Prophecy\Argument;
  * @group salesforce_mapping
  */
 class SalesforceMappingTest extends UnitTestCase {
+
   static public $modules = ['salesforce_mapping'];
 
   /**
@@ -145,6 +147,27 @@ class SalesforceMappingTest extends UnitTestCase {
       MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE,
     ]);
     $this->assertTrue($triggers);
+  }
+
+  /**
+   * Test getPullQuery()
+   */
+  public function testGetPullQuery() {
+    $start = strtotime('-5 minutes');
+    $stop = time();
+    $query = $this->mapping->getPullQuery([], $start, $stop);
+    $expectedQuery = new SelectQuery($this->saleforceObjectType);
+    $expectedQuery->addCondition($this->mapping->getPullTriggerDate(), gmdate('Y-m-d\TH:i:s\Z', $start), '>');
+    $expectedQuery->addCondition($this->mapping->getPullTriggerDate(), gmdate('Y-m-d\TH:i:s\Z', $stop), '<');
+    $expectedQuery->fields = $this->mapping->getPullFieldsArray();
+    $expectedQuery->fields[] = 'Id';
+    $expectedQuery->fields[] = $this->mapping->getPullTriggerDate();
+    $expectedQuery->order[$this->mapping->getPullTriggerDate()] = 'ASC';-
+    $this->assertArrayEquals($expectedQuery->fields, $query->fields);
+    $this->assertArrayEquals($expectedQuery->order, $query->order);
+    $this->assertArrayEquals($expectedQuery->conditions, $query->conditions);
+    $this->assertEquals($expectedQuery->objectType, $query->objectType);
+    $this->assertEquals($expectedQuery->limit, $query->limit);
   }
 
 }

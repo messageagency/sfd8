@@ -99,6 +99,12 @@ salesforce_mapping.salesforce_mapping.*:
             salesforce_field:
               type: string
               label: 'Salesforce Field Name'
+            id:
+              type: integer
+              label: 'Field Id'
+            drupal_constant:
+              type: string
+              label: 'Drupal Constant'
 
 # Schema / Config API requires that we add these:
     status:

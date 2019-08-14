@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_salesforce_test_link
+    - node.type.salesforce_mapping_test_content
+  module:
+    - link
+id: node.salesforce_mapping_test_content.field_salesforce_test_link
+field_name: field_salesforce_test_link
+entity_type: node
+bundle: salesforce_mapping_test_content
+label: 'Salesforce Test Link'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  link_type: 17
+  title: 1
+field_type: link

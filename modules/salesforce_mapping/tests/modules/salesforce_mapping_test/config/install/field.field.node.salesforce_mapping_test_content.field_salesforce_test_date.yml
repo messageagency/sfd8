@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_salesforce_test_date
+    - node.type.salesforce_mapping_test_content
+  module:
+    - datetime
+id: node.salesforce_mapping_test_content.field_salesforce_test_date
+field_name: field_salesforce_test_date
+entity_type: node
+bundle: salesforce_mapping_test_content
+label: 'Salesforce Test Date'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: datetime

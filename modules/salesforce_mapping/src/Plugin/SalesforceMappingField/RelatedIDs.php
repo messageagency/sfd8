@@ -59,6 +59,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     );
 
     if (empty($instances[$field_name])) {
+debug(__FUNCTION__.__LINE__);
       return;
     }
 
@@ -66,6 +67,7 @@ class RelatedIDs extends SalesforceMappingFieldPluginBase {
     if (empty($field->getValue()) || is_null($field->entity)) {
       // This reference field is blank or the referenced entity no longer
       // exists.
+debug(__FUNCTION__.__LINE__);
       return;
     }
 
