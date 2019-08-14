@@ -6,6 +6,7 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
 use Drupal\salesforce\Tests\TestRestClient;
 use Drupal\salesforce\Tests\TestHttpClientFactory;
+use Drupal\salesforce\Tests\TestSalesforceAuthProviderPluginManager;
 
 /**
  * Modifies the salesforce client service.
@@ -21,7 +22,10 @@ class SalesforceTestRestClientServiceProvider extends ServiceProviderBase {
       ->setClass(TestHttpClientFactory::class);
     $container->getDefinition('salesforce.client')
       ->setClass(TestRestClient::class);
-
+    $container->getDefinition('salesforce.client')
+      ->setClass(TestRestClient::class);
+    $container->getDefinition('plugin.manager.salesforce.auth_providers')
+      ->setClass(TestSalesforceAuthProviderPluginManager::class);
   }
 
 }

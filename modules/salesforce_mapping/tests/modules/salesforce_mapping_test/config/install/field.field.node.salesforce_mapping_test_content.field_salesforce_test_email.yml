@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_salesforce_test_email
+    - node.type.salesforce_mapping_test_content
+id: node.salesforce_mapping_test_content.field_salesforce_test_email
+field_name: field_salesforce_test_email
+entity_type: node
+bundle: salesforce_mapping_test_content
+label: 'Salesforce Test Email'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: email

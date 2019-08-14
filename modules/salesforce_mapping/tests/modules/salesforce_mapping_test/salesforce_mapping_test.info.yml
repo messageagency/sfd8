@@ -1,0 +1,12 @@
+name: "Salesforce mapping test module"
+type: module
+description: "Salesforce mapping test module"
+package: Testing
+core: 8.x
+dependencies:
+  - text
+  - datetime
+  - link
+  - node
+  - salesforce_mapping
+  - salesforce_test_rest_client

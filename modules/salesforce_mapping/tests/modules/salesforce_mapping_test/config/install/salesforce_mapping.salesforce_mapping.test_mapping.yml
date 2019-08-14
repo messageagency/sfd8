@@ -1,0 +1,88 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.salesforce_mapping_test_content.field_salesforce_test_bool
+    - field.field.node.salesforce_mapping_test_content.field_salesforce_test_date
+    - field.field.node.salesforce_mapping_test_content.field_salesforce_test_email
+    - field.field.node.salesforce_mapping_test_content.field_salesforce_test_link
+    - field.field.node.salesforce_mapping_test_content.field_salesforce_test_reference
+    - field.storage.node.field_salesforce_test_link
+    - field.storage.node.field_salesforce_test_reference
+    - node.type.salesforce_mapping_test_content
+  module:
+    - link
+id: test_mapping
+label: 'Test Mapping'
+weight: 0
+type: salesforce_mapping
+key: ''
+async: false
+push_standalone: false
+pull_standalone: false
+pull_trigger_date: LastModifiedDate
+pull_where_clause: ''
+sync_triggers:
+  push_create: true
+  push_update: true
+  push_delete: false
+  pull_create: false
+  pull_update: false
+  pull_delete: false
+salesforce_object_type: Contact
+drupal_entity_type: node
+drupal_bundle: salesforce_mapping_test_content
+field_mappings:
+  -
+    drupal_field_type: Constant
+    drupal_field_value: 'SALESFORCE TEST'
+    salesforce_field: FirstName
+    direction: drupal_sf
+    id: 8
+  -
+    drupal_field_type: DrupalConstant
+    drupal_field_value: title
+    direction: sf_drupal
+    drupal_constant: 'SALESFORCE TEST'
+    id: 9
+  -
+    drupal_field_type: properties
+    drupal_field_value: field_salesforce_test_email
+    salesforce_field: Email
+    direction: sync
+    id: 10
+  -
+    drupal_field_type: properties
+    drupal_field_value: field_salesforce_test_date
+    salesforce_field: Birthdate
+    direction: sync
+    id: 11
+  -
+    drupal_field_type: properties
+    drupal_field_value: field_salesforce_test_bool
+    salesforce_field: d5__Do_Not_Mail__c
+    direction: sync
+    id: 12
+  -
+    drupal_field_type: properties_extended
+    drupal_field_value: field_salesforce_test_link.uri
+    salesforce_field: Description
+    direction: sync
+    id: 13
+  -
+    drupal_field_type: RelatedIDs
+    drupal_field_value: field_salesforce_test_reference
+    salesforce_field: ReportsToId
+    direction: sync
+    id: 14
+  -
+    drupal_field_type: record_type
+    drupal_field_value: Contact_Type_1
+    salesforce_field: RecordTypeId
+    direction: drupal_sf
+    id: 15
+push_limit: 0
+push_retries: 3
+push_frequency: 0
+pull_frequency: 0
+always_upsert: false
