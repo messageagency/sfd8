@@ -62,7 +62,6 @@ class PushParamsTest extends BrowserTestBase {
 
     // Create a PushParams and assert it's created as we expect.
     $pushParams = new PushParams($this->mapping, $this->entity2);
-    dump($pushParams);
     $expected = [
       'FirstName' => 'SALESFORCE TEST',
       'Email' => 'test2@example.com',
@@ -72,9 +71,7 @@ class PushParamsTest extends BrowserTestBase {
       'RecordTypeId' => '012i0000001B15mAAC',
       'Description' => 'https://example.com',
     ];
-    dump($expected);
     $actual = $pushParams->getParams();
-    dump($actual);
     $this->assertEquals(ksort($expected), ksort($actual));
   }
 
