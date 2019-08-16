@@ -1,5 +1,7 @@
 <?php
 
+namespace Drupal\Tests\salesforce_push\Functional;
+
 use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
 
