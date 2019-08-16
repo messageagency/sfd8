@@ -10,7 +10,7 @@ use Drupal\salesforce_mapping\PushParams;
 use Drupal\Tests\BrowserTestBase;
 
 /**
- * Test description.
+ * Test that PushParams correctly creates data structures for Salesforce.
  *
  * @group salesforce_mapping
  */
@@ -19,9 +19,9 @@ class PushParamsTest extends BrowserTestBase {
   public static $modules = ['typed_data', 'dynamic_entity_reference', 'salesforce_mapping', 'salesforce_mapping_test'];
 
   /**
-   * Tests something.
+   * Test PushParams instantiation, where all the work gets done.
    */
-  public function testSomething() {
+  public function testPushParams() {
     $mapping = SalesforceMapping::load('test_mapping');
 
     $date = date(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, \Drupal::time()->getRequestTime());
