@@ -26,8 +26,8 @@ sync_triggers:
   push_create: true
   push_update: true
   push_delete: false
-  pull_create: false
-  pull_update: false
+  pull_create: true
+  pull_update: true
   pull_delete: false
 salesforce_object_type: Contact
 drupal_entity_type: node

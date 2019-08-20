@@ -4,7 +4,9 @@ namespace Drupal\salesforce\Tests;
 
 use Drupal\salesforce\Rest\RestResponse;
 use Drupal\salesforce\Rest\RestResponseDescribe;
+use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\SObject;
 use GuzzleHttp\Psr7\Response;
 use Drupal\salesforce\Rest\RestClient;
 
@@ -23,6 +25,19 @@ class TestRestClient extends RestClient {
    */
   public function isInit() {
     return TRUE;
+  }
+
+  public static function getContactQueryResults() {
+    return json_decode(file_get_contents(__DIR__ . '/contactQuery.json'), JSON_OBJECT_AS_ARRAY);
+  }
+
+  /**
+   * Mock a query result for test_mapping.
+   *
+   * @see modules/salesforce_mapping/tests/modules/salesforce_mapping_test/config/install/salesforce_mapping.salesforce_mapping.test_mapping.yml
+   */
+  public function query(SelectQueryInterface $query) {
+    return new SelectQueryResult(self::getContactQueryResults());
   }
 
   /**
