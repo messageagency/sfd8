@@ -6,6 +6,8 @@ use Drupal\link\Plugin\Field\FieldType\LinkItem;
 
 /**
  * Calculated link item.
+ *
+ * @deprecated CalculatedLinkItemBase is deprecated and will be removed in 8.x-4.0.
  */
 abstract class CalculatedLinkItemBase extends LinkItem {
 

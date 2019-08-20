@@ -2,17 +2,18 @@
 
 namespace Drupal\salesforce_mapping\Plugin\Field\FieldType;
 
-use Drupal\salesforce_mapping\Plugin\Field\CalculatedLinkItemBase;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\TypedData\DataDefinition;
+use Drupal\link\Plugin\Field\FieldType\LinkItem;
 
 /**
- * Lifted from https://www.drupal.org/docs/8/api/entity-api/dynamicvirtual-field-values-using-computed-field-property-classes.
- *
  * @FieldType(
  *   id = "salesforce_link",
  *   label = @Translation("Salesforce Record"),
  *   description = @Translation("A link to the salesforce record."),
  *   default_widget = "link_default",
  *   default_formatter = "link",
+ *   list_class = "\Drupal\salesforce_mapping\Plugin\Field\FieldType\SalesforceLinkItemList",
  *   constraints = {
  *     "LinkType" = {},
  *     "LinkAccess" = {},
@@ -21,23 +22,31 @@ use Drupal\salesforce_mapping\Plugin\Field\CalculatedLinkItemBase;
  *   }
  * )
  */
-class SalesforceLinkItem extends CalculatedLinkItemBase {
+class SalesforceLinkItem extends LinkItem {
 
   /**
-   * Calculates the value of the field and sets it.
+   * {@inheritdoc}
    */
-  protected function ensureCalculated() {
-    if (!$this->isCalculated) {
-      $entity = $this->getEntity();
-      if (!$entity->isNew()) {
-        $value = [
-          'uri' => $entity->getSalesforceUrl(),
-          'title' => $entity->sfid(),
-        ];
-        $this->setValue($value);
-      }
-      $this->isCalculated = TRUE;
-    }
+  public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
+    $properties['uri'] = DataDefinition::create('uri')
+      ->setLabel(t('Salesforce URL'));
+    $properties['title'] = DataDefinition::create('string')
+      ->setLabel(t('Salesforce ID'));
+    return $properties;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEmpty() {
+    return $this->getEntity()->isNew() || !method_exists($this->getEntity(), 'sfid') || !$this->getEntity()->sfid();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function schema(FieldStorageDefinitionInterface $field_definition) {
+    return [];
   }
 
 }

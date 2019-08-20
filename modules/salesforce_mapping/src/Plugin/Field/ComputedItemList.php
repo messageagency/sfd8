@@ -6,6 +6,8 @@ use Drupal\Core\Field\FieldItemList;
 
 /**
  * Lifted from https://www.drupal.org/docs/8/api/entity-api/dynamicvirtual-field-values-using-computed-field-property-classes.
+ *
+ * @deprecated ComputedItemList is deprecated and will be removed in 8.x-4.0. Use \Drupal\salesforce_mapping\Plugin\Field\FieldType\SalesforceLinkItemList
  */
 class ComputedItemList extends FieldItemList {
 
