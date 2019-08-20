@@ -21,8 +21,8 @@ use Drupal\salesforce_mapping\Event\SalesforcePullEntityValueEvent;
 use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
 use Drupal\salesforce_mapping\Event\SalesforcePushParamsEvent;
 use Drupal\salesforce_mapping\MappingConstants;
+use Drupal\salesforce_mapping\Plugin\Field\FieldType\SalesforceLinkItemList;
 use Drupal\salesforce_mapping\PushParams;
-use Drupal\salesforce_mapping\Plugin\Field\ComputedItemList;
 
 /**
  * Defines a Salesforce Mapped Object entity class.
@@ -221,7 +221,7 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       ->setRevisionable(FALSE)
       ->setTranslatable(FALSE)
       ->setComputed(TRUE)
-      ->setClass(ComputedItemList::class)
+      ->setClass(SalesforceLinkItemList::class)
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'string',
