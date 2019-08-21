@@ -336,3 +336,13 @@ function salesforce_update_8006() {
     return "Updated legacy token to new plugin config.";
   }
 }
+
+/**
+ * Assign default value for "endpoint_verification" config.
+ */
+function salesforce_update_8007() {
+  \Drupal::configFactory()
+    ->getEditable('salesforce.settings')
+    ->set('endpoint_verification', TRUE)
+    ->save();
+}

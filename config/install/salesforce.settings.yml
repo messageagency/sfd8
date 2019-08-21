@@ -9,3 +9,4 @@ show_all_objects: false
 standalone: false
 limit_mapped_object_revisions: 10
 salesforce_auth_provider: ''
+endpoint_verification: true

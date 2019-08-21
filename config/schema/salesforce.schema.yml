@@ -42,6 +42,10 @@ salesforce.settings:
       type: string
       label: 'Default authorization provider id'
       description: 'A salesforce_auth config entity id which provides API authorization.'
+    endpoint_verification:
+      type: boolean
+      label: 'Enforce endpoint verification'
+      description: 'Enabling endpoint verification will invalidate any access token whose identity does not match the login endpoint. Disable this option if you are frequently getting the message "Salesforce identity does not match salesforce endpoint: you need to re-authenticate."'
     rest_api_version:
       type: mapping
       label: 'REST API Version'

@@ -570,7 +570,7 @@ class RestClient implements RestClientInterface {
     $id_url_scheme = parse_url($identity['id']);
     $allowed_endpoint = $this->getLoginUrl();
     $allowed_endpoint_url_scheme = parse_url($allowed_endpoint);
-    if ($id_url_scheme['host'] != $allowed_endpoint_url_scheme['host']) {
+    if ($this->immutableConfig->get('endpoint_verification') && $id_url_scheme['host'] != $allowed_endpoint_url_scheme['host']) {
       throw new Exception('Salesforce identity does not match salesforce endpoint: you need to re-authenticate.');
     }
     return $identity;
