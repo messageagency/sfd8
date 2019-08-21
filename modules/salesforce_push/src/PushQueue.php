@@ -258,7 +258,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
     $ret = $query->execute();
 
     // Drupal still doesn't support now() https://www.drupal.org/node/215821
-    // 9 years.
+    // 11 years.
     if ($ret == Merge::STATUS_INSERT) {
       $this->connection->merge(static::TABLE_NAME)
         ->key(['name' => $this->name, 'entity_id' => $data['entity_id']])
