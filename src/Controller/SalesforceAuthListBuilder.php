@@ -36,6 +36,9 @@ class SalesforceAuthListBuilder extends ConfigEntityListBuilder {
   public function getDefaultOperations(EntityInterface $entity) {
     $operations = parent::getDefaultOperations($entity);
     $operations['edit']['title'] = t('Edit / Re-auth');
+    // Having "destination" on edit link breaks OAuth.
+    // Add a "revoke" action if we have a token.
+    $operations['edit']['url'] = $entity->toUrl('edit-form');
     if (!$entity instanceof SalesforceAuthConfig
     || !$entity->getPlugin()->hasAccessToken()
     || !$entity->hasLinkTemplate('revoke')) {
