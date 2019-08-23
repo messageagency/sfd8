@@ -7,7 +7,6 @@ use Drupal\salesforce\Consumer\SalesforceCredentials;
 use Drupal\salesforce\SalesforceAuthProviderPluginBase;
 use OAuth\Common\Token\TokenInterface;
 use OAuth\OAuth2\Service\Exception\MissingRefreshTokenException;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Fallback for broken / missing plugin.
@@ -21,20 +20,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class Broken extends SalesforceAuthProviderPluginBase {
 
   /**
-   * Broken constructor.
-   *
-   * @param array $configuration
-   *   Configuration.
-   * @param string $plugin_id
-   *   Plugin id.
-   * @param mixed $plugin_definition
-   *   Plugin definition.
+   * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
-    $this->configuration = $configuration;
-    $this->pluginDefinition = $plugin_definition;
-    $this->id = $plugin_id;
-    $this->credentials = new SalesforceCredentials('', '', '');
+  public function getCredentials() {
+    return new SalesforceCredentials('', '', '');
   }
 
   /**
@@ -42,13 +31,6 @@ class Broken extends SalesforceAuthProviderPluginBase {
    */
   public function refreshAccessToken(TokenInterface $token) {
     throw new MissingRefreshTokenException();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition);
   }
 
   /**
