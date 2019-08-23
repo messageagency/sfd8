@@ -4,6 +4,7 @@ namespace Drupal\salesforce_mapping;
 
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -25,6 +26,7 @@ use Drupal\salesforce\SObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMappingInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use DateTime;
 
 /**
  * Defines a base Salesforce Mapping Field Plugin implementation.
@@ -200,13 +202,8 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
 
       case 'date':
       case 'datetime':
-        $tmp = $value;
-        if (!is_int($tmp)) {
-          $tmp = strtotime($tmp);
-        }
-        if (!empty($tmp)) {
-          $value = $this->dateFormatter->format($tmp, 'custom', 'c');
-        }
+        $date = new DrupalDateTime($value, 'UTC');
+        $value = $date->format(DateTime::ISO8601);
         break;
 
       case 'double':
