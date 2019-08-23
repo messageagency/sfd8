@@ -71,9 +71,9 @@ class PushParamsTest extends BrowserTestBase {
       'Description' => 'https://example.com',
     ];
     $actual = $pushParams->getParams();
-    foreach ($expected as $key => $value) {
-      $this->assertSame($value, $actual[$key]);
-    }
+    ksort($actual);
+    ksort($expected);
+    $this->assertEquals($expected, $actual);
   }
 
 }
