@@ -2,12 +2,14 @@
 
 namespace Drupal\Tests\salesforce_mapping\Functional;
 
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\node\Entity\Node;
 use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\salesforce_mapping\PushParams;
 use Drupal\Tests\BrowserTestBase;
+use DateTime;
 
 /**
  * Test that PushParams correctly creates data structures for Salesforce.
@@ -22,9 +24,10 @@ class PushParamsTest extends BrowserTestBase {
    * Test PushParams instantiation, where all the work gets done.
    */
   public function testPushParams() {
+    date_default_timezone_set('America/New_York');
     $mapping = SalesforceMapping::load('test_mapping');
+    $storedDate = date(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, \Drupal::time()->getRequestTime());
 
-    $date = date(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, \Drupal::time()->getRequestTime());
     // Entity 1 is the target reference.
     $entity1 = Node::create([
         'type' => 'salesforce_mapping_test_content',
@@ -47,26 +50,30 @@ class PushParamsTest extends BrowserTestBase {
       'type' => 'salesforce_mapping_test_content',
       'title' => 'Test Example 2',
       'field_salesforce_test_bool' => 1,
-      'field_salesforce_test_date' => $date,
+      'field_salesforce_test_date' => $storedDate,
       'field_salesforce_test_email' => 'test2@example.com',
       'field_salesforce_test_link' => 'https://example.com',
       'field_salesforce_test_reference' => $entity1,
     ]);
     $entity2->save();
 
+    $expectedDate = new DrupalDateTime($storedDate, 'UTC');
+
     // Create a PushParams and assert it's created as we expect.
     $pushParams = new PushParams($mapping, $entity2);
     $expected = [
       'FirstName' => 'SALESFORCE TEST',
       'Email' => 'test2@example.com',
-      'Birthdate' => date('c', \Drupal::time()->getRequestTime()),
+      'Birthdate' => $expectedDate->format(DateTime::ISO8601),
       'd5__Do_Not_Mail__c' => TRUE,
       'ReportsToId' => '0123456789ABCDEFGH',
       'RecordTypeId' => '012i0000001B15mAAC',
       'Description' => 'https://example.com',
     ];
     $actual = $pushParams->getParams();
-    $this->assertEquals(ksort($expected), ksort($actual));
+    foreach ($expected as $key => $value) {
+      $this->assertSame($value, $actual[$key]);
+    }
   }
 
 }
