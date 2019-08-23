@@ -6,9 +6,12 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
+use OAuth\Common\Http\Client\ClientInterface;
 use OAuth\Common\Http\Exception\TokenResponseException;
 use OAuth\Common\Http\Uri\Uri;
 use OAuth\OAuth2\Service\Salesforce;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Shared methods for auth providers.
@@ -41,11 +44,59 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
   protected $storage;
 
   /**
-   * Machine name identifier.
+   * Provider id, e.g. jwt, oauth.
+   *
+   * @var string
+   */
+  protected $pluginId;
+
+  /**
+   * Plugin definition.
+   *
+   * @var array
+   */
+  protected $pluginDefinition;
+
+  /**
+   * Instance id, e.g. "sandbox1" or "production".
    *
    * @var string
    */
   protected $id;
+
+  /**
+   * SalesforceOAuthPlugin constructor.
+   *
+   * @param array $configuration
+   *   Plugin configuration.
+   * @param string $plugin_id
+   *   Plugin id.
+   * @param mixed $plugin_definition
+   *   Plugin definition.
+   * @param \OAuth\Common\Http\Client\ClientInterface $httpClient
+   *   The oauth http client.
+   * @param \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface $storage
+   *   Auth token storage service.
+   *
+   * @throws \OAuth\OAuth2\Service\Exception\InvalidScopeException
+   *   Comment.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $httpClient, SalesforceAuthTokenStorageInterface $storage) {
+    $this->id = $configuration['id'];
+    $this->configuration = $configuration;
+    $this->pluginDefinition = $plugin_definition;
+    $this->pluginId = $plugin_id;
+    $this->credentials = $this->getCredentials();
+    parent::__construct($this->getCredentials(), $httpClient, $storage, [], new Uri($this->getCredentials()->getLoginUrl()));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $configuration = array_merge(self::defaultConfiguration(), $configuration);
+    return new static($configuration, $plugin_id, $plugin_definition, $container->get('salesforce.http_client_wrapper'), $container->get('salesforce.auth_token_storage'));
+  }
 
   /**
    * {@inheritdoc}
@@ -60,15 +111,29 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
   /**
    * {@inheritdoc}
    */
+  public function label() {
+    return $this->getPluginDefinition()['label'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function id() {
+    return $this->id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPluginId() {
-    return $this->getConfiguration('id');
+    return $this->pluginId;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getPluginDefinition() {
-    return $this->getConfiguration();
+    return $this->pluginDefinition;
   }
 
   /**
@@ -133,22 +198,8 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
   /**
    * {@inheritdoc}
    */
-  public function id() {
-    return $this->id;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function type() {
     return static::SERVICE_TYPE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function label() {
-    return static::LABEL;
   }
 
   /**
