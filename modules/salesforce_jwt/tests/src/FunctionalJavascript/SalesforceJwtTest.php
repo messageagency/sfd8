@@ -61,50 +61,9 @@ class SalesforceJwtTest extends WebDriverTestBase {
       $page->fillField($key, $value);
     }
     $page->pressButton('Save');
-//    $this->assertUrl('admin/config/salesforce/authorize/add');
-//    $this->assertTrue(FALSE);
+    // See if we can cause a failure. Wasn't working before.
     $assert_session->addressEquals('foo');
     $assert_session->addressEquals('bar');
-
-    //    $this->assertText('Salesforce consumer key field is required.');
-//    $this->assertText('Salesforce login user field is required.');
-//    $this->assertText('Private Key field is required.');
-    //    $edit = [
-    //      'label' => $this->randomString(),
-    //      'id' => strtolower($this->randomMachineName()),
-    //      'provider' => 'jwt',
-    //      'save_default' => 1,
-    //    ];
-//    $edit['provider_settings'] += [
-//      'consumer_key' => 'foo',
-//      'login_user' => 'bar',
-//      'login_url' => 'zee',
-//      'encrypt_key' => self::KEY_ID,
-//    ];
-//    $this->drupalPostForm('admin/config/salesforce/authorize/add', $edit, 'submit');
-//    $this->assertUrl('admin/config/salesforce/authorize/add');
-////    $this->assertTrue(FALSE);
-//    $this->assertUrl('admin/config/salesforce/authorize/list');
-//    $this->drupalGet('admin/config/salesforce/authorize/list');
-
-//    /** @var \Drupal\salesforce_push\PushQueue $queue */
-//    $queue = \Drupal::service('queue.salesforce_push');
-//    $this->assertEquals(0, $queue->numberOfItems());
-//
-//    Node::create([
-//        'type' => 'salesforce_mapping_test_content',
-//        'title' => 'Test Example',
-//      ]
-//    )->save();
-//    $this->assertEquals(1, $queue->numberOfItems());
-//
-//    Node::create([
-//        'type' => 'salesforce_mapping_test_content',
-//        'title' => 'Test Example 2',
-//      ]
-//    )->save();
-//    $ this->assertEquals(2, $queue->numberOfItems());
-
   }
 
 }
