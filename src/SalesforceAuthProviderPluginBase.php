@@ -94,7 +94,7 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $configuration = array_merge(self::defaultConfiguration(), $configuration);
+    $configuration = array_merge(static::defaultConfiguration(), $configuration);
     return new static($configuration, $plugin_id, $plugin_definition, $container->get('salesforce.http_client_wrapper'), $container->get('salesforce.auth_token_storage'));
   }
 
