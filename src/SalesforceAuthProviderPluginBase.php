@@ -82,7 +82,7 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
    *   Comment.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $httpClient, SalesforceAuthTokenStorageInterface $storage) {
-    $this->id = $configuration['id'];
+    $this->id = !empty($configuration['id']) ? $configuration['id'] : NULL;
     $this->configuration = $configuration;
     $this->pluginDefinition = $plugin_definition;
     $this->pluginId = $plugin_id;

@@ -34,6 +34,7 @@ class SalesforceAuthForm extends EntityForm {
       '#type' => 'textfield',
       '#description' => $this->t('User-facing label for this project, e.g. "OAuth Full Sandbox"'),
       '#default_value' => $auth->label(),
+      '#required' => TRUE,
     ];
 
     $form['id'] = [
@@ -44,6 +45,7 @@ class SalesforceAuthForm extends EntityForm {
         'exists' => [$this, 'exists'],
         'source' => ['label'],
       ],
+      '#required' => TRUE,
     ];
 
     // This is the element that contains all of the dynamic parts of the form.
@@ -82,6 +84,14 @@ class SalesforceAuthForm extends EntityForm {
       $plugin = $this->entity->authManager()->createInstance($form_state->getValue('provider'));
       $form['settings']['provider_settings'] += $plugin->buildConfigurationForm([], $form_state);
     }
+    elseif ($form_state->getUserInput()) {
+      $input = $form_state->getUserInput();
+      if (!empty($input['provider'])) {
+        $plugin = $this->entity->authManager()
+          ->createInstance($input['provider']);
+        $form['settings']['provider_settings'] += $plugin->buildConfigurationForm([], $form_state);
+      }
+    }
     $form['save_default'] = [
       '#type' => 'checkbox',
       '#title' => 'Save and set default',
@@ -112,6 +122,11 @@ class SalesforceAuthForm extends EntityForm {
     parent::validateForm($form, $form_state);
 
     if (!$form_state->isSubmitted()) {
+      return;
+    }
+
+    if (!empty($form_state->getErrors())) {
+      // Don't bother processing plugin validation if we already have errors.
       return;
     }
 

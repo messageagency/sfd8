@@ -125,6 +125,7 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
     $form['encrypt_key'] = [
       '#title' => 'Private Key',
       '#type' => 'select',
+      '#empty_option' => $this->t('- Select -'),
       '#options' => $this->keyRepository->getKeyNamesAsOptions(['type' => 'authentication']),
       '#required' => TRUE,
       '#default_value' => $this->getCredentials()->getKeyId(),
@@ -138,6 +139,10 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
+    if (empty($form_state->getValue('provider_settings')) && $form_state->getValue('provider_settings') == self::defaultConfiguration()) {
+      $form_state->setError($form, $this->t('Please fill in JWT provider settings.'));
+      return;
+    }
     $this->setConfiguration($form_state->getValue('provider_settings'));
     try {
       // Bootstrap here by setting ID to provide a key to token storage.
