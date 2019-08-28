@@ -86,8 +86,6 @@ class SalesforceJwtTest extends WebDriverTestBase {
     $assert_session->pageTextContainsOnce($label);
     $assert_session->pageTextContainsOnce('Authorized');
     $assert_session->pageTextContainsOnce('Salesforce JWT OAuth');
-    $authConfig = SalesforceAuthConfig::load(self::KEY_ID);
-    $this->assertNotNull($authConfig);
   }
 
 }
