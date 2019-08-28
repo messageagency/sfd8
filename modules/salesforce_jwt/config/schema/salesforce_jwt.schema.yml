@@ -12,5 +12,5 @@ salesforce.auth_provider_settings.jwt:
       type: uri
       label: 'Login URL'
     encrypt_key:
-      type: key.key.[%key]
+      type: string
       label: 'Encryption Key ID'

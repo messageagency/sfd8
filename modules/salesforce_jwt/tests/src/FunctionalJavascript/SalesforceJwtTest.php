@@ -3,6 +3,8 @@
 namespace Drupal\Tests\salesforce_jwt\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\key\Entity\Key;
+use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\simpletest\WebTestBase;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\key\Functional\KeyTestTrait;
@@ -37,33 +39,55 @@ class SalesforceJwtTest extends WebDriverTestBase {
     parent::setUp();
     $this->adminUser = $this->drupalCreateUser(['authorize salesforce']);
     $this->drupalLogin($this->adminUser);
-    $this->createTestKey(self::KEY_ID);
+    $this->createTestKey(self::KEY_ID, 'authentication', 'file');
+    Key::load(self::KEY_ID)
+      ->set('key_provider_settings', [
+        'file_location' => __DIR__ . '/testKey.pem',
+        'strip_line_breaks' => FALSE,
+      ])->save();
   }
 
   /**
-   * Test that saving mapped nodes enqueues them for push to Salesforce.
+   * Test adding a jwt provider plugin.
    */
   public function testJwtAuth() {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
     $this->drupalGet('admin/config/salesforce/authorize/add');
-    $page->fillField('provider', 'jwt');
+    $labelField = $page->findField('label');
+    $label = $this->randomString();
+    $labelField->setValue($label);
+    $page->findField('provider')->setValue('jwt');
     $assert_session->assertWaitOnAjaxRequest();
-    $page->fillField('label', $this->randomString());
-    $page->fillField('label', $this->randomString());
     $edit = [
       'provider_settings[consumer_key]' => 'foo',
       'provider_settings[login_user]' => 'bar',
-      'provider_settings[login_url]' => 'zee',
+      'provider_settings[login_url]' => 'https://login.salesforce.com',
       'provider_settings[encrypt_key]' => self::KEY_ID,
     ];
     foreach ($edit as $key => $value) {
+      $assert_session->fieldExists($key);
       $page->fillField($key, $value);
     }
+    $this->createScreenshot(\Drupal::root() . '/sites/default/files/simpletest/sfjwt-1.png');
     $page->pressButton('Save');
-    // See if we can cause a failure. Wasn't working before.
-    $assert_session->addressEquals('foo');
-    $assert_session->addressEquals('bar');
+
+    // Weird behavior from testbot: machine name field doesn't seem to work
+    // as expected. Machine name field doesn't appear until after clicking
+    // "save", so we fill it and have to click save again. IDKWTF.
+    if ($page->findField('id')) {
+      $page->fillField('id', strtolower($this->randomMachineName()));
+      $this->createScreenshot(\Drupal::root() . '/sites/default/files/simpletest/sfjwt-2.png');
+      $page->pressButton('Save');
+    }
+    $assert_session->assertWaitOnAjaxRequest();
+    $this->createScreenshot(\Drupal::root() . '/sites/default/files/simpletest/sfjwt-3.png');
+    $assert_session->addressEquals('admin/config/salesforce/authorize/list');
+    $assert_session->pageTextContainsOnce($label);
+    $assert_session->pageTextContainsOnce('Authorized');
+    $assert_session->pageTextContainsOnce('Salesforce JWT OAuth');
+    $authConfig = SalesforceAuthConfig::load(self::KEY_ID);
+    $this->assertNotNull($authConfig);
   }
 
 }

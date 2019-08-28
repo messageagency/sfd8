@@ -39,16 +39,20 @@ class TestHttpClientWrapper implements ClientInterface {
   ) {
     // This method is only used to Salesforce OAuth. Based on the given args,
     // return a hard-coded version of the expected response.
-    if (is_array($requestBody) && array_key_exists('grant_type', $requestBody)) {
+    $dir = drupal_get_path('module', 'salesforce') . '/src/Tests/';
+    if ($endpoint->getPath() == '/services/oauth2/token') {
       switch ($requestBody['grant_type']) {
         case 'authorization_code':
-          return file_get_contents(__DIR__ . './oauthResponse.json');
+          $content = file_get_contents($dir . '/oauthResponse.json');
 
         case 'urn:ietf:params:oauth:grant-type:jwt-bearer':
-          return file_get_contents(__DIR__ . './jwtAuthResponse.json');
+          $content = file_get_contents($dir . '/jwtAuthResponse.json');
       }
     }
-    return '';
+    elseif ($endpoint->getPath() == '/id/XXXXXXXXXXXXXXXXXX/XXXXXXXXXXXXXXXXXX') {
+      $content = file_get_contents($dir . '/identityResponse.json');
+    }
+    return $content ?: '';
   }
 
 }
