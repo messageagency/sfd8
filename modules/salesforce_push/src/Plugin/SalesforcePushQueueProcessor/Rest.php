@@ -160,6 +160,9 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
       // If this is a delete, destroy the SF object and we're done.
       if ($item->op == MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE) {
         $mapped_object->pushDelete();
+        // This has to be cleaned up here because we need the object to process
+        // Async.
+        $mapped_object->delete();
       }
       else {
         $entity = $this->etm

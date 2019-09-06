@@ -2,10 +2,12 @@
 
 namespace Drupal\salesforce\Tests;
 
+use Drupal\Component\Utility\Random;
 use Drupal\salesforce\Rest\RestResponse;
 use Drupal\salesforce\Rest\RestResponseDescribe;
 use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce\SelectQueryResult;
+use Drupal\salesforce\SFID;
 use Drupal\salesforce\SObject;
 use GuzzleHttp\Psr7\Response;
 use Drupal\salesforce\Rest\RestClient;
@@ -118,5 +120,38 @@ class TestRestClient extends RestClient {
   public function listResources() {
     return (object) ['resources' => []];
   }
+
+  /**
+   * @inheritDoc
+   */
+  public function objectCreate($name, array $params) {
+    $random = new Random();
+    return new SFID(strtoupper($random->string(SFID::MAX_LENGTH)));
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function objectUpsert($name, $key, $value, array $params) {
+    $random = new Random();
+    return new SFID(strtoupper($random->string(SFID::MAX_LENGTH)));
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function objectUpdate($name, $id, array $params) {
+    // Object update does... NOTHING!
+    return NULL;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function objectDelete($name, $id, $throw_exception = FALSE) {
+    // Object delete does... NOTHING!
+    return NULL;
+  }
+
 
 }
