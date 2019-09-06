@@ -120,7 +120,36 @@ function salesforce_mapping_entity_update(EntityInterface $entity) {
 function salesforce_mapping_entity_delete(EntityInterface $entity) {
   $storage = \Drupal::entityTypeManager()
     ->getStorage('salesforce_mapped_object');
-  $storage->delete($storage->loadByEntity($entity));
+
+  if (\Drupal::moduleHandler()->moduleExists('salesforce_push') &&
+    \Drupal::database()->schema()->tableExists('salesforce_push_queue')) {
+    $mapped_objects = $storage->loadByEntity($entity);
+
+    if (!$mapped_objects) {
+      return;
+    }
+
+    foreach ($mapped_objects as $mapped_object) {
+      $mapping = $mapped_object->getMapping();
+      $queued_items = \Drupal::database()
+        ->select('salesforce_push_queue', 'spq')
+        ->fields('spq', ['item_id'])
+        ->condition('entity_id', $entity->id())
+        ->condition('name', $mapping->id())
+        ->condition('op', 'push_delete')
+        ->execute();
+
+      // If this was queued to be deleted, don't delete the mapping yet, defer
+      // to salesforce_push.
+      if (!$queued_items->fetch()) {
+        $mapped_object->delete();
+      }
+    }
+  }
+  else {
+    $storage->delete($storage->loadByEntity($entity));
+  }
+
 }
 
 /**
@@ -129,4 +158,19 @@ function salesforce_mapping_entity_delete(EntityInterface $entity) {
 function salesforce_mapping_field_formatter_info_alter(array &$info) {
   $info['link']['field_types'][] = 'mapped_entity_link';
   $info['link']['field_types'][] = 'salesforce_link';
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function salesforce_mapping_module_implements_alter(&$implementations, $hook) {
+  // This needs to go last to make sure the mapping isn't deleted before
+  // everything is done being cleaned up.
+  switch ($hook) {
+    case 'entity_delete':
+      $group = $implementations['salesforce_mapping'];
+      unset($implementations['salesforce_mapping']);
+      $implementations['salesforce_mapping'] = $group;
+      break;
+  }
 }
