@@ -2,13 +2,12 @@
 
 namespace Drupal\salesforce\Consumer;
 
-use Drupal\Core\Url;
 use OAuth\Common\Consumer\Credentials;
 
 /**
  * Salesforce credentials extension, for drupalisms.
  */
-abstract class SalesforceCredentials extends Credentials implements SalesforceCredentialsInterface {
+class SalesforceCredentials extends Credentials implements SalesforceCredentialsInterface {
 
   /**
    * Login URL e.g. https://test.salesforce.com or https://login.salesforce.com.
@@ -23,15 +22,6 @@ abstract class SalesforceCredentials extends Credentials implements SalesforceCr
    * @var string
    */
   protected $consumerKey;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct($consumerKey, $loginUrl) {
-    parent::__construct($consumerKey, NULL, NULL);
-    $this->loginUrl = $loginUrl;
-    $this->consumerKey = $consumerKey;
-  }
 
   /**
    * {@inheritdoc}
@@ -55,6 +45,18 @@ abstract class SalesforceCredentials extends Credentials implements SalesforceCr
       'absolute' => TRUE,
       'https' => TRUE,
     ])->toString();
+  }
+
+  public function isValid() {
+    // This class is a stub.
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(array $configuration) {
+    return new static($configuration['consumer_key'], $configuration['consumer_secret'], NULL);
   }
 
 }

@@ -18,6 +18,7 @@ class SalesforceController extends ControllerBase {
 
   protected $client;
   protected $httpClient;
+  protected $url_generator;
 
   /**
    * {@inheritdoc}

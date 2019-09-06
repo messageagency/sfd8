@@ -82,7 +82,7 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
    *   Comment.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $httpClient, SalesforceAuthTokenStorageInterface $storage) {
-    $this->id = $configuration['id'];
+    $this->id = !empty($configuration['id']) ? $configuration['id'] : NULL;
     $this->configuration = $configuration;
     $this->pluginDefinition = $plugin_definition;
     $this->pluginId = $plugin_id;
@@ -94,7 +94,7 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $configuration = array_merge(self::defaultConfiguration(), $configuration);
+    $configuration = array_merge(static::defaultConfiguration(), $configuration);
     return new static($configuration, $plugin_id, $plugin_definition, $container->get('salesforce.http_client_wrapper'), $container->get('salesforce.auth_token_storage'));
   }
 
@@ -185,42 +185,59 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-
+    $this->setConfiguration($form_state->getValue('provider_settings'));
   }
 
   /**
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-
+    // Initialize identity if token is available.
+    if (!$this->hasAccessToken()) {
+      return TRUE;
+    }
+    $token = $this->getAccessToken();
+    $headers = [
+      'Authorization' => 'OAuth ' . $token->getAccessToken(),
+      'Content-type' => 'application/json',
+    ];
+    $data = $token->getExtraParams();
+    $response = $this->httpClient->retrieveResponse(new Uri($data['id']), [], $headers);
+    $identity = $this->parseIdentityResponse($response);
+    $this->storage->storeIdentity($this->service(), $identity);
+    return TRUE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function type() {
-    return static::SERVICE_TYPE;
+  public function getCredentials() {
+    if (!$this->credentials || !$this->credentials->isValid()) {
+      $pluginDefinition = $this->getPluginDefinition();
+      $this->credentials = $pluginDefinition['credentials_class']::create($this->configuration);
+    }
+    return $this->credentials;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getAuthorizationEndpoint() {
-    return new Uri($this->credentials->getLoginUrl() . static::AUTH_ENDPOINT_PATH);
+    return new Uri($this->getCredentials()->getLoginUrl() . static::AUTH_ENDPOINT_PATH);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getAccessTokenEndpoint() {
-    return new Uri($this->credentials->getLoginUrl() . static::AUTH_TOKEN_PATH);
+    return new Uri($this->getCredentials()->getLoginUrl() . static::AUTH_TOKEN_PATH);
   }
 
   /**
    * {@inheritdoc}
    */
   public function hasAccessToken() {
-    return $this->storage->hasAccessToken($this->id());
+    return $this->storage ? $this->storage->hasAccessToken($this->id()) : FALSE;
   }
 
   /**
@@ -233,8 +250,47 @@ abstract class SalesforceAuthProviderPluginBase extends Salesforce implements Sa
   /**
    * {@inheritdoc}
    */
+  public function revokeAccessToken() {
+    return $this->storage->clearToken($this->id());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getInstanceUrl() {
     return $this->getAccessToken()->getExtraParams()['instance_url'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiEndpoint($api_type = 'rest') {
+    $url = &drupal_static(self::CLASS . __FUNCTION__ . $api_type);
+    if (!isset($url)) {
+      $identity = $this->getIdentity();
+      if (empty($identity)) {
+        return FALSE;
+      }
+      if (is_string($identity)) {
+        $url = $identity;
+      }
+      elseif (isset($identity['urls'][$api_type])) {
+        $url = $identity['urls'][$api_type];
+      }
+      $url = str_replace('{version}', $this->getApiVersion(), $url);
+    }
+    return $url;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApiVersion() {
+    $version = \Drupal::config('salesforce.settings')->get('rest_api_version.version');
+    if (empty($version) || \Drupal::config('salesforce.settings')->get('use_latest')) {
+      return self::LATEST_API_VERSION;
+    }
+    return \Drupal::config('salesforce.settings')->get('rest_api_version.version');
   }
 
   /**
