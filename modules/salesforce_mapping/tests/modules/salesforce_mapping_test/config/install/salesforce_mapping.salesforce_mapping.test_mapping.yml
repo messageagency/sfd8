@@ -25,10 +25,10 @@ pull_where_clause: ''
 sync_triggers:
   push_create: true
   push_update: true
-  push_delete: false
-  pull_create: false
-  pull_update: false
-  pull_delete: false
+  push_delete: true
+  pull_create: true
+  pull_update: true
+  pull_delete: true
 salesforce_object_type: Contact
 drupal_entity_type: node
 drupal_bundle: salesforce_mapping_test_content
