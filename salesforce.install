@@ -68,7 +68,7 @@ function salesforce_get_auth_provider_requirements() {
   $authMan = \Drupal::service('plugin.manager.salesforce.auth_providers');
   if (!$authMan->hasProviders()) {
     $requirements += [
-      'description' => t('No auth providers have been created. Please <a href="@href">create an auth provider</a> to connect to Salesforce.', ['@href' => Url::fromRoute('entity.salesforce_auth.add_form')]),
+      'description' => t('No auth providers have been created. Please <a href="@href">create an auth provider</a> to connect to Salesforce.', ['@href' => Url::fromRoute('entity.salesforce_auth.add_form')->toString()]),
       'severity' => REQUIREMENT_ERROR,
     ];
   }
@@ -79,7 +79,7 @@ function salesforce_get_auth_provider_requirements() {
     ];
   }
   else {
-    $failMessage = t('Salesforce authentication failed. Please <a href="@href">check your auth provider settings</a> to connect to Salesforce.', ['@href' => Url::fromRoute('entity.salesforce_auth.edit_form', ['salesforce_auth' => $authMan->getConfig()])]);
+    $failMessage = t('Salesforce authentication failed. Please <a href="@href">check your auth provider settings</a> to connect to Salesforce.', ['@href' => Url::fromRoute('entity.salesforce_auth.edit_form', ['salesforce_auth' => $authMan->getConfig()->id()])->toString()]);
     try {
       if (!$authMan->getToken()) {
         $requirements += [
