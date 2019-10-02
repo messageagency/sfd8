@@ -212,7 +212,6 @@ class SalesforcePushCommands extends SalesforceMappingCommandsBase {
         ->fetchAllAssoc($id_key);
       $entities = $entity_storage->loadMultiple(array_keys($results));
       $log = [];
-      print_r($entities);
       foreach ($entities as $entity) {
         salesforce_push_entity_crud($entity, 'push_create');
         $log[] = $entity->id();
