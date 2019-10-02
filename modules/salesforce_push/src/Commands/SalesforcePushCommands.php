@@ -161,9 +161,9 @@ class SalesforcePushCommands extends SalesforceMappingCommandsBase {
       $op = MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE;
       $time = time();
       $insertQuery = "REPLACE INTO salesforce_push_queue (name, entity_id, mapped_object_id, op, failures, expire, created, updated) 
-          (SELECT '$mapping_name', drupal_entity__target_id, id, '$op', 0, 0, $time, $time FROM salesforce_mapped_object";
+          (SELECT '$mapping_name', drupal_entity__target_id, id, '$op', 0, 0, $time, $time FROM salesforce_mapped_object WHERE salesforce_mapping = '$mapping_name' ";
       if (!empty($ids)) {
-        $insertQuery .= " WHERE drupal_entity__target_id IN (" . implode(',', $ids) . ")";
+        $insertQuery .= " AND drupal_entity__target_id IN (" . implode(',', $ids) . ")";
       }
       $insertQuery .= ")";
       $this->database->query($insertQuery)->execute();
