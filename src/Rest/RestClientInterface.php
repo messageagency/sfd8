@@ -15,7 +15,7 @@ interface RestClientInterface {
   /**
    * Determine if this SF instance is fully configured.
    *
-   * @TODO: Consider making a test API call.
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \Drupal\salesforce\Consumer\SalesforceCredentials::isValid instead.
    */
   public function isAuthorized();
 
@@ -114,6 +114,8 @@ interface RestClientInterface {
    *
    * @return string
    *   Complete URL endpoint for API access.
+   *
+   * @deprecated in 8.x-4.0, use \Drupal\salesforce\SalesforceAuthProviderInterface::getApiEndpoint instead.
    */
   public function getApiEndPoint($api_type = 'rest');
 
@@ -122,6 +124,8 @@ interface RestClientInterface {
    *
    * @return string
    *   The SF API version.
+   *
+   * @deprecated in 8.x-4.0, use \Drupal\salesforce\SalesforceAuthProviderInterface::getApiVersion instead.
    */
   public function getApiVersion();
 
@@ -135,6 +139,8 @@ interface RestClientInterface {
    *
    * @throws \Exception
    * @throws \GuzzleHttp\Exception\RequestException
+   *
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \Drupal::config('salesforce.settings')->set('rest_api_version.version') instead.
    */
   public function setApiVersion($use_latest = TRUE, $version = NULL);
 
@@ -152,6 +158,8 @@ interface RestClientInterface {
    *
    * @return string|null
    *   Consumer key.
+   *
+   * @deprecated in 8.x-4.0, use \Drupal\salesforce\SalesforceAuthProviderInterface::getConsumerKey instead.
    */
   public function getConsumerKey();
 
@@ -162,6 +170,8 @@ interface RestClientInterface {
    *   Consumer key value.
    *
    * @return $this
+   *
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \Drupal\salesforce\SalesforceAuthProviderInterface instead.
    */
   public function setConsumerKey($value);
 
@@ -170,6 +180,8 @@ interface RestClientInterface {
    *
    * @return string|null
    *   Consumer secret.
+   *
+   * @deprecated in 8.x-4.0, use \Drupal\salesforce\SalesforceAuthProviderInterface::getConsumerSecret instead.
    */
   public function getConsumerSecret();
 
@@ -180,6 +192,8 @@ interface RestClientInterface {
    *   Consumer secret value.
    *
    * @return $this
+   *
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \Drupal\salesforce\SalesforceAuthProviderInterface instead.
    */
   public function setConsumerSecret($value);
 
@@ -188,6 +202,8 @@ interface RestClientInterface {
    *
    * @return string|null
    *   Login url.
+   *
+   * @deprecated in 8.x-4.0, use \Drupal\salesforce\SalesforceAuthProviderInterface::getLoginUrl instead.
    */
   public function getLoginUrl();
 
@@ -198,6 +214,8 @@ interface RestClientInterface {
    *   The login url.
    *
    * @return $this
+   *
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \Drupal\salesforce\SalesforceAuthProviderInterface instead.
    */
   public function setLoginUrl($value);
 
@@ -206,6 +224,8 @@ interface RestClientInterface {
    *
    * @return string|null
    *   The instance url.
+   *
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \Drupal\salesforce\getInstanceUrl instead.
    */
   public function getInstanceUrl();
 
@@ -216,6 +236,8 @@ interface RestClientInterface {
    *   The url.
    *
    * @return $this
+   *
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \Drupal\salesforce\SalesforceAuthProviderInterface instead.
    */
   public function setInstanceUrl($url);
 
@@ -224,6 +246,8 @@ interface RestClientInterface {
    *
    * @return string|null
    *   The access token.
+   *
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \Drupal\salesforce\SalesforceAuthProviderInterface::getAccessToken instead.
    */
   public function getAccessToken();
 
@@ -232,6 +256,8 @@ interface RestClientInterface {
    *
    * @param string $token
    *   Access token from Salesforce.
+   *
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \Drupal\salesforce\SalesforceAuthProviderInterface instead.
    */
   public function setAccessToken($token);
 
@@ -240,6 +266,8 @@ interface RestClientInterface {
    *
    * @param string $token
    *   Refresh token from Salesforce.
+   *
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \Drupal\salesforce\SalesforceAuthProviderInterface instead.
    */
   public function setRefreshToken($token);
 
@@ -247,6 +275,8 @@ interface RestClientInterface {
    * Refresh access token based on the refresh token.
    *
    * @throws \Exception
+   *
+   * @deprecated in 8.x-4.0, use \Drupal\salesforce\SalesforceAuthProviderInterface::refreshAccessToken instead.
    */
   public function refreshToken();
 
@@ -258,6 +288,8 @@ interface RestClientInterface {
    *
    * @see SalesforceController::oauthCallback()
    * @see self::refreshToken()
+   *
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \OAuth\Common\Http\Client\StreamClient::retrieveResponse instead.
    */
   public function handleAuthResponse(Response $response);
 
@@ -268,6 +300,8 @@ interface RestClientInterface {
    *   Identity URL.
    *
    * @throws \Exception
+   *
+   * @deprecated in 8.x-4.0 and does not have an exact analog, refer to \Drupal\salesforce\SalesforceAuthProviderPluginBase::parseIdentityResponse instead.
    */
   public function initializeIdentity($id);
 
@@ -276,11 +310,15 @@ interface RestClientInterface {
    *
    * @return array|FALSE
    *   Returns FALSE is no identity has been stored.
+   *
+   * @deprecated in 8.x-4.0, use \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface::retrieveIdentity instead.
    */
   public function getIdentity();
 
   /**
    * Set the Salesforce identity, which is stored in a variable.
+   *
+   * @deprecated in 8.x-4.0, use \Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface::storeIdentity instead.
    */
   public function setIdentity($data);
 
@@ -291,6 +329,8 @@ interface RestClientInterface {
    *   Redirect URL.
    *
    * @see \Drupal\salesforce\Controller\SalesforceController
+   *
+   * @deprecated in 8.x-4.0, use \Drupal\salesforce\Consumer\SalesforceCredentials::getCallbackUrl instead.
    */
   public function getAuthCallbackUrl();
 
@@ -299,6 +339,8 @@ interface RestClientInterface {
    *
    * @return string
    *   REST OAuth Login URL.
+   *
+   * @deprecated in 8.x-4.0, use \Drupal\salesforce\SalesforceAuthProviderInterface::getAuthorizationEndpoint instead.
    */
   public function getAuthEndpointUrl();
 
@@ -307,6 +349,8 @@ interface RestClientInterface {
    *
    * @return string
    *   REST OAuth Token URL.
+   *
+   * @deprecated in 8.x-4.0, use \Drupal\salesforce\SalesforceAuthProviderInterface::getAccessTokenEndpoint instead.
    */
   public function getAuthTokenUrl();
 
