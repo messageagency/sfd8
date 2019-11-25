@@ -147,6 +147,13 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       return $this;
     }
     foreach ($vids_to_delete as $vid => $dummy) {
+      /** @var \Drupal\Core\Entity\RevisionableInterface $revision */
+      if ($revision = $storage->loadRevision($vid)) {
+        // Prevent deletion if this is the default revision.
+        if ($revision->isDefaultRevision()) {
+          continue;
+        }
+      }
       $storage->deleteRevision($vid);
     }
     return $this;
