@@ -65,6 +65,7 @@ function drush_salesforce_mapping_sf_prune_revisions() {
     return;
   }
   $etm = \Drupal::service('entity_type.manager');
+  /** @var \Drupal\salesforce_mapping\MappedObjectStorage $storage */
   $storage = $etm
     ->getStorage('salesforce_mapped_object');
   $revision_table = $etm
@@ -92,8 +93,10 @@ function drush_salesforce_mapping_sf_prune_revisions() {
     if ($i++ % $buckets == 0) {
       drush_log("Pruned $i of $total records.", 'ok');
     }
-    $mapped_object = $storage->load($id);
-    $mapped_object->pruneRevisions($storage);
+    /** @var \Drupal\salesforce_mapping\Entity\MappedObject $mapped_object */
+    if ($mapped_object = $storage->load($id)) {
+      $mapped_object->pruneRevisions($storage);
+    }
   }
 
 }
