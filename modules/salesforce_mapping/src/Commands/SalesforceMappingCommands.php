@@ -121,8 +121,9 @@ class SalesforceMappingCommands extends SalesforceMappingCommandsBase {
         $this->logger()->info(dt("Pruned !i of !total records.", ['!i' => $i, '!total' => $total]));
       }
       /** @var \Drupal\salesforce_mapping\Entity\MappedObject $mapped_object */
-      $mapped_object = $this->mappedObjectStorage->load($id);
-      $mapped_object->pruneRevisions($this->mappedObjectStorage);
+      if ($mapped_object = $this->mappedObjectStorage->load($id)) {
+        $mapped_object->pruneRevisions($this->mappedObjectStorage);
+      }
     }
   }
 
