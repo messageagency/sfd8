@@ -413,13 +413,13 @@ class RestClientTest extends UnitTestCase {
       ->method('apiCall')
       ->willReturn(NULL);
 
-    $exception404 = new RequestException('', new GuzzleRequest('', ''), new GuzzleResponse(404, [], ''));
+    $exception404 = new RequestException('', new GuzzleRequest('GET', ''), new GuzzleResponse(404, [], ''));
     $this->client->expects($this->at(1))
       ->method('apiCall')
       ->will($this->throwException($exception404));
 
     // Test the objectDelete throws any other exception.
-    $exceptionOther = new RequestException('', new GuzzleRequest('', ''), new GuzzleResponse(456, [], ''));
+    $exceptionOther = new RequestException('', new GuzzleRequest('GET', ''), new GuzzleResponse(456, [], ''));
     $this->client->expects($this->at(2))
       ->method('apiCall')
       ->will($this->throwException($exceptionOther));
