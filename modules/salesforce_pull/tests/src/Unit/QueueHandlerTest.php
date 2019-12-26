@@ -25,6 +25,12 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  * @group salesforce_pull
  */
 class QueueHandlerTest extends UnitTestCase {
+
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
   static public $modules = ['salesforce_pull'];
 
   /**

@@ -28,6 +28,11 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 class Token extends SalesforceMappingFieldPluginBase {
 
+  /**
+   * Token service.
+   *
+   * @var \Drupal\Core\Utility\Token
+   */
   protected $token;
 
   /**

@@ -18,6 +18,11 @@ class SalesforceLoggerSubscriber implements EventSubscriberInterface {
 
   const EXCEPTION_MESSAGE_PLACEHOLDER = '%type: @message in %function (line %line of %file).';
 
+  /**
+   * Logger.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
 
   /**

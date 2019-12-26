@@ -2,14 +2,14 @@
 
 namespace Drupal\salesforce_mapping_ui\Tests;
 
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests for salesforce admin settings.
  *
  * @group salesforce_mapping
  */
-class SalesforceMappingCrudFormTest extends WebTestBase {
+class SalesforceMappingCrudFormTest extends BrowserTestBase {
 
   /**
    * Modules to enable.
@@ -26,7 +26,11 @@ class SalesforceMappingCrudFormTest extends WebTestBase {
     'dynamic_entity_reference',
   ];
 
-  protected $normalUser;
+  /**
+   * Admin user.
+   *
+   * @var \Drupal\user\Entity\User
+   */
   protected $adminSalesforceUser;
 
   /**

@@ -29,6 +29,12 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  * @group salesforce_pull
  */
 class PullBaseTest extends UnitTestCase {
+
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
   public static $modules = ['salesforce_pull'];
 
   /**

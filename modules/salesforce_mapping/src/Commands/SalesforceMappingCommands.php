@@ -26,7 +26,18 @@ use Drupal\salesforce\Storage\SalesforceAuthTokenStorageInterface;
  */
 class SalesforceMappingCommands extends SalesforceMappingCommandsBase {
 
+  /**
+   * Salesforce settings.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
   protected $salesforceConfig;
+
+  /**
+   * Database service.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
   protected $database;
 
   /**

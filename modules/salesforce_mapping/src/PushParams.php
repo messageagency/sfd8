@@ -12,8 +12,25 @@ use Drupal\Core\Entity\EntityInterface;
  */
 class PushParams {
 
+  /**
+   * Key-value array of raw data.
+   *
+   * @var array
+   */
   protected $params;
+
+  /**
+   * Mapping for this push params.
+   *
+   * @var \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface
+   */
   protected $mapping;
+
+  /**
+   * The Drupal entity being parameterized.
+   *
+   * @var \Drupal\Core\Entity\EntityInterface
+   */
   protected $drupalEntity;
 
   /**

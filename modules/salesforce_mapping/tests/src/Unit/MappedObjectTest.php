@@ -23,6 +23,12 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  * @group salesforce_mapping
  */
 class MappedObjectTest extends UnitTestCase {
+
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
   static public $modules = ['salesforce_mapping'];
 
   /**

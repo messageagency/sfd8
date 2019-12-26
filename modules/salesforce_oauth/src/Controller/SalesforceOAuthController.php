@@ -18,8 +18,25 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  */
 class SalesforceOAuthController extends ControllerBase {
 
+  /**
+   * Request stack service.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
   protected $request;
+
+  /**
+   * Messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
   protected $messenger;
+
+  /**
+   * Temp store factory service.
+   *
+   * @var \Drupal\Core\TempStore\PrivateTempStore
+   */
   protected $tempStore;
 
   /**

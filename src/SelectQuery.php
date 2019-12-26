@@ -9,10 +9,39 @@ namespace Drupal\salesforce;
  */
 class SelectQuery implements SelectQueryInterface {
 
+  /**
+   * Fields to be selected.
+   *
+   * @var array
+   */
   public $fields = [];
+
+  /**
+   * Order-by statements.
+   *
+   * @var array
+   */
   public $order = [];
+
+  /**
+   * Objct type name, e.g. Contact, Account, etc.
+   *
+   * @var string
+   */
   public $objectType;
+
+  /**
+   * Limit query result to this number.
+   *
+   * @var int
+   */
   public $limit;
+
+  /**
+   * Condition statements.
+   *
+   * @var array
+   */
   public $conditions = [];
 
   /**

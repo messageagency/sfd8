@@ -105,14 +105,13 @@ class PullController extends ControllerBase {
     $this->deleteHandler = $deleteHandler;
     $this->mappingStorage = $etm->getStorage('salesforce_mapping');
     $this->config = $config;
-    $this->state  = $state;
+    $this->state = $state;
     $this->queueService = $queueService;
     $this->queueWorkerManager = $queueWorkerManager;
     $this->eventDispatcher = $eventDispatcher;
     $this->time = $time;
     $this->request = $requestStack->getCurrentRequest();
   }
-
 
   /**
    * {@inheritdoc}
@@ -164,6 +163,9 @@ class PullController extends ControllerBase {
     return new Response('', 204);
   }
 
+  /**
+   * Helper method to populate queue, optionally by mapping or a single record.
+   */
   protected function populateQueue(SalesforceMappingInterface $mapping = NULL, SFID $id = NULL) {
     $mappings = [];
     if ($id) {
@@ -182,12 +184,18 @@ class PullController extends ControllerBase {
     }
   }
 
+  /**
+   * Helper method to get queue processing time limit.
+   */
   protected function getTimeLimit() {
     return self::DEFAULT_TIME_LIMIT;
   }
 
+  /**
+   * Helper method to process queue.
+   */
   protected function processQueue() {
-    $start = microtime(true);
+    $start = microtime(TRUE);
     $worker = $this->queueWorkerManager->createInstance(QueueHandler::PULL_QUEUE_NAME);
     $end = time() + $this->getTimeLimit();
     $queue = $this->queueService->get(QueueHandler::PULL_QUEUE_NAME);
@@ -210,7 +218,12 @@ class PullController extends ControllerBase {
         throw new \Exception($e->getMessage());
       }
     }
-    $elapsed = microtime(true) - $start;
-    $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, 'Processed @count items from the @name queue in @elapsed sec.', ['@count' => $count, '@name' => QueueHandler::PULL_QUEUE_NAME, '@elapsed' => round($elapsed, 2)]));
+    $elapsed = microtime(TRUE) - $start;
+    $this->eventDispatcher->dispatch(SalesforceEvents::NOTICE, new SalesforceNoticeEvent(NULL, 'Processed @count items from the @name queue in @elapsed sec.', [
+      '@count' => $count,
+      '@name' => QueueHandler::PULL_QUEUE_NAME,
+      '@elapsed' => round($elapsed, 2),
+    ]));
   }
+
 }

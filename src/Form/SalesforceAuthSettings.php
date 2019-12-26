@@ -16,7 +16,18 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 class SalesforceAuthSettings extends ConfigFormBase {
 
+  /**
+   * Auth provider plugin manager service.
+   *
+   * @var \Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface
+   */
   protected $salesforceAuth;
+
+  /**
+   * Event dispatcher service.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
   protected $eventDispatcher;
 
   /**

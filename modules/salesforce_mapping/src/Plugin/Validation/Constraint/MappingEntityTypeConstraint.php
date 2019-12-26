@@ -15,6 +15,11 @@ use Symfony\Component\Validator\Constraint;
  */
 class MappingEntityTypeConstraint extends Constraint {
 
+  /**
+   * Constraint message.
+   *
+   * @var string
+   */
   public $message = 'Mapping %mapping cannot be used with entity type %entity_type.';
 
 }

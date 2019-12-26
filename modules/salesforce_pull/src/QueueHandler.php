@@ -195,7 +195,7 @@ class QueueHandler {
     if (!$mapping->doesPull()) {
       return FALSE;
     }
-    $record = $this->sfapi->objectRead($mapping->getSalesforceObjectType(), (string)$id);
+    $record = $this->sfapi->objectRead($mapping->getSalesforceObjectType(), (string) $id);
     if ($record) {
       $results = SelectQueryResult::createSingle($record);
       $this->enqueueAllResults($mapping, $results, $force_pull);

@@ -179,18 +179,7 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
   }
 
   /**
-   * Refreshes a the JWT access token: pass-through to requestAccessToken().
-   *
-   * @param \OAuth\Common\Token\TokenInterface $token
-   *   The JWT OAuth token to refresh.
-   *
-   * @return \OAuth\Common\Token\TokenInterface
-   *   On success.
-   *
-   * @throws \OAuth\OAuth2\Service\Exception\MissingRefreshTokenException
-   *   On error.
-   * @throws \OAuth\Common\Http\Exception\TokenResponseException
-   *   On error.
+   * {@inheritDoc}
    */
   public function refreshAccessToken(TokenInterface $token) {
     return $this->requestAccessToken($this->generateAssertion());

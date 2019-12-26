@@ -21,6 +21,11 @@ use Prophecy\Argument;
  */
 class SalesforceMappingTest extends UnitTestCase {
 
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
   static public $modules = ['salesforce_mapping'];
 
   /**
@@ -162,7 +167,7 @@ class SalesforceMappingTest extends UnitTestCase {
     $expectedQuery->fields = $this->mapping->getPullFieldsArray();
     $expectedQuery->fields[] = 'Id';
     $expectedQuery->fields[] = $this->mapping->getPullTriggerDate();
-    $expectedQuery->order[$this->mapping->getPullTriggerDate()] = 'ASC';-
+    $expectedQuery->order[$this->mapping->getPullTriggerDate()] = 'ASC';
     $this->assertArrayEquals($expectedQuery->fields, $query->fields);
     $this->assertArrayEquals($expectedQuery->order, $query->order);
     $this->assertArrayEquals($expectedQuery->conditions, $query->conditions);

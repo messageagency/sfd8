@@ -170,7 +170,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * {@inheritdoc}
    */
   public function pushValue(EntityInterface $entity, SalesforceMappingInterface $mapping) {
-    // @TODO to provide for better extensibility, this would be better implemented as some kind of constraint or plugin system. That would also open new possibilities for injecting business logic into he mapping layer.
+    // @TODO to provide for better extensibility, this would be better implemented as some kind of constraint or plugin system. That would also open new possibilities for injecting business logic into the mapping layer.
 
     // If this field plugin doesn't support salesforce_field config type, or
     // doesn't do push, then return the raw value from the mapped entity.
@@ -249,7 +249,7 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
    * {@inheritdoc}
    */
   public function pullValue(SObject $sf_object, EntityInterface $entity, SalesforceMappingInterface $mapping) {
-    // @TODO to provide for better extensibility, this would be better implemented as some kind of constraint or plugin system. That would also open new possibilities for injecting business logic into he mapping layer.
+    // @TODO to provide for better extensibility, this would be better implemented as some kind of constraint or plugin system. That would also open new possibilities for injecting business logic into the mapping layer.
 
     if (!$this->pull() || empty($this->config('salesforce_field'))) {
       throw new SalesforceException('No data to pull. Salesforce field mapping is not defined.');

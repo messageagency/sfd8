@@ -15,7 +15,6 @@ use Drupal\salesforce_mapping_ui\Form\SalesforceMappingEnableForm;
 use Drupal\salesforce_mapping_ui\Form\SalesforceMappingFieldsForm;
 use Drupal\salesforce_mapping_ui\MappedObjectList;
 use Drupal\salesforce_mapping_ui\Form\MappedObjectForm;
-use Drupal\salesforce_mapping_ui\Form\MappedObjectDeleteForm;
 
 /**
  * Implements hook_entity_type_alter().

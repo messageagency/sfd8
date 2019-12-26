@@ -13,6 +13,12 @@ use Drupal\salesforce_pull\PullQueueItem;
  * @group salesforce_pull
  */
 class PullQueueItemTest extends UnitTestCase {
+
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
   public static $modules = ['salesforce_pull'];
 
   /**

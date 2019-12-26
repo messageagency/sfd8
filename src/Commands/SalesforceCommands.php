@@ -178,7 +178,6 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   Display the full metadata for Contact SObject type.
    *
    * @command salesforce:describe-object-deprecated
-   * @deprecated Use describeFields, describeMetadata, describeRecordTypes...
    *
    * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields|null
    *   Describe result.
@@ -672,8 +671,6 @@ class SalesforceCommands extends SalesforceCommandsBase {
     return $this->returnQueryResult(new QueryResult($query, $this->client->query($query)));
   }
 
-
-
   /**
    * Lists authentication providers.
    *
@@ -691,7 +688,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    */
   public function listAuthProviders() {
     $rows = [];
-    foreach($this->authMan->getProviders() as $provider) {
+    foreach ($this->authMan->getProviders() as $provider) {
 
       $rows[] = [
         'default' => $this->authMan->getConfig()->id() == $provider->id() ? '✓' : '',
@@ -717,6 +714,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   Message indicating success or failure.
    *
    * @throws \OAuth\OAuth2\Service\Exception\MissingRefreshTokenException
+   *   For missing token.
    */
   public function refreshToken($providerName = '') {
     // If no provider name given, use the default.
@@ -746,6 +744,7 @@ class SalesforceCommands extends SalesforceCommandsBase {
    *   Message indicating success or failure.
    *
    * @throws \OAuth\OAuth2\Service\Exception\MissingRefreshTokenException
+   *   For missing token.
    */
   public function revokeToken($providerName = '') {
     // If no provider name given, use the default.

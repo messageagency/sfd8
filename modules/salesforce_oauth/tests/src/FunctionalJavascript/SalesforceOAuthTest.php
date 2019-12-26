@@ -11,6 +11,11 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  */
 class SalesforceOAuthTest extends WebDriverTestBase {
 
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
   public static $modules = [
     'key',
     'typed_data',
@@ -80,4 +85,5 @@ class SalesforceOAuthTest extends WebDriverTestBase {
   public function testOAuthCallback() {
     // @todo
   }
+
 }

@@ -49,7 +49,7 @@ interface PushQueueInterface extends ReliableQueueInterface {
    *
    * @param \Exception $e
    *   The exception which caused the failure.
-   * @param \stdClass $item
+   * @param object $item
    *   The failed item.
    */
   public function failItem(\Exception $e, \stdClass $item);

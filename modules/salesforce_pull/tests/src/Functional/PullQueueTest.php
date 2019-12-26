@@ -2,9 +2,6 @@
 
 namespace Drupal\Tests\salesforce_pull\Functional;
 
-use Drupal\Core\Queue\RequeueException;
-use Drupal\Core\Queue\SuspendQueueException;
-use Drupal\node\Entity\Node;
 use Drupal\salesforce\SFID;
 use Drupal\salesforce\Tests\TestRestClient;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
@@ -15,9 +12,20 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @group salesforce_push
  */
-class PushQueueTest extends BrowserTestBase {
+class PullQueueTest extends BrowserTestBase {
 
-  public static $modules = ['typed_data', 'dynamic_entity_reference', 'salesforce_mapping', 'salesforce_mapping_test', 'salesforce_pull'];
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
+  public static $modules = [
+    'typed_data',
+    'dynamic_entity_reference',
+    'salesforce_mapping',
+    'salesforce_mapping_test',
+    'salesforce_pull',
+  ];
 
   /**
    * Test that saving mapped nodes enqueues them for push to Salesforce.
@@ -45,7 +53,7 @@ class PushQueueTest extends BrowserTestBase {
     /** @var \Drupal\salesforce_mapping\MappedObjectStorage $mappedObjectStorage */
     $mappedObjectStorage = \Drupal::entityTypeManager()
       ->getStorage('salesforce_mapped_object');
-    for ($i = 0 ; $i < $items['totalSize']; $i++) {
+    for ($i = 0; $i < $items['totalSize']; $i++) {
       $item = $queue->claimItem();
       /** @var \Drupal\salesforce_pull\PullQueueItem $data */
       $data = $item->data;
@@ -78,8 +86,7 @@ class PushQueueTest extends BrowserTestBase {
     // Make sure our queue was re-populated.
     $this->assertEquals($items['totalSize'], $queue->numberOfItems());
 
-
-    for ($i = 0 ; $i < $items['totalSize']; $i++) {
+    for ($i = 0; $i < $items['totalSize']; $i++) {
       $item = $queue->claimItem();
       /** @var \Drupal\salesforce_pull\PullQueueItem $data */
       $data = $item->data;

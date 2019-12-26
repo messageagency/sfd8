@@ -7,6 +7,11 @@ namespace Drupal\salesforce;
  */
 class SelectQueryRaw implements SelectQueryInterface {
 
+  /**
+   * The query.
+   *
+   * @var string
+   */
   protected $query;
 
   /**

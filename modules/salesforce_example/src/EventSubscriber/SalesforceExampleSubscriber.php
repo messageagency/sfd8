@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_example\EventSubscriber;
 
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
 use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent;
@@ -159,9 +160,9 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
         // Fetch file destination from account settings.
         $destination = "public://user_picture/profilepic-" . $sf_data->id() . ".jpg";
 
-        // Attach the new file id to the user entity
+        // Attach the new file id to the user entity.
         /* var \Drupal\file\FileInterface */
-        if ($file = file_save_data($file_data, $destination, FILE_EXISTS_REPLACE)) {
+        if ($file = file_save_data($file_data, $destination, FileSystemInterface::EXISTS_REPLACE)) {
           $account->user_picture->target_id = $file->id();
         }
         else {

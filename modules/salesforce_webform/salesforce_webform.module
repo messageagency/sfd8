@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Salesforce webform.
+ */
+
 use Drupal\webform\Entity\WebformSubmission;
 
 /**

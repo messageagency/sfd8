@@ -50,8 +50,6 @@ function salesforce_mapping_drush_command() {
 
 /**
  * Support for drush 8 is deprecated and will be removed in a future release.
- *
- * @deprecated
  */
 function drush_salesforce_mapping_sf_prune_revisions() {
   _drush_salesforce_deprecated();
@@ -103,8 +101,6 @@ function drush_salesforce_mapping_sf_prune_revisions() {
 
 /**
  * Support for drush 8 is deprecated and will be removed in a future release.
- *
- * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_drupal() {
   _drush_salesforce_deprecated();
@@ -152,8 +148,6 @@ function drush_salesforce_mapping_sf_purge_drupal() {
 
 /**
  * Support for drush 8 is deprecated and will be removed in a future release.
- *
- * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_salesforce() {
   _drush_salesforce_deprecated();
@@ -226,8 +220,6 @@ function drush_salesforce_mapping_sf_purge_salesforce() {
 
 /**
  * Support for drush 8 is deprecated and will be removed in a future release.
- *
- * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_mapping() {
   _drush_salesforce_deprecated();
@@ -274,8 +266,6 @@ function drush_salesforce_mapping_sf_purge_mapping() {
 
 /**
  * Support for drush 8 is deprecated and will be removed in a future release.
- *
- * @deprecated
  */
 function drush_salesforce_mapping_sf_purge_all() {
   _drush_salesforce_deprecated();

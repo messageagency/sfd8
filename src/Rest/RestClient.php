@@ -106,6 +106,11 @@ class RestClient implements RestClientInterface {
    */
   protected $authToken;
 
+  /**
+   * HTTP client options.
+   *
+   * @var array
+   */
   protected $httpClientOptions;
 
   const CACHE_LIFETIME = 300;

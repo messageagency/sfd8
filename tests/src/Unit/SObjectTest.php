@@ -11,6 +11,12 @@ use Drupal\salesforce\SObject;
  * @group salesforce_pull
  */
 class SObjectTest extends UnitTestCase {
+
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
   static public $modules = ['salesforce'];
 
   /**

@@ -18,7 +18,17 @@ use DateTime;
  */
 class PushParamsTest extends BrowserTestBase {
 
-  public static $modules = ['typed_data', 'dynamic_entity_reference', 'salesforce_mapping', 'salesforce_mapping_test'];
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
+  public static $modules = [
+    'typed_data',
+    'dynamic_entity_reference',
+    'salesforce_mapping',
+    'salesforce_mapping_test',
+  ];
 
   /**
    * Test PushParams instantiation, where all the work gets done.
@@ -30,9 +40,9 @@ class PushParamsTest extends BrowserTestBase {
 
     // Entity 1 is the target reference.
     $entity1 = Node::create([
-        'type' => 'salesforce_mapping_test_content',
-        'title' => 'Test Example',
-      ]
+      'type' => 'salesforce_mapping_test_content',
+      'title' => 'Test Example',
+    ]
     );
     $entity1->save();
 

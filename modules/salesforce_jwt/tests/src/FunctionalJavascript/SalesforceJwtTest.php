@@ -4,9 +4,6 @@ namespace Drupal\Tests\salesforce_jwt\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\key\Entity\Key;
-use Drupal\salesforce\Entity\SalesforceAuthConfig;
-use Drupal\simpletest\WebTestBase;
-use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\key\Functional\KeyTestTrait;
 
 /**
@@ -18,7 +15,19 @@ class SalesforceJwtTest extends WebDriverTestBase {
 
   use KeyTestTrait;
 
-  public static $modules = ['key', 'typed_data', 'dynamic_entity_reference', 'salesforce', 'salesforce_test_rest_client', 'salesforce_jwt'];
+  /**
+   * Modules.
+   *
+   * @var array
+   */
+  public static $modules = [
+    'key',
+    'typed_data',
+    'dynamic_entity_reference',
+    'salesforce',
+    'salesforce_test_rest_client',
+    'salesforce_jwt',
+  ];
 
   /**
    * Admin user to test form.

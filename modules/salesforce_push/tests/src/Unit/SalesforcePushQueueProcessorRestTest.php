@@ -27,6 +27,12 @@ use Drupal\Core\StringTranslation\TranslationInterface;
  * @group salesforce_pull
  */
 class SalesforcePushQueueProcessorRestTest extends UnitTestCase {
+
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
   static public $modules = ['salesforce_pull'];
 
   /**

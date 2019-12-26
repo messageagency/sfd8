@@ -15,8 +15,18 @@ use Symfony\Component\Validator\Constraint;
  */
 class UniqueFieldsConstraint extends Constraint {
 
+  /**
+   * Constraint message.
+   *
+   * @var string
+   */
   public $message = 'A @entity_type already exists: <a href=":url">@label</a>';
 
+  /**
+   * Array of unique fields.
+   *
+   * @var array
+   */
   public $fields;
 
   /**

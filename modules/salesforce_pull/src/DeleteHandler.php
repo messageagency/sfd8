@@ -63,6 +63,11 @@ class DeleteHandler {
    */
   protected $time;
 
+  /**
+   * Event dispatcher service.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
   protected $eventDispatcher;
 
   /**

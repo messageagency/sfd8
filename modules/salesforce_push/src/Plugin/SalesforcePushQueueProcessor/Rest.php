@@ -133,7 +133,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   /**
    * Push queue item process callback.
    *
-   * @param \stdClass $item
+   * @param object $item
    *   The push queue item.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
@@ -201,7 +201,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   /**
    * Return the mapped object given a queue item and mapping.
    *
-   * @param \stdClass $item
+   * @param object $item
    *   Push queue item.
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *   The mapping.
@@ -244,7 +244,7 @@ class Rest extends PluginBase implements PushQueueProcessorInterface {
   /**
    * Helper method to generate a new MappedObject during push procesing.
    *
-   * @param \stdClass $item
+   * @param object $item
    *   Push queue item.
    * @param \Drupal\salesforce_mapping\Entity\SalesforceMappingInterface $mapping
    *   The mapping.

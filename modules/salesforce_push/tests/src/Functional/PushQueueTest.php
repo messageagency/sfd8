@@ -3,7 +3,6 @@
 namespace Drupal\Tests\salesforce_push\Functional;
 
 use Drupal\node\Entity\Node;
-use Drupal\salesforce_mapping\Entity\MappedObject;
 use Drupal\salesforce_mapping\Entity\SalesforceMapping;
 use Drupal\Tests\BrowserTestBase;
 
@@ -14,7 +13,18 @@ use Drupal\Tests\BrowserTestBase;
  */
 class PushQueueTest extends BrowserTestBase {
 
-  public static $modules = ['typed_data', 'dynamic_entity_reference', 'salesforce_mapping', 'salesforce_mapping_test', 'salesforce_push'];
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
+  public static $modules = [
+    'typed_data',
+    'dynamic_entity_reference',
+    'salesforce_mapping',
+    'salesforce_mapping_test',
+    'salesforce_push',
+  ];
 
   /**
    * Test queue features.
@@ -23,6 +33,11 @@ class PushQueueTest extends BrowserTestBase {
    * Test mocked push queue create and creation of mapped objects.
    * Test mocked push queue update and update of mapped objects.
    * Test deletion of entities and corresponding deletion of SF related records.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function testQueue() {
     /** @var \Drupal\salesforce_push\PushQueue $queue */
@@ -37,17 +52,17 @@ class PushQueueTest extends BrowserTestBase {
     $this->assertEquals(0, $queue->numberOfItems());
 
     $node1 = Node::create([
-        'type' => 'salesforce_mapping_test_content',
-        'title' => 'Test Example',
-      ]
+      'type' => 'salesforce_mapping_test_content',
+      'title' => 'Test Example',
+    ]
     );
     $node1->save();
     $this->assertEquals(1, $queue->numberOfItems());
 
     $node2 = Node::create([
-        'type' => 'salesforce_mapping_test_content',
-        'title' => 'Test Example 2',
-      ]
+      'type' => 'salesforce_mapping_test_content',
+      'title' => 'Test Example 2',
+    ]
     );
     $node2->save();
     $this->assertEquals(2, $queue->numberOfItems());

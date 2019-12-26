@@ -8,7 +8,6 @@ use Drupal\salesforce\Rest\RestResponseDescribe;
 use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce\SelectQueryResult;
 use Drupal\salesforce\SFID;
-use Drupal\salesforce\SObject;
 use GuzzleHttp\Psr7\Response;
 use Drupal\salesforce\Rest\RestClient;
 
@@ -29,6 +28,9 @@ class TestRestClient extends RestClient {
     return TRUE;
   }
 
+  /**
+   * Wrapper for test results.
+   */
   public static function getContactQueryResults() {
     return json_decode(file_get_contents(__DIR__ . '/contactQuery.json'), JSON_OBJECT_AS_ARRAY);
   }
@@ -122,7 +124,7 @@ class TestRestClient extends RestClient {
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function objectCreate($name, array $params) {
     $random = new Random();
@@ -130,7 +132,7 @@ class TestRestClient extends RestClient {
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function objectUpsert($name, $key, $value, array $params) {
     $random = new Random();
@@ -138,7 +140,7 @@ class TestRestClient extends RestClient {
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function objectUpdate($name, $id, array $params) {
     // Object update does... NOTHING!
@@ -146,12 +148,11 @@ class TestRestClient extends RestClient {
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function objectDelete($name, $id, $throw_exception = FALSE) {
     // Object delete does... NOTHING!
     return NULL;
   }
-
 
 }

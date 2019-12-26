@@ -12,28 +12,44 @@ use Drupal\Tests\BrowserTestBase;
  */
 class StatusPageTest extends BrowserTestBase {
 
-  public static $modules = array('salesforce', 'salesforce_test_rest_client');
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
+  public static $modules = ['salesforce', 'salesforce_test_rest_client'];
 
   /**
+   * Auth provider manager service.
+   *
    * @var \Drupal\salesforce\Tests\TestSalesforceAuthProviderPluginManager
    */
   protected $authMan;
 
   /**
+   * Token service.
+   *
    * @var \OAuth\OAuth2\Token\TokenInterface
    */
   protected $authToken;
 
   /**
+   * Auth provider.
+   *
    * @var \Drupal\salesforce\SalesforceAuthProviderInterface
    */
   protected $authProvider;
 
   /**
+   * Auth config.
+   *
    * @var \Drupal\salesforce\Entity\SalesforceAuthConfig
    */
   protected $authConfig;
 
+  /**
+   * {@inheritDoc}
+   */
   public function setUp() {
     parent::setUp();
     $this->authMan = \Drupal::service('plugin.manager.salesforce.auth_providers');
@@ -95,11 +111,18 @@ class StatusPageTest extends BrowserTestBase {
     $this->assertArrayNotHasKey('description', $requirements);
   }
 
+  /**
+   * Need to do.
+   */
   public function testTlsRequirements() {
     // @TODO write me.
   }
 
+  /**
+   * Need to do.
+   */
   public function testUsageRequirements() {
     // @TODO write me.
   }
+
 }

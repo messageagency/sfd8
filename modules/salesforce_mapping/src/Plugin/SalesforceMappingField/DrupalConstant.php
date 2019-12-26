@@ -88,14 +88,14 @@ class DrupalConstant extends SalesforceMappingFieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function value(EntityInterface $entity, SalesforceMappingInterface $mapping){
+  public function value(EntityInterface $entity, SalesforceMappingInterface $mapping) {
 
   }
 
   /**
    * {@inheritdoc}
    */
-  public function pullValue(SObject $sf_object, EntityInterface $entity, SalesforceMappingInterface $mapping){
+  public function pullValue(SObject $sf_object, EntityInterface $entity, SalesforceMappingInterface $mapping) {
     return $this->config('drupal_constant');
   }
 

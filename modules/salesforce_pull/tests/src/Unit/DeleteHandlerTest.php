@@ -23,6 +23,12 @@ use Prophecy\Argument;
  * @group salesforce_pull
  */
 class DeleteHandlerTest extends UnitTestCase {
+
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
   protected static $modules = ['salesforce_pull'];
 
   /**

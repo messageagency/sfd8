@@ -112,10 +112,10 @@ class RelatedTermString extends SalesforceMappingFieldPluginBase {
     if (empty($term_id)) {
       $vocab = reset($vocabs);
 
-      $term = Term::create(array(
+      $term = Term::create([
         'name' => $value,
         'vid' => $vocab,
-      ));
+      ]);
       $term->save();
       $term_id = $term->id();
     }
@@ -134,7 +134,7 @@ class RelatedTermString extends SalesforceMappingFieldPluginBase {
     $options = [];
     foreach ($instances as $name => $instance) {
       $hand = $instance->getSetting('handler');
-      //???
+      // ???
       if ($hand != "default:taxonomy_term") {
         continue;
       }

@@ -9,7 +9,13 @@ namespace Drupal\salesforce;
  */
 class SFID {
 
+  /**
+   * The id string value.
+   *
+   * @var string
+   */
   protected $id;
+
   const MAX_LENGTH = 18;
 
   /**

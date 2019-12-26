@@ -8,8 +8,26 @@ namespace Drupal\salesforce;
  * @package Drupal\salesforce
  */
 class SObject {
+
+  /**
+   * The Salesforce table name, e.g. Contact, Account, etc.
+   *
+   * @var string
+   */
   protected $type;
+
+  /**
+   * Key-value array of record fields.
+   *
+   * @var array
+   */
   protected $fields;
+
+  /**
+   * The id.
+   *
+   * @var \Drupal\salesforce\SFID
+   */
   protected $id;
 
   /**

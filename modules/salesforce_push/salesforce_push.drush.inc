@@ -52,8 +52,6 @@ function salesforce_push_drush_command() {
 
 /**
  * Implements drush_hook_COMMAND().
- *
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_push_sf_push_queue($name = NULL) {
   _drush_salesforce_deprecated();
@@ -76,8 +74,6 @@ function drush_salesforce_push_sf_push_queue($name = NULL) {
  *
  * Search for entities without Salesforce Object mappings and attempt to push
  * them to Salesforce.
- *
- * @deprecated Support for drush 8 is deprecated and will be removed in a future release.
  */
 function drush_salesforce_push_unmapped($name = NULL) {
   _drush_salesforce_deprecated();

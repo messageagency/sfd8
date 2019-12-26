@@ -12,6 +12,12 @@ use Drupal\salesforce\SelectQueryResult;
  * @group salesforce_pull
  */
 class SelectQueryResultTest extends UnitTestCase {
+
+  /**
+   * Required modules.
+   *
+   * @var array
+   */
   static public $modules = ['salesforce'];
 
   /**
