@@ -5,6 +5,7 @@ namespace Drupal\salesforce\Commands;
 use Consolidation\OutputFormatters\StructuredData\PropertyList;
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
 use Drupal\salesforce\Rest\RestException;
+use Drupal\salesforce\Entity\SalesforceAuthConfig;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce\SelectQueryRaw;
 use Drupal\salesforce\SFID;
@@ -12,6 +13,7 @@ use Drush\Exceptions\UserAbortException;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Output\Output;
+use OAuth\OAuth2\Token\StdOAuth2Token;
 
 /**
  * A Drush commandfile.
@@ -668,6 +670,95 @@ class SalesforceCommands extends SalesforceCommandsBase {
   public function executeQuery($query) {
     $query = new SelectQueryRaw($query);
     return $this->returnQueryResult(new QueryResult($query, $this->client->query($query)));
+  }
+
+
+
+  /**
+   * Lists authentication providers.
+   *
+   * @command salesforce:list-providers
+   * @aliases sflp
+   * @field-labels
+   *   default: Default
+   *   label: Label
+   *   name: Name
+   *   status: Token Status
+   * @default-fields label,name,default,status
+   *
+   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
+   *   The auth provider details.
+   */
+  public function listAuthProviders() {
+    $rows = [];
+    foreach($this->authMan->getProviders() as $provider) {
+
+      $rows[] = [
+        'default' => $this->authMan->getConfig()->id() == $provider->id() ? '✓' : '',
+        'label' => $provider->label(),
+        'name' => $provider->id(),
+        'status' => $provider->getPlugin()->hasAccessToken() ? 'Authorized' : 'Missing',
+      ];
+    }
+
+    return new RowsOfFields($rows);
+  }
+
+  /**
+   * Refresh the named authentication token, or the default if none specified.
+   *
+   * @param string $providerName
+   *   The name of the authentication provider.
+   *
+   * @command salesforce:refresh-token
+   * @aliases sfrt
+   *
+   * @return string
+   *   Message indicating success or failure.
+   *
+   * @throws \OAuth\OAuth2\Service\Exception\MissingRefreshTokenException
+   */
+  public function refreshToken($providerName = '') {
+    // If no provider name given, use the default.
+    if (empty($providerName)) {
+      $providerName = $this->authMan->getConfig()->id();
+    }
+
+    if ($provider = SalesforceAuthConfig::load($providerName)) {
+      $auth = $provider->getPlugin();
+      $token = $auth->hasAccessToken() ? $auth->getAccessToken() : new StdOAuth2Token();
+      $auth->refreshAccessToken($token);
+      return "Access token refreshed for $providerName";
+    }
+    return "Provider $providerName not found.";
+  }
+
+  /**
+   * Revoke the named authentication token, or the default if none specified.
+   *
+   * @param string $providerName
+   *   The name of the authentication provider.
+   *
+   * @command salesforce:revoke-token
+   * @aliases sfrvk
+   *
+   * @return string
+   *   Message indicating success or failure.
+   *
+   * @throws \OAuth\OAuth2\Service\Exception\MissingRefreshTokenException
+   */
+  public function revokeToken($providerName = '') {
+    // If no provider name given, use the default.
+    if (empty($providerName)) {
+      $providerName = $this->authMan->getConfig()->id();
+    }
+
+    if ($provider = SalesforceAuthConfig::load($providerName)) {
+      $auth = $provider->getPlugin();
+      $auth->revokeAccessToken();
+      return "Access token revoked for $providerName";
+    }
+    return "Provider $providerName not found.";
   }
 
 }
