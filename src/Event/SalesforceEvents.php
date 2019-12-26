@@ -10,6 +10,20 @@ namespace Drupal\salesforce\Event;
 final class SalesforceEvents {
 
   /**
+   * Dispatched before enqueueing or triggering an entity delete.
+   *
+   * Event listeners should call $event->disallowDelete() to prevent delete.
+   *
+   * The event listener method receives a
+   * \Drupal\salesforce_mapping\Event\SalesforceDeleteAllowedEvent instance.
+   *
+   * @Event
+   *
+   * @var string
+   */
+  const DELETE_ALLOWED = 'salesforce.delete_allowed';
+
+  /**
    * Dispatched before enqueueing or triggering a push event.
    *
    * Event listeners should call $event->disallowPush() to prevent push.
