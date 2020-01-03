@@ -10,22 +10,11 @@ module_load_include('test', 'salesforce', 'tests/salesforce');
 /**
  * Sets up basic tools for the testing of mapping Drupal to Salesforce.
  */
-class SalesforceMappingTestCase extends DrupalWebTestCase {
+abstract class SalesforceMappingTestCase extends DrupalWebTestCase {
 
   protected $adminPath = 'admin/structure/salesforce/mappings';
   protected $addMapPath = 'admin/structure/salesforce/mappings/add';
   protected $manageMapPrefix = 'admin/structure/salesforce/mappings/manage/';
-
-  /**
-   * Implementation of getInfo().
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Salesforce Mapping',
-      'description' => 'Sets up basic tools for the testing of mapping Drupal to Salesforce.',
-      'group' => 'Salesforce',
-    );
-  }
 
   /**
    * Implementation of setUp().
