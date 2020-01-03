@@ -48,7 +48,7 @@ function salesforce_pull_webhook() {
     $code = '200';
     // Queue is populated, but not processed yet so we manually do some of what
     // drupal_cron_run() does to trigger processing of our pull queue.
-    $queues = salesforce_cron_queue_info();
+    $queues = salesforce_pull_cron_queue_info();
     $info = $queues[SALESFORCE_PULL_QUEUE];
     $callback = $info['worker callback'];
     $end = time() + (isset($info['time']) ? $info['time'] : 15);
