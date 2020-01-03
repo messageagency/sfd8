@@ -1241,10 +1241,11 @@ function _salesforce_mapping_get_required_mapping_fields(&$form, &$form_state) {
  *   An empty field mapping array.
  */
 function _salesforce_mapping_get_empty_field_map_row() {
+  $direction_options_keys = array_keys(_salesforce_mapping_get_direction_options());
   return array(
     'drupal_field' => '',
     'salesforce_field' => '',
     'key' => '',
-    'direction' => end(array_keys(_salesforce_mapping_get_direction_options())),
+    'direction' => end($direction_options_keys),
   );
 }
