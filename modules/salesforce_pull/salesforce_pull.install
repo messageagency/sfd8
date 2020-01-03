@@ -42,7 +42,7 @@ function salesforce_pull_update_8002() {
  * Convert salesforce_pull_last* timestamps key-values into arrays.
  */
 function salesforce_pull_update_8001() {
-  $kv = db_query("SELECT name, value FROM key_value WHERE name like 'salesforce_pull_last%'")->fetchAllKeyed();
+  $kv = \Drupal::service('database')->query("SELECT name, value FROM key_value WHERE name like 'salesforce_pull_last%'")->fetchAllKeyed();
   $sync = [];
   $delete = [];
   foreach ($kv as $key => $value) {
