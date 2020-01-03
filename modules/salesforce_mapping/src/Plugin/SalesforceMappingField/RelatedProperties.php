@@ -132,9 +132,15 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
           $properties += $this
             ->entityFieldManager
             ->getBaseFieldDefinitions($entity_type);
+          $bundles = array_keys($this->entityTypeBundleInfo->getBundleInfo($entity_type));
+          foreach ($bundles as $bundle) {
+            $properties += $this
+              ->entityFieldManager
+              ->getFieldDefinitions($entity_type, $bundle);
+          }
         }
       }
-      catch (\LogicException $e) {
+      catch (\Exception $e) {
         // @TODO is there a better way to exclude non-fieldables?
         continue;
       }
