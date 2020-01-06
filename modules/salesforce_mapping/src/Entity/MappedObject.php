@@ -51,6 +51,11 @@ use Drupal\salesforce_mapping\PushParams;
  *      "revision" = "revision_id",
  *      "label" = "salesforce_id"
  *   },
+ *   revision_metadata_keys = {
+ *     "revision_user" = "revision_user",
+ *     "revision_created" = "revision_created",
+ *     "revision_log_message" = "revision_log_message"
+ *   },
  *   constraints = {
  *     "MappingSfid" = {},
  *     "MappingEntity" = {},
@@ -91,6 +96,24 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
       }
     }
     parent::__construct($values, 'salesforce_mapped_object');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSaveRevision(EntityStorageInterface $storage, \stdClass $record) {
+    // Revision uid, timestamp, and message are required for D9.
+    if ($this->isNewRevision()) {
+      if (empty($this->getRevisionUserId())) {
+        $this->setRevisionUserId(1);
+      }
+      if (empty($this->getRevisionCreationTime())) {
+        $this->setRevisionCreationTime(time());
+      }
+      if (empty($this->getRevisionLogMessage())) {
+        $this->setRevisionLogMessage('New revision');
+      }
+    }
   }
 
   /**

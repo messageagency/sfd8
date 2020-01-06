@@ -15,6 +15,13 @@ use Drupal\Tests\BrowserTestBase;
 class PullQueueTest extends BrowserTestBase {
 
   /**
+   * Default theme required for D9.
+   *
+   * @var string
+   */
+  protected $defaultTheme  = 'stark';
+
+  /**
    * Required modules.
    *
    * @var array

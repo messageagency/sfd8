@@ -12,6 +12,13 @@ use Drupal\Tests\BrowserTestBase;
 class SalesforceMappingCrudFormTest extends BrowserTestBase {
 
   /**
+   * Default theme required for D9.
+   *
+   * @var string
+   */
+  protected $defaultTheme  = 'stark';
+
+  /**
    * Modules to enable.
    *
    * @var array

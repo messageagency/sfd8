@@ -13,6 +13,13 @@ use Drupal\Tests\key\Functional\KeyTestTrait;
  */
 class SalesforceJwtTest extends WebDriverTestBase {
 
+  /**
+   * Default theme required for D9.
+   *
+   * @var string
+   */
+  protected $defaultTheme  = 'stark';
+
   use KeyTestTrait;
 
   /**

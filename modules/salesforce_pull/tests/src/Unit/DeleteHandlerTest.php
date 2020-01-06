@@ -54,11 +54,12 @@ class DeleteHandlerTest extends UnitTestCase {
     $this->sfapi = $prophecy->reveal();
 
     // Mock an atribtary Drupal entity.
-    $prophecy = $this->prophesize(User::CLASS);
-    $prophecy->delete()->willReturn(TRUE);
-    $prophecy->id()->willReturn(1);
-    $prophecy->label()->willReturn('foo');
-    $this->entity = $prophecy->reveal();
+    $this->entity = $this->getMockBuilder(User::CLASS)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->entity->expects($this->any())->method('delete')->willReturn(TRUE);
+    $this->entity->expects($this->any())->method('id')->willReturn(1);
+    $this->entity->expects($this->any())->method('label')->willReturn('foo');
 
     $this->mapping = $this->getMockBuilder(SalesforceMappingInterface::CLASS)->getMock();
     $this->mapping->expects($this->any())
