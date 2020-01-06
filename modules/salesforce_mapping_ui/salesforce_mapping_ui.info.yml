@@ -3,6 +3,7 @@ type: module
 description: User interface for managing Salesforce mappings.
 package: Salesforce
 core: 8.x
+core_version_requirement: ^8 || ^9
 configure: entity.salesforce_mapping.list
 dependencies:
   - salesforce:salesforce_mapping
