@@ -2,3 +2,5 @@
 .tags
 .vscode
 .idea
+vendor
+composer.lock

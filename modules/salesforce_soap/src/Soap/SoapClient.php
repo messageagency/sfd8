@@ -69,7 +69,7 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
       throw new \Exception('Salesforce needs to be authorized to connect to this website.');
     }
     $this->createConnection($this->wsdl);
-    $this->setSessionHeader($token);
+    $this->setSessionHeader($token->getAccessToken());
     $this->setEndPoint($this->authMan->getProvider()->getApiEndpoint('partner'));
     $this->isConnected = TRUE;
   }
