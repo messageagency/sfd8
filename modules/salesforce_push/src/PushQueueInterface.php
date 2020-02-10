@@ -47,11 +47,11 @@ interface PushQueueInterface extends ReliableQueueInterface {
    * Exception handler so that Queue Processors don't have to worry about what
    * happens when a queue item fails.
    *
-   * @param \Exception $e
+   * @param \Throwable $e
    *   The exception which caused the failure.
    * @param object $item
    *   The failed item.
    */
-  public function failItem(\Exception $e, \stdClass $item);
+  public function failItem(\Throwable $e, \stdClass $item);
 
 }

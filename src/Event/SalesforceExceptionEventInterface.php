@@ -10,7 +10,7 @@ interface SalesforceExceptionEventInterface {
   /**
    * Getter for exception.
    *
-   * @return \Exception|null
+   * @return \Throwable|null
    *   The exception or NULL if no exception was given.
    */
   public function getException();

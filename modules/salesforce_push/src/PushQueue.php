@@ -505,7 +505,7 @@ class PushQueue extends DatabaseQueue implements PushQueueInterface {
   /**
    * {@inheritdoc}
    */
-  public function failItem(\Exception $e, \stdClass $item) {
+  public function failItem(\Throwable $e, \stdClass $item) {
     $mapping = $this->mappingStorage->load($item->name);
 
     if ($e instanceof EntityNotFoundException) {
