@@ -7,6 +7,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\salesforce\SalesforceAuthProviderPluginManagerInterface;
 use Drupal\salesforce\SelectQueryInterface;
 use Drupal\salesforce\SFID;
@@ -21,6 +22,8 @@ use Drupal\Component\Datetime\TimeInterface;
  * Objects, properties, and methods to communicate with the Salesforce REST API.
  */
 class RestClient implements RestClientInterface {
+
+  use StringTranslationTrait;
 
   /**
    * Response object.
@@ -165,7 +168,7 @@ class RestClient implements RestClientInterface {
    */
   public function apiCall($path, array $params = [], $method = 'GET', $returnObject = FALSE) {
     if (!$this->isInit()) {
-      throw new RestException(NULL, 'RestClient is not initialized.');
+      throw new RestException(NULL, $this->t('RestClient is not initialized.'));
     }
     if (!$this->authToken) {
       $this->authToken = $this->authManager->refreshToken();
@@ -207,7 +210,11 @@ class RestClient implements RestClientInterface {
 
     if (empty($this->response)
     || ((int) floor($this->response->getStatusCode() / 100)) != 2) {
-      throw new RestException($this->response, 'Unknown error occurred during API call');
+      throw new RestException($this->response, $this->t('Unknown error occurred during API call "@call": status code @status : @reason', [
+        '@call' => $path,
+        '@code' => $this->response->getStatusCode(),
+        '@reason' => $this->response->getReasonPhrase(),
+      ]));
     }
 
     $this->updateApiUsage($this->response);
@@ -238,7 +245,7 @@ class RestClient implements RestClientInterface {
    */
   protected function apiHttpRequest($url, array $params, $method) {
     if (!$this->authToken) {
-      throw new \Exception('Missing OAuth Token');
+      throw new \Exception($this->t('Missing OAuth Token'));
     }
 
     $headers = [
@@ -257,7 +264,7 @@ class RestClient implements RestClientInterface {
    */
   public function httpRequestRaw($url) {
     if (!$this->authManager->getToken()) {
-      throw new \Exception('Missing OAuth Token');
+      throw new \Exception($this->t('Missing OAuth Token'));
     }
     $headers = [
       'Authorization' => 'OAuth ' . $this->authToken->getAccessToken(),
@@ -466,7 +473,7 @@ class RestClient implements RestClientInterface {
    */
   public function objectDescribe($name, $reset = FALSE) {
     if (empty($name)) {
-      throw new \Exception('No name provided to describe');
+      throw new \Exception($this->t('No name provided to describe'));
     }
 
     if (!$reset && ($cache = $this->cache->get('salesforce:object:' . $name))) {
