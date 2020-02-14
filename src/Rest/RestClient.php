@@ -210,7 +210,7 @@ class RestClient implements RestClientInterface {
 
     if (empty($this->response)
     || ((int) floor($this->response->getStatusCode() / 100)) != 2) {
-      throw new RestException($this->response, $this->t('Unknown error occurred during API call "@call": status code @status : @reason', [
+      throw new RestException($this->response, $this->t('Unknown error occurred during API call "@call": status code @code : @reason', [
         '@call' => $path,
         '@code' => $this->response->getStatusCode(),
         '@reason' => $this->response->getReasonPhrase(),
