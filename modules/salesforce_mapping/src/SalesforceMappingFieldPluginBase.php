@@ -204,8 +204,10 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
 
       case 'date':
       case 'datetime':
-        $date = new DrupalDateTime($value, 'UTC');
-        $value = $date->format(DateTime::ISO8601);
+        if (!empty($value)) {
+          $date = new DrupalDateTime($value, 'UTC');
+          $value = $date->format(DateTime::ISO8601);
+        }
         break;
 
       case 'double':
