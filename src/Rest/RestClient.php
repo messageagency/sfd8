@@ -178,7 +178,7 @@ class RestClient implements RestClientInterface {
       $url = $this->authProvider->getInstanceUrl() . $path;
     }
     else {
-      $url = $this->authProvider->getApiEndPoint() . $path;
+      $url = $this->authProvider->getApiEndpoint() . $path;
     }
 
     try {
@@ -463,7 +463,7 @@ class RestClient implements RestClientInterface {
         'records' => [],
       ]);
     }
-    $version_path = parse_url($this->authProvider->getApiEndPoint(), PHP_URL_PATH);
+    $version_path = parse_url($this->authProvider->getApiEndpoint(), PHP_URL_PATH);
     $next_records_url = str_replace($version_path, '', $results->nextRecordsUrl());
     return new SelectQueryResult($this->apiCall($next_records_url));
   }

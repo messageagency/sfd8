@@ -70,7 +70,7 @@ class SoapClient extends SforcePartnerClient implements SoapClientInterface {
     }
     $this->createConnection($this->wsdl);
     $this->setSessionHeader($token->getAccessToken());
-    $this->setEndPoint($this->authMan->getProvider()->getApiEndpoint('partner'));
+    $this->setEndpoint($this->authMan->getProvider()->getApiEndpoint('partner'));
     $this->isConnected = TRUE;
   }
 

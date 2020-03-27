@@ -65,7 +65,7 @@ class RestClientTest extends UnitTestCase {
       ->disableOriginalConstructor()
       ->getMock();
     $this->authProvider->expects($this->any())
-      ->method('getApiEndPoint')
+      ->method('getApiEndpoint')
       ->willReturn('https://example.com');
     $this->authConfig =
       $this->getMockBuilder(SalesforceAuthConfig::CLASS)
