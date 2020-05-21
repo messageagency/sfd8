@@ -187,24 +187,22 @@ class MappedObject extends RevisionableContentEntityBase implements MappedObject
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $i = 0;
-    if (\Drupal::moduleHandler()->moduleExists('dynamic_entity_reference')) {
-      $fields['drupal_entity'] = BaseFieldDefinition::create('dynamic_entity_reference')
-        ->setLabel(t('Mapped Entity'))
-        ->setDescription(t('Reference to the Drupal entity mapped by this mapped object.'))
-        ->setRevisionable(FALSE)
-        ->setCardinality(1)
-        ->setDisplayOptions('form', [
-          'type' => 'dynamic_entity_reference_default',
-          'weight' => $i,
-        ])
-        ->setDisplayOptions('view', [
-          'label' => 'above',
-          'type' => 'dynamic_entity_reference_label',
-          'weight' => $i++,
-        ])
-        ->setDisplayConfigurable('form', TRUE)
-        ->setDisplayConfigurable('view', TRUE);
-    }
+    $fields['drupal_entity'] = BaseFieldDefinition::create('dynamic_entity_reference')
+      ->setLabel(t('Mapped Entity'))
+      ->setDescription(t('Reference to the Drupal entity mapped by this mapped object.'))
+      ->setRevisionable(FALSE)
+      ->setCardinality(1)
+      ->setDisplayOptions('form', [
+        'type' => 'dynamic_entity_reference_default',
+        'weight' => $i,
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'dynamic_entity_reference_label',
+        'weight' => $i++,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['salesforce_mapping'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Salesforce mapping'))

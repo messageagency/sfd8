@@ -4,14 +4,14 @@
   "type": "drupal-module",
   "authors": [
     {
-      "name": "Author name",
-      "email": "author@example.com"
+      "name": "Aaron Bauman",
+      "email": "aaron@messageagency.com"
     }
   ],
   "require": {
     "php": ">=5.6.0",
-    "drupal/dynamic_entity_reference": "^2.0@alpha",
-    "drupal/typed_data": "^1.0@alpha"
+    "drupal/dynamic_entity_reference": "^2.0@alpha10",
+    "drupal/typed_data": "1.x-dev"
   },
   "extra": {
     "drush": {

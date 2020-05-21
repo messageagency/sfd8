@@ -1,11 +1,11 @@
 {
-    "name": "org/salesforce_push",
-    "description": "This extension provides new commands for Drush.",
-    "type": "drupal-drush",
+    "name": "drupal/salesforce_push",
+    "description": "Push data from drupal to salesforce.",
+    "type": "drupal-module",
     "authors": [
         {
-            "name": "Author name",
-            "email": "author@example.com"
+            "name": "Aaron Bauman",
+            "email": "aaron@messageagency.com"
         }
     ],
     "require": {

@@ -4,5 +4,3 @@ description: Modules to integrate Drupal and Salesforce
 package: Salesforce
 core_version_requirement: ^8.7.7 || ^9
 configure: salesforce.admin_config_salesforce
-dependencies:
-  typed_data:typed_data

@@ -1,11 +1,11 @@
 {
-    "name": "drupal/salesforce_pull",
-    "description": "Pull data from salesforce to drupal.",
+    "name": "drupal/salesforce_webform",
+    "description": "Webform compatibility for salesforce.",
     "type": "drupal-module",
     "authors": [
         {
-            "name": "Aaron Bauman",
-            "email": "aaron@messageagency.com"
+            "name": "Author name",
+            "email": "author@example.com"
         }
     ],
     "require": {
