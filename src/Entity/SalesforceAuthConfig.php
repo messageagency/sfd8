@@ -32,6 +32,12 @@ use Drupal\Core\Plugin\DefaultSingleLazyPluginCollection;
  *     "revoke" = "/admin/config/salesforce/authorize/revoke/{salesforce_auth}"
  *   },
  *   admin_permission = "authorize salesforce",
+ *   config_export = {
+ *    "id",
+ *    "label",
+ *    "provider",
+ *    "provider_settings"
+ *   },
  * )
  */
 class SalesforceAuthConfig extends ConfigEntityBase implements EntityWithPluginCollectionInterface {
