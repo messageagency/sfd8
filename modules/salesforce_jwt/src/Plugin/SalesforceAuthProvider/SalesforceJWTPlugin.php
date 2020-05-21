@@ -144,6 +144,8 @@ class SalesforceJWTPlugin extends SalesforceAuthProviderPluginBase {
       return;
     }
     $this->setConfiguration($form_state->getValue('provider_settings'));
+    // Force new credentials from form input, rather than storage.
+    unset($this->credentials);
     try {
       // Bootstrap here by setting ID to provide a key to token storage.
       $this->id = $form_state->getValue('id');
