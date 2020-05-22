@@ -85,7 +85,7 @@ class RestResponse extends Response {
       throw new RestException($this, $e->getMessage(), $e->getCode(), $e);
     }
 
-    if (empty($data)) {
+    if (empty($data) || !is_array($data)) {
       throw new RestException($this, $this->t('Invalid response'));
     }
 
