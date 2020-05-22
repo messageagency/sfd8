@@ -22,7 +22,7 @@ function salesforce_mapping_update_8001(&$sandbox) {
   if (empty($sandbox['progress'])) {
     $sandbox['progress'] = 0;
     $sandbox['current_id'] = 0;
-    $sandbox['max'] = \Drupal::service('database')->query("SELECT count(*) FROM salesforce_mapped_object")->fetchField();
+    $sandbox['max'] = \Drupal::service('database')->query("SELECT count(*) FROM {salesforce_mapped_object}")->fetchField();
     if (empty($sandbox['max'])) {
       $sandbox['#finished'] = 1;
       return t('No mapped objects to update.');
@@ -32,7 +32,7 @@ function salesforce_mapping_update_8001(&$sandbox) {
   // Have to go directly to the database for the entity values because they've
   // been removed from baseFieldDefinitions, therefore they don't get attached
   // to the entity on load.
-  $mapped_objects = \Drupal::service('database')->query("SELECT id, entity_type_id, entity_id FROM salesforce_mapped_object WHERE id > {$sandbox['current_id']} ORDER BY id ASC LIMIT 3");
+  $mapped_objects = \Drupal::service('database')->query("SELECT id, entity_type_id, entity_id FROM {salesforce_mapped_object} WHERE id > {$sandbox['current_id']} ORDER BY id ASC LIMIT 3");
 
   foreach ($mapped_objects as $mapped_object_data) {
     $sandbox['current_id'] = $mapped_object_data->id;
