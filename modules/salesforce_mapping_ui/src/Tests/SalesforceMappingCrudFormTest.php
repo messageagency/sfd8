@@ -2,6 +2,7 @@
 
 namespace Drupal\salesforce_mapping_ui\Tests;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -10,6 +11,8 @@ use Drupal\Tests\BrowserTestBase;
  * @group salesforce_mapping
  */
 class SalesforceMappingCrudFormTest extends BrowserTestBase {
+
+  use StringTranslationTrait;
 
   /**
    * Default theme required for D9.
@@ -67,7 +70,7 @@ class SalesforceMappingCrudFormTest extends BrowserTestBase {
       'drupal_bundle' => 'user',
       'salesforce_object_type' => 'Contact',
     ];
-    $this->drupalPostForm('admin/structure/salesforce/mappings/add', $post, t('Save'));
+    $this->drupalPostForm('admin/structure/salesforce/mappings/add', $post, $this->t('Save'));
     $newurl = parse_url($this->getUrl());
 
     // Make sure the redirect was correct (and therefore form was submitted
@@ -87,7 +90,7 @@ class SalesforceMappingCrudFormTest extends BrowserTestBase {
       'drupal_bundle' => 'user',
       'salesforce_object_type' => 'Contact',
     ];
-    $this->drupalPostForm('admin/structure/salesforce/mappings/manage/' . $mapping_name, $post, t('Save'));
+    $this->drupalPostForm('admin/structure/salesforce/mappings/manage/' . $mapping_name, $post, $this->t('Save'));
     $this->assertFieldByName('label', $post['label']);
 
     // Test simply adding a field plugin of every possible type. This is not
@@ -100,7 +103,7 @@ class SalesforceMappingCrudFormTest extends BrowserTestBase {
         $post = [
           'field_type' => $definition['id'],
         ];
-        $this->drupalPostForm('admin/structure/salesforce/mappings/manage/' . $mapping_name . '/fields', $post, t('Add a field mapping to get started'));
+        $this->drupalPostForm('admin/structure/salesforce/mappings/manage/' . $mapping_name . '/fields', $post, $this->t('Add a field mapping to get started'));
       }
     }
 

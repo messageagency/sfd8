@@ -31,7 +31,7 @@ class DrupalConstant extends SalesforceMappingFieldPluginBase {
     // Display the plugin config form here:
     if (empty($options)) {
       $pluginForm['drupal_field_value'] = [
-        '#markup' => t('No available properties.'),
+        '#markup' => $this->t('No available properties.'),
       ];
     }
     else {

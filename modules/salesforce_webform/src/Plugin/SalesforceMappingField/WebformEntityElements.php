@@ -42,7 +42,7 @@ class WebformEntityElements extends SalesforceMappingFieldPluginBase {
 
     if (empty($options)) {
       $pluginForm['drupal_field_value'] += [
-        '#markup' => t('No available webform entity reference elements.'),
+        '#markup' => $this->t('No available webform entity reference elements.'),
       ];
     }
     else {

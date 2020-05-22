@@ -5,6 +5,7 @@ namespace Drupal\salesforce\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
 use Drupal\Core\Plugin\DefaultSingleLazyPluginCollection;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Defines a Salesforce Auth entity.
@@ -41,6 +42,8 @@ use Drupal\Core\Plugin\DefaultSingleLazyPluginCollection;
  * )
  */
 class SalesforceAuthConfig extends ConfigEntityBase implements EntityWithPluginCollectionInterface {
+
+  use StringTranslationTrait;
 
   /**
    * Auth id. e.g. "oauth_full_sandbox".
@@ -173,7 +176,7 @@ class SalesforceAuthConfig extends ConfigEntityBase implements EntityWithPluginC
       $options[$id] = ($definition['label']);
     }
     if (!empty($options)) {
-      return ['' => t('- Select -')] + $options;
+      return ['' => $this->t('- Select -')] + $options;
     }
     return [];
   }

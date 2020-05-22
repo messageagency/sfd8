@@ -3,6 +3,7 @@
 namespace Drupal\salesforce_example\EventSubscriber;
 
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\salesforce\Event\SalesforceEvents;
 use Drupal\salesforce_mapping\Event\SalesforcePullEvent;
 use Drupal\salesforce_mapping\Event\SalesforcePushOpEvent;
@@ -20,6 +21,8 @@ use Drupal\salesforce_mapping\Event\SalesforceQueryEvent;
  * @package Drupal\salesforce_example
  */
 class SalesforceExampleSubscriber implements EventSubscriberInterface {
+
+  use StringTranslationTrait;
 
   /**
    * SalesforcePushAllowedEvent callback.
@@ -153,7 +156,7 @@ class SalesforceExampleSubscriber implements EventSubscriberInterface {
         }
         catch (\Exception $e) {
           // Unable to fetch file data from SF.
-          \Drupal::logger('db')->error(t('failed to fetch attachment for user @user', ['@user' => $account->id()]));
+          \Drupal::logger('db')->error($this->t('failed to fetch attachment for user @user', ['@user' => $account->id()]));
           return;
         }
 

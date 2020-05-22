@@ -29,7 +29,7 @@ class Properties extends SalesforceMappingFieldPluginBase {
     // Display the plugin config form here:
     if (empty($options)) {
       $pluginForm['drupal_field_value'] = [
-        '#markup' => t('No available properties.'),
+        '#markup' => $this->t('No available properties.'),
       ];
     }
     else {
@@ -53,10 +53,10 @@ class Properties extends SalesforceMappingFieldPluginBase {
     $vals = $form_state->getValues();
     $config = $vals['config'];
     if (empty($config['salesforce_field'])) {
-      $form_state->setError($form['config']['salesforce_field'], t('Salesforce field is required.'));
+      $form_state->setError($form['config']['salesforce_field'], $this->t('Salesforce field is required.'));
     }
     if (empty($config['drupal_field_value'])) {
-      $form_state->setError($form['config']['drupal_field_value'], t('Drupal field is required.'));
+      $form_state->setError($form['config']['drupal_field_value'], $this->t('Drupal field is required.'));
     }
   }
 

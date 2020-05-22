@@ -3,6 +3,7 @@
 namespace Drupal\salesforce\Rest;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 
@@ -12,6 +13,8 @@ use Psr\Http\Message\ResponseInterface;
  * @package Drupal\salesforce\Rest
  */
 class RestResponse extends Response {
+
+  use StringTranslationTrait;
 
   /**
    * The original Response used to build this object.
@@ -83,7 +86,7 @@ class RestResponse extends Response {
     }
 
     if (empty($data)) {
-      throw new RestException($this, t('Invalid response'));
+      throw new RestException($this, $this->t('Invalid response'));
     }
 
     if (!empty($data['error'])) {

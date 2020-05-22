@@ -35,7 +35,7 @@ class WebformElements extends SalesforceMappingFieldPluginBase {
 
     if (empty($options)) {
       $pluginForm['drupal_field_value'] += [
-        '#markup' => t('No available webform elements.'),
+        '#markup' => $this->t('No available webform elements.'),
       ];
     }
     else {

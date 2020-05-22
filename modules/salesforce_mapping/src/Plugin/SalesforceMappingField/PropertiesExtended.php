@@ -191,10 +191,10 @@ class PropertiesExtended extends SalesforceMappingFieldPluginBase {
     $vals = $form_state->getValues();
     $config = $vals['config'];
     if (empty($config['salesforce_field'])) {
-      $form_state->setError($form['config']['salesforce_field'], t('Salesforce field is required.'));
+      $form_state->setError($form['config']['salesforce_field'], $this->t('Salesforce field is required.'));
     }
     if (empty($config['drupal_field_value'])) {
-      $form_state->setError($form['config']['drupal_field_value'], t('Drupal field is required.'));
+      $form_state->setError($form['config']['drupal_field_value'], $this->t('Drupal field is required.'));
     }
     // @TODO: Should we validate the $config['drupal_field_value']['setting'] property?
   }

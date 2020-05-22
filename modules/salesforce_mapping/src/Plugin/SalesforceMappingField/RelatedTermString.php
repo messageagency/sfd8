@@ -33,7 +33,7 @@ class RelatedTermString extends SalesforceMappingFieldPluginBase {
 
     if (empty($options)) {
       $pluginForm['drupal_field_value'] += [
-        '#markup' => t('No available taxonomy reference fields.'),
+        '#markup' => $this->t('No available taxonomy reference fields.'),
       ];
     }
     else {

@@ -136,11 +136,11 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     // @TODO either change sync_triggers to human readable values, or make them work as hex flags again.
     $trigger_options = $this->getSyncTriggerOptions();
     $form['sync_triggers'] = [
-      '#title' => t('Action triggers'),
+      '#title' => $this->t('Action triggers'),
       '#type' => 'details',
       '#open' => TRUE,
       '#tree' => TRUE,
-      '#description' => t('Select which actions on Drupal entities and Salesforce
+      '#description' => $this->t('Select which actions on Drupal entities and Salesforce
         objects should trigger a synchronization. These settings are used by the
         salesforce_push and salesforce_pull modules.'
       ),
@@ -160,7 +160,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     if ($this->moduleHandler->moduleExists('salesforce_pull')) {
       // @TODO should push and pull settings get moved into push and pull modules?
       $form['pull'] = [
-        '#title' => t('Pull Settings'),
+        '#title' => $this->t('Pull Settings'),
         '#type' => 'details',
         '#description' => '',
         '#open' => TRUE,
@@ -175,12 +175,12 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       if (!$mapping->isNew()) {
         $form['pull']['last_pull_date'] = [
           '#type' => 'item',
-          '#title' => t('Last Pull Date: %last_pull', ['%last_pull' => $mapping->getLastPullTime() ? \Drupal::service('date.formatter')->format($mapping->getLastPullTime()) : 'never']),
-          '#markup' => t('Resetting last pull date will cause salesforce pull module to query for updated records without respect for the pull trigger date. This is useful, for example, to re-pull all records after a purge.'),
+          '#title' => $this->t('Last Pull Date: %last_pull', ['%last_pull' => $mapping->getLastPullTime() ? \Drupal::service('date.formatter')->format($mapping->getLastPullTime()) : 'never']),
+          '#markup' => $this->t('Resetting last pull date will cause salesforce pull module to query for updated records without respect for the pull trigger date. This is useful, for example, to re-pull all records after a purge.'),
         ];
         $form['pull']['last_pull_reset'] = [
           '#type' => 'button',
-          '#value' => t('Reset Last Pull Date'),
+          '#value' => $this->t('Reset Last Pull Date'),
           '#disabled' => $mapping->getLastPullTime() == NULL,
           '#limit_validation_errors' => [],
           '#validate' => ['::lastPullReset'],
@@ -188,12 +188,12 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
 
         $form['pull']['last_delete_date'] = [
           '#type' => 'item',
-          '#title' => t('Last Delete Date: %last_pull', ['%last_pull' => $mapping->getLastDeleteTime() ? \Drupal::service('date.formatter')->format($mapping->getLastDeleteTime()) : 'never']),
-          '#markup' => t('Resetting last delete date will cause salesforce pull module to query for deleted record without respect for the pull trigger date.'),
+          '#title' => $this->t('Last Delete Date: %last_pull', ['%last_pull' => $mapping->getLastDeleteTime() ? \Drupal::service('date.formatter')->format($mapping->getLastDeleteTime()) : 'never']),
+          '#markup' => $this->t('Resetting last delete date will cause salesforce pull module to query for deleted record without respect for the pull trigger date.'),
         ];
         $form['pull']['last_delete_reset'] = [
           '#type' => 'button',
-          '#value' => t('Reset Last Delete Date'),
+          '#value' => $this->t('Reset Last Delete Date'),
           '#disabled' => $mapping->getLastDeleteTime() == NULL,
           '#limit_validation_errors' => [],
           '#validate' => ['::lastDeleteReset'],
@@ -203,8 +203,8 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         // @TODO figure out best way to alert admins about this, or AJAX-ify it.
         $form['pull']['pull_trigger_date'] = [
           '#type' => 'select',
-          '#title' => t('Date field to trigger pull'),
-          '#description' => t('Poll Salesforce for updated records based on the given date field. Defaults to "Last Modified Date".'),
+          '#title' => $this->t('Date field to trigger pull'),
+          '#description' => $this->t('Poll Salesforce for updated records based on the given date field. Defaults to "Last Modified Date".'),
           '#required' => $mapping->salesforce_object_type,
           '#default_value' => $mapping->pull_trigger_date,
           '#options' => $this->getPullTriggerOptions(),
@@ -212,27 +212,27 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       }
 
       $form['pull']['pull_where_clause'] = [
-        '#title' => t('Pull query SOQL "Where" clause'),
+        '#title' => $this->t('Pull query SOQL "Where" clause'),
         '#type' => 'textarea',
-        '#description' => t('Add a "where" SOQL condition clause to limit records pulled from Salesforce. e.g. Email != \'\' AND RecordType.DevelopName = \'ExampleRecordType\''),
+        '#description' => $this->t('Add a "where" SOQL condition clause to limit records pulled from Salesforce. e.g. Email != \'\' AND RecordType.DevelopName = \'ExampleRecordType\''),
         '#default_value' => $mapping->pull_where_clause,
       ];
 
       $form['pull']['pull_where_clause'] = [
-        '#title' => t('Pull query SOQL "Where" clause'),
+        '#title' => $this->t('Pull query SOQL "Where" clause'),
         '#type' => 'textarea',
-        '#description' => t('Add a "where" SOQL condition clause to limit records pulled from Salesforce. e.g. Email != \'\' AND RecordType.DevelopName = \'ExampleRecordType\''),
+        '#description' => $this->t('Add a "where" SOQL condition clause to limit records pulled from Salesforce. e.g. Email != \'\' AND RecordType.DevelopName = \'ExampleRecordType\''),
         '#default_value' => $mapping->pull_where_clause,
       ];
 
       $form['pull']['pull_frequency'] = [
-        '#title' => t('Pull Frequency'),
+        '#title' => $this->t('Pull Frequency'),
         '#type' => 'number',
         '#default_value' => $mapping->pull_frequency,
-        '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to pull data to Drupal. Enter 0 to pull as often as possible. FYI: 1 hour = 3600; 1 day = 86400. <em>NOTE: pull frequency is shared per-Salesforce Object. The setting is exposed here for convenience.</em>'),
+        '#description' => $this->t('Enter a frequency, in seconds, for how often this mapping should be used to pull data to Drupal. Enter 0 to pull as often as possible. FYI: 1 hour = 3600; 1 day = 86400. <em>NOTE: pull frequency is shared per-Salesforce Object. The setting is exposed here for convenience.</em>'),
       ];
 
-      $description = t('Check this box to disable cron pull processing for this mapping, and allow standalone processing only. A URL will be generated after saving the mapping.');
+      $description = $this->t('Check this box to disable cron pull processing for this mapping, and allow standalone processing only. A URL will be generated after saving the mapping.');
       if ($mapping->id()) {
         $standalone_url = Url::fromRoute(
           'salesforce_pull.endpoint.salesforce_mapping',
@@ -242,10 +242,10 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
           ],
           ['absolute' => TRUE])
           ->toString();
-        $description = t('Check this box to disable cron pull processing for this mapping, and allow standalone processing via this URL: <a href=":url">:url</a>', [':url' => $standalone_url]);
+        $description = $this->t('Check this box to disable cron pull processing for this mapping, and allow standalone processing via this URL: <a href=":url">:url</a>', [':url' => $standalone_url]);
       }
       $form['pull']['pull_standalone'] = [
-        '#title' => t('Enable standalone pull queue processing'),
+        '#title' => $this->t('Enable standalone pull queue processing'),
         '#type' => 'checkbox',
         '#description' => $description,
         '#default_value' => $mapping->pull_standalone,
@@ -257,15 +257,15 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         $settings_url = Url::fromRoute('salesforce.global_settings')->toString();
         $form['pull']['pull_standalone']['#default_value'] = TRUE;
         $form['pull']['pull_standalone']['#disabled'] = TRUE;
-        $form['pull']['pull_standalone']['#description'] .= ' ' . t('See also <a href="@url">global standalone processing settings</a>.', ['@url' => $settings_url]);
+        $form['pull']['pull_standalone']['#description'] .= ' ' . $this->t('See also <a href="@url">global standalone processing settings</a>.', ['@url' => $settings_url]);
       }
     }
 
     if ($this->moduleHandler->moduleExists('salesforce_push')) {
       $form['push'] = [
-        '#title' => t('Push Settings'),
+        '#title' => $this->t('Push Settings'),
         '#type' => 'details',
-        '#description' => t('The asynchronous push queue is always enabled in Drupal 8: real-time push fails are queued for async push. Alternatively, you can choose to disable real-time push and use async-only.'),
+        '#description' => $this->t('The asynchronous push queue is always enabled in Drupal 8: real-time push fails are queued for async push. Alternatively, you can choose to disable real-time push and use async-only.'),
         '#open' => TRUE,
         '#tree' => FALSE,
         '#states' => [
@@ -276,45 +276,45 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       ];
 
       $form['push']['async'] = [
-        '#title' => t('Disable real-time push'),
+        '#title' => $this->t('Disable real-time push'),
         '#type' => 'checkbox',
-        '#description' => t('When real-time push is disabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD, and only enqueue failures for async push.'),
+        '#description' => $this->t('When real-time push is disabled, enqueue changes and push to Salesforce asynchronously during cron. When disabled, push changes immediately upon entity CRUD, and only enqueue failures for async push.'),
         '#default_value' => $mapping->async,
       ];
 
       $form['push']['push_frequency'] = [
-        '#title' => t('Push Frequency'),
+        '#title' => $this->t('Push Frequency'),
         '#type' => 'number',
         '#default_value' => $mapping->push_frequency,
-        '#description' => t('Enter a frequency, in seconds, for how often this mapping should be used to push data to Salesforce. Enter 0 to push as often as possible. FYI: 1 hour = 3600; 1 day = 86400.'),
+        '#description' => $this->t('Enter a frequency, in seconds, for how often this mapping should be used to push data to Salesforce. Enter 0 to push as often as possible. FYI: 1 hour = 3600; 1 day = 86400.'),
         '#min' => 0,
       ];
 
       $form['push']['push_limit'] = [
-        '#title' => t('Push Limit'),
+        '#title' => $this->t('Push Limit'),
         '#type' => 'number',
         '#default_value' => $mapping->push_limit,
-        '#description' => t('Enter the maximum number of records to be pushed to Salesforce during a single queue batch. Enter 0 to process as many records as possible, subject to the global push queue limit.'),
+        '#description' => $this->t('Enter the maximum number of records to be pushed to Salesforce during a single queue batch. Enter 0 to process as many records as possible, subject to the global push queue limit.'),
         '#min' => 0,
       ];
 
       $form['push']['push_retries'] = [
-        '#title' => t('Push Retries'),
+        '#title' => $this->t('Push Retries'),
         '#type' => 'number',
         '#default_value' => $mapping->push_retries,
-        '#description' => t("Enter the maximum number of attempts to push a record to Salesforce before it's considered failed. Enter 0 for no limit."),
+        '#description' => $this->t("Enter the maximum number of attempts to push a record to Salesforce before it's considered failed. Enter 0 for no limit."),
         '#min' => 0,
       ];
 
       $form['push']['weight'] = [
-        '#title' => t('Weight'),
+        '#title' => $this->t('Weight'),
         '#type' => 'select',
         '#options' => array_combine(range(-50, 50), range(-50, 50)),
-        '#description' => t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
+        '#description' => $this->t('Not yet in use. During cron, mapping weight determines in which order items will be pushed. Lesser weight items will be pushed before greater weight items.'),
         '#default_value' => $mapping->weight,
       ];
 
-      $description = t('Check this box to disable cron push processing for this mapping, and allow standalone processing. A URL will be generated after saving the mapping.');
+      $description = $this->t('Check this box to disable cron push processing for this mapping, and allow standalone processing. A URL will be generated after saving the mapping.');
       if ($mapping->id()) {
         $standalone_url = Url::fromRoute(
           'salesforce_push.endpoint.salesforce_mapping',
@@ -324,11 +324,11 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
           ],
           ['absolute' => TRUE])
           ->toString();
-        $description = t('Check this box to disable cron push processing for this mapping, and allow standalone processing via this URL: <a href=":url">:url</a>', [':url' => $standalone_url]);
+        $description = $this->t('Check this box to disable cron push processing for this mapping, and allow standalone processing via this URL: <a href=":url">:url</a>', [':url' => $standalone_url]);
       }
 
       $form['push']['push_standalone'] = [
-        '#title' => t('Enable standalone push queue processing'),
+        '#title' => $this->t('Enable standalone push queue processing'),
         '#type' => 'checkbox',
         '#description' => $description,
         '#default_value' => $mapping->push_standalone,
@@ -340,7 +340,7 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
         $settings_url = Url::fromRoute('salesforce.global_settings')->toString();
         $form['push']['push_standalone']['#default_value'] = TRUE;
         $form['push']['push_standalone']['#disabled'] = TRUE;
-        $form['push']['push_standalone']['#description'] .= ' ' . t('See also <a href="@url">global standalone processing settings</a>.', ['@url' => $settings_url]);
+        $form['push']['push_standalone']['#description'] .= ' ' . $this->t('See also <a href="@url">global standalone processing settings</a>.', ['@url' => $settings_url]);
       }
     }
 
@@ -348,14 +348,14 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
       '#type' => 'details',
       '#open' => TRUE,
       '#tree' => FALSE,
-      '#title' => t('Additional properties'),
+      '#title' => $this->t('Additional properties'),
     ];
 
     $form['meta']['weight'] = [
-      '#title' => t('Weight'),
+      '#title' => $this->t('Weight'),
       '#type' => 'select',
       '#options' => array_combine(range(-50, 50), range(-50, 50)),
-      '#description' => t('During cron, mapping weight determines in which order items will be pushed or pulled. Lesser weight items will be pushed or pulled before greater weight items.'),
+      '#description' => $this->t('During cron, mapping weight determines in which order items will be pushed or pulled. Lesser weight items will be pushed or pulled before greater weight items.'),
       '#default_value' => $mapping->weight,
     ];
 
@@ -487,16 +487,16 @@ abstract class SalesforceMappingFormCrudBase extends SalesforceMappingFormBase {
     $options = [];
     if ($this->moduleHandler->moduleExists('salesforce_push')) {
       $options += [
-        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => t('Drupal entity create (push)'),
-        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => t('Drupal entity update (push)'),
-        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE => t('Drupal entity delete (push)'),
+        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_CREATE => $this->t('Drupal entity create (push)'),
+        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_UPDATE => $this->t('Drupal entity update (push)'),
+        MappingConstants::SALESFORCE_MAPPING_SYNC_DRUPAL_DELETE => $this->t('Drupal entity delete (push)'),
       ];
     }
     if ($this->moduleHandler->moduleExists('salesforce_pull')) {
       $options += [
-        MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE => t('Salesforce object create (pull)'),
-        MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE => t('Salesforce object update (pull)'),
-        MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE => t('Salesforce object delete (pull)'),
+        MappingConstants::SALESFORCE_MAPPING_SYNC_SF_CREATE => $this->t('Salesforce object create (pull)'),
+        MappingConstants::SALESFORCE_MAPPING_SYNC_SF_UPDATE => $this->t('Salesforce object update (pull)'),
+        MappingConstants::SALESFORCE_MAPPING_SYNC_SF_DELETE => $this->t('Salesforce object delete (pull)'),
       ];
     }
     return $options;

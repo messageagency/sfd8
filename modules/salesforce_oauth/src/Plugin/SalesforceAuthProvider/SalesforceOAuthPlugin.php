@@ -40,9 +40,9 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase {
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form['consumer_key'] = [
-      '#title' => t('Salesforce consumer key'),
+      '#title' => $this->t('Salesforce consumer key'),
       '#type' => 'textfield',
-      '#description' => t('Consumer key of the Salesforce remote application you want to grant access to'),
+      '#description' => $this->t('Consumer key of the Salesforce remote application you want to grant access to'),
       '#required' => TRUE,
       '#default_value' => $this->getCredentials()->getConsumerKey(),
     ];
@@ -56,10 +56,10 @@ class SalesforceOAuthPlugin extends SalesforceAuthProviderPluginBase {
     ];
 
     $form['login_url'] = [
-      '#title' => t('Login URL'),
+      '#title' => $this->t('Login URL'),
       '#type' => 'textfield',
       '#default_value' => $this->getCredentials()->getLoginUrl(),
-      '#description' => t('Enter a login URL, either https://login.salesforce.com or https://test.salesforce.com.'),
+      '#description' => $this->t('Enter a login URL, either https://login.salesforce.com or https://test.salesforce.com.'),
       '#required' => TRUE,
     ];
     return $form;

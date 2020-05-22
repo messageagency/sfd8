@@ -6,6 +6,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Plugin\DefaultLazyPluginCollection;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\salesforce\Exception;
 use Drupal\salesforce\SelectQuery;
 use Drupal\salesforce_mapping\MappingConstants;
@@ -58,6 +59,8 @@ use Drupal\salesforce_mapping\MappingConstants;
  * )
  */
 class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInterface {
+
+  use StringTranslationTrait;
 
   /**
    * Only one bundle type for now.
@@ -444,7 +447,7 @@ class SalesforceMapping extends ConfigEntityBase implements SalesforceMappingInt
         return $field_plugin->value($entity, $this);
       }
     }
-    throw new \Exception(t('Key %key not found for this mapping.', ['%key' => $this->getKeyField()]));
+    throw new \Exception($this->t('Key %key not found for this mapping.', ['%key' => $this->getKeyField()]));
   }
 
   /**

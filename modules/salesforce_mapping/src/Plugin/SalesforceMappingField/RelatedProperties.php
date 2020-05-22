@@ -30,7 +30,7 @@ class RelatedProperties extends SalesforceMappingFieldPluginBase {
 
     if (empty($options)) {
       $pluginForm['drupal_field_value'] += [
-        '#markup' => t('No available entity reference fields.'),
+        '#markup' => $this->t('No available entity reference fields.'),
       ];
     }
     else {

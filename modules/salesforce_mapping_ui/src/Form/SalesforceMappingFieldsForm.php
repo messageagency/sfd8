@@ -36,15 +36,15 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     $form['overview'] = ['#markup' => 'Field mapping overview goes here.'];
 
     $form['key_wrapper'] = [
-      '#title' => t('Upsert Key'),
+      '#title' => $this->t('Upsert Key'),
       '#type' => 'details',
       '#open' => TRUE,
-      '#description' => t('An Upsert Key can be assigned to map a Drupal property to a Salesforce External Identifier. If specified an UPSERT will be used to limit data duplication.'),
+      '#description' => $this->t('An Upsert Key can be assigned to map a Drupal property to a Salesforce External Identifier. If specified an UPSERT will be used to limit data duplication.'),
     ];
 
     $key_options = $this->getUpsertKeyOptions();
     if (empty($key_options)) {
-      $form['key_wrapper']['#description'] .= ' ' . t('To add an upsert key for @sobject_name, assign a field as an External Identifier in Salesforce.', ['@sobject_name' => $this->entity->get('salesforce_object_type')]);
+      $form['key_wrapper']['#description'] .= ' ' . $this->t('To add an upsert key for @sobject_name, assign a field as an External Identifier in Salesforce.', ['@sobject_name' => $this->entity->get('salesforce_object_type')]);
       $form['key_wrapper']['key'] = [
         '#type' => 'value',
         '#value' => '',
@@ -53,22 +53,22 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     else {
       $form['key_wrapper']['key'] = [
         '#type' => 'select',
-        '#title' => t('Upsert Key'),
+        '#title' => $this->t('Upsert Key'),
         '#options' => $key_options,
         '#default_value' => $this->entity->getKeyField(),
-        '#empty_option' => t('(none)'),
+        '#empty_option' => $this->t('(none)'),
         '#empty_value' => '',
       ];
       $form['key_wrapper']['always_upsert'] = [
         '#type' => 'checkbox',
-        '#title' => t('Always Upsert'),
+        '#title' => $this->t('Always Upsert'),
         '#default_value' => $this->entity->get('always_upsert'),
-        '#description' => t('If checked, always use "upsert" to push data to Salesforce. Otherwise, prefer a Salesforce ID if available. For example, given a user mapping with "email" set for upsert key, leave this checkbox off; otherwise, a new Salesforce record will be created whenever a user changes their email.'),
+        '#description' => $this->t('If checked, always use "upsert" to push data to Salesforce. Otherwise, prefer a Salesforce ID if available. For example, given a user mapping with "email" set for upsert key, leave this checkbox off; otherwise, a new Salesforce record will be created whenever a user changes their email.'),
       ];
     }
 
     $form['field_mappings_wrapper'] = [
-      '#title' => t('Mapped Fields'),
+      '#title' => $this->t('Mapped Fields'),
       '#type' => 'details',
       '#id' => 'edit-field-mappings-wrapper',
       '#open' => TRUE,
@@ -93,11 +93,11 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       ],
     ];
 
-    $add_field_text = !empty($field_mappings) ? t('Add another field mapping') : t('Add a field mapping to get started');
+    $add_field_text = !empty($field_mappings) ? $this->t('Add another field mapping') : $this->t('Add a field mapping to get started');
 
     $form['buttons'] = ['#type' => 'container'];
     $form['buttons']['field_type'] = [
-      '#title' => t('Field Type'),
+      '#title' => $this->t('Field Type'),
       '#type' => 'select',
       '#options' => $this->getDrupalTypeOptions($this->entity),
       '#attributes' => ['id' => 'edit-mapping-add-field-type'],
@@ -217,7 +217,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
     ];
     $defaults = [];
     $row['ops'] = [
-      '#title' => t('Operations'),
+      '#title' => $this->t('Operations'),
       '#type' => 'checkboxes',
       '#options' => $operations,
       '#default_value' => $defaults,
@@ -267,7 +267,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
 
     if (!empty($key) && !$key_mapped) {
       // Do not allow saving mapping when key field is not mapped.
-      $form_state->setErrorByName('key', t('You must add the selected field to the field mapping in order set an Upsert Key.'));
+      $form_state->setErrorByName('key', $this->t('You must add the selected field to the field mapping in order set an Upsert Key.'));
     }
 
   }

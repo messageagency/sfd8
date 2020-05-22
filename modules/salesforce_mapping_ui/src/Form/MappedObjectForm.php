@@ -129,7 +129,7 @@ class MappedObjectForm extends ContentEntityForm {
 
     $form['actions']['push'] = [
       '#type' => 'submit',
-      '#value' => t('Push'),
+      '#value' => $this->t('Push'),
       '#weight' => 5,
       '#submit' => [[$this, 'submitPush']],
       '#validate' => [[$this, 'validateForm'], [$this, 'validatePush']],
@@ -137,7 +137,7 @@ class MappedObjectForm extends ContentEntityForm {
 
     $form['actions']['pull'] = [
       '#type' => 'submit',
-      '#value' => t('Pull'),
+      '#value' => $this->t('Pull'),
       '#weight' => 6,
       '#submit' => [[$this, 'submitPull']],
       '#validate' => [[$this, 'validateForm'], [$this, 'validatePull']],
@@ -154,7 +154,7 @@ class MappedObjectForm extends ContentEntityForm {
 
     // Verify entity was given - required for push.
     if (empty($drupal_entity_array['target_id'])) {
-      $form_state->setErrorByName('drupal_entity][0][target_id', t('Please specify an entity to push.'));
+      $form_state->setErrorByName('drupal_entity][0][target_id', $this->t('Please specify an entity to push.'));
       return;
     }
   }
@@ -166,7 +166,7 @@ class MappedObjectForm extends ContentEntityForm {
     // Verify SFID was given - required for pull.
     $sfid = $form_state->getValue(['salesforce_id', 0, 'value'], FALSE);
     if (!$sfid) {
-      $form_state->setErrorByName('salesforce_id', t('Please specify a Salesforce ID to pull.'));
+      $form_state->setErrorByName('salesforce_id', $this->t('Please specify a Salesforce ID to pull.'));
       return;
     }
   }
@@ -198,7 +198,7 @@ class MappedObjectForm extends ContentEntityForm {
     catch (\Exception $e) {
       $mapped_object->delete();
       $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-      $this->messenger()->addError(t('Push failed with an exception: %exception', ['%exception' => $e->getMessage()]));
+      $this->messenger()->addError($this->t('Push failed with an exception: %exception', ['%exception' => $e->getMessage()]));
       $form_state->setRebuild();
       return;
     }
@@ -240,7 +240,7 @@ class MappedObjectForm extends ContentEntityForm {
     }
     catch (\Exception $e) {
       $this->eventDispatcher->dispatch(SalesforceEvents::ERROR, new SalesforceErrorEvent($e));
-      $this->messenger()->addError(t('Pull failed with an exception: %exception', ['%exception' => $e->getMessage()]));
+      $this->messenger()->addError($this->t('Pull failed with an exception: %exception', ['%exception' => $e->getMessage()]));
       $form_state->setRebuild();
       return;
     }

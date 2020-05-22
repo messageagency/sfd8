@@ -385,21 +385,21 @@ abstract class SalesforceMappingFieldPluginBase extends PluginBase implements Sa
 
     $options = $this->getSalesforceFieldOptions($form['#entity']->getSalesforceObjectType());
     $pluginForm['salesforce_field'] = [
-      '#title' => t('Salesforce field'),
+      '#title' => $this->t('Salesforce field'),
       '#type' => 'select',
-      '#description' => t('Select a Salesforce field to map.'),
+      '#description' => $this->t('Select a Salesforce field to map.'),
       '#options' => $options,
       '#default_value' => $this->config('salesforce_field'),
       '#empty_option' => $this->t('- Select -'),
     ];
 
     $pluginForm['direction'] = [
-      '#title' => t('Direction'),
+      '#title' => $this->t('Direction'),
       '#type' => 'radios',
       '#options' => [
-        MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => t('Drupal to SF'),
-        MappingConstants::SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL => t('SF to Drupal'),
-        MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC => t('Sync'),
+        MappingConstants::SALESFORCE_MAPPING_DIRECTION_DRUPAL_SF => $this->t('Drupal to SF'),
+        MappingConstants::SALESFORCE_MAPPING_DIRECTION_SF_DRUPAL => $this->t('SF to Drupal'),
+        MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC => $this->t('Sync'),
       ],
       '#required' => TRUE,
       '#default_value' => $this->config('direction') ? $this->config('direction') : MappingConstants::SALESFORCE_MAPPING_DIRECTION_SYNC,

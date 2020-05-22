@@ -79,7 +79,7 @@ class SalesforceOAuthController extends ControllerBase {
       try {
         $oauth->requestAccessToken(\Drupal::request()->get('code'));
         $this->messenger()
-          ->addStatus(t('Successfully connected to Salesforce.'));
+          ->addStatus($this->t('Successfully connected to Salesforce.'));
         return new RedirectResponse(Url::fromRoute('entity.salesforce_auth.collection')
           ->toString());
       }
