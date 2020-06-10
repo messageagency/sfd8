@@ -6,4 +6,4 @@ core_version_requirement: ^8.7.7 || ^9
 dependencies:
   - salesforce:salesforce
   - dynamic_entity_reference:dynamic_entity_reference (>= 2.0-alpha10)
-  - typed_data:typed_data
+  - typed_data:typed_data (>= 1.0-alpha5)

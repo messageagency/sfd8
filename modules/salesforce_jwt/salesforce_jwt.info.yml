@@ -6,4 +6,4 @@ package: Salesforce
 configure: salesforce.auth_config
 dependencies:
   - salesforce:salesforce
-  - key:key
+  - key:key (>= 1.14)

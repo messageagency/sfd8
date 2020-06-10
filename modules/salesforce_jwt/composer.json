@@ -25,7 +25,7 @@
     "source": "http://cgit.drupalcode.org/salesforce"
   },
   "require": {
-    "drupal/key": "1.x-dev",
+    "drupal/key": "^1.14",
     "firebase/php-jwt": "^5.0",
     "lusitanian/oauth": "^0.8.11"
   }
