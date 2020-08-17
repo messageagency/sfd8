@@ -53,13 +53,6 @@ class PullController extends ControllerBase {
   protected $mappingStorage;
 
   /**
-   * State.
-   *
-   * @var \Drupal\Core\State\StateInterface
-   */
-  protected $state;
-
-  /**
    * Queue factory service.
    *
    * @var \Drupal\Core\Queue\QueueFactory
@@ -100,12 +93,12 @@ class PullController extends ControllerBase {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(QueueHandler $queueHandler, DeleteHandler $deleteHandler, EntityTypeManagerInterface $etm, ConfigFactoryInterface $config, StateInterface $state, QueueFactory $queueService, QueueWorkerManagerInterface $queueWorkerManager, EventDispatcherInterface $eventDispatcher, Time $time, RequestStack $requestStack) {
+  public function __construct(QueueHandler $queueHandler, DeleteHandler $deleteHandler, EntityTypeManagerInterface $etm, ConfigFactoryInterface $configFactory, StateInterface $stateService, QueueFactory $queueService, QueueWorkerManagerInterface $queueWorkerManager, EventDispatcherInterface $eventDispatcher, Time $time, RequestStack $requestStack) {
     $this->queueHandler = $queueHandler;
     $this->deleteHandler = $deleteHandler;
     $this->mappingStorage = $etm->getStorage('salesforce_mapping');
-    $this->config = $config;
-    $this->state = $state;
+    $this->configFactory = $configFactory;
+    $this->stateService = $stateService;
     $this->queueService = $queueService;
     $this->queueWorkerManager = $queueWorkerManager;
     $this->eventDispatcher = $eventDispatcher;
@@ -137,7 +130,7 @@ class PullController extends ControllerBase {
   public function endpoint(SalesforceMappingInterface $salesforce_mapping = NULL, $key = NULL, $id = NULL) {
     // If standalone for this mapping is disabled, and global standalone is
     // disabled, then "Access Denied" for this mapping.
-    if ($key != $this->state->get('system.cron_key')) {
+    if ($key != $this->stateService->get('system.cron_key')) {
       throw new AccessDeniedHttpException();
     }
     $global_standalone = $this->config('salesforce.settings')->get('standalone');
