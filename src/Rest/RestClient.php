@@ -157,8 +157,13 @@ class RestClient implements RestClientInterface {
    * {@inheritdoc}
    */
   public function isInit() {
-    if (!$this->authProvider || !$this->authToken || !$this->authManager) {
+    if (!$this->authProvider || !$this->authManager) {
       return FALSE;
+    }
+    // If authToken is not set, try refreshing it before failing init.
+    if (!$this->authToken) {
+      $this->authToken = $this->authManager->refreshToken();
+      return isset($this->authToken);
     }
     return TRUE;
   }
@@ -169,9 +174,6 @@ class RestClient implements RestClientInterface {
   public function apiCall($path, array $params = [], $method = 'GET', $returnObject = FALSE) {
     if (!$this->isInit()) {
       throw new RestException(NULL, $this->t('RestClient is not initialized.'));
-    }
-    if (!$this->authToken) {
-      $this->authToken = $this->authManager->refreshToken();
     }
 
     if (strpos($path, '/') === 0) {
