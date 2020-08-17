@@ -76,6 +76,14 @@ class SalesforceAuthTokenStorage implements SalesforceAuthTokenStorageInterface 
    * {@inheritdoc}
    */
   public function storeAccessToken($service, TokenInterface $token) {
+    // Salesforce API doesn't return a refresh token when refreshing.
+    // If $token refresh token is null, retain existing instead of overwriting.
+    if (!$token->getRefreshToken()) {
+      $oldToken = $this->state->get(static::getTokenStorageId($service));
+      if ($oldToken) {
+        $token->setRefreshToken($oldToken->getRefreshToken());
+      }
+    }
     $this->state->set(static::getTokenStorageId($service), $token);
     return $this;
   }
