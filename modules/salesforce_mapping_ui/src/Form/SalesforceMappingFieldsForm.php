@@ -221,6 +221,7 @@ class SalesforceMappingFieldsForm extends SalesforceMappingFormBase {
       '#type' => 'checkboxes',
       '#options' => $operations,
       '#default_value' => $defaults,
+      '#attributes' => ['class' => ['narrow']],
     ];
     $row['drupal_field_type'] = [
       '#type' => 'hidden',

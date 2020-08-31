@@ -5,8 +5,12 @@
 
 .salesforce-mapping-fields-form .field_mapping_field > .form-item {
   float: left;
-  width: 23%;
+  width: 25%;
   padding-left: 1em;
+}
+
+.salesforce-mapping-fields-form .field_mapping_field > .narrow {
+  width: 10%;
 }
 
 .salesforce-mapping-fields-form .field_mapping_field {
